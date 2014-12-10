@@ -1,0 +1,6 @@
+# UUID                                  	Group Name
+#
+cc1fd7e3c3880b03de0e59a3efaf37ab2bd00eb5	Non-Interactive iotdm users
+global:Anonymous-Users                  	Anonymous Users
+global:Registered-Users                 	Registered Users
+ldap:cn=gerrit-iotdm-committers,ou=Groups,dc=opendaylight,dc=org	ldap/gerrit-iotdm-committers
