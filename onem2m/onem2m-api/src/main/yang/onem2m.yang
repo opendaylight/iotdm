@@ -1,0 +1,9 @@
+module onem2m {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2m";
+    prefix "onem2m";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2m model";
+    }
+}

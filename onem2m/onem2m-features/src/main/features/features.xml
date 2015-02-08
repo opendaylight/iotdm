@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright(c) Cisco Systems, Inc.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-iotdm-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-restconf/${mdsal.version}/xml/features</repository>
+
+    <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
+    <!-- the onem2m yang model and rpc's  -->
+    <feature name='odl-onem2m-api' version='${project.version}' description='OpenDaylight :: onem2m :: api '>
+        <feature version='${yangtools.version}'>odl-yangtools-models</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-api/${project.version}</bundle>
+    </feature>
+
+    <!-- the provider of the onem2m service, implementation of the rpc's -->
+    <feature name='odl-onem2m-core' version='${project.version}' description='OpenDaylight :: onem2m :: core '>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-core/${project.version}</bundle>
+        <configfile finalname="onem2m-core-default-config.xml"> mvn:org.opendaylight.iotdm/onem2m-core/${project.version}/xml/config
+        </configfile>
+    </feature>
+
+    <feature name='odl-onem2m-notifier' version='${project.version}' description='OpenDaylight :: onem2m :: notifier'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-notifier/${project.version}</bundle>
+        <configfile finalname="onem2m-notifier-default-config.xml">mvn:org.opendaylight.iotdm/onem2m-notifier/${project.version}/xml/config</configfile>
+    </feature>
+
+    <!-- OneM2M Messaging over CoAP protocol -->
+    <feature name='odl-onem2m-coap' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+        <bundle>mvn:org.eclipse.californium/californium-osgi/1.0.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap/${project.version}</bundle>
+        <configfile finalname="onem2m-protocol-coap-default-config.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-coap/${project.version}/xml/config</configfile>
+        <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->
+    </feature>
+
+    <!-- oneM2M messaging over HTTP protocol -->
+    <feature name='odl-onem2m-http' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http/${project.version}</bundle>
+        <configfile finalname="onem2m-protocol-http-default-config.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-http/${project.version}/xml/config</configfile>
+    </feature>
+
+    <!-- oneM2M messaging over MQTT protocol -->
+    <feature name='odl-onem2m-mqtt' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/${project.version}</bundle>
+        <configfile finalname="onem2m-protocol-mqtt-default-config.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/${project.version}/xml/config</configfile>
+    </feature>
+
+    <!-- use this to test core only with restconf -->
+    <feature name='odl-onem2m-core-rest' version='${project.version}' description='OpenDaylight :: onem2m :: core :: REST '>
+        <feature version="${project.version}">odl-onem2m-core</feature>
+        <feature version="${mdsal.version}">odl-restconf</feature>
+        <!-- TODO: uncomment to enable data store persistence -->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-clustering</feature>-->
+    </feature>
+
+    <!-- access via restconf, enable xsql, and api-docs -->
+    <feature name='odl-onem2m-ui' version='${project.version}' description='OpenDaylight :: onem2m :: UI'>
+        <feature version="${mdsal.version}">odl-restconf</feature>
+        <!-- use http://localhost:8181/apidoc/explorer/index.html to access api docs -->
+        <feature version="${mdsal.version}">odl-mdsal-apidocs</feature>
+        <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
+    </feature>
+
+    <!--  The <karaf.localFeature> stanza in onem2m-karaf/pom.xml will boot karaf with the feature bundle specified -->
+    <feature name='odl-iotdm-onem2m' version='${project.version}' description='OpenDaylight :: iotdm :: OneM2M'>
+        <!-- TODO: uncomment next line to enable data store persistence -->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-clustering</feature>-->
+        <!-- TODO: comment out next line to disable restconf, sql, and apidocs -->
+        <feature version="${project.version}">odl-onem2m-ui</feature>
+
+        <feature version="${project.version}">odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+
+        <!-- TODO: comment out next line if onem2m/coap access is not required -->
+        <feature version="${project.version}">odl-onem2m-coap</feature>
+        <!-- TODO: comment out next line if onem2m/http access is not required -->
+        <feature version="${project.version}">odl-onem2m-http</feature>
+        <!-- TODO: comment out next line if onem2m/mqtt access is not required -->
+        <feature version="${project.version}">odl-onem2m-mqtt</feature>
+    </feature>
+
+</features>
+
