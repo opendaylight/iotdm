@@ -27,7 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-core/${project.version}</bundle>
-        <configfile finalname="onem2m-core-default-config.xml"> mvn:org.opendaylight.iotdm/onem2m-core/${project.version}/xml/config
+        <configfile finalname="${config.configfile.directory}/onem2m-core-default-config.xml"> mvn:org.opendaylight.iotdm/onem2m-core/${project.version}/xml/config
         </configfile>
     </feature>
 
