@@ -24,7 +24,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <properties>
         <mdsal.version>1.2.0-SNAPSHOT</mdsal.version>
         <yangtools.version>0.7.0-SNAPSHOT</yangtools.version>
-        <config.configfile.directory>>etc/opendaylight/karaf</config.configfile.directory>
+        <dlux.version>0.2.0-SNAPSHOT</dlux.version>
+        <configfile.directory>etc/opendaylight/karaf</configfile.directory>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -64,9 +65,27 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <scope>runtime</scope>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.dlux</groupId>
+            <artifactId>features-dlux</artifactId>
+            <version>${dlux.version}</version>
+            <classifier>features</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -80,8 +99,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-notifier</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-protocol-coap</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocol-coap</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -90,8 +123,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocol-http</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-protocol-mqtt</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocol-mqtt</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
         </dependency>
     </dependencies>
 </project>
