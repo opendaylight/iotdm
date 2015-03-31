@@ -271,13 +271,24 @@ public class ResultContentProcessor {
 
 
     /**
-     * The results of teh create now must be put in the response.  The result content is used to decide how the
+     * The results of the create now must be put in the response.  The result content is used to decide how the
      * results should be formatted.
      *
      * @param onem2mRequest
      * @param onem2mResponse
      */
     public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        produceJsonResultContent(onem2mRequest, onem2mResponse);
+    }
+
+    /**
+     * The results of the delete now must be put in the response.  The result content is used to decide how the
+     * results should be formatted.
+     *
+     * @param onem2mRequest
+     * @param onem2mResponse
+     */
+    public static void handleDelete(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         produceJsonResultContent(onem2mRequest, onem2mResponse);
     }
 }

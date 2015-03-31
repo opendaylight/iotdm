@@ -41,7 +41,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
 
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);
-
+        initializePerfCse();
         LOG.info("Session Initiated");
     }
 
@@ -56,6 +56,13 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         LOG.info("Session Closed");
     }
 
+    private void initializePerfCse() {
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
+        onem2mRequest.setPrimitive("CSE_TYPE", "IN-CSE");
+        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+        onem2mRequest.provisionCse(onem2mResponse);
+    }
     /**
      * This is the requestPrimitive RPC, it can be called from restconf directly, or it can be called from
      * onem2m-protocol-coap/http/mqtt.  Each of those onem2m-protocols have used the protocol specific bindings
@@ -72,7 +79,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     @Override
     public Future<RpcResult<Onem2mRequestPrimitiveOutput>> onem2mRequestPrimitive(Onem2mRequestPrimitiveInput input) {
 
-        LOG.info("RPC: begin handle op ...");
+        //LOG.info("RPC: begin handle op ...");
 
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor(onem2mPrimitiveList);
@@ -84,7 +91,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         Onem2mRequestPrimitiveOutput output = new Onem2mRequestPrimitiveOutputBuilder()
                 .setOnem2mPrimitive(onem2mPrimitiveList).build();
 
-        LOG.info("RPC: end handle op ...");
+        //LOG.info("RPC: end handle op ...");
 
         return RpcResultBuilder.success(output).buildFuture();
     }
@@ -103,7 +110,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     @Override
     public Future<RpcResult<Onem2mCseProvisioningOutput>> onem2mCseProvisioning(Onem2mCseProvisioningInput input) {
 
-        LOG.info("RPC: begin handle op ...");
+        LOG.info("RPC: begin handle onem2mCseProvisioning ...");
 
         List<Onem2mPrimitive> csePrimitiveList = input.getOnem2mPrimitive();
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor(csePrimitiveList);
@@ -115,7 +122,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         Onem2mCseProvisioningOutput output = new Onem2mCseProvisioningOutputBuilder()
                 .setOnem2mPrimitive(csePrimitiveList).build();
 
-        LOG.info("RPC: end handle op ...");
+        LOG.info("RPC: end handle onem2mCseProvisioning ...");
 
         return RpcResultBuilder.success(output).buildFuture();
     }
@@ -123,6 +130,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
         Onem2mDb.getInstance().cleanupDataStore();
+        initializePerfCse();
         Onem2mDb.getInstance().dumpDataStoreToLog();
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }

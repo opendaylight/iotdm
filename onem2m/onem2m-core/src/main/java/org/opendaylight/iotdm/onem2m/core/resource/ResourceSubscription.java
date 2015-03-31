@@ -27,18 +27,18 @@ public class ResourceSubscription {
     // taken from CDT-contentInstance-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO: ts0001 9.6.7-1
 
-    public static final String EXPIRATION_COUNTER = "x";
-    public static final String NOTIFICATION_URI = "x";
-    public static final String BATCH_NOTIFY = "x";
-    public static final String RATE_LIMIT = "x";
-    public static final String PRE_SUBSCRIPTION_NOTIFY = "x";
-    public static final String PENDING_NOTIFICATION = "x";
-    public static final String NOTIFICATION_STORAGE_POLICY = "x";
-    public static final String LATEST_NOTIFY = "x";
-    public static final String NOTIFICATION_CONTENT_TYPE = "x";
-    public static final String NOTIFICATION_EVENT_CAT = "x";
-    public static final String CREATOR = "x";
-    public static final String SUBSCRIBTER_URI = "x";
+    public static final String EXPIRATION_COUNTER = "exc";
+    public static final String NOTIFICATION_URI = "nu";
+    public static final String BATCH_NOTIFY = "bn";
+    public static final String RATE_LIMIT = "rl";
+    public static final String PRE_SUBSCRIPTION_NOTIFY = "psn";
+    public static final String PENDING_NOTIFICATION = "pn";
+    public static final String NOTIFICATION_STORAGE_POLICY = "nsp";
+    public static final String LATEST_NOTIFY = "ln";
+    public static final String NOTIFICATION_CONTENT_TYPE = "nct";
+    public static final String NOTIFICATION_EVENT_CAT = "nec";
+    public static final String CREATOR = "cr";
+    public static final String SUBSCRIBTER_URI = "su";
 
     // TODO: need to add a section or new file to handle event notification criteria
 

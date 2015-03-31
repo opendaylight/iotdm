@@ -25,6 +25,7 @@ public class Onem2m {
     private Onem2m() {
     }
     public static final String CSE_DEFAULT_NAME = "InCSE1";
+    public static final String SYS_PERF_TEST_CSE = "SYS_PERF_TEST_CSE";
 
     public class Operation {
         public static final String CREATE = "1";
@@ -173,7 +174,7 @@ public class Onem2m {
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");
         }
 
-        Onem2mDb.getInstance().dumpDataStoreToLog();
+        //Onem2mDb.getInstance().dumpDataStoreToLog();
 
         return onem2mResponse;
     }

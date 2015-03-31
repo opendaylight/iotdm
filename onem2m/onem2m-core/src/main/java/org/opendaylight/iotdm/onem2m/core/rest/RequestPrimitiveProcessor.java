@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
@@ -42,6 +43,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
     public RequestPrimitiveProcessor() {
         super();
+        resourceContent = new ResourceContent();
     }
 
     /**
@@ -406,15 +408,15 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        /* TODO: when support resourceTypes in the List<Attr>, ... unlock this code
-        String rt = this.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
-        if (rt.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+        DbAttr parentDbAttrs = this.getDbAttrs();
+        String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+        if (rt != null && rt.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
                     "Not permitted to delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
+            return;
         }
-        */
 
-        //ResultContentProcessor.handleDelete(this, onem2mResponse);
+        ResultContentProcessor.handleDelete(this, onem2mResponse);
 
         // now delete the resource from the database
         // TODO: idempotent so who cares if cannot find the resource ... is this true?

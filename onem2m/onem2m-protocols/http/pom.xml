@@ -26,6 +26,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <artifactId>onem2m-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+      <dependency>
+          <groupId>org.eclipse.jetty.aggregate</groupId>
+          <artifactId>jetty-all-server</artifactId>
+          <version>8.1.14.v20131031</version>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-io</artifactId>
+          <version>1.3.2</version>
+      </dependency>
   </dependencies>
 
 </project>

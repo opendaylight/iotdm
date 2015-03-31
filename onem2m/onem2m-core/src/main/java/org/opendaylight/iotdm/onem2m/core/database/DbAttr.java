@@ -49,7 +49,7 @@ public class DbAttr {
         }
         attrsList.add(new AttrBuilder().setKey(new AttrKey(attrName)).setName(attrName).setValue(attrValue).build());
         attrMap.put(attrName, attrValue);
-        LOG.info("set Attr N={}, V={}", attrName, attrValue);
+        //LOG.info("set Attr N={}, V={}", attrName, attrValue);
     }
 
     public String getAttr(String attrName) {

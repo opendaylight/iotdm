@@ -112,7 +112,7 @@ public class ResourceContent {
                         "CONTENT(" + RequestPrimitive.CONTENT + ") JSONObject found: " + key);
                 return;
             } else if (o instanceof String) {
-                LOG.info("key: {}, val: {}", key, o.toString());
+                //LOG.info("key: {}, val: {}", key, o.toString());
                 if (validAttributes.contains(key)) {
                     this.setDbAttr(key, o.toString());
                 } else {

@@ -37,18 +37,25 @@ public class BasePrimitive {
     }
 
     public void setPrimitive(String primitiveName, String primitiveValue) {
-        String temp = getPrimitive(primitiveName);
-        if (temp != null) {
-            LOG.error("Duplicate attr: prim={}, old={}, new={}", primitiveName, temp, primitiveValue);
-            return;
+        if (delPrimitive(primitiveName)) {
+            LOG.error("set Attr N={}, V={}", primitiveName, primitiveValue);
         }
         onem2mPrimitivesList.add(new Onem2mPrimitiveBuilder().setName(primitiveName).setValue(primitiveValue).build());
         primitiveMap.put(primitiveName, primitiveValue);
-        LOG.info("set Attr N={}, V={}", primitiveName, primitiveValue);
+        //LOG.info("set Attr N={}, V={}", primitiveName, primitiveValue);
     }
 
     public String getPrimitive(String primitiveName) {
         return this.primitiveMap.get(primitiveName);
+    }
+
+    private boolean delPrimitive(String primitiveName) {
+        if (primitiveMap.containsKey(primitiveName)) {
+            primitiveMap.remove(primitiveName);
+            onem2mPrimitivesList.remove(primitiveName);
+            return true;
+        }
+        return false;
     }
 
     /**

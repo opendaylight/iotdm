@@ -1,0 +1,96 @@
+module onem2mbenchmark {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mbenchmark";
+    prefix "onem2mbenchmark";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2mbenchmark model";
+    }
+
+    container test-status {
+        leaf execStatus {
+            type enumeration {
+                enum "idle" {
+                    value 1;
+                }
+                enum "executing" {
+                    value 2;
+                }
+            }
+            config false;
+            mandatory true;
+            description
+                "Indicates whether a test run is in progress; only one test can run at a time";
+        }
+    }
+
+    rpc start-test {
+        description
+          "Start a new data store write test run";
+
+        input {
+            leaf operation {
+                mandatory true;
+                type enumeration {
+                    enum "PERF CRUD" {
+                        value 1;
+                        description
+                          "The put operation";
+                    }
+                }
+                description
+                    "Type of the test to benchmark";
+            }
+
+            leaf numResources {
+                type uint32;
+                default 100000;
+                description
+                  "Number of resources to CRUD";
+              }
+        }
+        output {
+            leaf status {
+                mandatory true;
+                type enumeration {
+                    enum "OK" {
+                        value 1;
+                    }
+                    enum "FAILED" {
+                        value 2;
+                    }
+                    enum "TEST-IN-PROGRESS" {
+                        value 3;
+                    }
+                }
+                description
+                    "Indicates whether the test finished successfully";
+               }
+            leaf createsPerSec {
+                type uint32;
+                default 1;
+                description
+                  "The time it took to creates/second";
+              }
+            leaf retrievesPerSec {
+                type uint32;
+                default 1;
+                description
+                  "The time it took to retrieves/second";
+              }
+            leaf updatesPerSec {
+                type uint32;
+                default 1;
+                description
+                  "The time it took to updates/second";
+              }
+            leaf deletesPerSec {
+                type uint32;
+                default 1;
+                description
+                  "The time it took to deletes/second";
+              }
+
+        }
+    }
+}
