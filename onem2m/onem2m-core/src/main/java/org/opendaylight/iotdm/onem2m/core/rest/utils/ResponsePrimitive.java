@@ -50,8 +50,8 @@ public class ResponsePrimitive extends BasePrimitive {
         super(onem2m2PrimitiveList);
     }
 
-    public void setRSC(Onem2m.ResponseStatusCode rsc, String content) { //throws Onem2mRSCException {
-        this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc.toString());
+    public void setRSC(String rsc, String content) { //throws Onem2mRSCException {
+        this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc);
         this.setPrimitive(ResponsePrimitive.CONTENT, content);
         //throw new Onem2mRSCException();
     }

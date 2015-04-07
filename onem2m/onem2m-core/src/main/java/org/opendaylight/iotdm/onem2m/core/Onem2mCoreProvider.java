@@ -57,11 +57,13 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     }
 
     private void initializePerfCse() {
-        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-        onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
-        onem2mRequest.setPrimitive("CSE_TYPE", "IN-CSE");
-        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-        onem2mRequest.provisionCse(onem2mResponse);
+        if (!Onem2mDb.getInstance().FindCseByName(Onem2m.SYS_PERF_TEST_CSE)) {
+            RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+            onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
+            onem2mRequest.setPrimitive("CSE_TYPE", "IN-CSE");
+            ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+            onem2mRequest.provisionCse(onem2mResponse);
+        }
     }
     /**
      * This is the requestPrimitive RPC, it can be called from restconf directly, or it can be called from

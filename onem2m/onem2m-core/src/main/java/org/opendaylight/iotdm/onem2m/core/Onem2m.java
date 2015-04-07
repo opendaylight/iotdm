@@ -16,6 +16,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO: TS0004 8.3, and 8.4, short names are required
 
@@ -102,9 +103,26 @@ public class Onem2m {
     }
 
     // TS0004 sectiopns: 6.3.3.2.9, 6.6
-    public enum ResponseStatusCode {
-        ACCEPTED(1000),
+    public class ResponseStatusCode {
+        public static final String OK = "2000";
+        public static final String CREATED = "2001";
+        public static final String DELETED = "2002";
+        public static final String CHANGED = "2004";
 
+        public static final String BAD_REQUEST = "4000";
+        public static final String NOT_FOUND = "4004";
+        public static final String OPERATION_NOT_ALLOWED = "4005";
+        public static final String CONTENTS_UNACCEPTABLE = "4102";
+        public static final String CONFLICT = "4105";
+
+        public static final String INTERNAL_SERVER_ERROR = "5000";
+        public static final String NOT_IMPLEMENTED = "5001";
+        public static final String ALREADY_EXISTS = "5106";
+        public static final String NON_BLOCKING_REQUEST_NOT_SUPPORTED = "5206";
+
+        public static final String INVALID_ARGUMENTS = "6023";
+        public static final String INSUFFICIENT_ARGUMENTS = "6024";
+/*
         OK(2000),
         CREATED(2001),
         DELETED(2002),
@@ -143,13 +161,21 @@ public class Onem2m {
         MGMT_COMMAND_NOT_CANCELLABLE(6029),
         MGMT_CONVERSION_ERROR(6025),
         MGMT_CANCELATION_FAILURE(6026);
+*/
+    }
 
-        private int value;
-
-        private ResponseStatusCode(int value) {
-            this.value = value;
-
-        }
+    public class CoapOption {
+        public static final int ONEM2M_FR = 256;
+        public static final int ONEM2M_RQI = 257;
+        public static final int ONEM2M_NM = 258;
+        public static final int ONEM2M_OT = 259;
+        public static final int ONEM2M_RQET = 260;
+        public static final int ONEM2M_RSET = 261;
+        public static final int ONEM2M_OET = 262;
+        public static final int ONEM2M_RTURI = 263;
+        public static final int ONEM2M_EC = 264;
+        public static final int ONEM2M_RSC = 265;
+        public static final int ONEM2M_GID = 266;
     }
 
     /**
@@ -160,6 +186,8 @@ public class Onem2m {
      * @return
      */
     public static ResponsePrimitive serviceOnenm2mRequest(RequestPrimitive onem2mRequest, Onem2mService onem2mService) {
+
+        final Logger LOG = LoggerFactory.getLogger(Onem2m.class);
 
         ResponsePrimitive onem2mResponse;
 
@@ -172,6 +200,7 @@ public class Onem2m {
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");
+            LOG.error("serviceOnenm2mRequest: RPC exception");
         }
 
         //Onem2mDb.getInstance().dumpDataStoreToLog();

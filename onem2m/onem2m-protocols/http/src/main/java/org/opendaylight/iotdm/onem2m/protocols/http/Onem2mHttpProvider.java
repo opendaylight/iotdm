@@ -26,13 +26,13 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
     private Server server;
     private final int PORT = 8282;
 
-
     public static final String X_M2M_ORIGIN = "X-M2M-Origin";
     public static final String X_M2M_RI = "X-M2M-RI";
     public static final String X_M2M_NM = "X-M2M-NM";
     public static final String X_M2M_GID = "X-M2M-GID";
     public static final String X_M2M_RTU = "X-M2M-RTU";
     public static final String X_M2M_OT = "X-M2M-OT";
+    public static final String X_M2M_RSC = "X-M2M-RSC";
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
@@ -82,7 +82,7 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
 
             clientBuilder.setTo(httpRequest.getRequestURI());
 
-            // now pull fields out of the headers
+            // pull fields out of the headers
             headerValue = httpRequest.getHeader(X_M2M_ORIGIN);
             if (headerValue != null) {
                 clientBuilder.setFrom(headerValue);
@@ -124,21 +124,21 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
 
             switch (method) {
                 case "get":
-                    clientBuilder.setOperation(Onem2m.Operation.RETRIEVE);
+                    clientBuilder.setOperationRetrieve();
 
                     break;
                 case "post":
                     if (resourceTypePresent) {
-                        clientBuilder.setOperation(Onem2m.Operation.CREATE);
+                        clientBuilder.setOperationCreate();
                     } else {
-                        clientBuilder.setOperation(Onem2m.Operation.NOTIFY);
+                        clientBuilder.setOperationNotify();
                     }
                     break;
                 case "put":
-                    clientBuilder.setOperation(Onem2m.Operation.UPDATE);
+                    clientBuilder.setOperationUpdate();
                     break;
                 case "delete":
-                    clientBuilder.setOperation(Onem2m.Operation.DELETE);
+                    clientBuilder.setOperationDelete();
                     break;
                 default:
                     httpResponse.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
@@ -153,28 +153,64 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
             ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
 
             // now place the fields from the onem2m result response back in the http fields, and send
-            sendHttpResponseFromOnem2mResponse(httpResponse, onem2mRequest, onem2mResponse);
+            sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
 
             httpResponse.setContentType("text/json;charset=utf-8");
-            //response.setStatus(HttpServletResponse.SC_OK);
             baseRequest.setHandled(true);
         }
 
-
-
-        private void sendHttpResponseFromOnem2mResponse(HttpServletResponse httpResponse, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) throws IOException {
-
-            // TODO: map the onem2m response RSC to a HTTP return code
+        private void sendHttpResponseFromOnem2mResponse(HttpServletResponse httpResponse,
+                                                        ResponsePrimitive onem2mResponse) throws IOException {
 
             // the content is already in the required format ...
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-            int httpRSC = HttpServletResponse.SC_CREATED;
+            String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+            int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
             if (content != null) {
                 httpResponse.setStatus(httpRSC);
                 httpResponse.getWriter().println(content);
             } else {
                 httpResponse.setStatus(httpRSC);
             }
+        }
+
+        private int mapCoreResponseToHttpResponse(HttpServletResponse httpResponse, String rscString) {
+
+            httpResponse.setHeader(X_M2M_RSC, rscString);
+            switch (rscString) {
+                case Onem2m.ResponseStatusCode.OK:
+                    return HttpServletResponse.SC_OK;
+                case Onem2m.ResponseStatusCode.CREATED:
+                    return HttpServletResponse.SC_CREATED;
+                case Onem2m.ResponseStatusCode.CHANGED:
+                    return HttpServletResponse.SC_OK;
+                case Onem2m.ResponseStatusCode.DELETED:
+                    return HttpServletResponse.SC_OK;
+
+                case Onem2m.ResponseStatusCode.NOT_FOUND:
+                    return HttpServletResponse.SC_NOT_FOUND;
+                case Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED:
+                    return HttpServletResponse.SC_METHOD_NOT_ALLOWED;
+                case Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE:
+                    return HttpServletResponse.SC_BAD_REQUEST;
+                case Onem2m.ResponseStatusCode.CONFLICT:
+                    return HttpServletResponse.SC_CONFLICT;
+
+                case Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR:
+                    return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                case Onem2m.ResponseStatusCode.NOT_IMPLEMENTED:
+                    return HttpServletResponse.SC_NOT_IMPLEMENTED;
+                case Onem2m.ResponseStatusCode.ALREADY_EXISTS:
+                    return HttpServletResponse.SC_FORBIDDEN;
+                case Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED:
+                    return HttpServletResponse.SC_NOT_IMPLEMENTED;
+
+                case Onem2m.ResponseStatusCode.INVALID_ARGUMENTS:
+                    return HttpServletResponse.SC_BAD_REQUEST;
+                case Onem2m.ResponseStatusCode.INSUFFICIENT_ARGUMENTS:
+                    return HttpServletResponse.SC_BAD_REQUEST;
+            }
+            return HttpServletResponse.SC_BAD_REQUEST;
         }
     }
 }

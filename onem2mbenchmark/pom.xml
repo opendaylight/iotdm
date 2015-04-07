@@ -50,9 +50,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   </build>
 
   <scm>
-    <connection>scm:git:ssh://git.opendaylight.org:29418/onem2mbenchmark.git</connection>
-    <developerConnection>scm:git:ssh://git.opendaylight.org:29418/onem2mbenchmark.git</developerConnection>
+    <connection>scm:git:ssh://git.opendaylight.org:29418/iotdm.git</connection>
+    <developerConnection>scm:git:ssh://git.opendaylight.org:29418/iotdm.git</developerConnection>
     <tag>HEAD</tag>
-    <url>https://wiki.opendaylight.org/view/onem2mbenchmark:Main</url>
+    <url>https://wiki.opendaylight.org/view/IoTDM:Main</url>
   </scm>
 </project>

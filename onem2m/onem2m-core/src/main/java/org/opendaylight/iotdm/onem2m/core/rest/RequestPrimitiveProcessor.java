@@ -290,14 +290,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
-        /**
-         * The resource has been filled in with any attributes that need to be written to the database
-         */
-        if (!Onem2mDb.getInstance().createResource(this, onem2mResponse)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
-            // TODO: what do we do now ... seems really bad ... keep stats
-            return;
-        }
 
         // now format a response based on result content desired
         ResultContentProcessor.handleCreate(this, onem2mResponse);
@@ -485,9 +477,9 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // need to figure out notification strategy
 
         // TODO: see TS0004 6.8
-        // if FOUND, and all went well, send back OK
+        // if FOUND, and all went well, send back CHANGED
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.OK.toString());
+            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CHANGED.toString());
         }
     }
 

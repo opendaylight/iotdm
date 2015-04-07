@@ -7,11 +7,8 @@
  */
 package org.opendaylight.iotdm.onem2m.core.utils;
 
-//import org.joda.time.DateTime;
-//import org.joda.time.DateTimeZone;
-//import org.joda.time.format.DateTimeFormat;
-//import org.joda.time.format.DateTimeFormatter;
-
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * ISO8601 standard YYYY-MM-DD'T'HH:MM:SSZZ
@@ -21,11 +18,10 @@ public class Onem2mDateTime {
     private Onem2mDateTime() {
     }
 
-    //public static String getCurrDateTime() {
-    //    return new DateTime(DateTimeZone.UTC).toString();
-    //}
     public static String getCurrDateTime() {
-        return "YYYY-MM-DD'T'HH:MM:SSZZ";
+        DateTime dt = new DateTime(DateTimeZone.UTC);
+        //return "YYYY-MM-DD'T'HH:MM:SSZZ";
+        return dt.toString();
     }
 
     public static boolean isValidDateTime(String dateTimeString) {
