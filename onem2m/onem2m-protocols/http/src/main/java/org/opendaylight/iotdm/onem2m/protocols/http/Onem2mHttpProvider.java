@@ -26,7 +26,6 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
     private Server server;
     private final int PORT = 8282;
 
-
     public static final String X_M2M_ORIGIN = "X-M2M-Origin";
     public static final String X_M2M_RI = "X-M2M-RI";
     public static final String X_M2M_NM = "X-M2M-NM";
@@ -82,7 +81,7 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
 
             clientBuilder.setTo(httpRequest.getRequestURI());
 
-            // now pull fields out of the headers
+            // pull fields out of the headers
             headerValue = httpRequest.getHeader(X_M2M_ORIGIN);
             if (headerValue != null) {
                 clientBuilder.setFrom(headerValue);
@@ -124,21 +123,21 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
 
             switch (method) {
                 case "get":
-                    clientBuilder.setOperation(Onem2m.Operation.RETRIEVE);
+                    clientBuilder.setOperationRetrieve();
 
                     break;
                 case "post":
                     if (resourceTypePresent) {
-                        clientBuilder.setOperation(Onem2m.Operation.CREATE);
+                        clientBuilder.setOperationCreate();
                     } else {
-                        clientBuilder.setOperation(Onem2m.Operation.NOTIFY);
+                        clientBuilder.setOperationNotify();
                     }
                     break;
                 case "put":
-                    clientBuilder.setOperation(Onem2m.Operation.UPDATE);
+                    clientBuilder.setOperationUpdate();
                     break;
                 case "delete":
-                    clientBuilder.setOperation(Onem2m.Operation.DELETE);
+                    clientBuilder.setOperationDelete();
                     break;
                 default:
                     httpResponse.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);

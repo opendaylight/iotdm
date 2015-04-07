@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +24,24 @@ public class Onem2mRequestPrimitiveClientBuilder {
         onem2mRequest = new Onem2mRequestPrimitiveClient();
     }
 
-    public Onem2mRequestPrimitiveClientBuilder setOperation(String value) {
-        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, value);
+    public Onem2mRequestPrimitiveClientBuilder setOperationCreate() {
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.CREATE);
+        return this;
+    }
+    public Onem2mRequestPrimitiveClientBuilder setOperationRetrieve() {
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.RETRIEVE);
+        return this;
+    }
+    public Onem2mRequestPrimitiveClientBuilder setOperationUpdate() {
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.UPDATE);
+        return this;
+    }
+    public Onem2mRequestPrimitiveClientBuilder setOperationDelete() {
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.DELETE);
+        return this;
+    }
+    public Onem2mRequestPrimitiveClientBuilder setOperationNotify() {
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.NOTIFY);
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setTo(String value) {
@@ -79,7 +96,6 @@ public class Onem2mRequestPrimitiveClientBuilder {
         onem2mRequest.setPrimitive(RequestPrimitive.RESULT_PERSISTENCE, value);
         return this;
     }
-
     public Onem2mRequestPrimitiveClientBuilder setResultContent(String value) {
         onem2mRequest.setPrimitive(RequestPrimitive.RESULT_CONTENT, value);
         return this;

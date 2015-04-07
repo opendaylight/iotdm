@@ -25,6 +25,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <mdsal.version>1.2.0-SNAPSHOT</mdsal.version>
         <yangtools.version>0.7.0-SNAPSHOT</yangtools.version>
         <dlux.version>0.2.0-SNAPSHOT</dlux.version>
+        <californium.version>1.0.0-M1</californium.version>
         <configfile.directory>etc/opendaylight/karaf</configfile.directory>
     </properties>
     <dependencyManagement>
@@ -74,6 +75,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.californium</groupId>
+            <artifactId>californium-osgi</artifactId>
+            <version>${californium.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

@@ -26,27 +26,47 @@ module onem2mbenchmark {
 
     rpc start-test {
         description
-          "Start a new data store write test run";
+          "Start a new performance test run";
 
         input {
             leaf operation {
                 mandatory true;
                 type enumeration {
-                    enum "PERF CRUD" {
+                    enum "PERF RPC" {
                         value 1;
                         description
-                          "The put operation";
+                          "The CRUD performance test using RPC's";
+                    }
+                    enum "PERF COAP" {
+                        value 2;
+                        description
+                          "The CRUD performance test using CoAP";
+                    }
+                    enum "PERF HTTP" {
+                        value 3;
+                        description
+                          "The CRUD performance test using HTTP";
+                    }
+                    enum "BASIC SANITY" {
+                        value 4;
+                        description
+                          "CRUD one of each resource type";
                     }
                 }
                 description
                     "Type of the test to benchmark";
             }
-
             leaf numResources {
                 type uint32;
                 default 100000;
                 description
-                  "Number of resources to CRUD";
+                  "Number of resources to test";
+              }
+            leaf serverUri {
+                type string;
+                default "coap://localhost";
+                description
+                  "Example: for coap://localhost, for http://localhost:8282";
               }
         }
         output {
@@ -70,25 +90,25 @@ module onem2mbenchmark {
                 type uint32;
                 default 1;
                 description
-                  "The time it took to creates/second";
+                  "creates/second";
               }
             leaf retrievesPerSec {
                 type uint32;
                 default 1;
                 description
-                  "The time it took to retrieves/second";
+                  "retrieves/second";
               }
             leaf updatesPerSec {
                 type uint32;
                 default 1;
                 description
-                  "The time it took to updates/second";
+                  "updates/second";
               }
             leaf deletesPerSec {
                 type uint32;
                 default 1;
                 description
-                  "The time it took to deletes/second";
+                  "deletes/second";
               }
 
         }

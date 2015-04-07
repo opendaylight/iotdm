@@ -24,12 +24,8 @@ public class ResourceContentInstanceBuilder extends ResourceContentBuilder {
         jsonContent.put(ResourceContentInstance.CONTENT, value);
         return this;
     }
-    public ResourceContentInstanceBuilder setResourceName(String value) {
+    public ResourceContentInstanceBuilder setContentInfo(String value) {
         jsonContent.put(ResourceContentInstance.CONTENT_INFO, value);
-        return this;
-    }
-    public ResourceContentInstanceBuilder setContentSize(String value) {
-        jsonContent.put(ResourceContentInstance.CONTENT_SIZE, value);
         return this;
     }
     public ResourceContentInstanceBuilder setOntologyRef(String value) {

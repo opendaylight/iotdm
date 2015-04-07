@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -110,6 +111,15 @@ public class ResourceAE {
         String aeId = resourceContent.getDbAttr(AE_ID);
         if (aeId == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID missing parameter");
+            return;
+        }
+
+        /**
+         * The resource has been filled in with any attributes that need to be written to the database
+         */
+        if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+            // TODO: what do we do now ... seems really bad ... keep stats
             return;
         }
     }

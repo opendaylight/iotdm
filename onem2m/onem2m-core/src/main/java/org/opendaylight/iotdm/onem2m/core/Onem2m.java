@@ -16,6 +16,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO: TS0004 8.3, and 8.4, short names are required
 
@@ -152,6 +153,20 @@ public class Onem2m {
         }
     }
 
+    public class CoapOption {
+        public static final int ONEM2M_FR = 256;
+        public static final int ONEM2M_RQI = 257;
+        public static final int ONEM2M_NM = 258;
+        public static final int ONEM2M_OT = 259;
+        public static final int ONEM2M_RQET = 260;
+        public static final int ONEM2M_RSET = 261;
+        public static final int ONEM2M_OET = 262;
+        public static final int ONEM2M_RTURI = 263;
+        public static final int ONEM2M_EC = 264;
+        public static final int ONEM2M_RSC = 265;
+        public static final int ONEM2M_GID = 266;
+    }
+
     /**
      * Routine to allow REST clients to invoke the MDSAL RPC which will process the RequestPrimitive accessed via
      * the Onem2mService.
@@ -160,6 +175,8 @@ public class Onem2m {
      * @return
      */
     public static ResponsePrimitive serviceOnenm2mRequest(RequestPrimitive onem2mRequest, Onem2mService onem2mService) {
+
+        final Logger LOG = LoggerFactory.getLogger(Onem2m.class);
 
         ResponsePrimitive onem2mResponse;
 
@@ -172,6 +189,7 @@ public class Onem2m {
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");
+            LOG.error("serviceOnenm2mRequest: RPC exception");
         }
 
         //Onem2mDb.getInstance().dumpDataStoreToLog();

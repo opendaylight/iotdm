@@ -13,6 +13,7 @@ import java.util.Set;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.slf4j.Logger;
@@ -143,7 +144,19 @@ public class ResourceContainer {
         tempInt = 0;
         resourceContent.setDbAttr(CURR_BYTE_SIZE, tempInt.toString());
 
-        // note for update, if updating maxNrOfInstances and the other max, then a side affect of possibly deleting
-        // some contentInstances might have to occur
+        // initialize latest and oldest to "0"
+        resourceContent.setDbAttr(LATEST, tempInt.toString());
+        resourceContent.setDbAttr(OLDEST, tempInt.toString());
+
+        /**
+         * The resource has been filled in with any attributes that need to be written to the database
+         */
+        if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+            // TODO: what do we do now ... seems really bad ... keep stats
+            return;
+        }
     }
+
+    // handleUpdate .... update the stateTag, used in conjunction with lmt and competing mods avoid races
 }

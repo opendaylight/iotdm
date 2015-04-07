@@ -31,7 +31,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
           <artifactId>onem2m-core</artifactId>
           <version>0.0.1-SNAPSHOT</version>
       </dependency>
-
+      <dependency>
+          <groupId>org.eclipse.californium</groupId>
+          <artifactId>californium-osgi</artifactId>
+          <version>1.0.0-M1</version>
+      </dependency>
     <!-- Testing Dependencies -->
     <dependency>
       <groupId>junit</groupId>

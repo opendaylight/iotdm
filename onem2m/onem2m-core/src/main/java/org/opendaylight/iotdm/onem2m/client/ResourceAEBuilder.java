@@ -24,19 +24,15 @@ public class ResourceAEBuilder extends ResourceContentBuilder {
         jsonContent.put(ResourceAE.APP_NAME, value);
         return this;
     }
-    public ResourceAEBuilder setResourceName(String value) {
+    public ResourceAEBuilder setAppId(String value) {
         jsonContent.put(ResourceAE.APP_ID, value);
         return this;
     }
-    public ResourceAEBuilder setParentId(String value) {
+    public ResourceAEBuilder setAEId(String value) {
         jsonContent.put(ResourceAE.AE_ID, value);
         return this;
     }
-    public ResourceAEBuilder setRequestIdentifier(String value) {
-        jsonContent.put(ResourceAE.POINT_OF_ACCESS, value);
-        return this;
-    }
-    public ResourceAEBuilder setExpirationTime(String value) {
+    public ResourceAEBuilder setOntologyRef(String value) {
         jsonContent.put(ResourceAE.ONTOLOGY_REF, value);
         return this;
     }

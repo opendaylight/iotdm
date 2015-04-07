@@ -135,6 +135,42 @@ public class DbResourceTree {
     }
 
     /**
+     * Retrieve the attr by name from the data store
+     * @param resourceId
+     * @param attrName
+     * @return Attr
+     */
+    public Attr retrieveAttrByName(String resourceId, String attrName) {
+
+        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(Attr.class, new AttrKey(attrName));
+
+        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+    }
+
+    /**
+     * Retrieve the attr by name from the data store
+     * @param resourceId
+     * @param attrName
+     * @return Attr
+     */
+    public void updateAttr(DbTransaction dbTxn, String resourceId, String attrName, String attrValue) {
+
+        Attr attr = new AttrBuilder()
+                .setKey(new AttrKey(attrName))
+                .setName(attrName)
+                .setValue(attrValue)
+                .build();
+
+        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(Attr.class, new AttrKey(attrName));
+
+        dbTxn.update(iid, attr, LogicalDatastoreType.OPERATIONAL);
+    }
+
+    /**
      * Link the parent resource to the child resource in the data store.
      * @param dbTxn
      * @param parentResourceId
