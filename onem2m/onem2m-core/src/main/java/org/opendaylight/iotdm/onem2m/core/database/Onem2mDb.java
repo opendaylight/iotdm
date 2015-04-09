@@ -16,6 +16,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -28,49 +29,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The OneM2M data store uses the Binding Aware data store with transaction chaining.  See teh ODL coretutorials
+ * The OneM2M data store uses the Binding Aware data store with transaction chaining.  See the ODL core tutorials
  * dsbenchmark for details.  The data store implements the Resource tree in the onenm2m yang model.  It is a very
  * generic data/meta model.  It enables all of the onem2m resource types to be CRUDed.  The semantics of how these
- * resources are enforced in the onem2m-core/service layer.  The onenm2m-core/REST layer is used as the API into the
+ * resources are enforced in the onem2m-core/resource layer.  The onenm2m-core/rest layer is used as the API into the
  * system.  The client (Onem2mRequestPrimitiveClient) is how the onenm2m-protocols adapt msgs to the onem2m protocol
  * independent format.  The message is then sent to the onem2m service.  See Onem2m.serviceRequest().
  *
  * The resource tree holds a list of cseBase's.  Onem2m provisions for one cseBase but I allowed for more just in case
- * more flexibility is reequired.  Examples of needing more might be customer partitioning.  Maybe a virtual tree is
- * given to each IOT network.  I dont know if this is realistic but the capability is there.  Also, there maybe a
- * feature that some internal application wishes to implement using a resoruce tree, so it can provision its own
+ * more flexibility is required.  Examples of needing more might be customer partitioning.  Maybe a virtual tree is
+ * given to each IOT network.  I don't know if this is realistic but the capability is there.  Also, there maybe a
+ * feature that some internal application wishes to implement using a resource tree, so it can provision its own
  * cseBase if that makes sense.
  *
- * Each new cseBase provisioned is allocated a resource which is the root/base for its resoruce tree.  When any new
- * resource is provisioned unser the cseBase, it is allocated a new resource and is added as a child resoruce to the
+ * Each new cseBase provisioned is allocated a resource which is the root/base for its resource tree.  When any new
+ * resource is provisioned under the cseBase, it is allocated a new resource and is added as a child resource to the
  * cseBase resource, and the new resource's parentID is set to point to the cseBase.  This mechanism allows a tree
  * to be built.
  *
- * Accessing the resources.  A resource can be accessed by its hierarchical name or its non-hierarchical name.  The
- * latter sits directly .... add more stuff here TODO
- */
-
-/**
- * Thoughts on interfaces to the data store.
- * 1) New Cse ... initial creation
- * 2) Add a new resource ...
- * 2a) Find the parent resourceId
- * 2b) add a new resource
- * 2c) add a child to the parent resource child list
- * 2d) update an attr or attr set in the parent resource like MOD_TIME
- * 2e) in 2b) make sure set the parentId to the parentResource
- *
- * 3) delete a resource, this is a logical tree so need to do work to delete below the hierarchy
- * 3a) find it, the service layer will need to read its children for subscription notifications
- * 3b) also, will need to recurse the tree and delete resources starting from leafs, could be tricky
- *
- * 4) notes on resource creation
- * 4a) a resource needs attr list, attsets plus members, child entry
- * 4b) where should these sub structures be filled in
- * 4c) the onem2mRequest has the primitives, who converts these to the db structures?
- *
- * 5) In the service layer, validate the primitives, fill in any extra that are required, then call a db routine
- *    to effect the transaction ..the db routine will hide the db implementation
  */
 public class Onem2mDb implements TransactionChainListener {
 
@@ -81,7 +57,7 @@ public class Onem2mDb implements TransactionChainListener {
     private static final String NULL_RESOURCE_ID = "0";
 
     /**
-     * Allows other parts of the system to access the one and only instance of hte "datastore" object
+     * Allows other parts of the system to access the one and only instance of the "data store" object
      * @return
      */
     public static Onem2mDb getInstance() {
@@ -102,18 +78,6 @@ public class Onem2mDb implements TransactionChainListener {
         LOG.info("bindingTxChain: {}", this.bindingTransactionChain);
     }
 
-    /**
-     * For now I am making this a String even though it is a number.  Also, I experimented making the id a
-     * random number (and verifying that NO resource in the system uses the same number by looking it up in the db.
-     * The reason: I was curious about attacks if I made the number atomically increasing from some starting base.
-     * I can keep stats on "missed" non-hierarchical resource operations, and if they get out-of-control, maybe the
-     * SDN portion of the controller can shut down the offender.  I'll leave it like this for the time being, and
-     * I'll experiment later with performance and my other concerns.  The key is to keep the size of the resourceId
-     * small as constrained devices will want to use the non-hierarchical URI's so the smaller the better.
-     *
-     * TODO: figure out my strategy here.
-     * @return
-     */
     private String generateResourceId() {
         Integer intResourceId;
         do {
@@ -128,7 +92,7 @@ public class Onem2mDb implements TransactionChainListener {
 
     /**
      * The cse is a special resource, its the root of the tree, and all resources are created under it.  Note that
-     * it is possible to create and initalize multiple cse's but for now, we add one hard coded cse in the
+     * it is possible to create and initialize multiple cse's but for now, we add one hard coded cse in the
      * Onem2mCoreProvider.
      * @param onem2mRequest
      * @param onem2mResponse
@@ -174,10 +138,6 @@ public class Onem2mDb implements TransactionChainListener {
             onem2mRequest.setResourceName(onem2mRequest.getResourceId());
         }
 
-        // get current date/time, set the parent->modeTime, and the child->orig/create_time
-        // Date now = new Date();
-        // do a merge on the List<attr> of the parent for the MOD_TIME attr
-
         // create a childEntry on the parent resourceId, <child-name, child-resourceId>
         dbResourceTree.createParentChildLink(dbTxn,
                 onem2mRequest.getOnem2mResource().getResourceId(), // parent
@@ -191,6 +151,7 @@ public class Onem2mDb implements TransactionChainListener {
         // now save this newly created resource
         onem2mRequest.setOnem2mResource(onem2mResource);
     }
+
     /**
      * The create resource is carried out by this routine.  The onem2mRequest has the parameters in it to effect the
      * creation request.  The resource specific routines have in .../core/resource already vetted the parameters so
@@ -217,6 +178,7 @@ public class Onem2mDb implements TransactionChainListener {
      * The contentInstance resource is special in that it requires the parent container to be involved.
      * 1) if maxByteSize and maxNrInstances are supported, then those limits have to be enforced.
      * 2) the latest/oldest in the container have to be maintained, as well as next/prev in the content instances
+     * TODO: latest/oldest
      *
      * @param onem2mRequest
      * @param onem2mResponse
@@ -232,51 +194,12 @@ public class Onem2mDb implements TransactionChainListener {
         String containerId = onem2mRequest.getOnem2mResource().getResourceId();
         Onem2mResource containerResource = dbResourceTree.retrieveResourceById(containerId);
 
-        // find the latest/oldest
-        Attr latest = dbResourceTree.retrieveAttrByName(containerId, ResourceContainer.LATEST);
-        Attr oldest = dbResourceTree.retrieveAttrByName(containerId, ResourceContainer.OLDEST);
-        Attr sibling = null;
-        if (!latest.getValue().contentEquals(NULL_RESOURCE_ID)) {
-            sibling = dbResourceTree.retrieveAttrByName(latest.getValue(), ResourceContentInstance.NEXT);
-        }
-
         // store the contentInstance id in the request in prep for creation
         onem2mRequest.setResourceId(contentInstanceResourceId);
 
         // allocate a transaction, for the series of updates and creates to the data store
         DbTransaction dbTxn = new DbTransaction(bindingTransactionChain);
 
-        // maintain the links from container to content instances
-        if (latest.getValue().contentEquals(NULL_RESOURCE_ID)) {
-            // TODO: investigate updating the set of attrs for the container as a group
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.LATEST, contentInstanceResourceId);
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.OLDEST, contentInstanceResourceId);
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.CURR_NR_INSTANCES, "1");
-            String currByteSize = contentInstanceAttrs.getAttr(ResourceContainer.CURR_BYTE_SIZE);
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.CURR_BYTE_SIZE,currByteSize);
-
-            // need to update next/prev to NULL for the contentInstance attrs
-            contentInstanceAttrs.setAttr(ResourceContentInstance.NEXT, NULL_RESOURCE_ID);
-            contentInstanceAttrs.setAttr(ResourceContentInstance.PREV, NULL_RESOURCE_ID);
-
-        } else {
-            if (oldest.getValue().contentEquals(latest.getValue())) {
-                dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.OLDEST, contentInstanceResourceId);
-            }
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.LATEST, contentInstanceResourceId);
-            dbResourceTree.updateAttr(dbTxn, sibling.getValue(), ResourceContentInstance.NEXT, contentInstanceResourceId);
-            contentInstanceAttrs.setAttr(ResourceContentInstance.PREV, sibling.getValue());
-        }
-/*
-        // enforce max byte and nr instances rules
-        if (latest.getValue() == NULL_RESOURCE_ID) {
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.CURR_NR_INSTANCES, "1");
-            String currByteSize = contentInstanceAttrs.getAttr(ResourceContainer.CURR_BYTE_SIZE);
-            dbResourceTree.updateAttr(dbTxn, containerId, ResourceContainer.CURR_BYTE_SIZE,currByteSize);
-        } else {
-
-        }
-        */
         // create the contentInstance
         internalCreateResource(dbTxn, onem2mRequest, onem2mResponse);
 
@@ -293,7 +216,6 @@ public class Onem2mDb implements TransactionChainListener {
     public Boolean FindResourceUsingURI(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String targetURI = onem2mRequest.getPrimitive((RequestPrimitive.TO));
-        assert(targetURI != null); // go find why we got here with a null TO attr, checked in rest/service layer
 
         targetURI = trimURI(targetURI); // get rid of leading and following "/"
         String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
@@ -315,6 +237,7 @@ public class Onem2mDb implements TransactionChainListener {
         if (hierarchy.length == 1) { // case 1
             onem2mRequest.setOnem2mResource(dbResourceTree.retrieveResourceById(cse.getResourceId()));
             onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
+            onem2mRequest.setResourceId(cse.getResourceId());
             return true;
         }
 
@@ -342,6 +265,7 @@ public class Onem2mDb implements TransactionChainListener {
         if (onem2mResource == null)
             return false; // resource not found
 
+        onem2mRequest.setResourceId(onem2mResource.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
         onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
         return true;
@@ -404,7 +328,7 @@ public class Onem2mDb implements TransactionChainListener {
         if (onem2mResource == null || limit < 1) {
             return null;
         }
-        List<String> resourceList = new ArrayList<String>(limit);
+        List<String> resourceList = new ArrayList<String>();
         resourceList.add(startResourceId);
         if (resourceList.size() >= limit) {
             return resourceList;
@@ -453,8 +377,7 @@ public class Onem2mDb implements TransactionChainListener {
         String thisResourceName = onem2mRequest.getOnem2mResource().getName();
 
         // build a 'to be Deleted list' by walking the hierarchy
-        List<String> resourceIdList = new ArrayList<String>();
-        dbResourceTree.hierarchicalFindResource(thisResourceId, resourceIdList);
+        List<String> resourceIdList = GetHierarchicalResourceList(thisResourceId, Onem2m.MAX_RESOURCES+1);
 
         // now in a transaction, smoke all the resources under this ResourceId
         DbTransaction dbTxn = new DbTransaction(bindingTransactionChain);
@@ -470,11 +393,13 @@ public class Onem2mDb implements TransactionChainListener {
         return dbTxn.commitTransaction();
     }
 
-    public void dumpDataStoreToLog() {
-        dbResourceTree.dumpRawTreeToLog();
-        dbResourceTree.dumpHierarchicalTreeToLog();
+    public void dumpResourceIdLog(String resourceId) {
+        dbResourceTree.dumpRawTreeToLog(resourceId);
     }
 
+    public void dumpHResourceIdToLog(String resourceId) {
+        dbResourceTree.dumpHierarchicalTreeToLog(resourceId);
+    }
     public void cleanupDataStore() {
         dbResourceTree.reInitializeDatastore(); // reinitialize the data store.
     }

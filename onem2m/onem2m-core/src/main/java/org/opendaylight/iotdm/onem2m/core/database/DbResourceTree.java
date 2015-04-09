@@ -242,21 +242,6 @@ public class DbResourceTree {
     }
 
     /**
-     * This routine walks the hierarchy and recursively finds the children and adds them to the list.
-     * @param resourceId
-     * @param resourceIdList
-     */
-    public void hierarchicalFindResource(String resourceId, List<String> resourceIdList) {
-
-        Onem2mResource onem2mResource = retrieveResourceById(resourceId);
-        List<Child> childList = onem2mResource.getChild();
-        for (Child child : childList) {
-            hierarchicalFindResource(child.getResourceId(), resourceIdList);
-        }
-        resourceIdList.add(resourceId);
-    }
-
-    /**
      * Cleanup the data store.
      */
     public void reInitializeDatastore() {
@@ -312,7 +297,20 @@ public class DbResourceTree {
     }
 
     // debug function to dump the resource tree to the karaf log
-    public void dumpRawTreeToLog() {
+    public void dumpRawTreeToLog(String resourceId) {
+
+        // if a resource id is supplied, dump the specific resource or fall thru and dump them all
+        if (resourceId != null) {
+            LOG.info("Dumping ResourceId: {}, Start", resourceId);
+
+            Onem2mResource onem2mResource = retrieveResourceById(resourceId);
+            if (onem2mResource != null) {
+                dumpResourceToLog(onem2mResource, false);
+            }
+            LOG.info("Dumping ResourceId: {}, End", resourceId);
+
+            return;
+        }
 
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
 
@@ -348,8 +346,15 @@ public class DbResourceTree {
     }
 
     // debug function to dump the resource tree in hierarchical format to the karaf log
-    public void dumpHierarchicalTreeToLog() {
+    public void dumpHierarchicalTreeToLog(String resourceId) {
 
+        // if a resource id is supplied, dump the specific resource or fall thru and dump them all
+        if (resourceId != null) {
+            LOG.info("Dumping ResourceId: {}, Start", resourceId);
+            dumpHierarchicalResourceToLog(resourceId);
+            LOG.info("Dumping ResourceId: {}, End", resourceId);
+            return;
+        }
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
 
         Onem2mCseList cseList = DbTransaction.retrieve(bindingTransactionChain, iidCseList, LogicalDatastoreType.OPERATIONAL);

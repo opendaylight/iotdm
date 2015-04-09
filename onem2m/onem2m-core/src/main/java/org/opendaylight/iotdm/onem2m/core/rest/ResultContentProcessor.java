@@ -10,12 +10,10 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import java.util.List;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.FilterCriteria;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -59,7 +57,6 @@ public class ResultContentProcessor {
         }
 
         onem2mResponse.setUseFilterCriteria(false);
-        parseJsonFilterCriteria(onem2mRequest, onem2mResponse);
 
         JSONObject jContent = new JSONObject();
         Onem2mResource onem2mResource = onem2mRequest.getOnem2mResource();
@@ -119,28 +116,6 @@ public class ResultContentProcessor {
         LOG.error("createXmlResultContent not implemented!");
     }
 
-    private static void parseJsonFilterCriteria(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        JSONObject jfc = null;
-
-        String fc = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA);
-        if (fc == null) {
-            return;
-        }
-
-        try {
-            jfc = new JSONObject(fc);
-        } catch (JSONException e) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                    "FILTER_CRITERIA(" + RequestPrimitive.FILTER_CRITERIA + ") parser error (" + e + ")");
-        }
-        onem2mResponse.setUseFilterCriteria(true);
-        onem2mResponse.setFilterCriteriaJSONObj(jfc);
-
-        FilterCriteria.parseRequestContent(onem2mRequest, onem2mResponse);
-
-    }
-
     /**
      * Find the hierarchical name for this resource and return it.
      * @param onem2mResource
@@ -150,9 +125,7 @@ public class ResultContentProcessor {
                                                                     ResponsePrimitive onem2mResponse,
                                                                     JSONObject j) {
         if (onem2mResponse.useFilterCriteria()) {
-            if (!FilterCriteria.resourcePassesFilterCriteria(onem2mResource.getResourceId())) {
-                return;
-            }
+            // TODO: filter resource based on criteria
         }
 
         String h = Onem2mDb.getInstance().GetHierarchicalNameForResource(onem2mResource.getResourceId());
@@ -170,9 +143,7 @@ public class ResultContentProcessor {
                                                            JSONObject j) {
 
         if (onem2mResponse.useFilterCriteria()) {
-            if (!FilterCriteria.resourcePassesFilterCriteria(onem2mResource.getResourceId())) {
-                return;
-            }
+            // TODO: filter resource based on criteria
         }
 
         j.put(ResourceContent.PARENT_ID, onem2mResource.getParentId());
@@ -188,9 +159,7 @@ public class ResultContentProcessor {
 
         for (Attr attr : onem2mResource.getAttr()) {
 
-            if (!FilterCriteria.attributePassesFilterCriteria(onem2mResource.getResourceId())) {
-                continue;
-            }
+            // TODO: only include attributes based on resource content
 
             // for this attribute, we need to see if it should be included or filtered
             j.put(attr.getName(), attr.getValue());
@@ -217,9 +186,7 @@ public class ResultContentProcessor {
 
             // only include the resources that pass filter criteria
             if (onem2mResponse.useFilterCriteria()) {
-                if (!FilterCriteria.resourcePassesFilterCriteria(resourceId)) {
-                    continue;
-                }
+                // TODO: filter resource based on criteria
             }
             JSONObject childRef = new JSONObject();
             if (onem2mResponse.useHierarchicalAddressing()) {
@@ -256,9 +223,7 @@ public class ResultContentProcessor {
 
             // only include the resources that pass filter criteria
             if (onem2mResponse.useFilterCriteria()) {
-                if (!FilterCriteria.resourcePassesFilterCriteria(resourceId)) {
-                    continue;
-                }
+                // TODO: filter resource based on criteria
             }
             JSONObject attrs = new JSONObject();
             onem2mResource = Onem2mDb.getInstance().GetResource(resourceId);

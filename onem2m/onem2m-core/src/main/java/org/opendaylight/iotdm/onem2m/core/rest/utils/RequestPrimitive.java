@@ -7,9 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
-import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
@@ -63,31 +61,58 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String NATIVEAPP_NAME = "nativeAppName"; // if Protocol is NATIVE_APP then set this parm
 
 
-    // hard code set of acceptable primitive attributes, short and long name
+    // hard code set of acceptable primitive attributes, short name
     public static final Set<String> primitiveAttributes = new HashSet<String>() {{
         // short; long
-        add(OPERATION); add("operation");
-        add(TO); add("to");
-        add(FROM); add("from");
-        add(REQUEST_IDENTIFIER); add("requestIdentifier");
-        add(RESOURCE_TYPE); add("resourceType");
-        add(NAME); add("name");
-        add(CONTENT); add("content");
-        add(ORIGINATING_TIMESTAMP); add("originatingTimestamp");
-        add(REQUEST_EXPIRATION_TIMESTAMP); add("requestExpirationTimestamp");
-        add(RESULT_EXPIRATION_TIMESTAMP); add("resultExpirationTimestamp");
-        add(OPERATION_EXECUTION_TIME); add("operationExecutionTime");
-        add(RESPONSE_TYPE); add("responseType");
-        add(RESULT_PERSISTENCE); add("resultPersistence");
-        add(RESULT_CONTENT); add("resultContent");
-        add(EVENT_CATEGORY); add("eventCategory");
-        add(DELIVERY_AGGREGATION); add("deliveryAggregation");
-        add(GROUP_REQUEST_IDENTIFIER); add("groupRequestIdentifier");
-        add(FILTER_CRITERIA); add("filterCriteria");
-        add(DISCOVERY_RESULT_TYPE); add("discoveryResultType");
+        add(OPERATION);
+        add(TO);
+        add(FROM);
+        add(REQUEST_IDENTIFIER);
+        add(RESOURCE_TYPE);
+        add(NAME);
+        add(CONTENT);
+        add(ORIGINATING_TIMESTAMP);
+        add(REQUEST_EXPIRATION_TIMESTAMP);
+        add(RESULT_EXPIRATION_TIMESTAMP);
+        add(OPERATION_EXECUTION_TIME);
+        add(RESPONSE_TYPE);
+        add(RESULT_PERSISTENCE);
+        add(RESULT_CONTENT);
+        add(EVENT_CATEGORY);
+        add(DELIVERY_AGGREGATION);
+        add(GROUP_REQUEST_IDENTIFIER);
+        add(FILTER_CRITERIA);
+        add(DISCOVERY_RESULT_TYPE);
         add(PROTOCOL);
         add(CONTENT_FORMAT);
         add(NATIVEAPP_NAME);
+    }};
+
+    // hard code set of long to short name
+    public static final Map<String,String> longToShortAttributes = new HashMap<String,String>() {{
+        // short; long
+        put("operation", OPERATION);
+        put("to", TO);
+        put("from", FROM);
+        put("requestIdentifier", REQUEST_IDENTIFIER);
+        put("resourceType", RESOURCE_TYPE);
+        put("name", NAME);
+        put("content", CONTENT);
+        put("originatingTimestamp", ORIGINATING_TIMESTAMP);
+        put("requestExpirationTimestamp", REQUEST_EXPIRATION_TIMESTAMP);
+        put("resultExpirationTimestamp", RESULT_EXPIRATION_TIMESTAMP);
+        put("operationExecutionTime", OPERATION_EXECUTION_TIME);
+        put("responseType", RESPONSE_TYPE);
+        put("resultPersistence", RESULT_PERSISTENCE);
+        put("resultContent", RESULT_CONTENT);
+        put("eventCategory", EVENT_CATEGORY);
+        put("deliveryAggregation", DELIVERY_AGGREGATION);
+        put("groupRequestIdentifier", GROUP_REQUEST_IDENTIFIER);
+        put("filterCriteria", FILTER_CRITERIA);
+        put("discoveryResultType", DISCOVERY_RESULT_TYPE);
+        put("protocol", PROTOCOL);
+        put("contentFormat", CONTENT_FORMAT);
+        put("nativeAppName", NATIVEAPP_NAME);
     }};
 
     /**

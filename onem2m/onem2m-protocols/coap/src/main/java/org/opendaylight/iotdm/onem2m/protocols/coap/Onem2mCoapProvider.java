@@ -91,7 +91,7 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
 
             clientBuilder.setTo(options.getURIPathString()); // To/TargetURI
 
-            coapSetOptions(options, clientBuilder); // pull options out of coap header fields
+            processOptions(options, clientBuilder); // pull options out of coap header fields
 
             // according to the spec, the uri query string can contain in short form, the
             // resourceType, responseType, result persistence,  Delivery Aggregation, Result Content,
@@ -160,7 +160,7 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
          * @param clientBuilder
          * @return
          */
-        private void coapSetOptions(OptionSet options, Onem2mRequestPrimitiveClientBuilder clientBuilder) {
+        private void processOptions(OptionSet options, Onem2mRequestPrimitiveClientBuilder clientBuilder) {
             for (Option opt : options.asSortedList()) {
 
                 switch (opt.getNumber()) {
@@ -197,7 +197,6 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
 
         private CoAP.ResponseCode mapCoreResponseToCoapResponse(String rscString) {
 
-            //httpResponse.setHeader(Onem2m.CoapOption.ONEM2M_RSC, rscString);
             switch (rscString) {
                 case Onem2m.ResponseStatusCode.OK:
                     return CoAP.ResponseCode.CONTENT;

@@ -19,6 +19,7 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderCo
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
@@ -133,14 +134,41 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
         Onem2mDb.getInstance().cleanupDataStore();
         initializePerfCse();
-        Onem2mDb.getInstance().dumpDataStoreToLog();
+        Onem2mDb.getInstance().dumpResourceIdLog(null);
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }
 
     @Override
-    public Future<RpcResult<java.lang.Void>> onem2mDumpResourceTree() {
+    public Future<RpcResult<java.lang.Void>> onem2mDumpResourceTree(Onem2mDumpResourceTreeInput input) {
         LOG.info("RPC: onem2mDumpResourceTree dumping ...");
-        Onem2mDb.getInstance().dumpDataStoreToLog();
+
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+
+        String resourceId;
+        if (input == null || input.getResourceUri() == null || input.getResourceUri().trim().contentEquals("")) {
+            resourceId = null;
+        } else {
+            String resourceUri = input.getResourceUri().trim();
+            onem2mRequest.setPrimitive(RequestPrimitive.TO, resourceUri);
+            if (!Onem2mDb.getInstance().FindResourceUsingURI(onem2mRequest, onem2mResponse)) {
+                LOG.error("Cannot find resourceUri: {}", resourceUri);
+                return Futures.immediateFuture(RpcResultBuilder.<Void>failed().build());
+            }
+            resourceId = onem2mRequest.getResourceId();
+            LOG.info("Dumping resourceUri: {}, resourceId: {}", resourceUri, resourceId);
+        }
+        switch (input.getDumpMethod()) {
+            case RAW:
+                Onem2mDb.getInstance().dumpResourceIdLog(resourceId);
+                break;
+            case HIERARCHICAL:
+                Onem2mDb.getInstance().dumpHResourceIdToLog(resourceId);
+                break;
+            default:
+                LOG.error("Unknown dump method: {}", input.getDumpMethod());
+                break;
+        }
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }
 }

@@ -42,27 +42,33 @@ public class BasicSanityRpc {
     public static final String CONTAINER_ONTOLOGY_REF = "http://ontology/container";
     public static final String CONTENT_INSTANCE_NAME = "ContentInstanceName";
     public static final String CONTENT_INSTANCE_CONTENT = "SomeCoolSensorMeasurement";
-    public static final String CONTENT_INSTANCE_CONTENT_INFO = "1";
+    public static final String CONTENT_INSTANCE_CONTENT_INFO = "ContentInfo";
     public static final String CONTENT_INSTANCE_ONTOLOGY_REF = "http://ontology/content/instance";
 
     /**
-     * Run a performance test that create 'numResources' and records how long it took, then it will retrieve
-     * each of the created resources, then update each of the resources, then finally delete each of the originally
-     * created resources.  This test creates resources under a special cseBase that has been specially designed
-     * to hold resoources for this performance test.  The other cseBase's in the system are unaffected.
-     *
-     * I was thinking that when one deploys this feature, they might want to have some notion of how well it will
-     * perform in their environment.  Conceivably, an administration/diagnostic function could be implemented that
-     * would invoke the rpc with some number of resources, and the operator could know what performance to expect.
+     * Run various test suites
      * @return
      */
     public boolean runTestSuite() {
 
+        if (!runBasicCrud() || !runContentInstanceLatestOldestTest()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Run a basic CRUD for create AE, container, contentInstance.
+     * @return
+     */
+    public boolean runBasicCrud() {
+
         List<String> resourceList = new ArrayList<String>();
         List<String> toList = new ArrayList<String>();
         if (createTest(resourceList, toList) &&
-            retrieveTest(resourceList, toList) &&
-            deleteTest(resourceList, toList)) {
+                retrieveTest(resourceList, toList) &&
+                deleteTest(resourceList, toList)) {
             LOG.info("runTestSuite: all tests finished");
         } else {
             LOG.error("runTestSuite: tests failed early");
@@ -284,7 +290,7 @@ public class BasicSanityRpc {
 
         boolean success = true;
 
-        // delete in order from leaf to root, otherwise deleting the AE will delete everything
+        // delete in order from leaf to root, otherwise deleting the AE will delete all below it
         for (int i = resourceList.size() - 1; i >= 0; i--) {
             String resourceId = resourceList.get(i);
             String resourceName = resourceNameList.get(i);
@@ -315,6 +321,81 @@ public class BasicSanityRpc {
                 break;
             }
         }
+        return success;
+    }
+
+    /**
+     * Run a basic CRUD for create AE, container, contentInstance.
+     * @return
+     */
+    public boolean runContentInstanceLatestOldestTest() {
+
+
+        Onem2mRequestPrimitiveClient onem2mRequest;
+        boolean success = true;
+
+        String toURI = "/" + Onem2m.SYS_PERF_TEST_CSE;
+        String containerString = new ResourceContainerBuilder()
+                .setCreator(CONTAINER_CREATOR)
+                .setMaxNrInstances(CONTAINER_MAX_NR_INSTANCES)
+                .setOntologyRef(CONTAINER_ONTOLOGY_REF)
+                .setMaxByteSize("100")
+                .setMaxInstanceAge("1")
+                .build();
+
+        onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+                .setProtocol(Onem2m.Protocol.NATIVEAPP)
+                .setContentFormat(Onem2m.ContentFormat.JSON)
+                .setTo(toURI)
+                .setFrom("")
+                .setRequestIdentifier("RQI_1234")
+                .setResourceType(Onem2m.ResourceType.CONTAINER)
+                .setOperationCreate()
+                .setContent(containerString)
+                .setName(CONTAINER_NAME)
+                .build();
+
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+
+        toURI += "/" + CONTAINER_NAME;
+
+        for (Integer i = 0; i < 4; i++) {
+
+            String contentString = new ResourceContentInstanceBuilder()
+                    .setContent(CONTENT_INSTANCE_CONTENT + i.toString())
+                    .setContentInfo(CONTENT_INSTANCE_CONTENT_INFO + i.toString())
+                    .setOntologyRef(CONTENT_INSTANCE_ONTOLOGY_REF + i.toString())
+                    .build();
+
+            onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+                    .setProtocol(Onem2m.Protocol.NATIVEAPP)
+                    .setContentFormat(Onem2m.ContentFormat.JSON)
+                    .setTo(toURI)
+                    .setFrom("")
+                    .setRequestIdentifier("RQI_1234")
+                    .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
+                    .setOperationCreate()
+                    .setContent(contentString)
+                    .build();
+
+            onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+
+            String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+            try {
+                JSONObject j = new JSONObject(responseContent);
+                String resourceId = j.getString(ResourceContent.RESOURCE_ID);
+                if (resourceId == null) {
+                    LOG.error("Create cannot parse resourceId for cin create");
+                    success = false;
+                }
+            } catch (JSONException e) {
+                LOG.error("Create parse responseContent error: {}", e);
+                success = false;
+            }
+        }
+
+        // get the content instance resources by using ...//latest nad /oldest
+        
         return success;
     }
 }

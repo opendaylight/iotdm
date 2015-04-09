@@ -161,9 +161,36 @@ module onem2m {
 
     /*
     * Debug method to dump the resource tree to the karaf log. It is dumped in two ways, 1) a list of all the
-    * resources in the system (no specific order), 2) dumped hierarchically from the cse root.
+    * resources in the system (no specific order), 2) dumped hierarchically from the cse root.  An optional
+    * resourceId can be provided indicating which resourceId to start dumping from.
     */
     rpc onem2m-dump-resource-tree {
         description "Dump the onem2m data store to the karaf log";
+
+        input {
+            leaf dump-method {
+                mandatory true;
+                type enumeration {
+                    enum "RAW" {
+                        value 1;
+                        description
+                          "Raw dump of cse-list and resource tree";
+                    }
+                    enum "HIERARCHICAL" {
+                        value 2;
+                        description
+                          "Enable logging";
+                    }
+                }
+                description
+                    "Type of the test to benchmark";
+            }
+            leaf resourceUri {
+                type string;
+                default "";
+                description
+                  "If RAW, dump only this resource, if HIERARCHICAL, dump from this root, empty for ALL";
+              }
+        }
     }
 }

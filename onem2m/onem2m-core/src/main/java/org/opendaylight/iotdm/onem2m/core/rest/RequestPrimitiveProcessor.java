@@ -12,6 +12,7 @@ import java.util.List;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
 import org.opendaylight.iotdm.onem2m.core.rest.ResourceContentProcessor;
@@ -54,10 +55,28 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     public boolean validatePrimitiveAttributes(ResponsePrimitive onem2mResponse)  {
         for (Onem2mPrimitive onem2mResource : this.onem2mPrimitivesList) {
             if (!RequestPrimitive.primitiveAttributes.contains(onem2mResource.getName())) {
+                String shortName = RequestPrimitive.longToShortAttributes.get(onem2mResource.getName());
+                if (shortName != null) {
+                    // replace the primitive with the short name
+                    // for now fall thru and error
+                }
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "REQUEST_PRIMITIVES(" + onem2mResource.getName() + ") not valid");
                 return false;
             }
+        }
+        return true;
+    }
+
+    /**
+     * Ensure the name is OK
+     * @param name
+     * @return
+     */
+    public boolean validateResourceName(String name)  {
+        if (name.contentEquals("latest") || name.contentEquals("oldest") ||
+                name.contains("/")) {
+            return false;
         }
         return true;
     }
@@ -106,11 +125,13 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
         // TODO: RFC 3986 ... reserved characters in a URI
         if (getPrimitive(RequestPrimitive.TO) == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "TO(" + RequestPrimitive.TO + ") not specified");
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "TO(" + RequestPrimitive.TO + ") not specified");
             return;
         }
         if (getPrimitive(RequestPrimitive.FROM) == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "FROM(" + RequestPrimitive.FROM + ") not specified");
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "FROM(" + RequestPrimitive.FROM + ") not specified");
             return;
         }
 
@@ -143,7 +164,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // only support blocking requests at this time, if not provided we default to blocking anyway
         String rt = getPrimitive(RequestPrimitive.RESPONSE_TYPE);
         if (rt != null && !rt.contentEquals(Onem2m.ResponseType.BLOCKING_REQUEST)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED, "Invalid response type: " + rt);
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED,
+                    "Invalid response type: " + rt);
             return;
         }
 
@@ -266,15 +288,14 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
         // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
 
+        // if the a name is provided, ensure it is valid and unique at this hierarchical level
         String resourceName = this.getPrimitive((RequestPrimitive.NAME));
         if (resourceName != null) {
-            //NOTE: "/" is invalid char, "latest", and "oldest" are BAD too,
-            // can we use Patterns to validate input
-            //if (Onem2m.validateResourceName(resourceName) == false) {
-            //    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
-            //            "Resource name invalid: " + resourceName);
-            //    return;
-            //}
+            if (validateResourceName(resourceName) == false) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
+                        "Resource name invalid: " + resourceName);
+                return;
+            }
             // using the parent, see if this new resource name already exists under this parent resource
             if (Onem2mDb.getInstance().FindResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
                 // TS0004: 7.2.3.2
@@ -297,7 +318,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // TODO: see TS0004 6.8
         // if the create was successful, ie no error has already happened, set CREATED for status code here
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CREATED.toString());
+            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CREATED);
         }
     }
 
@@ -356,7 +377,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back OK
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.OK.toString());
+            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.OK);
         }
     }
 
@@ -423,7 +444,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back OK
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.DELETED.toString());
+            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.DELETED);
         }
     }
 
@@ -479,7 +500,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back CHANGED
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CHANGED.toString());
+            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CHANGED);
         }
     }
 
