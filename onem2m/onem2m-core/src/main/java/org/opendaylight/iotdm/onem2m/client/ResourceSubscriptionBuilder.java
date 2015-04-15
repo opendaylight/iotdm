@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.json.JSONArray;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,39 +18,14 @@ public class ResourceSubscriptionBuilder extends ResourceContentBuilder {
     /**
      * The onem2m-protocols use this to create a new RequestPrimitive class
      */
+
+    private JSONArray nUriArray;
     public ResourceSubscriptionBuilder() {
         super();
-    }
-    public ResourceSubscriptionBuilder setExpirationCounter(String value) {
-        jsonContent.put(ResourceSubscription.EXPIRATION_COUNTER, value);
-        return this;
+        nUriArray = new JSONArray();
     }
     public ResourceSubscriptionBuilder setNotificationUri(String value) {
-        jsonContent.put(ResourceSubscription.NOTIFICATION_URI, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setBatchNotify(String value) {
-        jsonContent.put(ResourceSubscription.BATCH_NOTIFY, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setRateLimit(String value) {
-        jsonContent.put(ResourceSubscription.RATE_LIMIT, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setPreSubscriptionNotify(String value) {
-        jsonContent.put(ResourceSubscription.PRE_SUBSCRIPTION_NOTIFY, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setPendingNotification(String value) {
-        jsonContent.put(ResourceSubscription.PENDING_NOTIFICATION, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setNotificationStoragePolicy(String value) {
-        jsonContent.put(ResourceSubscription.NOTIFICATION_STORAGE_POLICY, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setLatestNotify(String value) {
-        jsonContent.put(ResourceSubscription.LATEST_NOTIFY, value);
+        nUriArray.put(value);
         return this;
     }
     public ResourceSubscriptionBuilder setNotificationContentType(String value) {
@@ -60,12 +36,8 @@ public class ResourceSubscriptionBuilder extends ResourceContentBuilder {
         jsonContent.put(ResourceSubscription.NOTIFICATION_EVENT_CAT, value);
         return this;
     }
-    public ResourceSubscriptionBuilder setCreator(String value) {
-        jsonContent.put(ResourceSubscription.CREATOR, value);
-        return this;
-    }
-    public ResourceSubscriptionBuilder setSubscriberUri(String value) {
-        jsonContent.put(ResourceSubscription.SUBSCRIBTER_URI, value);
-        return this;
+    public String build() {
+        jsonContent.put(ResourceSubscription.NOTIFICATION_URI, nUriArray);
+        return super.build();
     }
 }

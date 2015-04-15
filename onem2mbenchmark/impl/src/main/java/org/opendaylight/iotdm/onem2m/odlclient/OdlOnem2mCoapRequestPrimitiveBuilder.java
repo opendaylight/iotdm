@@ -127,11 +127,46 @@ public class OdlOnem2mCoapRequestPrimitiveBuilder {
         onem2mRequest.optionsSet.addOption(new Option(Onem2m.CoapOption.ONEM2M_GID, value));
         return this;
     }
-    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteria(String value) {
+    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteriaCreatedBefore(String value) {
         if (!onem2mRequest.uriQueryString.contentEquals("")) {
             onem2mRequest.uriQueryString += "&";
         }
-        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA + "=" + value;
+        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE + "=" + value;
+        return this;
+    }
+    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteriaCreatedAfter(String value) {
+        if (!onem2mRequest.uriQueryString.contentEquals("")) {
+            onem2mRequest.uriQueryString += "&";
+        }
+        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER + "=" + value;
+        return this;
+    }
+    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteriaResourceType(String value) {
+        if (!onem2mRequest.uriQueryString.contentEquals("")) {
+            onem2mRequest.uriQueryString += "&";
+        }
+        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE + "=" + value;
+        return this;
+    }
+    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteriaLabel(String value) {
+        if (!onem2mRequest.uriQueryString.contentEquals("")) {
+            onem2mRequest.uriQueryString += "&";
+        }
+        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA_LABELS + "=" + value;
+        return this;
+    }
+    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteriaFilterUsage(String value) {
+        if (!onem2mRequest.uriQueryString.contentEquals("")) {
+            onem2mRequest.uriQueryString += "&";
+        }
+        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE + "=" + value;
+        return this;
+    }
+    public OdlOnem2mCoapRequestPrimitiveBuilder setFilterCriteriaLimit(String value) {
+        if (!onem2mRequest.uriQueryString.contentEquals("")) {
+            onem2mRequest.uriQueryString += "&";
+        }
+        onem2mRequest.uriQueryString += RequestPrimitive.FILTER_CRITERIA_LIMIT + "=" + value;
         return this;
     }
     public OdlOnem2mCoapRequestPrimitiveBuilder setDiscoveryResultType(String value) {

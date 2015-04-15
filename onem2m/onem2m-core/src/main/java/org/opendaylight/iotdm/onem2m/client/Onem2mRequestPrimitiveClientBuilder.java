@@ -108,11 +108,6 @@ public class Onem2mRequestPrimitiveClientBuilder {
         onem2mRequest.setPrimitive(RequestPrimitive.GROUP_REQUEST_IDENTIFIER, value);
         return this;
     }
-
-    public Onem2mRequestPrimitiveClientBuilder setFilterCriteria(String value) {
-        onem2mRequest.setPrimitive(RequestPrimitive.FILTER_CRITERIA, value);
-        return this;
-    }
     public Onem2mRequestPrimitiveClientBuilder setDiscoveryResultType(String value) {
         onem2mRequest.setPrimitive(RequestPrimitive.DISCOVERY_RESULT_TYPE, value);
         return this;
@@ -151,7 +146,11 @@ public class Onem2mRequestPrimitiveClientBuilder {
                     key = param[0];
                     if (param.length > 1) {
                         value = param[1];
-                        onem2mRequest.setPrimitive(key, value);
+                        if (key.contentEquals(RequestPrimitive.FILTER_CRITERIA_LABELS)) {
+                            onem2mRequest.setPrimitiveMany(key, value);
+                        } else {
+                            onem2mRequest.setPrimitive(key, value);
+                        }
                         if (key.equalsIgnoreCase(RequestPrimitive.RESOURCE_TYPE)) { resourceTypePresent = true; }
                     }
                 }

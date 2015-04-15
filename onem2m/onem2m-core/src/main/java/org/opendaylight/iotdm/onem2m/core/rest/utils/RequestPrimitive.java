@@ -24,15 +24,7 @@ public class RequestPrimitive extends BasePrimitive {
      * This is the onem2m request primitive.  Parameters can be filled in by restconf, or they will be filled in by the
      * onem2m-protocols as each specific protocol is responsible for binding its internal protocol fields to this
      * protocol independent onenm2m format.  This file implements section 7.1 of TS0004.
-     * TODO: need to go through the spec and verify only support local CSE, blocking requests, ...
-     * Need to ensure that I do nothing to prevent forwarding to other CSE's architecturally/structurally
      */
-    public RequestPrimitive() {
-        super();
-    }
-    public RequestPrimitive(List<Onem2mPrimitive> onem2mPrimitivesList) {
-        super(onem2mPrimitivesList);
-    }
 
     // taken from CDT-requestPrimitive-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     public static final String OPERATION = "op";
@@ -40,7 +32,7 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String FROM = "fr";
     public static final String REQUEST_IDENTIFIER = "rqi";
     public static final String RESOURCE_TYPE = "ty";
-    public static final String NAME = "nm"; // TODO: how is this used ... primitive
+    public static final String NAME = "nm";
     public static final String CONTENT = "pc";
     public static final String ORIGINATING_TIMESTAMP = "ot";
     public static final String REQUEST_EXPIRATION_TIMESTAMP = "rqet";
@@ -53,6 +45,12 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String DELIVERY_AGGREGATION = "da";
     public static final String GROUP_REQUEST_IDENTIFIER = "gid";
     public static final String FILTER_CRITERIA = "fc";
+    public static final String FILTER_CRITERIA_CREATED_BEFORE = "crb";
+    public static final String FILTER_CRITERIA_CREATED_AFTER = "cra";
+    public static final String FILTER_CRITERIA_LABELS = "lbl";
+    public static final String FILTER_CRITERIA_RESOURCE_TYPE = "rty";
+    public static final String FILTER_CRITERIA_FILTER_USAGE = "fu";
+    public static final String FILTER_CRITERIA_LIMIT = "lim";
     public static final String DISCOVERY_RESULT_TYPE = "drt";
 
     // helper attributes
@@ -63,7 +61,6 @@ public class RequestPrimitive extends BasePrimitive {
 
     // hard code set of acceptable primitive attributes, short name
     public static final Set<String> primitiveAttributes = new HashSet<String>() {{
-        // short; long
         add(OPERATION);
         add(TO);
         add(FROM);
@@ -82,6 +79,12 @@ public class RequestPrimitive extends BasePrimitive {
         add(DELIVERY_AGGREGATION);
         add(GROUP_REQUEST_IDENTIFIER);
         add(FILTER_CRITERIA);
+        add(FILTER_CRITERIA_CREATED_BEFORE);
+        add(FILTER_CRITERIA_CREATED_AFTER);
+        add(FILTER_CRITERIA_LABELS);
+        add(FILTER_CRITERIA_RESOURCE_TYPE);
+        add(FILTER_CRITERIA_FILTER_USAGE);
+        add(FILTER_CRITERIA_LIMIT);
         add(DISCOVERY_RESULT_TYPE);
         add(PROTOCOL);
         add(CONTENT_FORMAT);
@@ -109,12 +112,33 @@ public class RequestPrimitive extends BasePrimitive {
         put("deliveryAggregation", DELIVERY_AGGREGATION);
         put("groupRequestIdentifier", GROUP_REQUEST_IDENTIFIER);
         put("filterCriteria", FILTER_CRITERIA);
+        put("createdBefore", FILTER_CRITERIA_CREATED_BEFORE);
+        put("createdAfter", FILTER_CRITERIA_CREATED_AFTER);
+        put("label", FILTER_CRITERIA_LABELS);
+        put("filterUsage", FILTER_CRITERIA_FILTER_USAGE);
+        put("limit", FILTER_CRITERIA_LIMIT);
         put("discoveryResultType", DISCOVERY_RESULT_TYPE);
         put("protocol", PROTOCOL);
         put("contentFormat", CONTENT_FORMAT);
         put("nativeAppName", NATIVEAPP_NAME);
     }};
 
+    public RequestPrimitive() {
+        super();
+    }
+
+    public void setPrimitivesList(List<Onem2mPrimitive> onem2mPrimitivesList) {
+        for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
+            switch (onem2mPrimitive.getName()) {
+                case FILTER_CRITERIA_LABELS:
+                    setPrimitiveMany(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
+                    break;
+                default:
+                    setPrimitive(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
+                    break;
+            }
+        }
+    }
     /**
      * The following section is used to hold attributes for the data store.  In the case of create, when the parent
      * resource is read from the database, it is stored in the 'Onem2mResource onem2mResource' variable.

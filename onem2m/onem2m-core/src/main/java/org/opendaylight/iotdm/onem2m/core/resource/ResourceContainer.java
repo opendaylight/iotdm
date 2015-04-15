@@ -9,13 +9,18 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +39,7 @@ public class ResourceContainer {
     public static final String MAX_INSTANCE_AGE = "mia";
     public static final String CURR_NR_INSTANCES = "cni";
     public static final String CURR_BYTE_SIZE = "cbs";
-    public static final String LOCATION_ID = "li";
+    //public static final String LOCATION_ID = "li";
     public static final String ONTOLOGY_REF = "or";
     public static final String LATEST = "la"; // <-- container: head/tail, ci: next/prev
     public static final String OLDEST = "oldest"; // TODO: no short name defined
@@ -49,7 +54,6 @@ public class ResourceContainer {
         add(MAX_NR_INSTANCES); add("maxNrOfInstances");
         add(MAX_BYTE_SIZE); add("maxByteSize");
         add(MAX_INSTANCE_AGE); add("maxInstanceAge");
-        add(LOCATION_ID); add("locationID");
         add(ONTOLOGY_REF); add("ontologyRef");
     }};
 
@@ -70,10 +74,81 @@ public class ResourceContainer {
         add(MAX_INSTANCE_AGE); add("maxInstanceAge");
         add(CURR_NR_INSTANCES); add("currNrOfInstances");
         add(CURR_BYTE_SIZE); add("currByteSize");
-        add(LOCATION_ID); add("locationID");
         add(ONTOLOGY_REF); add("ontologyRef");
     }
     };
+
+    /**
+     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
+     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
+     * Maybe the next iteration of code, I'll create json files for each resource.
+     * @param onem2mRequest
+     * @param onem2mResponse
+     */
+    private static void processJsonCreateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        //Set<String> validAttributes = onem2mRequest.getValidAttributes();
+        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+
+            /*
+            if (!validAttributes.contains(key)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
+                return;
+            }
+            */
+
+            Object o = resourceContent.getJsonContent().get(key);
+
+            switch (key) {
+                case MAX_NR_INSTANCES:
+                case MAX_BYTE_SIZE:
+                case MAX_INSTANCE_AGE:
+                    if (!(o instanceof Integer)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
+
+                case ONTOLOGY_REF:
+                case CREATOR:
+                case ResourceContent.CREATION_TIME:
+                case ResourceContent.EXPIRATION_TIME:
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
+                case ResourceContent.LABELS:
+                    if (!(o instanceof JSONArray)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                        return;
+                    }
+                    JSONArray array = (JSONArray) o;
+                    for (int i = 0; i < array.length(); i++) {
+                        if (!(array.get(i) instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                            return;                        }
+                        //resourceContent.setDbAttr(key, array.get(i));
+                    }
+                    break;
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
+                    return;
+            }
+        }
+    }
 
     /**
      * When create a container, add two special names as children, one is latest, the other is oldest, and
@@ -82,12 +157,8 @@ public class ResourceContainer {
      * prev, next with values "".  These 4 special attrs will be head, tail, prev, next for a doubly LL.
      */
 
-    /**
-     * The list<Attr> and List<AttrSet> must be filled in with the ContentPrimitive attributes
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+    public static void processCreateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String tempStr;
         Integer tempInt;
@@ -158,5 +229,57 @@ public class ResourceContainer {
         }
     }
 
-    // handleUpdate .... update the stateTag, used in conjunction with lmt and competing mods avoid races
+    /**
+     * Parse the CONTENT resource representation.
+     * @param onem2mRequest
+     * @param onem2mResponse
+     */
+    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        resourceContent.parse(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
+
+        if (resourceContent.isJson()) {
+            processJsonCreateContent(onem2mRequest, onem2mResponse);
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+                return;
+        }
+        resourceContent.processCommonCreateAttributes(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+                    return;
+        ResourceContainer.processCreateAttributes(onem2mRequest, onem2mResponse);
+
+    }
+
+    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
+
+        for (Attr attr : onem2mResource.getAttr()) {
+            switch (attr.getName()) {
+                case CREATOR:
+                case ONTOLOGY_REF:
+                    j.put(attr.getName(), attr.getValue());
+                    break;
+                case MAX_NR_INSTANCES:
+                case MAX_BYTE_SIZE:
+                case MAX_INSTANCE_AGE:
+                case CURR_NR_INSTANCES:
+                case CURR_BYTE_SIZE:
+                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+                    break;
+                default:
+                    ResourceContent.produceJsonForCommonAttributes(attr, j);
+                    break;
+            }
+        }
+        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+            switch (attrSet.getName()) {
+                default:
+                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+                    break;
+            }
+        }
+    }
 }

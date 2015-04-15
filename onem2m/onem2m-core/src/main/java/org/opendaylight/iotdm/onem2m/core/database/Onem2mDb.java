@@ -18,6 +18,7 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -79,11 +80,12 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     private String generateResourceId() {
-        Integer intResourceId;
+        String b36ResourceId;
         do {
-            intResourceId = ThreadLocalRandom.current().nextInt(1, 1000000000); // 9 digit random id
-        } while (dbResourceTree.retrieveResourceById(intResourceId.toString()) != null); // make sure it is not used already
-        return intResourceId.toString();
+            int r = ThreadLocalRandom.current().nextInt(1, 1000000000); // 9 digit random id
+            b36ResourceId = Integer.toString(r, 36); // gen at most 6 char string with 0-9,a-z as "digits"
+        } while (dbResourceTree.retrieveResourceById(b36ResourceId) != null); // make sure it is not used already
+        return b36ResourceId;
     }
 
     public boolean FindCseByName(String name) {
@@ -207,6 +209,12 @@ public class Onem2mDb implements TransactionChainListener {
         return dbTxn.commitTransaction();
     }
 
+    /**
+     *
+     * @param resourceId
+     * @param resourceName
+     * @return
+     */
     public Boolean FindResourceUsingIdAndName(String resourceId, String resourceName) {
 
         Onem2mResource onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, resourceName);
@@ -358,8 +366,22 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     /**
+     * Find teh resource type in the list of attrs
+     * @param onem2mResource
+     * @return
+     */
+    public String getResourceType(Onem2mResource onem2mResource) {
+        for (Attr attr : onem2mResource.getAttr()) {
+            if (attr.getName().contentEquals(ResourceContent.RESOURCE_TYPE)) {
+                return attr.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Deletes are idempotent.  This routine is called after the requestProcessor has grabbed all info it needed
-     * for the delete operation so now it is a bulk recursive delete.
+     * for the delete operation so now it is a bulk delete.
      * @param onem2mRequest
      * @param onem2mResponse
      * @return

@@ -25,28 +25,16 @@ public class ResourceContainerBuilder extends ResourceContentBuilder {
         jsonContent.put(ResourceContainer.CREATOR, value);
         return this;
     }
-    public ResourceContainerBuilder setMaxNrInstances(String value) {
+    public ResourceContainerBuilder setMaxNrInstances(Integer value) {
         jsonContent.put(ResourceContainer.MAX_NR_INSTANCES, value);
         return this;
     }
-    public ResourceContainerBuilder setMaxByteSize(String value) {
+    public ResourceContainerBuilder setMaxByteSize(Integer value) {
         jsonContent.put(ResourceContainer.MAX_BYTE_SIZE, value);
         return this;
     }
-    public ResourceContainerBuilder setMaxInstanceAge(String value) {
+    public ResourceContainerBuilder setMaxInstanceAge(Integer value) {
         jsonContent.put(ResourceContainer.MAX_INSTANCE_AGE, value);
-        return this;
-    }
-    public ResourceContainerBuilder setCurrNrInstances(String value) {
-        jsonContent.put(ResourceContainer.CURR_NR_INSTANCES, value);
-        return this;
-    }
-    public ResourceContainerBuilder setCurrByteSize(String value) {
-        jsonContent.put(ResourceContainer.CURR_BYTE_SIZE, value);
-        return this;
-    }
-    public ResourceContainerBuilder setLocationId(String value) {
-        jsonContent.put(ResourceContainer.LOCATION_ID, value);
         return this;
     }
     public ResourceContainerBuilder setOntologyRef(String value) {

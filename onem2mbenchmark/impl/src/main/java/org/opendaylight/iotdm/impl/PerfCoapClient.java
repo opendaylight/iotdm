@@ -85,10 +85,10 @@ public class PerfCoapClient {
 
         String containerString = new ResourceContainerBuilder()
                 .setCreator("Creator")
-                .setMaxNrInstances("5")
+                .setMaxNrInstances(5)
                 .setOntologyRef("http://ontology/ref")
-                .setMaxByteSize("100")
-                .setMaxInstanceAge("1")
+                .setMaxByteSize(100)
+                .setMaxInstanceAge(1)
                 .build();
 
         startTime = System.nanoTime();

@@ -27,7 +27,11 @@ public class Onem2m {
     }
     public static final String CSE_DEFAULT_NAME = "InCSE1";
     public static final String SYS_PERF_TEST_CSE = "SYS_PERF_TEST_CSE";
-    public static final int MAX_RESOURCES = 999999999;
+
+    public static final int MAX_RESOURCES = 1000000;
+    public static final int MAX_TREE_WIDTH = 10000;
+    public static final int MAX_TREE_LEVEL = 20;
+    public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
 
     public class Operation {
         public static final String CREATE = "1";
@@ -84,7 +88,7 @@ public class Onem2m {
         public static final String FILTER_USAGE = "fu";
     }
 
-    // TODO: where did this list come from, not specfied in XSD but specified in TS0001 8.1.2
+    // TODO: where did this list come from, not specified in XSD but specified in TS0001 8.1.2
     public class ResultContent {
         public static final String NOTHING = "0";
         public static final String ATTRIBUTES = "1";
@@ -93,7 +97,7 @@ public class Onem2m {
         public static final String ATTRIBUTES_CHILD_RESOURCES = "4";
         public static final String ATTRIBUTES_CHILD_RESOURCE_REFS = "5";
         public static final String CHILD_RESOURCE_REFS = "6";
-        public static final String ORIGINAL_RESOURCE = "7";
+        //public static final String ORIGINAL_RESOURCE = "7";
     }
 
     // TODO: CDT-enumerationTypes
@@ -157,7 +161,8 @@ public class Onem2m {
 
         try {
             RpcResult<Onem2mRequestPrimitiveOutput> rpcResult = onem2mService.onem2mRequestPrimitive(input).get();
-            onem2mResponse = new ResponsePrimitive(rpcResult.getResult().getOnem2mPrimitive());
+            onem2mResponse = new ResponsePrimitive();
+            onem2mResponse.setPrimitivesList(rpcResult.getResult().getOnem2mPrimitive());
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");

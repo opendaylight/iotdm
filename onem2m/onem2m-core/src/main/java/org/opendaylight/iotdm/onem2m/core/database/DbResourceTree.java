@@ -107,8 +107,6 @@ public class DbResourceTree {
                 .setParentId(parentResourceId) // parent resource
                 .setChild(Collections.<Child>emptyList()) // new resource has NO children
                 .setAttr(onem2mRequest.getResourceContent().getAttrList())
-                //.setAttr(Collections.<Attr>emptyList())
-                //.setAttr(tempAttrList)
                 //.setAttrSet(onem2mRequest.getDbAttrSets().getAttrSetsList())
                 .setAttrSet(Collections.<AttrSet>emptyList())
                 .build();

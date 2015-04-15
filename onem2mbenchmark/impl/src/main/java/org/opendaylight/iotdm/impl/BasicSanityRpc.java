@@ -29,6 +29,7 @@ public class BasicSanityRpc {
         this.onem2mService = onem2mService;
     }
 
+    // these are constants for test purposes
     public static final String AE_ID = "AE-ID";
     public static final String AE_APP_ID = "APP_ID";
     public static final String AE_ONTOLOGY_REF = "http://ontology/ae";
@@ -36,9 +37,7 @@ public class BasicSanityRpc {
     public static final String AENAME = "AE_NAME";
     public static final String CONTAINER_NAME = "CONTAINER_NAME";
     public static final String CONTAINER_CREATOR = "Creator";
-    public static final String CONTAINER_MAX_NR_INSTANCES = "5";
-    public static final String CONTAINER_MAX_BYTE_SIZE = "5";
-    public static final String CONTAINER_INFO = "5";
+    public static final Integer CONTAINER_MAX_NR_INSTANCES = 5;
     public static final String CONTAINER_ONTOLOGY_REF = "http://ontology/container";
     public static final String CONTENT_INSTANCE_NAME = "ContentInstanceName";
     public static final String CONTENT_INSTANCE_CONTENT = "SomeCoolSensorMeasurement";
@@ -156,8 +155,8 @@ public class BasicSanityRpc {
             .setCreator(CONTAINER_CREATOR)
             .setMaxNrInstances(CONTAINER_MAX_NR_INSTANCES)
             .setOntologyRef(CONTAINER_ONTOLOGY_REF)
-            .setMaxByteSize("100")
-            .setMaxInstanceAge("1")
+            .setMaxByteSize(100)
+            .setMaxInstanceAge(1)
             .build();
 
         onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
@@ -339,8 +338,8 @@ public class BasicSanityRpc {
                 .setCreator(CONTAINER_CREATOR)
                 .setMaxNrInstances(CONTAINER_MAX_NR_INSTANCES)
                 .setOntologyRef(CONTAINER_ONTOLOGY_REF)
-                .setMaxByteSize("100")
-                .setMaxInstanceAge("1")
+                .setMaxByteSize(100)
+                .setMaxInstanceAge(1)
                 .build();
 
         onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()

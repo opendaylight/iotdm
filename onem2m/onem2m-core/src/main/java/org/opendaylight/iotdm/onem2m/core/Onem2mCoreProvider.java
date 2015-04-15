@@ -85,7 +85,8 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         //LOG.info("RPC: begin handle op ...");
 
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
-        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor(onem2mPrimitiveList);
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
 
         onem2mRequest.handleOperation(onem2mResponse);
@@ -116,7 +117,8 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         LOG.info("RPC: begin handle onem2mCseProvisioning ...");
 
         List<Onem2mPrimitive> csePrimitiveList = input.getOnem2mPrimitive();
-        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor(csePrimitiveList);
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitivesList(csePrimitiveList);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
 
         onem2mRequest.provisionCse(onem2mResponse);

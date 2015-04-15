@@ -7,8 +7,11 @@
  */
 package org.opendaylight.iotdm.onem2m.core.rest;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
@@ -32,15 +35,6 @@ import org.slf4j.LoggerFactory;
 public class RequestPrimitiveProcessor extends RequestPrimitive {
 
     private static final Logger LOG = LoggerFactory.getLogger(RequestPrimitiveProcessor.class);
-
-    /**
-     * A processor to handle all the request primitives.
-     * @param onem2m2PrimitiveList
-     */
-    public RequestPrimitiveProcessor(List<Onem2mPrimitive> onem2m2PrimitiveList) {
-        super(onem2m2PrimitiveList);
-        resourceContent = new ResourceContent();
-    }
 
     public RequestPrimitiveProcessor() {
         super();
@@ -80,6 +74,21 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
         return true;
     }
+
+    /**
+     * Ensure the proposed uriString is OK, construct a URI to see if the syntax is a valid URI.
+     * @param uriString
+     * @return
+     */
+    public boolean validateUri(String uriString)  {
+        try {
+            URI toUri = new URI(uriString);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+        return true;
+    }
+
 
     /**
      * Called by the core RPC:onem2mRequestPrimitive to process the onenm2m request primitive operation.
@@ -124,14 +133,25 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // TODO: RFC 3986 ... reserved characters in a URI
-        if (getPrimitive(RequestPrimitive.TO) == null) {
+        String to = getPrimitive(RequestPrimitive.TO);
+        if (to == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "TO(" + RequestPrimitive.TO + ") not specified");
             return;
+        } else if (!validateUri(to)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "TO(" + RequestPrimitive.TO + ") not value URI: " + to);
+            return;
         }
-        if (getPrimitive(RequestPrimitive.FROM) == null) {
+
+        String from = getPrimitive(RequestPrimitive.FROM);
+        if (from == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "FROM(" + RequestPrimitive.FROM + ") not specified");
+            return;
+        } else if (!validateUri(from)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "FROM(" + RequestPrimitive.FROM + ") not value URI: " + from);
             return;
         }
 
@@ -158,6 +178,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not permitted for operation: " + operation);
                 return;
             }
+            // resource type value will be verified later
         }
 
         // this is an optional parameter but we will reject unsupported values
@@ -175,6 +196,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
+                return;
+            }
+            if (!validateResourceName(resourceName)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
+                        "Resource name invalid: " + resourceName);
                 return;
             }
         }
@@ -267,7 +293,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // validate result content options
+        // validate result content options for create
         String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
         if (rc != null) {
             if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
@@ -291,11 +317,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // if the a name is provided, ensure it is valid and unique at this hierarchical level
         String resourceName = this.getPrimitive((RequestPrimitive.NAME));
         if (resourceName != null) {
-            if (validateResourceName(resourceName) == false) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
-                        "Resource name invalid: " + resourceName);
-                return;
-            }
             // using the parent, see if this new resource name already exists under this parent resource
             if (Onem2mDb.getInstance().FindResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
                 // TS0004: 7.2.3.2
@@ -341,13 +362,12 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
         }
 
-        // validate result content options
+        // validate result content options for retrieve
         String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
         if (rc != null) {
             if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES) ||
                     rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
-                    rc.contentEquals(Onem2m.ResultContent.ORIGINAL_RESOURCE) ||
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                         "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
@@ -392,7 +412,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
         String cf = getPrimitive(RequestPrimitive.CONTENT);
         if (cf != null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS, "CONTENT(" + RequestPrimitive.CONTENT + ") not permitted");
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
+                    "CONTENT(" + RequestPrimitive.CONTENT + ") not permitted");
             return;
         }
 
@@ -403,7 +424,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES) ||
                     rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
                     rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
-                    rc.contentEquals(Onem2m.ResultContent.ORIGINAL_RESOURCE) ||
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                         "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
@@ -478,7 +498,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES) ||
                     rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
                     rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
-                    rc.contentEquals(Onem2m.ResultContent.ORIGINAL_RESOURCE) ||
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                         "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
@@ -541,16 +560,17 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        resourceContent.setDbAttr(ResourceCse.CSE_ID, cseId);
-        resourceContent.setDbAttr(ResourceCse.CSE_TYPE, cseType);
+        this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+        JSONObject j = new JSONObject();
+        j.put(ResourceCse.CSE_ID, cseId);
+        j.put(ResourceCse.CSE_TYPE, cseType);
+        this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
         // process the resource specific attributes
         ResourceContentProcessor.handleCreate(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
-
-        Onem2mDb.getInstance().createCseResource(this, onem2mResponse);
 
         // TODO: see TS0004 6.8
         // if the create was successful, ie no error has already happened, set CREATED for status code here

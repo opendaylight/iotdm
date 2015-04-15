@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.client.Onem2mAERequest;
+import org.opendaylight.iotdm.onem2m.client.Onem2mAERequestBuilder;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.client.ResourceContainerBuilder;
@@ -69,10 +71,10 @@ public class PerfCrudRpc {
 
         String containerString = new ResourceContainerBuilder()
                 .setCreator("Creator")
-                .setMaxNrInstances("5")
+                .setMaxNrInstances(5)
                 .setOntologyRef("http://ontology/ref")
-                .setMaxByteSize("100")
-                .setMaxInstanceAge("1")
+                .setMaxByteSize(100)
+                .setMaxInstanceAge(1)
                 .build();
 
         Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
@@ -86,6 +88,14 @@ public class PerfCrudRpc {
                 .setContent(containerString)
                 .build();
 
+        /*
+        Onem2mAERequest aeRequest = new Onem2mAERequestBuilder()
+                .setTo("/" + Onem2m.SYS_PERF_TEST_CSE)
+                .setOperationCreate()
+                .build();
+
+        aeRequest.send(onem2mService);
+        */
         startTime = System.nanoTime();
         for (int i = 0; i < numResources; i++) {
             ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);

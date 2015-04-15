@@ -21,16 +21,16 @@ public class BasePrimitive {
     private static final Logger LOG = LoggerFactory.getLogger(BasePrimitive.class);
 
     protected List<Onem2mPrimitive> onem2mPrimitivesList;
-    private Map<String,String> primitiveMap;
+    protected Map<String,String> primitiveMap;
+    protected Map<String,List<String>> primitiveManyMap;
 
     public BasePrimitive() {
         onem2mPrimitivesList = new ArrayList<Onem2mPrimitive>();
         primitiveMap = new HashMap<String,String>();
+        primitiveManyMap = new HashMap<String,List<String>>();
    }
 
-    public BasePrimitive(List<Onem2mPrimitive> onem2mPrimitivesList) {
-        this.onem2mPrimitivesList = onem2mPrimitivesList;
-        this.primitiveMap = new HashMap<String,String>();
+    public void setPrimitivesList(List<Onem2mPrimitive> onem2mPrimitivesList) {
         for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
             primitiveMap.put(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
         }
@@ -44,11 +44,33 @@ public class BasePrimitive {
         primitiveMap.put(primitiveName, primitiveValue);
         //LOG.info("set Attr N={}, V={}", primitiveName, primitiveValue);
     }
-
+    /**
+     * Enable many values to be set for the same primitive (labels as an example)  These will ultimately
+     * be stored in the DbAttrSets vs the DbAttrs
+     * @param primitiveName
+     * @param primitiveValue
+     */
+    public void setPrimitiveMany(String primitiveName, String primitiveValue) {
+        if (delPrimitive(primitiveName)) {
+            LOG.error("set Attr N={}, V={}", primitiveName, primitiveValue);
+        }
+        onem2mPrimitivesList.add(new Onem2mPrimitiveBuilder().setName(primitiveName).setValue(primitiveValue).build());
+        List<String> valueArray = getPrimitiveMany(primitiveName);
+        if (valueArray == null) {
+            valueArray = new ArrayList<String>();
+            valueArray.add(primitiveValue);
+            primitiveManyMap.put(primitiveName, valueArray);
+        } else {
+            valueArray.add(primitiveValue);
+        }
+        //LOG.info("setMany Attr N={}, V={}, numValues={}", primitiveName, primitiveValue, valueArray.size());
+    }
     public String getPrimitive(String primitiveName) {
         return this.primitiveMap.get(primitiveName);
     }
-
+    public List<String> getPrimitiveMany(String primitiveName) {
+        return this.primitiveManyMap.get(primitiveName);
+    }
     private boolean delPrimitive(String primitiveName) {
         if (primitiveMap.containsKey(primitiveName)) {
             primitiveMap.remove(primitiveName);

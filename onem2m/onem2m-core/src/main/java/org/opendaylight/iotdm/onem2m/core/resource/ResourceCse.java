@@ -8,10 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.core.resource;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -21,6 +19,9 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,6 @@ public class ResourceCse {
     // hard code set of acceptable create attributes, short and long name
     public static final Set<String> createAttributes = new HashSet<String>() {{
         // short; long
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
         add(ResourceContent.CREATION_TIME); add("creationTime");
         add(ResourceContent.LABELS); add("labels");
         add(CSE_TYPE); add("cseType");
@@ -74,13 +74,138 @@ public class ResourceCse {
     }
     };
 
+    private static void processCreateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        String cseId = resourceContent.getDbAttr(CSE_ID);
+        if (cseId == null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID missing parameter");
+            return;
+        }
+
+        /**
+         * The resource has been filled in with any attributes that need to be written to the database
+         */
+        if (!Onem2mDb.getInstance().createCseResource(onem2mRequest, onem2mResponse)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+            // TODO: what do we do now ... seems really bad ... keep stats
+            return;
+        }
+
+    }
+
     /**
-     * The list<Attr> and List<AttrSet> must be filled in with the ContentPrimitive attributes
+     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
+     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
+     * Maybe the next iteration of code, I'll create json files for each resource.
+     * @param onem2mRequest
+     * @param onem2mResponse
+     */
+    private static void processJsonCreateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        //Set<String> validAttributes = onem2mRequest.getValidAttributes();
+        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+
+            Object o = resourceContent.getJsonContent().get(key);
+
+            switch (key) {
+
+                case CSE_ID:
+                case CSE_TYPE:
+                case ResourceContent.CREATION_TIME:
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
+                case ResourceContent.LABELS:
+                    if (!(o instanceof JSONArray)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                        return;
+                    }
+                    JSONArray array = (JSONArray) o;
+                    for (int i = 0; i < array.length(); i++) {
+                        if (!(array.get(i) instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                            return;
+                        }
+                        //resourceContent.setDbAttr(key, o.toString());
+                        //onem2mRequest.getDbAttrSets().setAttr(key, array.get(i));
+                    }
+                    break;
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
+                    return;
+            }
+        }
+    }
+
+    /**
+     * Parse the CONTENT resource representation.
      * @param onem2mRequest
      * @param onem2mResponse
      */
     public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        // TODO: validate CSE parameters
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        resourceContent.parse(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
+
+        if (resourceContent.isJson()) {
+            processJsonCreateContent(onem2mRequest, onem2mResponse);
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+                return;
+        }
+        resourceContent.processCommonCreateAttributes(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
+
+        ResourceCse.processCreateAttributes(onem2mRequest, onem2mResponse);
+
+    }
+
+    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
+
+        for (Attr attr : onem2mResource.getAttr()) {
+            switch (attr.getName()) {
+                case CSE_ID:
+                case CSE_TYPE:
+                    j.put(attr.getName(), attr.getValue());
+                    break;
+                case NOTIFICATION_CONGESTION_POLICY:
+                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+                    break;
+                default:
+                    ResourceContent.produceJsonForCommonAttributes(attr, j);
+                    break;
+            }
+        }
+
+        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+            switch (attrSet.getName()) {
+                case SUPPORTED_RESOURCE_TYPES:
+                    JSONArray a = new JSONArray();
+                    for (Member member : attrSet.getMember()) {
+                        a.put(member.getValue());
+                    }
+                    j.put(attrSet.getName(), a); // TODO: enum or string?
+                    break;
+                default:
+                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+                    break;
+            }
+        }
     }
 }

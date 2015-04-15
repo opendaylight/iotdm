@@ -22,8 +22,8 @@ public class ResponsePrimitive extends BasePrimitive {
     /**
      * This is the onem2m response primitive.  When the onem2m core processes the input requestPrimitive parms,
      * it must send back a one m2m responsePrimitive.  Restconf will get these in the output parameters.  As far
-     * as the onenm2m protocols, each protocol must take this reposnse and adapt it for that protocol.  For
-     * example: the onem2m status code must be mapped to the approproate coap status code.
+     * as the onenm2m protocols, each protocol must take this response and adapt it for that protocol.  For
+     * example: the onem2m status code must be mapped to the appropriate coap status code.
      */
 
     // taken from CDT-responsePrimitive-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
@@ -41,15 +41,6 @@ public class ResponsePrimitive extends BasePrimitive {
         super();
     }
 
-    /**
-     * The core RPC pulls the request primitives list from the RPC input parameter and creates this class
-     * TODO: investigate using hashmap creating to make finding primitives faster later
-     * @param onem2m2PrimitiveList
-     */
-    public ResponsePrimitive(List<Onem2mPrimitive> onem2m2PrimitiveList) {
-        super(onem2m2PrimitiveList);
-    }
-
     public void setRSC(String rsc, String content) { //throws Onem2mRSCException {
         this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc);
         this.setPrimitive(ResponsePrimitive.CONTENT, content);
@@ -62,22 +53,6 @@ public class ResponsePrimitive extends BasePrimitive {
     }
     public boolean useHierarchicalAddressing() {
         return this.useHierarchicalAddressing;
-    }
-
-    private boolean useFilterCriteria;
-    public void setUseFilterCriteria(boolean fc) {
-        this.useFilterCriteria = fc;
-    }
-    public boolean useFilterCriteria() {
-        return this.useFilterCriteria;
-    }
-
-    private JSONObject filterCriteriaJSONObj;
-    public void setFilterCriteriaJSONObj(JSONObject fc) {
-        this.filterCriteriaJSONObj = fc;
-    }
-    public JSONObject getFilterCriteriaJSONObj() {
-        return this.filterCriteriaJSONObj;
     }
 
     // the original resourceContent used to return content based on result content requested
