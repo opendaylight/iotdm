@@ -83,7 +83,7 @@ public class PerfCrudRpc {
                 .setTo("/" + Onem2m.SYS_PERF_TEST_CSE)
                 .setFrom("")
                 .setRequestIdentifier("RQI_1234")
-                .setResourceType("cnt")
+                .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
                 .setContent(containerString)
                 .build();

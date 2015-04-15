@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.slf4j.Logger;
@@ -63,6 +64,10 @@ public class ResourceContentBuilder {
         return this;
     }
     public String build() {
-        return (jsonContent.toString());
+        JSONObject j = new JSONObject();
+        JSONArray anyArray = new JSONArray();
+        anyArray.put(jsonContent);
+        j.put("any", anyArray);
+        return (j.toString());
     }
 }

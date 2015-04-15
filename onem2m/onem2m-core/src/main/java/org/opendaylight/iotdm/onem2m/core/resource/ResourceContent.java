@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.core.resource;
 
+import java.util.Iterator;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -100,7 +101,47 @@ public class ResourceContent {
                     "CONTENT(" + RequestPrimitive.CONTENT + ") parser error (" + e + ")");
             return null;
         }
-        return jsonContent;
+
+        // the json should be an array of objects called "any", we support only one element in the array so pull
+        // that element in the array out and place it in jsonContent
+        return processJsonCreateAnyArray(jsonContent, onem2mResponse);
+    }
+
+    private JSONObject processJsonCreateAnyArray(JSONObject jAnyArray, ResponsePrimitive onem2mResponse) {
+
+        Iterator<?> keys = jAnyArray.keys();
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+            Object o = jAnyArray.get(key);
+
+            switch (key) {
+
+                case "any":
+                    if (!(o instanceof JSONArray)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                        return null;
+                    }
+                    JSONArray array = (JSONArray) o;
+                    if (array.length() != 1) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") too many elements: json array length: " +
+                                        array.length());
+                        return null;
+                    }
+                    if (!(array.get(0) instanceof JSONObject)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") JSONObject expected");
+                        return null;
+                    }
+                    return (JSONObject) array.get(0);
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: expected: any" + key);
+                    return null;
+            }
+        }
+        return null;
     }
 
     public void processCommonCreateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
@@ -162,8 +203,8 @@ public class ResourceContent {
                 break;
             case ResourceContent.RESOURCE_TYPE:
                 // TODO: should this be a number
-                j.put(attr.getName(), attr.getValue());
-                //j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+                //j.put(attr.getName(), attr.getValue());
+                j.put(attr.getName(), Integer.valueOf(attr.getValue()));
                 break;
             case ResourceContent.STATE_TAG:
                 j.put(attr.getName(), Integer.valueOf(attr.getValue()));

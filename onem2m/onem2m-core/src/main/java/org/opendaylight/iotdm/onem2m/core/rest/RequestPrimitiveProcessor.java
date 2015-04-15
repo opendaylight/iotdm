@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
@@ -561,9 +562,13 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+        JSONObject jCse = new JSONObject();
+        jCse.put(ResourceCse.CSE_ID, cseId);
+        jCse.put(ResourceCse.CSE_TYPE, cseType);
+        JSONArray anyArray = new JSONArray();
+        anyArray.put(jCse);
         JSONObject j = new JSONObject();
-        j.put(ResourceCse.CSE_ID, cseId);
-        j.put(ResourceCse.CSE_TYPE, cseType);
+        j.put("any", anyArray);
         this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
         // process the resource specific attributes

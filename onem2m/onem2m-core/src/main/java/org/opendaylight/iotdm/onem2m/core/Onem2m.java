@@ -56,11 +56,11 @@ public class Onem2m {
 
     // TODO: ts0004 6.3.3.2.1, 8.2.4-1, why are there ENUMS and SHORT NAMES ???? WHICH ONE DO WE USE
     public class ResourceType {
-        public static final String AE = "ae";
-        public static final String CONTAINER = "cnt";
-        public static final String CSE_BASE = "csb";
-        public static final String CONTENT_INSTANCE = "cin";
-        public static final String SUBSCRIPTION = "sub";
+        public static final String AE = "2"; //"ae";
+        public static final String CONTAINER = "3"; //"cnt";
+        public static final String CSE_BASE = "5"; //"csb";
+        public static final String CONTENT_INSTANCE = "4"; //"cin";
+        public static final String SUBSCRIPTION = "23"; //"sub";
     }
 
     public class ResponseType { // TS0001 section 8.2.1

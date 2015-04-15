@@ -60,11 +60,11 @@ public class OdlOnem2mCoapRequestPrimitiveBuilder {
         return this;
     }
 
-    public OdlOnem2mCoapRequestPrimitiveBuilder setResourceType(String value) {
+    public OdlOnem2mCoapRequestPrimitiveBuilder setResourceType(Integer value) {
         if (!onem2mRequest.uriQueryString.contentEquals("")) {
             onem2mRequest.uriQueryString += "&";
         }
-        onem2mRequest.uriQueryString += RequestPrimitive.RESOURCE_TYPE + "=" + value;
+        onem2mRequest.uriQueryString += RequestPrimitive.RESOURCE_TYPE + "=" + value.toString();
         return this;
     }
     public OdlOnem2mCoapRequestPrimitiveBuilder setName(String value) {

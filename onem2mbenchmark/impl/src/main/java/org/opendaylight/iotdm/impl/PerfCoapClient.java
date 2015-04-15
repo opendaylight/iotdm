@@ -100,7 +100,7 @@ public class PerfCoapClient {
                     .setFrom("PerfCoap_FROM")
                     .setRequestIdentifier("PerfCoap_RQI")
                     .setContent(containerString, MediaTypeRegistry.APPLICATION_JSON)
-                    .setResourceType(Onem2m.ResourceType.CONTAINER)
+                    .setResourceType(3) // container
                     .build();
 
             CoapResponse coapResponse = coapClient.sendRequest(coapRequest);
