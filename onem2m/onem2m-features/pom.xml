@@ -74,6 +74,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <type>xml</type>
         </dependency>
         <dependency>
+            <groupId>org.ops4j.pax.web</groupId>
+            <artifactId>pax-web-features</artifactId>
+            <version>3.1.0</version>
+            <classifier>features</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
         </dependency>
