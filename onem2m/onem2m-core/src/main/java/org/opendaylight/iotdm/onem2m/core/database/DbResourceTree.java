@@ -151,7 +151,6 @@ public class DbResourceTree {
      * Retrieve the attr by name from the data store
      * @param resourceId
      * @param attrName
-     * @return Attr
      */
     public void updateAttr(DbTransaction dbTxn, String resourceId, String attrName, String attrValue) {
 
@@ -229,7 +228,6 @@ public class DbResourceTree {
      * Delete the resource using its key, ie. the resourceId
      *
      * @param resourceId
-     * @return
      */
     public void deleteResourceById(DbTransaction dbTxn, String resourceId) {
 

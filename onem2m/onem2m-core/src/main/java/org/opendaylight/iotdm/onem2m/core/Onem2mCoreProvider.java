@@ -69,7 +69,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     /**
      * This is the requestPrimitive RPC, it can be called from restconf directly, or it can be called from
      * onem2m-protocol-coap/http/mqtt.  Each of those onem2m-protocols have used the protocol specific bindings
-     * to extract primitives from protocol specific fields and placed them in the List<Onem2mPrimitives>.
+     * to extract primitives from protocol specific fields and placed them in the List&lt;Onem2mPrimitives&gt;.
      * See Onem2m.RequestPrimitive for the list of possible primitives.  For the most part, these primitives
      * are format independent and as such are strings.  There is one exception, ie the Onem2m.RequestPrimitive.CONTENT
      * parameter which has been serialized as a string by the onenm2m-protocols which was encoded in the payload
