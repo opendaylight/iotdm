@@ -145,6 +145,9 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
             CoAP.ResponseCode coapRSC = mapCoreResponseToCoapResponse(rscString);
+            // return the request id in the return option
+            options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RQI,
+                    onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER)));
             // put the onem2m response code into the RSC option and return it too
             options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RSC, Integer.parseInt(rscString)));
             if (content != null) {

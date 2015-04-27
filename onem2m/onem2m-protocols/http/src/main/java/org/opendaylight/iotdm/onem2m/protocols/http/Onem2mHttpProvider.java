@@ -165,6 +165,8 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
             // the content is already in the required format ...
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+            httpResponse.setHeader(X_M2M_RI, onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
+
             int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
             if (content != null) {
                 httpResponse.setStatus(httpRSC);

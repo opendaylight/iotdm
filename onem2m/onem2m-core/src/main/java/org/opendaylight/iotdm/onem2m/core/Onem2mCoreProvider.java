@@ -8,9 +8,6 @@
 package org.opendaylight.iotdm.onem2m.core;
 
 import com.google.common.util.concurrent.Futures;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -153,7 +150,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         } else {
             String resourceUri = input.getResourceUri().trim();
             onem2mRequest.setPrimitive(RequestPrimitive.TO, resourceUri);
-            if (!Onem2mDb.getInstance().FindResourceUsingURI(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().findResourceUsingURI(onem2mRequest, onem2mResponse)) {
                 LOG.error("Cannot find resourceUri: {}", resourceUri);
                 return Futures.immediateFuture(RpcResultBuilder.<Void>failed().build());
             }

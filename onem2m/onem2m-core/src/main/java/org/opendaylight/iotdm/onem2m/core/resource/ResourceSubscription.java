@@ -34,18 +34,10 @@ public class ResourceSubscription {
     // taken from CDT-contentInstance-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO: ts0001 9.6.7-1
 
-    //public static final String EXPIRATION_COUNTER = "exc";
     public static final String NOTIFICATION_URI = "nu";
-    //public static final String BATCH_NOTIFY = "bn";
-    //public static final String RATE_LIMIT = "rl";
-    //public static final String PRE_SUBSCRIPTION_NOTIFY = "psn";
-    //public static final String PENDING_NOTIFICATION = "pn";
-    //public static final String NOTIFICATION_STORAGE_POLICY = "nsp";
-    //public static final String LATEST_NOTIFY = "ln";
     public static final String NOTIFICATION_CONTENT_TYPE = "nct";
     public static final String NOTIFICATION_EVENT_CAT = "nec";
-    //public static final String CREATOR = "cr";
-    //public static final String SUBSCRIBTER_URI = "su";
+    public static final String SUBSCRIBER_URI = "su";
 
     // TODO: need to add a section or new file to handle event notification criteria
 
@@ -91,7 +83,7 @@ public class ResourceSubscription {
         add(NOTIFICATION_CONTENT_TYPE); add("notificationContentType");
         add(NOTIFICATION_EVENT_CAT); add("notificationEventCat");
         //add(CREATOR); add("creator");
-        //add(SUBSCRIBTER_URI); add("subscriberURI");
+        //add(SUBSCRIBER_URI); add("subscriberURI");
     }
     };
 
@@ -100,26 +92,20 @@ public class ResourceSubscription {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private static void processCreateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String tempStr;
-        Integer tempInt;
-        /**
-         * When the parentURI was located in the tree, the attr list was read, this puts it into a class
-         * so that each attribute can be easily accessed
-         */
-        DbAttr parentDbAttrs = onem2mRequest.getDbAttrs();
 
-        /**
-         * The only resource type that can be the parent according to TS0001 9.6.1.1-1 is a cseBase
-         */
-        String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
-        if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
-                            rt.contentEquals(Onem2m.ResourceType.CONTAINER) ||
-                            rt.contentEquals(Onem2m.ResourceType.AE))) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                    "Cannot create Subscription under this resource type: " + rt);
-            return;
+        if (onem2mRequest.isCreate) {
+            DbAttr parentDbAttrs = onem2mRequest.getDbAttrs();
+            String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+            if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
+                    rt.contentEquals(Onem2m.ResourceType.CONTAINER) ||
+                    rt.contentEquals(Onem2m.ResourceType.AE))) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                        "Cannot create Subscription under this resource type: " + rt);
+                return;
+            }
         }
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
@@ -134,10 +120,18 @@ public class ResourceSubscription {
         /**
          * The resource has been filled in with any attributes that need to be written to the database
          */
-        if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
-            // TODO: what do we do now ... seems really bad ... keep stats
-            return;
+        if (onem2mRequest.isCreate) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
+                // TODO: what do we do now ... seems really bad ... keep stats
+                return;
+            }
+        } else {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
+                // TODO: what do we do now ... seems really bad ... keep stats
+                return;
+            }
         }
     }
 
@@ -148,11 +142,10 @@ public class ResourceSubscription {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private static void processJsonCreateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        //Set<String> validAttributes = onem2mRequest.getValidAttributes();
         Iterator<?> keys = resourceContent.getJsonContent().keys();
         while( keys.hasNext() ) {
             String key = (String)keys.next();
@@ -163,37 +156,49 @@ public class ResourceSubscription {
 
                 case NOTIFICATION_CONTENT_TYPE:
                 case NOTIFICATION_EVENT_CAT:
-                    if (!(o instanceof Integer)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
-                        return;
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        if (!(o instanceof Integer)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
+                            return;
+                        }
+                        resourceContent.setDbAttr(key, o.toString());
+                    } else {
+                        resourceContent.setDbAttr(key, null);
                     }
-                    resourceContent.setDbAttr(key, o.toString());
                     break;
 
-                case ResourceContent.CREATION_TIME:
                 case ResourceContent.EXPIRATION_TIME:
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        if (!(o instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                            return;
+                        }
+                        resourceContent.setDbAttr(key, o.toString());
+                    } else {
+                        resourceContent.setDbAttr(key, null);
                     }
-                    resourceContent.setDbAttr(key, o.toString());
                     break;
                 case ResourceContent.LABELS:
                 case NOTIFICATION_URI:
-                    if (!(o instanceof JSONArray)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
-                        return;
-                    }
-                    JSONArray array = (JSONArray) o;
-                    for (int i = 0; i < array.length(); i++) {
-                        if (!(array.get(i) instanceof String)) {
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
-                            return;                        }
-                        //resourceContent.setDbAttr(key, array.get(i));
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.get(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            }
+                            //resourceContent.setDbAttr(key, array.get(i));
+                        }
+                    } else {
+                        //resourceContent.setDbAttr(key, null);
                     }
                     break;
                 default:
@@ -209,7 +214,7 @@ public class ResourceSubscription {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -218,15 +223,15 @@ public class ResourceSubscription {
             return;
 
         if (resourceContent.isJson()) {
-            processJsonCreateContent(onem2mRequest, onem2mResponse);
+            processJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        resourceContent.processCommonCreateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
-        ResourceSubscription.processCreateAttributes(onem2mRequest, onem2mResponse);
+        ResourceSubscription.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
 
     }
 
@@ -258,6 +263,93 @@ public class ResourceSubscription {
                     ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
                     break;
             }
+        }
+    }
+
+    /**
+     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
+     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
+     * Maybe the next iteration of code, I'll create json files for each resource.
+     *
+     * This routine enforces the mandatory and option parameters
+     * @param onem2mRequest
+     * @param onem2mResponse
+     */
+    private static void processJsonRetrieveContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+
+            Object o = resourceContent.getJsonContent().get(key);
+
+            switch (key) {
+
+                case SUBSCRIBER_URI:
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
+
+                case NOTIFICATION_URI:
+                    if (!(o instanceof JSONArray)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                        return;
+                    }
+                    JSONArray array = (JSONArray) o;
+                    for (int i = 0; i < array.length(); i++) {
+                        if (!(array.get(i) instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                            return;
+                        }
+                        //resourceContent.setDbAttr(key, array.get(i));
+                    }
+                    break;
+
+                case NOTIFICATION_CONTENT_TYPE:
+                case NOTIFICATION_EVENT_CAT:
+
+                    if (!(o instanceof Integer)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") integer expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
+
+                default:
+                    if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
+                        return;
+                    }
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Parse the CONTENT resource representation.
+     * @param onem2mRequest
+     * @param onem2mResponse
+     */
+    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        resourceContent.parse(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
+
+        if (resourceContent.isJson()) {
+            processJsonRetrieveContent(onem2mRequest, onem2mResponse);
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+                return;
         }
     }
 }

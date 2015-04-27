@@ -37,12 +37,30 @@ public class FilterCriteria {
         }
 
         String cra = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER);
-        if (crb != null) {
+        if (cra != null) {
             String ct = dbAttrs.getAttr(ResourceContent.CREATION_TIME);
             if (ct != null && Onem2mDateTime.dateCompare(ct, cra) <= 0) {
                 return false;
             }
         }
+
+        String ms = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE);
+        if (ms != null) {
+            String mt = dbAttrs.getAttr(ResourceContent.LAST_MODIFIED_TIME);
+            if (mt != null && Onem2mDateTime.dateCompare(mt, ms) >= 0) {
+                return false;
+            }
+        }
+
+        String ums = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE);
+        if (ums != null) {
+            String mt = dbAttrs.getAttr(ResourceContent.LAST_MODIFIED_TIME);
+            if (mt != null && Onem2mDateTime.dateCompare(mt, ums) <= 0) {
+                return false;
+            }
+        }
+
+        // TODO: add state tag checks here
 
         String rty = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
         if (rty != null) {
@@ -76,7 +94,6 @@ public class FilterCriteria {
                 return false;
             }
         }
-
         return true;
     }
 }

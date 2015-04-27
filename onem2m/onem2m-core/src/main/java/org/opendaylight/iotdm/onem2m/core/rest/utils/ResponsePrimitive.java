@@ -43,7 +43,9 @@ public class ResponsePrimitive extends BasePrimitive {
 
     public void setRSC(String rsc, String content) { //throws Onem2mRSCException {
         this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc);
-        this.setPrimitive(ResponsePrimitive.CONTENT, content);
+        JSONObject j = new JSONObject();
+        j.put("error", content);
+        this.setPrimitive(ResponsePrimitive.CONTENT, j.toString());
         //throw new Onem2mRSCException();
     }
 
@@ -62,5 +64,14 @@ public class ResponsePrimitive extends BasePrimitive {
     }
     public ResourceContent getResourceContent() {
         return this.resourceContent;
+    }
+
+    // the original resourceContent used to return content based on result content requested
+    protected boolean useJsonAnySyntax;
+    public void setUseJsonAnySyntax(boolean any) {
+        this.useJsonAnySyntax = any;
+    }
+    public boolean useJsonAnySyntax() {
+        return this.useJsonAnySyntax;
     }
 }

@@ -47,8 +47,15 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String FILTER_CRITERIA = "fc";
     public static final String FILTER_CRITERIA_CREATED_BEFORE = "crb";
     public static final String FILTER_CRITERIA_CREATED_AFTER = "cra";
+    public static final String FILTER_CRITERIA_MODIFIED_SINCE = "ms";
+    public static final String FILTER_CRITERIA_UNMODIFIED_SINCE = "us";
+    public static final String FILTER_CRITERIA_STATE_TAG_SMALLER = "sts";
+    public static final String FILTER_CRITERIA_STATE_TAG_BIGGER = "stb";
     public static final String FILTER_CRITERIA_LABELS = "lbl";
     public static final String FILTER_CRITERIA_RESOURCE_TYPE = "rty";
+    public static final String FILTER_CRITERIA_SIZE_ABOVE = "sza";
+    public static final String FILTER_CRITERIA_SIZE_BELOW = "szb";
+    public static final String FILTER_CRITERIA_ATTRIBUTE = "atr";
     public static final String FILTER_CRITERIA_FILTER_USAGE = "fu";
     public static final String FILTER_CRITERIA_LIMIT = "lim";
     public static final String DISCOVERY_RESULT_TYPE = "drt";
@@ -81,6 +88,10 @@ public class RequestPrimitive extends BasePrimitive {
         add(FILTER_CRITERIA);
         add(FILTER_CRITERIA_CREATED_BEFORE);
         add(FILTER_CRITERIA_CREATED_AFTER);
+        add(FILTER_CRITERIA_MODIFIED_SINCE);
+        add(FILTER_CRITERIA_UNMODIFIED_SINCE);
+        add(FILTER_CRITERIA_STATE_TAG_SMALLER);
+        add(FILTER_CRITERIA_STATE_TAG_BIGGER);
         add(FILTER_CRITERIA_LABELS);
         add(FILTER_CRITERIA_RESOURCE_TYPE);
         add(FILTER_CRITERIA_FILTER_USAGE);
@@ -111,10 +122,15 @@ public class RequestPrimitive extends BasePrimitive {
         put("eventCategory", EVENT_CATEGORY);
         put("deliveryAggregation", DELIVERY_AGGREGATION);
         put("groupRequestIdentifier", GROUP_REQUEST_IDENTIFIER);
-        put("filterCriteria", FILTER_CRITERIA);
         put("createdBefore", FILTER_CRITERIA_CREATED_BEFORE);
         put("createdAfter", FILTER_CRITERIA_CREATED_AFTER);
+        put("modifiedSince", FILTER_CRITERIA_MODIFIED_SINCE);
+        put("unmodifiedSince", FILTER_CRITERIA_UNMODIFIED_SINCE);
+        put("stateTagSmaller", FILTER_CRITERIA_STATE_TAG_SMALLER);
+        put("stateTagBigger", FILTER_CRITERIA_STATE_TAG_BIGGER);
         put("label", FILTER_CRITERIA_LABELS);
+        put("resourceType", FILTER_CRITERIA_RESOURCE_TYPE);
+        put("attribute", FILTER_CRITERIA_ATTRIBUTE);
         put("filterUsage", FILTER_CRITERIA_FILTER_USAGE);
         put("limit", FILTER_CRITERIA_LIMIT);
         put("discoveryResultType", DISCOVERY_RESULT_TYPE);
@@ -139,6 +155,8 @@ public class RequestPrimitive extends BasePrimitive {
             }
         }
     }
+
+    public boolean isCreate;
     /**
      * The following section is used to hold attributes for the data store.  In the case of create, when the parent
      * resource is read from the database, it is stored in the 'Onem2mResource onem2mResource' variable.
