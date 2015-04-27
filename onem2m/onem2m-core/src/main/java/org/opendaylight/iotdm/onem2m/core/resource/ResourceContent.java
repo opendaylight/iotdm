@@ -42,8 +42,8 @@ public class ResourceContent {
     public static final String LAST_MODIFIED_TIME = "lt";
     public static final String LABELS = "lbl";
     public static final String STATE_TAG = "st";
-    public static final String CHILD_RESOURCE = "childResource";
-    public static final String CHILD_RESOURCE_REF = "childResourceRef";
+    public static final String CHILD_RESOURCE = "ch";
+    public static final String CHILD_RESOURCE_REF = "chr";
 
     private DbAttr dbAttrs;
     private JSONObject jsonContent;
@@ -63,8 +63,8 @@ public class ResourceContent {
      * Pulls the json/xml formatted data out of the RequestPrimitive.CONTENT string
      * and put it into the request.  It calls an abstract method so that each resource pulls out the data
      * specific to that resource.
-     * @param onem2mRequest
-     * @param onem2mResponse
+     * @param onem2mRequest request
+     * @param onem2mResponse response
      */
     public void parse(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         String cf = onem2mRequest.getPrimitive(RequestPrimitive.CONTENT_FORMAT);
@@ -81,8 +81,9 @@ public class ResourceContent {
     /**
      * Parse the JSON content, put it into the set of RequestPrimitive attrs by calling the extractJsonRequestContent
      * which is implemented by each of the resource specific classes as it is an abstract method.
-     * @param onem2mRequest
-     * @param onem2mResponse
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     * @return the json obj
      */
     private JSONObject parseJson(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -104,10 +105,12 @@ public class ResourceContent {
 
         // the json should be an array of objects called "any", we support only one element in the array so pull
         // that element in the array out and place it in jsonContent
-        return processJsonCreateAnyArray(jsonContent, onem2mResponse);
+        return processJsonAnyArray(jsonContent, onem2mResponse);
     }
 
-    private JSONObject processJsonCreateAnyArray(JSONObject jAnyArray, ResponsePrimitive onem2mResponse) {
+    private JSONObject processJsonAnyArray(JSONObject jAnyArray, ResponsePrimitive onem2mResponse) {
+
+        onem2mResponse.setUseJsonAnySyntax(false);
 
         Iterator<?> keys = jAnyArray.keys();
         while( keys.hasNext() ) {
@@ -134,38 +137,55 @@ public class ResourceContent {
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") JSONObject expected");
                         return null;
                     }
+                    onem2mResponse.setUseJsonAnySyntax(true);
                     return (JSONObject) array.get(0);
+
                 default:
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                            "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: expected: any" + key);
-                    return null;
+                    /**
+                     * in the spirit of supporting more clients, if they dont use the "any" array syntax for their
+                     * request, but just list the jsonObject attributes, then we should try to support that format also
+                     * So, simply return the JSON object that was passed in as it is not a JSON "any" array.
+                     */
+                    return jAnyArray;
             }
         }
         return null;
     }
 
-    public void processCommonCreateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    /**
+     * Ensure the create/updates follow the rules
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     */
+    public void processCommonCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        this.setDbAttr(ResourceContent.RESOURCE_TYPE,
-                onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE));
+        if (onem2mRequest.isCreate) {
+            this.setDbAttr(ResourceContent.RESOURCE_TYPE,
+                    onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE));
+        } else {
+            this.setDbAttr(ResourceContent.RESOURCE_TYPE,
+                    onem2mRequest.getDbAttrs().getAttr(ResourceContent.RESOURCE_TYPE));
+        }
 
         // resourceId, resourceName, parentId is filled in by the Onem2mDb.createResource method
 
         String currDateTime = Onem2mDateTime.getCurrDateTime();
 
-        String ct = this.getDbAttr(ResourceContent.CREATION_TIME);
-        if (ct != null) {
-            if (!Onem2mDateTime.isValidDateTime(ct)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "Invalid ISO8601 date/time format: (YYYYMMDDTHHMMSSZ) " + ct);
-                return;
-            } else if (Onem2mDateTime.dateCompare(ct, currDateTime) > 0) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "Cannot set time in the future " + ct);
-                return;
+        if (onem2mRequest.isCreate) {
+            String ct = this.getDbAttr(ResourceContent.CREATION_TIME);
+            if (ct != null) {
+                if (!Onem2mDateTime.isValidDateTime(ct)) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                            "Invalid ISO8601 date/time format (YYYYMMDDTHHMMSSZ): " + ct);
+                    return;
+                } else if (Onem2mDateTime.dateCompare(ct, currDateTime) > 0) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                            "Cannot set time in the future " + ct);
+                    return;
+                }
+            } else {
+                this.setDbAttr(ResourceContent.CREATION_TIME, currDateTime);
             }
-        } else {
-            this.setDbAttr(ResourceContent.CREATION_TIME, currDateTime);
         }
 
         // if expiration time not provided, make one
@@ -184,6 +204,7 @@ public class ResourceContent {
             this.setDbAttr(ResourceContent.EXPIRATION_TIME, currDateTime /* + ONEM2M_FUTURE_EXPIRY */);
         }
 
+        // always update lmt at create or update
         String lmt = this.getDbAttr(ResourceContent.LAST_MODIFIED_TIME);
         if (lmt != null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
@@ -193,6 +214,11 @@ public class ResourceContent {
         this.setDbAttr(ResourceContent.LAST_MODIFIED_TIME, currDateTime);
     }
 
+    /**
+     * Generate JSON for this attr
+     * @param attr this attr
+     * @param j the obj
+     */
     public static void produceJsonForCommonAttributes(Attr attr, JSONObject j) {
 
         switch (attr.getName()) {
@@ -212,6 +238,11 @@ public class ResourceContent {
         }
     }
 
+    /**
+     * Generate JSON for this attribute set
+     * @param attrSet attr set
+     * @param j json obj
+     */
     public static void produceJsonForCommonAttributeSets(AttrSet attrSet, JSONObject j) {
 
         switch (attrSet.getName()) {
@@ -225,6 +256,12 @@ public class ResourceContent {
         }
     }
 
+    /**
+     * Generate resource specific JSON
+     * @param resourceType input resource type
+     * @param onem2mResource the resource info
+     * @param j json obj
+     */
     public static void produceJsonForResource(String resourceType, Onem2mResource onem2mResource, JSONObject j) {
 
         switch (resourceType) {
@@ -245,6 +282,69 @@ public class ResourceContent {
                 ResourceCse.produceJsonForResource(onem2mResource, j);
                 break;
         }
+    }
+
+    /**
+     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
+     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
+     * Maybe the next iteration of code, I'll create json files for each resource.
+     * @param key json content key
+     * @param resourceContent fill in with parsed json values
+     * @param onem2mResponse response
+     * @return valid content
+     */
+    public static boolean processJsonCommonRetrieveContent(String key,
+                                                            ResourceContent resourceContent,
+                                                            ResponsePrimitive onem2mResponse) {
+
+        Object o = resourceContent.getJsonContent().get(key);
+
+        switch (key) {
+
+            case CREATION_TIME:
+            case EXPIRATION_TIME:
+            case LAST_MODIFIED_TIME:
+            case RESOURCE_ID:
+            case RESOURCE_NAME:
+            case PARENT_ID:
+                if (!(o instanceof String)) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                    return false;
+                }
+                resourceContent.setDbAttr(key, o.toString());
+                break;
+            case RESOURCE_TYPE:
+            case STATE_TAG:
+                if (!(o instanceof Integer)) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") integer expected for json key: " + key);
+                    return false;
+                }
+                resourceContent.setDbAttr(key, o.toString());
+                break;
+            case LABELS:
+                if (!(o instanceof JSONArray)) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                    return false;
+                }
+                JSONArray array = (JSONArray) o;
+                for (int i = 0; i < array.length(); i++) {
+                    if (!(array.get(i) instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                        return false;
+                    }
+                    //resourceContent.setDbAttr(key, array.get(i));
+                }
+                break;
+            default:
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
+                return false;
+        }
+        return true;
     }
 
     /**

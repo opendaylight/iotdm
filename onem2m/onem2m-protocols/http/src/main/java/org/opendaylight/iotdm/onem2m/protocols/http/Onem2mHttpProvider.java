@@ -57,6 +57,15 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
 
     public class MyHandler extends AbstractHandler {
 
+        /**
+         * The handler for the HTTP requesst
+         * @param target target
+         * @param baseRequest  request
+         * @param httpRequest  request
+         * @param httpResponse  response
+         * @throws IOException
+         * @throws ServletException
+         */
         @Override
         public void handle(String target, Request baseRequest,
                            HttpServletRequest httpRequest,
@@ -165,6 +174,8 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
             // the content is already in the required format ...
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+            httpResponse.setHeader(X_M2M_RI, onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
+
             int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
             if (content != null) {
                 httpResponse.setStatus(httpRSC);

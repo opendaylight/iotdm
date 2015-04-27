@@ -82,22 +82,17 @@ public class ResourceAE {
     }
     };
 
-    private static void processCreateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        /**
-         * When the parentURI was located in the tree, the attr list was read, this puts it into a class
-         * so that each attribute can be easily accessed
-         */
-        DbAttr parentDbAttrs = onem2mRequest.getDbAttrs();
-
-        /**
-         * The only resource type that can be the parent according to TS0001 9.6.1.1-1 is a cseBase
-         */
-        String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
-        if (rt == null || !rt.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                    "Cannot create AE under this resource type: " + rt);
-            return;
+        // ensure resource can be created under the target resource
+        if (onem2mRequest.isCreate) {
+            DbAttr parentDbAttrs = onem2mRequest.getDbAttrs();
+            String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+            if (rt == null || !rt.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                        "Cannot create AE under this resource type: " + rt);
+                return;
+            }
         }
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
@@ -117,10 +112,18 @@ public class ResourceAE {
         /**
          * The resource has been filled in with any attributes that need to be written to the database
          */
-        if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
-            // TODO: what do we do now ... seems really bad ... keep stats
-            return;
+        if (onem2mRequest.isCreate) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+                // TODO: what do we do now ... seems really bad ... keep stats
+                return;
+            }
+        } else {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+                // TODO: what do we do now ... seems really bad ... keep stats
+                return;
+            }
         }
     }
 
@@ -131,22 +134,13 @@ public class ResourceAE {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private static void processJsonCreateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        //Set<String> validAttributes = onem2mRequest.getValidAttributes();
         Iterator<?> keys = resourceContent.getJsonContent().keys();
         while( keys.hasNext() ) {
             String key = (String)keys.next();
-
-            /*
-            if (!validAttributes.contains(key)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
-                return;
-            }
-            */
 
             Object o = resourceContent.getJsonContent().get(key);
 
@@ -156,28 +150,36 @@ public class ResourceAE {
                 case AE_ID:
                 case ONTOLOGY_REF:
                 case APP_ID:
-                case ResourceContent.CREATION_TIME:
                 case ResourceContent.EXPIRATION_TIME:
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        if (!(o instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                            return;
+                        }
+                        resourceContent.setDbAttr(key, o.toString());
+                    } else {
+                        resourceContent.setDbAttr(key, null);
                     }
-                    resourceContent.setDbAttr(key, o.toString());
                     break;
                 case ResourceContent.LABELS:
-                    if (!(o instanceof JSONArray)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
-                        return;
-                    }
-                    JSONArray array = (JSONArray) o;
-                    for (int i = 0; i < array.length(); i++) {
-                        if (!(array.get(i) instanceof String)) {
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
-                            return;                        }
-                        //resourceContent.setDbAttr(key, array.get(i));
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.get(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            }
+                            //resourceContent.setDbAttr(key, array.get(i));
+                        }
+                    } else {
+                        //resourceContent.setDbAttrSet(key, null);
                     }
                     break;
                 default:
@@ -189,11 +191,11 @@ public class ResourceAE {
     }
 
     /**
-     * Parse the CONTENT resource representation.
-     * @param onem2mRequest
-     * @param onem2mResponse
+     * Parse the CONTENT resource representation for create and update
+     * @param onem2mRequest request
+     * @param onem2mResponse response
      */
-    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -202,17 +204,23 @@ public class ResourceAE {
             return;
 
         if (resourceContent.isJson()) {
-            processJsonCreateContent(onem2mRequest, onem2mResponse);
+            processJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        resourceContent.processCommonCreateAttributes(onem2mRequest, onem2mResponse);
+
+        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
-        ResourceAE.processCreateAttributes(onem2mRequest, onem2mResponse);
 
+        ResourceAE.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
     }
 
+    /**
+     * Generate JSON data for this resource
+     * @param onem2mResource this resource
+     * @param j the object to put the json into
+     */
     public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
 
         for (Attr attr : onem2mResource.getAttr()) {
@@ -234,6 +242,67 @@ public class ResourceAE {
                     ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
                     break;
             }
+        }
+    }
+
+    /**
+     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
+     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
+     * Maybe the next iteration of code, I'll create json files for each resource.
+     *
+     * This routine enforces the mandatory and option parameters
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     */
+    private static void processJsonRetrieveContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+
+            Object o = resourceContent.getJsonContent().get(key);
+
+            switch (key) {
+
+                case APP_NAME:
+                case AE_ID:
+                case ONTOLOGY_REF:
+                case APP_ID:
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
+                default:
+                    if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
+                        return;
+                    }
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Parse the CONTENT resource representation.
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     */
+    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+
+        resourceContent.parse(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
+
+        if (resourceContent.isJson()) {
+            processJsonRetrieveContent(onem2mRequest, onem2mResponse);
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+                return;
         }
     }
 }

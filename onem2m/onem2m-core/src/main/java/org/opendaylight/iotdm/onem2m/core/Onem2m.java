@@ -32,6 +32,7 @@ public class Onem2m {
     public static final int MAX_TREE_WIDTH = 10000;
     public static final int MAX_TREE_LEVEL = 20;
     public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
+    public static final boolean USE_JSON_ANY_SYNTAX = true;
 
     public class Operation {
         public static final String CREATE = "1";
@@ -107,6 +108,13 @@ public class Onem2m {
 
     }
 
+    // TODO: Filter Usage
+    public class FilterUsageType {
+        public static final String DISCOVERY = "1";
+        public static final String EVENT_NOTIFICATION_CRITERIA = "2";
+
+    }
+
     // TS0004 sectiopns: 6.3.3.2.9, 6.6
     public class ResponseStatusCode {
         public static final String OK = "2000";
@@ -146,9 +154,9 @@ public class Onem2m {
     /**
      * Routine to allow REST clients to invoke the MDSAL RPC which will process the RequestPrimitive accessed via
      * the Onem2mService.
-     * @param onem2mRequest
-     * @param onem2mService
-     * @return
+     * @param onem2mRequest request
+     * @param onem2mService response
+     * @return the response primitives
      */
     public static ResponsePrimitive serviceOnenm2mRequest(RequestPrimitive onem2mRequest, Onem2mService onem2mService) {
 

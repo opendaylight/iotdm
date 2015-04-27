@@ -14,15 +14,13 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mAERequest {
+public class Onem2mRequest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Onem2mAERequest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Onem2mRequest.class);
 
     Onem2mRequestPrimitiveClient requestPrimitive;
-    /**
-     * The onem2m-protocols use this to create a new RequestPrimitive class
-     */
-    public Onem2mAERequest() {
+
+    public Onem2mRequest() {
         requestPrimitive = new Onem2mRequestPrimitiveClient();
     }
 

@@ -37,7 +37,7 @@ public class DbTransaction {
 
     /**
      * Create a txn, it requires the chain as it uses the transaction chaining feature of the data store
-     * @param bindingTransactionChain
+     * @param bindingTransactionChain transaction chain
      */
     public DbTransaction(BindingTransactionChain bindingTransactionChain) {
         this.bindingTransactionChain = bindingTransactionChain;
@@ -46,7 +46,7 @@ public class DbTransaction {
 
     /**
      * Commit the transaction to the data store
-     * @return
+     * @return success/fail
      */
     public boolean commitTransaction() {
         boolean ret;
@@ -63,9 +63,9 @@ public class DbTransaction {
 
     /**
      * Delete
-     * @param deleteIID
-     * @param logicalDatastoreType
-     * @param <U>
+     * @param deleteIID iid
+     * @param logicalDatastoreType op vs config
+     * @param <U> return value
      */
     public <U extends org.opendaylight.yangtools.yang.binding.DataObject> void delete
             (InstanceIdentifier<U> deleteIID, LogicalDatastoreType logicalDatastoreType) {
@@ -74,10 +74,10 @@ public class DbTransaction {
 
     /**
      * Update
-     * @param addIID
-     * @param data
-     * @param logicalDatastoreType
-     * @param <U>
+     * @param addIID iid
+     * @param data new value
+     * @param logicalDatastoreType op vs config
+     * @param <U> return value
      */
     public <U extends org.opendaylight.yangtools.yang.binding.DataObject> void update // writeMerge
             (InstanceIdentifier<U> addIID, U data, LogicalDatastoreType logicalDatastoreType) {
@@ -86,10 +86,10 @@ public class DbTransaction {
 
     /**
      * Create/Write
-     * @param addIID
-     * @param data
-     * @param logicalDatastoreType
-     * @param <U>
+     * @param addIID iid
+     * @param data new data
+     * @param logicalDatastoreType op vs config
+     * @param <U> return value
      */
     public <U extends org.opendaylight.yangtools.yang.binding.DataObject> void create // writePut
             (InstanceIdentifier<U> addIID, U data, LogicalDatastoreType logicalDatastoreType) {
@@ -100,11 +100,11 @@ public class DbTransaction {
      * This is a static routine that is a complete transaction for reading.  It is not really apart of the
      * DbTransaction where a sequence of open, trans, {db ops}, followed by db.commit is required.   We use that
      * only for changing the db.
-     * @param bindingTransactionChain
-     * @param readIID
-     * @param logicalDatastoreType
-     * @param <U>
-     * @return
+     * @param bindingTransactionChain transaction chain
+     * @param readIID iid
+     * @param logicalDatastoreType op vs config
+     * @param <U> return type
+     * @return return date
      */
     public static <U extends org.opendaylight.yangtools.yang.binding.DataObject> U retrieve (
             BindingTransactionChain bindingTransactionChain,
