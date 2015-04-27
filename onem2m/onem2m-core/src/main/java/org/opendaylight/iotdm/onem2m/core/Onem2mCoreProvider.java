@@ -8,9 +8,6 @@
 package org.opendaylight.iotdm.onem2m.core;
 
 import com.google.common.util.concurrent.Futures;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -35,6 +32,10 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     private DataBroker dataBroker;
     private Onem2mDb db;
 
+    /**
+     * Perform session initialization
+     * @param session
+     */
     @Override
     public void onSessionInitiated(ProviderContext session) {
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
@@ -46,6 +47,10 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         LOG.info("Session Initiated");
     }
 
+    /**
+     * Shutdown the session
+     * @throws Exception
+     */
     @Override
     public void close() throws Exception {
         if (this.rpcReg != null) {
@@ -58,7 +63,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     }
 
     private void initializePerfCse() {
-        if (!Onem2mDb.getInstance().FindCseByName(Onem2m.SYS_PERF_TEST_CSE)) {
+        if (!Onem2mDb.getInstance().findCseByName(Onem2m.SYS_PERF_TEST_CSE)) {
             RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
             onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
             onem2mRequest.setPrimitive("CSE_TYPE", "IN-CSE");
@@ -76,8 +81,8 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
      * of those protocols.  The CONTENT is encoded by the Onem2m.RequestPrimitive.CONTENT_FORMAT=json/xml).  The
      * code that ultimately cares about the CONTENT will decode it using the appropriate content parser.
      * Based on the operation, mandatory fields have to be checked.
-     * @param input
-     * @return
+     * @param input the input request primitives
+     * @return the response primitives
      */
     @Override
     public Future<RpcResult<Onem2mRequestPrimitiveOutput>> onem2mRequestPrimitive(Onem2mRequestPrimitiveInput input) {
@@ -108,8 +113,8 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
      * For now the provisioning parms supported are
      * 1 CSE_ID - the name of the cse Base
      * 2 CSE_TYPE - "IN-CSE", "...
-     * @param input
-     * @return
+     * @param input cse parms
+     * @return cse output parms
      */
     @Override
     public Future<RpcResult<Onem2mCseProvisioningOutput>> onem2mCseProvisioning(Onem2mCseProvisioningInput input) {
@@ -132,6 +137,10 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         return RpcResultBuilder.success(output).buildFuture();
     }
 
+    /**
+     * Cleanup the data store RPC
+     * @return VOID
+     */
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
         Onem2mDb.getInstance().cleanupDataStore();
@@ -140,6 +149,11 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }
 
+    /**
+     * Dump the data store to karaf log RPC
+     * @param input all or start resource
+     * @return VOID
+     */
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mDumpResourceTree(Onem2mDumpResourceTreeInput input) {
         LOG.info("RPC: onem2mDumpResourceTree dumping ...");
@@ -153,7 +167,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         } else {
             String resourceUri = input.getResourceUri().trim();
             onem2mRequest.setPrimitive(RequestPrimitive.TO, resourceUri);
-            if (!Onem2mDb.getInstance().FindResourceUsingURI(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().findResourceUsingURI(onem2mRequest, onem2mResponse)) {
                 LOG.error("Cannot find resourceUri: {}", resourceUri);
                 return Futures.immediateFuture(RpcResultBuilder.<Void>failed().build());
             }

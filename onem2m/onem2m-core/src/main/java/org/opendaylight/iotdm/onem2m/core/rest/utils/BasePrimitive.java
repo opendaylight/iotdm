@@ -30,12 +30,21 @@ public class BasePrimitive {
         primitiveManyMap = new HashMap<String,List<String>>();
    }
 
+    /**
+     * Prime the list with a LIST of primitives
+     * @param onem2mPrimitivesList
+     */
     public void setPrimitivesList(List<Onem2mPrimitive> onem2mPrimitivesList) {
         for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
             primitiveMap.put(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
         }
     }
 
+    /**
+     * Set a name value pair
+     * @param primitiveName
+     * @param primitiveValue
+     */
     public void setPrimitive(String primitiveName, String primitiveValue) {
         if (delPrimitive(primitiveName)) {
             LOG.error("set Attr N={}, V={}", primitiveName, primitiveValue);
@@ -44,6 +53,7 @@ public class BasePrimitive {
         primitiveMap.put(primitiveName, primitiveValue);
         //LOG.info("set Attr N={}, V={}", primitiveName, primitiveValue);
     }
+
     /**
      * Enable many values to be set for the same primitive (labels as an example)  These will ultimately
      * be stored in the DbAttrSets vs the DbAttrs
@@ -65,12 +75,25 @@ public class BasePrimitive {
         }
         //LOG.info("setMany Attr N={}, V={}, numValues={}", primitiveName, primitiveValue, valueArray.size());
     }
+
+    /**
+     * Return the value for this name
+     * @param primitiveName
+     * @return value for this name
+     */
     public String getPrimitive(String primitiveName) {
         return this.primitiveMap.get(primitiveName);
     }
+
+    /**
+     * Some names can have many values associated with them eg. labels
+     * @param primitiveName
+     * @return the list of values
+     */
     public List<String> getPrimitiveMany(String primitiveName) {
         return this.primitiveManyMap.get(primitiveName);
     }
+
     private boolean delPrimitive(String primitiveName) {
         if (primitiveMap.containsKey(primitiveName)) {
             primitiveMap.remove(primitiveName);
@@ -82,7 +105,7 @@ public class BasePrimitive {
 
     /**
      * The input requestPrimitive builder needs access to the internal list
-     * @return
+     * @return the list of primitives
      */
     public List<Onem2mPrimitive> getPrimitivesList() {
         return onem2mPrimitivesList;

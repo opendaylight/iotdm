@@ -14,7 +14,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-restconf/${mdsal.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.dlux/features-dlux/${dlux.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.iotdm/onem2m-features/${project.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.iotdm/onem2m-features/${onem2m.version}/xml/features</repository>
 
     <feature name='odl-onem2mbenchmark-api' version='${project.version}' description='OpenDaylight :: onem2mbenchmark :: api'>
         <feature version='${yangtools.version}'>odl-yangtools-models</feature>

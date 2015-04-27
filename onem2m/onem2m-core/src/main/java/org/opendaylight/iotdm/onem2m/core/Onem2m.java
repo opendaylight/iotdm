@@ -32,6 +32,7 @@ public class Onem2m {
     public static final int MAX_TREE_WIDTH = 10000;
     public static final int MAX_TREE_LEVEL = 20;
     public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
+    public static final boolean USE_JSON_ANY_SYNTAX = true;
 
     public class Operation {
         public static final String CREATE = "1";
@@ -104,6 +105,13 @@ public class Onem2m {
     public class DiscoveryResultType {
         public static final String HIERARCHICAL = "1";
         public static final String NON_HIERARCHICAL = "2";
+
+    }
+
+    // TODO: Filter Usage
+    public class FilterUsageType {
+        public static final String DISCOVERY = "1";
+        public static final String EVENT_NOTIFICATION_CRITERIA = "2";
 
     }
 

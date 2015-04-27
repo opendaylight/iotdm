@@ -20,11 +20,11 @@ public class ResourceContentBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceContentBuilder.class);
     protected JSONObject jsonContent;
-    /**
-     * The onem2m-protocols use this to create a new RequestPrimitive class
-     */
+    protected boolean useAnySyntax;
+
     public ResourceContentBuilder() {
         jsonContent = new JSONObject();
+        useAnySyntax = false;
     }
 
     public ResourceContentBuilder setResourceType(String value) {
@@ -63,11 +63,18 @@ public class ResourceContentBuilder {
         jsonContent.put(ResourceContent.STATE_TAG, value);
         return this;
     }
+    public void setUseAnySyntax(boolean useAny) {
+        this.useAnySyntax = useAny;
+    }
     public String build() {
-        JSONObject j = new JSONObject();
-        JSONArray anyArray = new JSONArray();
-        anyArray.put(jsonContent);
-        j.put("any", anyArray);
-        return (j.toString());
+        if (useAnySyntax) {
+            JSONObject j = new JSONObject();
+            JSONArray anyArray = new JSONArray();
+            anyArray.put(jsonContent);
+            j.put("any", anyArray);
+            return (j.toString());
+        } else {
+            return (jsonContent.toString());
+        }
     }
 }
