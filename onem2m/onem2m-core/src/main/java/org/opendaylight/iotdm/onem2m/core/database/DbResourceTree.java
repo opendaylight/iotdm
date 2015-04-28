@@ -23,12 +23,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.ChildBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.ChildKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
@@ -104,8 +99,8 @@ public class DbResourceTree {
                 .setOldestId((Onem2mDb.NULL_RESOURCE_ID))
                 .setChild(Collections.<Child>emptyList()) // new resource has NO children
                 .setAttr(onem2mRequest.getResourceContent().getAttrList())
-                //.setAttrSet(onem2mRequest.getDbAttrSets().getAttrSetsList())
-                .setAttrSet(Collections.<AttrSet>emptyList())
+                .setAttrSet(onem2mRequest.getResourceContent().getAttrSetList())
+                //.setAttrSet(Collections.<AttrSet>emptyList())
                 .build();
 
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
@@ -199,6 +194,38 @@ public class DbResourceTree {
 
         dbTxn.update(iid, attr, LogicalDatastoreType.OPERATIONAL);
     }
+
+    /**
+     *
+     * @param dbTxn transaction id
+     * @param resourceId this resource
+     * @param attrSet updated memberList
+     */
+    public void updateAttrSet(DbTransaction dbTxn, String resourceId, AttrSet attrSet) {
+
+        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(AttrSet.class, attrSet.getKey());
+
+        dbTxn.update(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
+    }
+
+    /**
+     * Delete the attr by name from the data store
+     * @param dbTxn transaction id
+     * @param resourceId this resource
+     * @param attrSetName name
+     */
+    public void deleteAttrSet(DbTransaction dbTxn, String resourceId, String attrSetName) {
+
+        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(AttrSet.class, new AttrSetKey(attrSetName));
+
+        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
+    }
+
+
 
     /**
      * Retrieve teh child using its resource name
@@ -384,7 +411,7 @@ public class DbResourceTree {
             List<Member> memberList = attrSet.getMember();
             LOG.info("        AttrSet: name: {}, count: {}", attrSet.getName(), memberList.size());
             for (Member member : memberList) {
-                LOG.info("            Member: name: {}, value: {}", member.getMember(), member.getValue());
+                LOG.info("            Member: name: {}", member.getMember());
             }
         }
     }

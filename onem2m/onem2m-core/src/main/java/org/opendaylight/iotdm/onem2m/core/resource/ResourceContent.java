@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.core.resource;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.json.JSONArray;
@@ -14,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
+import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
@@ -21,6 +23,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +50,13 @@ public class ResourceContent {
     public static final String CHILD_RESOURCE_REF = "chr";
 
     private DbAttr dbAttrs;
+    private DbAttrSet dbAttrSets;
     private JSONObject jsonContent;
     private String xmlContent;
 
     public ResourceContent() {
         dbAttrs = new DbAttr();
+        dbAttrSets = new DbAttrSet();
         jsonContent = null;
         xmlContent = null;
     }
@@ -215,6 +221,58 @@ public class ResourceContent {
     }
 
     /**
+     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
+     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
+     * Maybe the next iteration of code, I'll create json files for each resource.
+     * @param key json content key
+     * @param resourceContent fill in with parsed json values
+     * @param onem2mResponse response
+     * @return valid content
+     */
+    public static boolean processJsonCommonCreateUpdateContent(String key,
+                                                           ResourceContent resourceContent,
+                                                           ResponsePrimitive onem2mResponse) {
+
+        Object o = resourceContent.getJsonContent().get(key);
+
+        switch (key) {
+
+            case LABELS:
+                if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!(o instanceof JSONArray)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                        return false;
+                    }
+                    JSONArray array = (JSONArray) o;
+                    List<Member> memberList = new ArrayList<Member>(array.length());
+                    for (int i = 0; i < array.length(); i++) {
+                        if (!(array.get(i) instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                            return false;
+                        }
+                        String memberName = array.get(i).toString();
+                        memberList.add(new MemberBuilder()
+                                .setKey(new MemberKey(memberName))
+                                .setMember(memberName)
+                                .build());
+                    }
+                    resourceContent.setDbAttrSet(key, memberList);
+
+                } else {
+                    resourceContent.setDbAttrSet(key, null);
+                }
+                break;
+            default:
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
+                return false;
+        }
+        return true;
+    }
+
+    /**
      * Generate JSON for this attr
      * @param attr this attr
      * @param j the obj
@@ -228,8 +286,6 @@ public class ResourceContent {
                 j.put(attr.getName(), attr.getValue());
                 break;
             case ResourceContent.RESOURCE_TYPE:
-                // TODO: should this be a number
-                //j.put(attr.getName(), attr.getValue());
                 j.put(attr.getName(), Integer.valueOf(attr.getValue()));
                 break;
             case ResourceContent.STATE_TAG:
@@ -249,7 +305,7 @@ public class ResourceContent {
             case ResourceContent.LABELS:
                 JSONArray a = new JSONArray();
                 for (Member member : attrSet.getMember()) {
-                    a.put(member.getValue());
+                    a.put(member.getMember());
                 }
                 j.put(attrSet.getName(), a);
                 break;
@@ -367,16 +423,20 @@ public class ResourceContent {
         this.dbAttrs.setAttr(name, value);
     }
 
-    public DbAttr getDbAttrList() {
-        return this.dbAttrs;
-    }
-
     public List<Attr> getAttrList() {
         return this.dbAttrs.getAttrList();
     }
 
-    public void setAttrList(List<Attr> attrList) {
-        this.dbAttrs = new DbAttr(attrList);
+    public List<Member> getDbAttrSet(String name) {
+        return this.dbAttrSets.getAttrSet(name);
+    }
+
+    public void setDbAttrSet(String name, List<Member> memberList) {
+        this.dbAttrSets.setAttrSet(name, memberList);
+    }
+
+    public List<AttrSet> getAttrSetList() {
+        return this.dbAttrSets.getAttrSetsList();
     }
 }
 

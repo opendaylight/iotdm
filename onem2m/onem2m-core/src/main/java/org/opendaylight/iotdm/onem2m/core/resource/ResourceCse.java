@@ -137,26 +137,13 @@ public class ResourceCse {
                     }
                     break;
                 case ResourceContent.LABELS:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
-                        if (!(o instanceof JSONArray)) {
-                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
-                            return;
-                        }
-                        JSONArray array = (JSONArray) o;
-                        for (int i = 0; i < array.length(); i++) {
-                            if (!(array.get(i) instanceof String)) {
-                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
-                                return;
-                            }
-                            //resourceContent.setDbAttr(key, o.toString());
-                            //onem2mRequest.getDbAttrSets().setAttr(key, array.get(i));
-                        }
-                    } else {
-                        //resourceContent.setDbAttr(key, null);
+                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                            resourceContent,
+                            onem2mResponse)) {
+                        return;
                     }
                     break;
+
                 default:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
@@ -218,7 +205,7 @@ public class ResourceCse {
                 case SUPPORTED_RESOURCE_TYPES:
                     JSONArray a = new JSONArray();
                     for (Member member : attrSet.getMember()) {
-                        a.put(member.getValue());
+                        a.put(member.getMember());
                     }
                     j.put(attrSet.getName(), a); // TODO: enum or string?
                     break;

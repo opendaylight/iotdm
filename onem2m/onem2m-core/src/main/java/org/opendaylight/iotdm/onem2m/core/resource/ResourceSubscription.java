@@ -9,9 +9,7 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -23,6 +21,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,7 +180,6 @@ public class ResourceSubscription {
                         resourceContent.setDbAttr(key, null);
                     }
                     break;
-                case ResourceContent.LABELS:
                 case NOTIFICATION_URI:
                     if (!resourceContent.getJsonContent().isNull(key)) {
                         if (!(o instanceof JSONArray)) {
@@ -189,18 +188,33 @@ public class ResourceSubscription {
                             return;
                         }
                         JSONArray array = (JSONArray) o;
+                        List<Member> memberList = new ArrayList<Member>(array.length());
                         for (int i = 0; i < array.length(); i++) {
                             if (!(array.get(i) instanceof String)) {
                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                         "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
                                 return;
                             }
-                            //resourceContent.setDbAttr(key, array.get(i));
+                            String memberName = array.get(i).toString();
+                            memberList.add(new MemberBuilder()
+                                    .setKey(new MemberKey(memberName))
+                                    .setMember(memberName)
+                                    .build());
                         }
+                        resourceContent.setDbAttrSet(key, memberList);
+
                     } else {
-                        //resourceContent.setDbAttr(key, null);
+                        resourceContent.setDbAttrSet(key, null);
                     }
                     break;
+                case ResourceContent.LABELS:
+                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                            resourceContent,
+                            onem2mResponse)) {
+                        return;
+                    }
+                    break;
+
                 default:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
@@ -260,7 +274,7 @@ public class ResourceSubscription {
                 case NOTIFICATION_URI:
                     JSONArray a = new JSONArray();
                     for (Member member : attrSet.getMember()) {
-                        a.put(member.getValue());
+                        a.put(member.getMember());
                     }
                     j.put(attrSet.getName(), a);
                     break;

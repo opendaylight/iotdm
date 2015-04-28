@@ -23,7 +23,9 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,12 +225,23 @@ public class Onem2mDb implements TransactionChainListener {
                 dbResourceTree.deleteAttr(dbTxn, onem2mRequest.getResourceId(), attr.getName());
             }
         }
+        List<AttrSet> attrSetList = onem2mRequest.getResourceContent().getAttrSetList();
+        for (AttrSet attrSet : attrSetList) {
+            List<Member> member = attrSet.getMember();
+            if (member != null) {
+                dbResourceTree.updateAttrSet(dbTxn, onem2mRequest.getResourceId(), attrSet);
+
+            } else {
+                dbResourceTree.deleteAttrSet(dbTxn, onem2mRequest.getResourceId(), attrSet.getName());
+            }
+        }
 
         boolean success = dbTxn.commitTransaction();
 
         Onem2mResource onem2mResource = getResource(onem2mRequest.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
         onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
+        //onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
 
         return success;
     }

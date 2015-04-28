@@ -131,23 +131,10 @@ public class ResourceContainer {
                     }
                     break;
                 case ResourceContent.LABELS:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
-                        if (!(o instanceof JSONArray)) {
-                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
-                            return;
-                        }
-                        JSONArray array = (JSONArray) o;
-                        for (int i = 0; i < array.length(); i++) {
-                            if (!(array.get(i) instanceof String)) {
-                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
-                                return;
-                            }
-                            //resourceContent.setDbAttr(key, array.get(i));
-                        }
-                    } else {
-                        //resourceContent.setDbAttr(key, null);
+                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                            resourceContent,
+                            onem2mResponse)) {
+                        return;
                     }
                     break;
                 default:

@@ -106,9 +106,6 @@ module onem2m {
                     leaf member {
                         type string;
                     }
-                    leaf value {
-                        type string;
-                    }
                 }
             }
         }

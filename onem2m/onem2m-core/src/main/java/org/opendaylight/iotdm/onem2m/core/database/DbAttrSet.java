@@ -46,12 +46,12 @@ public class DbAttrSet {
     public void setAttrSet(String attrSetName, List<Member> memberList) {
         List<Member> temp = getAttrSet(attrSetName);
         if (temp != null) {
-            LOG.error("Duplicate attr: prim={}, old={}, new={}", attrSetName, temp, memberList);
+            LOG.error("Duplicate attrSet: name={}, old={}, new={}", attrSetName, temp, memberList);
             assert (false);
         }
         attrSetsList.add(new AttrSetBuilder().setKey(new AttrSetKey(attrSetName)).setName(attrSetName).setMember(memberList).build());
         attrMap.put(attrSetName, memberList);
-        LOG.info("set Attr N={}, V={}", attrSetName, memberList);
+        //LOG.info("set Attr N={}, V={}", attrSetName, memberList);
     }
 
     public List<Member> getAttrSet(String attrSetName) {

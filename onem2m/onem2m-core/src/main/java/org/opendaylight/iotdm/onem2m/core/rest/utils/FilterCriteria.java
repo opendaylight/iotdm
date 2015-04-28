@@ -14,6 +14,7 @@ import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,13 +85,13 @@ public class FilterCriteria {
                 if (foundLabel) {
                     break;
                 }
-                List<String> dbLabels = null;//dbAttrSets.getAttrSet(ResourceContent.LABELS);
+                List<Member> dbLabels = dbAttrSets.getAttrSet(ResourceContent.LABELS);
                 // if no label in data store, then it does not pass the filter
                 if (dbLabels == null) {
                     return false;
                 }
-                for (String dbLabel : dbLabels) {
-                    if (dbLabel.contentEquals(filterLabel)) {
+                for (Member dbLabel : dbLabels) {
+                    if (dbLabel.getMember().contentEquals(filterLabel)) {
                         foundLabel = true;
                         break;
                     }

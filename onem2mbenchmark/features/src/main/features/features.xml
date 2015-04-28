@@ -23,7 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature name='odl-onem2mbenchmark' version='${project.version}' description='OpenDaylight :: onem2mbenchmark'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2mbenchmark-api</feature>
-        <feature version='${project.version}'>odl-iotdm-onem2m</feature>
+        <feature version='${onem2m.version}'>odl-iotdm-onem2m</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2mbenchmark-impl/${project.version}</bundle>
         <bundle>mvn:org.eclipse.californium/californium-osgi/${californium.version}</bundle>
         <configfile finalname="${configfile.directory}/onem2mbenchmark.xml">

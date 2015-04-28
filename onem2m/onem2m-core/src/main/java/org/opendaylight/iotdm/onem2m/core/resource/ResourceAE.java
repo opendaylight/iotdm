@@ -8,10 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.core.resource;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -27,6 +24,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,23 +163,10 @@ public class ResourceAE {
                     }
                     break;
                 case ResourceContent.LABELS:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
-                        if (!(o instanceof JSONArray)) {
-                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
-                            return;
-                        }
-                        JSONArray array = (JSONArray) o;
-                        for (int i = 0; i < array.length(); i++) {
-                            if (!(array.get(i) instanceof String)) {
-                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
-                                return;
-                            }
-                            //resourceContent.setDbAttr(key, array.get(i));
-                        }
-                    } else {
-                        //resourceContent.setDbAttrSet(key, null);
+                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                            resourceContent,
+                            onem2mResponse)) {
+                        return;
                     }
                     break;
                 default:
