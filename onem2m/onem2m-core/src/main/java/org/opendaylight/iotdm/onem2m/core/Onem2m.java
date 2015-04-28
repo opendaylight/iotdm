@@ -70,23 +70,10 @@ public class Onem2m {
         public static final String BLOCKING_REQUEST = "3";
     }
 
-    public class RequestFilterCriteria { // TODO: ts0004 table 8.2.2.1
-        public static final String CREATED_BEFORE = "crb";
-        public static final String CREATED_AFTER = "cra";
-        public static final String MODIFIED_SINCE = "ms";
-        public static final String UNMODIFIED_SINCE = "us";
-        public static final String STATE_TAG_SMALLER = "sts";
-        public static final String STATE_TAG_BIGGER = "stb";
-        public static final String EXPIRE_BEFORE = "exb";
-        public static final String EXPIRE_AFTER = "exa";
-        public static final String LABELS = "lbl";
-        public static final String RESOURCE_TYPE = "rty";
-        public static final String SIZE_ABOVE = "sza";
-        public static final String SIZE_BELOW = "szb";
-        public static final String CONTENT_TYPE = "cty";
-        public static final String LIMIT = "lim";
-        public static final String ATTRIBUTE = "atr";
-        public static final String FILTER_USAGE = "fu";
+    public class NotificationContentType {
+        public static final String MODIFIED_ATTRIBUTES = "1";
+        public static final String WHOLE_RESOURCE = "2";
+        public static final String REFERENCE_ONLY = "3";
     }
 
     // TODO: where did this list come from, not specified in XSD but specified in TS0001 8.1.2

@@ -94,12 +94,14 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
             }
 
             clientBuilder.setTo(options.getURIPathString()); // To/TargetURI
+            // M3 clientBuilder.setTo(options.getUriPathString()); // To/TargetURI // M3
 
             processOptions(options, clientBuilder); // pull options out of coap header fields
 
             // according to the spec, the uri query string can contain in short form, the
             // resourceType, responseType, result persistence,  Delivery Aggregation, Result Content,
             Boolean resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(options.getURIQueryString());
+            // M3 Boolean resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(options.getUriQueryString());
             if (resourceTypePresent && code != CoAP.Code.POST) {
                 coapExchange.respond(CoAP.ResponseCode.BAD_REQUEST, "Specifying resource type not permitted.");
                 return;

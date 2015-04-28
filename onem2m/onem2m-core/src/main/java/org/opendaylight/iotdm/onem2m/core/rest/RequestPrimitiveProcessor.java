@@ -212,7 +212,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         } else if (!validateUri(from)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "FROM(" + RequestPrimitive.FROM + ") not value URI: " + from);
+                    "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
             return;
         }
 
@@ -519,6 +519,9 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         ResultContentProcessor.handleDelete(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
 
         // now delete the resource from the database
         // TODO: idempotent so who cares if cannot find the resource ... is this true?
@@ -586,12 +589,18 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
         if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                    "Not permitted to update this resource: " + this.getPrimitive(RequestPrimitive.TO));
+                    "Not permitted to update content instance: " + this.getPrimitive(RequestPrimitive.TO));
             return;
         }
         //
         ResourceContentProcessor.handleUpdate(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
         ResultContentProcessor.handleUpdate(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
         // need to figure out notification strategy
 
         // TODO: see TS0004 6.8

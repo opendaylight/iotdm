@@ -48,6 +48,7 @@ public class OdlOnem2mCoapRequestPrimitiveBuilder {
     }
     public OdlOnem2mCoapRequestPrimitiveBuilder setTo(String value) {
         onem2mRequest.optionsSet.addURIPath(value);
+        // M3 onem2mRequest.optionsSet.addUriPath(value);
         return this;
     }
     public OdlOnem2mCoapRequestPrimitiveBuilder setFrom(String value) {
@@ -74,6 +75,7 @@ public class OdlOnem2mCoapRequestPrimitiveBuilder {
 
     public OdlOnem2mCoapRequestPrimitiveBuilder setContent(String value, int contentFormat) {
         onem2mRequest.coapRequest.setPayload(value, MediaTypeRegistry.APPLICATION_JSON);
+        // M3 onem2mRequest.coapRequest.setPayload(value);
         return this;
     }
 
@@ -178,6 +180,7 @@ public class OdlOnem2mCoapRequestPrimitiveBuilder {
     }
     public OdlOnem2mCoapRequestPrimitive build() {
         onem2mRequest.optionsSet.addURIQuery(onem2mRequest.uriQueryString);
+        // M3 onem2mRequest.optionsSet.addUriQuery(onem2mRequest.uriQueryString);
         onem2mRequest.coapRequest.setOptions(onem2mRequest.optionsSet);
         return (onem2mRequest);
     }

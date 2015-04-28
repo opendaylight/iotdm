@@ -9,6 +9,8 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -87,6 +89,15 @@ public class ResourceSubscription {
     }
     };
 
+    private static boolean validateUri(String uriString)  {
+        try {
+            URI toUri = new URI(uriString);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * The list<Attr> and List<AttrSet> must be filled in with the ContentPrimitive attributes
      * @param onem2mRequest
@@ -110,11 +121,30 @@ public class ResourceSubscription {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        // TODO: this is a list, so it should be in AttrSet
-        tempStr = resourceContent.getDbAttr(NOTIFICATION_URI);
-        if (tempStr == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "NOTIFICATION_URI(s) missing parameter");
+        List<Member> memberList = resourceContent.getDbAttrSet(NOTIFICATION_URI);
+        if (memberList == null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "NOTIFICATION_URI(s) missing parameter");
             return;
+        } else {
+            for (Member member : memberList) {
+                if (!validateUri(member.getMember())) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                            "NOTIFICATION_URI(s) not valid URI: " + member.getMember());
+                    return;
+                }
+            }
+        }
+
+        tempStr = resourceContent.getDbAttr(NOTIFICATION_CONTENT_TYPE);
+        if (tempStr != null) {
+            if (!tempStr.contentEquals(Onem2m.NotificationContentType.MODIFIED_ATTRIBUTES) &&
+                !tempStr.contentEquals(Onem2m.NotificationContentType.WHOLE_RESOURCE) &&
+                !tempStr.contentEquals(Onem2m.NotificationContentType.REFERENCE_ONLY)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "NOTIFICATION_CONTENT_TYPE not valid: " + tempStr);
+                return;
+            }
         }
 
         /**

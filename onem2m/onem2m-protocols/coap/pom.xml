@@ -29,6 +29,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <dependency>
           <groupId>org.eclipse.californium</groupId>
           <artifactId>californium-osgi</artifactId>
+          <!--<version>1.0.0-M3</version>-->
           <version>1.0.0-M1</version>
       </dependency>
   </dependencies>

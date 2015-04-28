@@ -26,6 +26,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <yangtools.version>0.7.0-SNAPSHOT</yangtools.version>
         <dlux.version>0.2.0-SNAPSHOT</dlux.version>
         <pax.web.version>3.1.4</pax.web.version>
+        <!--<californium.version>1.0.0-M3</californium.version>-->
         <californium.version>1.0.0-M1</californium.version>
         <joda.version>2.7</joda.version>
         <configfile.directory>etc/opendaylight/karaf</configfile.directory>

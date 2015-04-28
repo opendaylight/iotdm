@@ -264,7 +264,8 @@ public class Onem2mDb implements TransactionChainListener {
             String rt = getResourceType(containerOnem2mResource);
             /**
              * We are at a container resource and looking at "latest", check to see if the resource is a
-             * content instance
+             * content instance.  Note TODO: need to skip over non-CONTENT-INSTANCE resources
+             * There might be subscription resources so skip until find a CONTENT-INSTANCE
              */
             if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
                 Onem2mResource onem2mResource = getResource(containerOnem2mResource.getLatestId());
