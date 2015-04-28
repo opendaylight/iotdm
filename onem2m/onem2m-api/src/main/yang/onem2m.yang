@@ -61,7 +61,13 @@ module onem2m {
             leaf parent-id {
                 type string;
             }
-            leaf name {
+            leaf name { // the onem2m resource name
+                type string;
+            }
+            leaf oldest-id {
+                type string;
+            }
+            leaf latest-id {
                 type string;
             }
             list child {
@@ -70,6 +76,12 @@ module onem2m {
                     type string;
                 }
                 leaf resource-id {
+                    type string;
+                }
+                leaf prev-id {
+                    type string;
+                }
+                leaf next-id {
                     type string;
                 }
             }

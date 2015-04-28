@@ -18,7 +18,6 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.FilterCriteria;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,8 @@ public class ResultContentProcessor {
      * This routine uses the result content, and filter criteria to gather information to return in the
      * ResponsePrimitive onem2mResponse.
      *
-     * @param onem2mRequest
-     * @param onem2mResponse
+     * @param onem2mRequest request
+     * @param onem2mResponse response
      */
     public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         produceJsonResultContent(onem2mRequest, onem2mResponse);
@@ -60,45 +59,54 @@ public class ResultContentProcessor {
         JSONObject jContent = new JSONObject();
         Onem2mResource onem2mResource = onem2mRequest.getOnem2mResource();
 
-        if (FilterCriteria.matches(onem2mRequest, onem2mResource)) {
-            // cache the resourceContent so resultContent options can be restricted
-            onem2mResponse.setResourceContent(onem2mRequest.getResourceContent());
+        // cache the resourceContent so resultContent options can be restricted
+        onem2mResponse.setResourceContent(onem2mRequest.getResourceContent());
 
-            String rc = onem2mRequest.getPrimitive(RequestPrimitive.RESULT_CONTENT);
-            if (rc == null) {
-                rc = Onem2m.ResultContent.ATTRIBUTES;
-            }
-            switch (rc) {
-                case Onem2m.ResultContent.NOTHING:
-                    return; // that was easy
-                case Onem2m.ResultContent.ATTRIBUTES:
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    break;
-                case Onem2m.ResultContent.HIERARCHICAL_ADDRESS:
-                    produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    break;
-                case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    break;
-                case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES:
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    break;
-                case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    break;
-                case Onem2m.ResultContent.CHILD_RESOURCE_REFS:
-                    produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jContent);
-                    break;
-                default:
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: (" + rc + ")");
-                    return;
-            }
+        String rc = onem2mRequest.getPrimitive(RequestPrimitive.RESULT_CONTENT);
+        if (rc == null) {
+            rc = Onem2m.ResultContent.ATTRIBUTES;
+        }
+        switch (rc) {
+            case Onem2m.ResultContent.NOTHING:
+                return; // that was easy
+            case Onem2m.ResultContent.ATTRIBUTES:
+                produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                break;
+            case Onem2m.ResultContent.HIERARCHICAL_ADDRESS:
+                produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                break;
+            case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
+                produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                break;
+            case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES:
+                produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                break;
+            case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
+                produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                break;
+            case Onem2m.ResultContent.CHILD_RESOURCE_REFS:
+                produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jContent);
+                break;
+            default:
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: (" + rc + ")");
+                return;
         }
 
-        onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jContent.toString());
+        if (onem2mResponse.useJsonAnySyntax()) {
+            // now we need to create primitiveContent for this internal content
+            JSONObject j = new JSONObject();
+            JSONArray anyArray = new JSONArray();
+            anyArray.put(jContent);
+            j.put("any", anyArray);
+
+            onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, j.toString());
+        } else {
+            onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jContent.toString());
+
+        }
     }
 
     /**
@@ -124,7 +132,7 @@ public class ResultContentProcessor {
                                                                     ResponsePrimitive onem2mResponse,
                                                                     JSONObject j) {
 
-        String h = Onem2mDb.getInstance().GetHierarchicalNameForResource(onem2mResource.getResourceId());
+        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
 
         j.put(ResourceContent.RESOURCE_NAME, h);
     }
@@ -139,21 +147,24 @@ public class ResultContentProcessor {
                                                            ResponsePrimitive onem2mResponse,
                                                            JSONObject j) {
 
-        j.put(ResourceContent.PARENT_ID, onem2mResource.getParentId());
-        j.put(ResourceContent.RESOURCE_ID, onem2mResource.getResourceId());
-        String name;
-        if (onem2mResponse.useHierarchicalAddressing()) {
-            name = Onem2mDb.getInstance().GetHierarchicalNameForResource(onem2mResource.getResourceId());
-        } else {
+        if (FilterCriteria.matches(onem2mRequest, onem2mResource)) {
 
-            name = Onem2mDb.getInstance().GetNonHierarchicalNameForResource(onem2mResource.getResourceId());
+            j.put(ResourceContent.PARENT_ID, onem2mResource.getParentId());
+            j.put(ResourceContent.RESOURCE_ID, onem2mResource.getResourceId());
+            String name;
+            if (onem2mResponse.useHierarchicalAddressing()) {
+                name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
+            } else {
+
+                name = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
+            }
+            j.put(ResourceContent.RESOURCE_NAME, name);
+
+            // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
+
+            String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
+            ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
         }
-        j.put(ResourceContent.RESOURCE_NAME, name);
-
-        // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
-
-        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
-        ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
     }
 
     /**
@@ -175,7 +186,7 @@ public class ResultContentProcessor {
 
             String resourceId = child.getResourceId();
 
-            Onem2mResource childResource = Onem2mDb.getInstance().GetResource(resourceId);
+            Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
             String resourceType = Onem2mDb.getInstance().getResourceType(childResource);
             if (!FilterCriteria.matches(onem2mRequest, childResource)) {
                 continue;
@@ -183,12 +194,12 @@ public class ResultContentProcessor {
 
             JSONObject childRef = new JSONObject();
             if (onem2mResponse.useHierarchicalAddressing()) {
-                h = Onem2mDb.getInstance().GetHierarchicalNameForResource(resourceId);
+                h = Onem2mDb.getInstance().getHierarchicalNameForResource(resourceId);
             } else {
-                h = Onem2mDb.getInstance().GetNonHierarchicalNameForResource(resourceId);
+                h = Onem2mDb.getInstance().getNonHierarchicalNameForResource(resourceId);
             }
             childRef.put(ResourceContent.RESOURCE_NAME, h);
-            childRef.put(ResourceContent.RESOURCE_TYPE, resourceType);
+            childRef.put(ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
             ja.put(childRef);
 
         }
@@ -213,7 +224,7 @@ public class ResultContentProcessor {
         for (Child child : childList) {
 
             String resourceId = child.getResourceId();
-            Onem2mResource childResource = Onem2mDb.getInstance().GetResource(resourceId);
+            Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
 
             // only include the resources that pass filter criteria
             if (!FilterCriteria.matches(onem2mRequest, childResource)) {
@@ -221,7 +232,7 @@ public class ResultContentProcessor {
             }
 
             JSONObject attrs = new JSONObject();
-            onem2mResource = Onem2mDb.getInstance().GetResource(resourceId);
+            onem2mResource = Onem2mDb.getInstance().getResource(resourceId);
             produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, attrs);
             ja.put(attrs);
 
@@ -234,10 +245,21 @@ public class ResultContentProcessor {
      * The results of the create now must be put in the response.  The result content is used to decide how the
      * results should be formatted.
      *
-     * @param onem2mRequest
-     * @param onem2mResponse
+     * @param onem2mRequest request
+     * @param onem2mResponse response
      */
     public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        produceJsonResultContent(onem2mRequest, onem2mResponse);
+    }
+
+    /**
+     * The results of the create now must be put in the response.  The result content is used to decide how the
+     * results should be formatted.
+     *
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     */
+    public static void handleUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         produceJsonResultContent(onem2mRequest, onem2mResponse);
     }
 
@@ -245,8 +267,8 @@ public class ResultContentProcessor {
      * The results of the delete now must be put in the response.  The result content is used to decide how the
      * results should be formatted.
      *
-     * @param onem2mRequest
-     * @param onem2mResponse
+     * @param onem2mRequest request
+     * @param onem2mResponse response
      */
     public static void handleDelete(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         produceJsonResultContent(onem2mRequest, onem2mResponse);

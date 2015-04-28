@@ -9,23 +9,17 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
-import org.opendaylight.iotdm.onem2m.core.rest.ResourceContentProcessor;
-import org.opendaylight.iotdm.onem2m.core.rest.ResultContentProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
+import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +41,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * @param onem2mResponse
      * @return
      */
-    public boolean validatePrimitiveAttributes(ResponsePrimitive onem2mResponse)  {
+    private boolean validatePrimitiveAttributes(ResponsePrimitive onem2mResponse)  {
         for (Onem2mPrimitive onem2mResource : this.onem2mPrimitivesList) {
             if (!RequestPrimitive.primitiveAttributes.contains(onem2mResource.getName())) {
                 String shortName = RequestPrimitive.longToShortAttributes.get(onem2mResource.getName());
@@ -68,7 +62,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * @param name
      * @return
      */
-    public boolean validateResourceName(String name)  {
+    private boolean validateResourceName(String name)  {
         if (name.contentEquals("latest") || name.contentEquals("oldest") ||
                 name.contains("/")) {
             return false;
@@ -81,7 +75,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * @param uriString
      * @return
      */
-    public boolean validateUri(String uriString)  {
+    private boolean validateUri(String uriString)  {
         try {
             URI toUri = new URI(uriString);
         } catch (URISyntaxException e) {
@@ -90,6 +84,70 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         return true;
     }
 
+    private boolean validateFilterCriteria(ResponsePrimitive onem2mResponse)  {
+
+        boolean found_filter_criteria = false;
+
+        String crb = getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE);
+        if (crb != null) {
+            if (!Onem2mDateTime.isValidDateTime(crb)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_CREATED_BEFORE(" + RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE +
+                                ") not valid format: " + crb);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String cra = getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER);
+        if (cra != null) {
+            if (!Onem2mDateTime.isValidDateTime(cra)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_CREATED_AFTER(" + RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER +
+                                ") not valid format: " + cra);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String ms = getPrimitive(RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE);
+        if (ms != null) {
+            if (!Onem2mDateTime.isValidDateTime(ms)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_MODIFIED_SINCE(" + RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE +
+                                ") not valid format: " + ms);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String ums = getPrimitive(RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE);
+        if (ums != null) {
+            if (!Onem2mDateTime.isValidDateTime(ums)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_UNMODIFIED_SINCE(" + RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE +
+                                ") not valid format: " + ums);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        // TODO: add state tag validation here
+
+        String fu = getPrimitive(RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE);
+        if (fu != null) {
+            if (!fu.contentEquals(Onem2m.FilterUsageType.DISCOVERY) &&
+                !fu.contentEquals(Onem2m.FilterUsageType.EVENT_NOTIFICATION_CRITERIA)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_FILTER_USAGE(" + RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE +
+                                ") not valid value: " + fu);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        return found_filter_criteria;
+    }
 
     /**
      * Called by the core RPC:onem2mRequestPrimitive to process the onenm2m request primitive operation.
@@ -105,7 +163,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      *
      * TODO: should I be using throw new Onem2mRequestError() so the code is more java-esque?
      *
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void handleOperation(ResponsePrimitive onem2mResponse) {
 
@@ -113,6 +171,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         if (!validatePrimitiveAttributes(onem2mResponse)) {
             return;
         }
+
+        onem2mResponse.setUseJsonAnySyntax(Onem2m.USE_JSON_ANY_SYNTAX);
 
         // Use table TS0004: 7.1.1.1-1 to validate mandatory parameters
 
@@ -207,12 +267,14 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // filter criteria only valid for RETRIEVE
-        String fc = getPrimitive(RequestPrimitive.FILTER_CRITERIA);
-        if (fc != null) {
+        boolean found_filter_criteria = validateFilterCriteria(onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
+        if (found_filter_criteria) {
             if (!operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA(" + RequestPrimitive.FILTER_CRITERIA +
-                                ") not permitted for operation: " + operation);
+                        "FILTER_CRITERIA not permitted for operation: " + operation);
                 return;
             }
         }
@@ -269,7 +331,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     /**
      * Handle the request primitive create ...
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void handleOperationCreate(ResponsePrimitive onem2mResponse) {
 
@@ -308,7 +370,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // lookup the resource ... this will be the parent where the new resource will be created
-        if (!Onem2mDb.getInstance().FindResourceUsingURI(this, onem2mResponse)) {
+        if (!Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                     "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
             return;
@@ -319,7 +381,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         String resourceName = this.getPrimitive((RequestPrimitive.NAME));
         if (resourceName != null) {
             // using the parent, see if this new resource name already exists under this parent resource
-            if (Onem2mDb.getInstance().FindResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
+            if (Onem2mDb.getInstance().findResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
                 // TS0004: 7.2.3.2
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
                         "Resource already exists: " + this.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
@@ -347,7 +409,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     /**
      * Handle the request primitive retrieve ...
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void handleOperationRetrieve(ResponsePrimitive onem2mResponse) {
 
@@ -383,12 +445,18 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // find the resource using the TO URI ...
-        if (!Onem2mDb.getInstance().FindResourceUsingURI(this, onem2mResponse)) {
+        if (!Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse)) {
 
             // TODO: maybe we are trying to find the attribute, write FindResourceUsingURIAndAttribute
 
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                     "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
+            return;
+        }
+
+        // process the resource specific attributes
+        ResourceContentProcessor.handleRetrieve(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
 
@@ -405,7 +473,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     /**
      * Handle the request primitive delete ...
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void handleOperationDelete(ResponsePrimitive onem2mResponse) {
 
@@ -435,7 +503,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         /**
          * Find the resource, fill in the response based on result content
          */
-        if (Onem2mDb.getInstance().FindResourceUsingURI(this, onem2mResponse) == false) {
+        if (Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse) == false) {
             // TODO: is it idempotent or not ... fail or succeed???
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                     "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
@@ -454,7 +522,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
         // now delete the resource from the database
         // TODO: idempotent so who cares if cannot find the resource ... is this true?
-        if (Onem2mDb.getInstance().DeleteResourceUsingURI(this, onem2mResponse) == false) {
+        if (Onem2mDb.getInstance().deleteResourceUsingURI(this, onem2mResponse) == false) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
                     "Resource target URI data store delete error: " + this.getPrimitive(RequestPrimitive.TO));
             return;
@@ -471,7 +539,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
     /**
      * Handle update
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void handleOperationUpdate(ResponsePrimitive onem2mResponse) {
 
@@ -507,14 +575,23 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // now find the resource from the database
-        if (Onem2mDb.getInstance().FindResourceUsingURI(this, onem2mResponse) == false) {
+        if (Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse) == false) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                     "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
             return;
         }
 
-        //RequestContentProcessor.updateResultContent(this, onem2mResponse);
-        //ResultContentProcessor.handleUpdate(this, onem2mResponse);
+        // cannot update contentInstance resources
+        DbAttr parentDbAttrs = this.getDbAttrs();
+        String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+        if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                    "Not permitted to update this resource: " + this.getPrimitive(RequestPrimitive.TO));
+            return;
+        }
+        //
+        ResourceContentProcessor.handleUpdate(this, onem2mResponse);
+        ResultContentProcessor.handleUpdate(this, onem2mResponse);
         // need to figure out notification strategy
 
         // TODO: see TS0004 6.8
@@ -526,7 +603,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
     /**
      * Support this when we do CSE-CSE (Mcc) communication
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void handleOperationNotify(ResponsePrimitive onem2mResponse) {
         // Use table TS0004: 7.1.1.1-1 to validate NOTIFY specific parameters that were not handled in the calling routine
@@ -535,7 +612,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     /**
      * Internally create a cse base based on the restconf call which is designed to be called from a provisioning
      * server or management app.
-     * @param onem2mResponse
+     * @param onem2mResponse response
      */
     public void provisionCse(ResponsePrimitive onem2mResponse) {
 
@@ -556,7 +633,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         this.setPrimitive(RequestPrimitive.NAME, cseId);
         this.setResourceName(cseId);
 
-        if (Onem2mDb.getInstance().FindCseByName(cseId)) {
+        if (Onem2mDb.getInstance().findCseByName(cseId)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name already exists: " + cseId);
             return;
         }

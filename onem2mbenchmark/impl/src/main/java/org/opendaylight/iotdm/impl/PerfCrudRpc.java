@@ -9,13 +9,10 @@ package org.opendaylight.iotdm.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opendaylight.iotdm.onem2m.client.Onem2mAERequest;
-import org.opendaylight.iotdm.onem2m.client.Onem2mAERequestBuilder;
-import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
-import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
-import org.opendaylight.iotdm.onem2m.client.ResourceContainerBuilder;
+import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -102,7 +99,8 @@ public class PerfCrudRpc {
             String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
             try {
-                JSONObject j = new JSONObject(responseContent);
+                Onem2mResponse or = new Onem2mResponse(responseContent);
+                JSONObject j = or.getJSONObject();
                 String resourceId = j.getString(ResourceContent.RESOURCE_ID);
                 if (resourceId == null) {
                     LOG.error("Create cannot parse resourceId (iteration: {})", i);
@@ -149,7 +147,8 @@ public class PerfCrudRpc {
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
             String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             try {
-                JSONObject j = new JSONObject(responseContent);
+                Onem2mResponse or = new Onem2mResponse(responseContent);
+                JSONObject j = or.getJSONObject();
                 if (!resourceId.contentEquals(j.getString(ResourceContent.RESOURCE_ID))) {
                     LOG.error("Retrieve resourceId: {} not found", resourceId);
                     break;
@@ -195,7 +194,8 @@ public class PerfCrudRpc {
             String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
             try {
-                JSONObject j = new JSONObject(responseContent);
+                Onem2mResponse or = new Onem2mResponse(responseContent);
+                JSONObject j = or.getJSONObject();
                 if (!resourceId.contentEquals(j.getString(ResourceContent.RESOURCE_ID))) {
                     LOG.error("Delete resourceId: {} not found", resourceId);
                     break;

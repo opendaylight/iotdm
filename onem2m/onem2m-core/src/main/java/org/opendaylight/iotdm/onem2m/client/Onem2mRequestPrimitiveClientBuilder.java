@@ -131,8 +131,8 @@ public class Onem2mRequestPrimitiveClientBuilder {
      * will encode their options ... maybe they will simply add each option as a primitive directly, or they can
      * construct an option string ... which ever makes more sense.
      * TODO: look at MQTT to see how it encodes some of its primitives; does it use a query string?
-     * @param query
-     * @return
+     * @param query query string
+     * @return is resource type present in the query string
      */
     public Boolean parseQueryStringIntoPrimitives(String query) {
         Boolean resourceTypePresent = false;
