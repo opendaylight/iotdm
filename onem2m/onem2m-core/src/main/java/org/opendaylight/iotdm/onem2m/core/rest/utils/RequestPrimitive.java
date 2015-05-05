@@ -223,4 +223,12 @@ public class RequestPrimitive extends BasePrimitive {
     public Set<String> getValidAttributes() {
         return this.validAttributes;
     }
+
+    private String retrieveByAttrName;
+    public void setRetrieveByAttrName(String name) {
+        this.retrieveByAttrName = name;
+    }
+    public String getRetrieveByAttrName() {
+        return this.retrieveByAttrName;
+    }
 }

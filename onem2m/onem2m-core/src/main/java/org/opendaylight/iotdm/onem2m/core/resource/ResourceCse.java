@@ -45,35 +45,6 @@ public class ResourceCse {
     public static final String SUPPORTED_RESOURCE_TYPES = "srt";
     public static final String NOTIFICATION_CONGESTION_POLICY = "ncp";
 
-    // hard code set of acceptable create attributes, short and long name
-    public static final Set<String> createAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LABELS); add("labels");
-        add(CSE_TYPE); add("cseType");
-        add(CSE_ID); add("CSE-ID");
-        add(SUPPORTED_RESOURCE_TYPES); add("supportedResourceType");
-        add(NOTIFICATION_CONGESTION_POLICY); add("notificationCongestionPolicy");
-    }};
-
-    // hard code set of acceptable retrieve attributes, short and long name
-    public static final Set<String> retrieveAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.RESOURCE_TYPE); add("resourceType");
-        add(ResourceContent.RESOURCE_ID); add("resourceID");
-        add(ResourceContent.RESOURCE_NAME); add("resourceName");
-        add(ResourceContent.PARENT_ID); add("parentID");
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LAST_MODIFIED_TIME); add("lastModifiedTime");
-        add(ResourceContent.LABELS); add("labels");
-        add(CSE_TYPE); add("cseType");
-        add(CSE_ID); add("CSE-ID");
-        add(SUPPORTED_RESOURCE_TYPES); add("supportedResourceType");
-        add(NOTIFICATION_CONGESTION_POLICY); add("notificationCongestionPolicy");
-    }
-    };
-
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();

@@ -43,52 +43,6 @@ public class ResourceSubscription {
 
     // TODO: need to add a section or new file to handle event notification criteria
 
-    // hard code set of acceptable create attributes, short and long name
-    public static final Set<String> createAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LABELS); add("labels");
-        //add(EXPIRATION_COUNTER); add("expirationCounter");
-        add(NOTIFICATION_URI); add("notificationURI");
-        //add(BATCH_NOTIFY); add("batchNotify");
-        //add(RATE_LIMIT); add("rateLimit");
-        //add(PRE_SUBSCRIPTION_NOTIFY); add("preSubscriptionNotify");
-        //add(PENDING_NOTIFICATION); add("pendingNotification");
-        //add(NOTIFICATION_STORAGE_POLICY); add("notificationStoragePolicy");
-        //add(LATEST_NOTIFY); add("latestNotify");
-        add(NOTIFICATION_CONTENT_TYPE); add("notificationContentType");
-        add(NOTIFICATION_EVENT_CAT); add("notificationEventCat");
-        //add(CREATOR); add("creator");
-        //add(SUBSCRIBTER_URI); add("subscriberURI");
-    }};
-
-    // hard code set of acceptable retrieve attributes, short and long name
-    public static final Set<String> retrieveAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.RESOURCE_TYPE); add("resourceType");
-        add(ResourceContent.RESOURCE_ID); add("resourceID");
-        add(ResourceContent.RESOURCE_NAME); add("resourceName");
-        add(ResourceContent.PARENT_ID); add("parentID");
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LAST_MODIFIED_TIME); add("lastModifiedTime");
-        add(ResourceContent.LABELS); add("labels");
-        //add(EXPIRATION_COUNTER); add("expirationCounter");
-        add(NOTIFICATION_URI); add("notificationURI");
-        //add(BATCH_NOTIFY); add("batchNotify");
-        //add(RATE_LIMIT); add("rateLimit");
-        //add(PRE_SUBSCRIPTION_NOTIFY); add("preSubscriptionNotify");
-        //add(PENDING_NOTIFICATION); add("pendingNotification");
-        //add(NOTIFICATION_STORAGE_POLICY); add("notificationStoragePolicy");
-        //add(LATEST_NOTIFY); add("latestNotify");
-        add(NOTIFICATION_CONTENT_TYPE); add("notificationContentType");
-        add(NOTIFICATION_EVENT_CAT); add("notificationEventCat");
-        //add(CREATOR); add("creator");
-        //add(SUBSCRIBER_URI); add("subscriberURI");
-    }
-    };
-
     private static boolean validateUri(String uriString)  {
         try {
             URI toUri = new URI(uriString);

@@ -13,6 +13,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.client.Onem2mRequest;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
@@ -318,7 +319,9 @@ public class ResourceContent {
      * @param onem2mResource the resource info
      * @param j json obj
      */
-    public static void produceJsonForResource(String resourceType, Onem2mResource onem2mResource, JSONObject j) {
+    public static void produceJsonForResource(String resourceType,
+                                              Onem2mResource onem2mResource,
+                                              JSONObject j) {
 
         switch (resourceType) {
 

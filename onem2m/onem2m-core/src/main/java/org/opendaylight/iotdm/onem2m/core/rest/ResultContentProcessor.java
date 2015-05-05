@@ -18,6 +18,9 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.FilterCriteria;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,22 +150,30 @@ public class ResultContentProcessor {
                                                            ResponsePrimitive onem2mResponse,
                                                            JSONObject j) {
 
+
         if (FilterCriteria.matches(onem2mRequest, onem2mResource)) {
 
-            j.put(ResourceContent.PARENT_ID, onem2mResource.getParentId());
-            j.put(ResourceContent.RESOURCE_ID, onem2mResource.getResourceId());
+            String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
+            String id;
+
+            id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getParentId());
+            if (id != null) {
+                j.put(ResourceContent.PARENT_ID, id);
+            }
+
+            id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
+            j.put(ResourceContent.RESOURCE_ID, id);
+
             String name;
             if (onem2mResponse.useHierarchicalAddressing()) {
                 name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
             } else {
-
                 name = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
             }
             j.put(ResourceContent.RESOURCE_NAME, name);
 
             // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
 
-            String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
             ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
         }
     }

@@ -301,9 +301,9 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return found status
      */
-    public Boolean findResourceUsingURI(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        String targetURI = onem2mRequest.getPrimitive((RequestPrimitive.TO));
+    public Boolean findResourceUsingURI(String targetURI,
+                                        RequestPrimitive onem2mRequest,
+                                        ResponsePrimitive onem2mResponse) {
 
         targetURI = trimURI(targetURI); // get rid of leading and following "/"
         String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
@@ -346,7 +346,9 @@ public class Onem2mDb implements TransactionChainListener {
                 onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, hierarchy[hierarchyIndex]);
                 if (onem2mResource == null) {
                     onem2mResource = checkForLatestOldestContentInstance(saveOnem2mResource, hierarchy[hierarchyIndex]);
-                    break;
+                    if (onem2mResource == null) {
+                        break;
+                    }
                 }
                 resourceId = onem2mResource.getResourceId();
                 saveOnem2mResource = onem2mResource;
@@ -363,12 +365,45 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     /**
+     * Using the target URI/attribute, strip off the attribute, and see if a resource is found.  Then look to see
+     * if the attribute exists under this resource type.
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     * @return found status
+     */
+    public Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
+                                                    RequestPrimitive onem2mRequest,
+                                                    ResponsePrimitive onem2mResponse) {
+        String trimmedURI = trimURI(uriAndAttribute); // get rid of leading and following "/"
+        String hierarchy[] = trimmedURI.split("/"); // split the URI into its hierarchy of path component strings
+        if (hierarchy.length <= 1) {
+            return false;
+        }
+        String targetAttribute = hierarchy[hierarchy.length-1];
+        String targetURI = "";
+        for (int i = 0; i < hierarchy.length-1; i++) {
+            targetURI += "/" + hierarchy[i];
+        }
+        if (findResourceUsingURI(targetURI, onem2mRequest, onem2mResponse)) {
+            String value = onem2mRequest.getDbAttrs().getAttr(targetAttribute);
+            if (value != null) {
+                onem2mRequest.setRetrieveByAttrName(targetAttribute);
+                return false;// TODO: need more downstream work to support this
+            }
+        }
+        return false;
+    }
+
+    /**
      * Using the resourceId, build the non hierarchical name of the path using the /cseName + /name of resource
      * @param resourceId resource id
      * @return name of resource using the /cse/resourceId format
      */
     public String getNonHierarchicalNameForResource(String resourceId) {
 
+        if (resourceId == null || resourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return null;
+        }
         String hierarchy = "/" + resourceId;
 
         Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
@@ -424,9 +459,11 @@ public class Onem2mDb implements TransactionChainListener {
         if (resourceList.size() >= limit) {
             return resourceList;
         }
+
         // tack new resources onto the end of resourceList as the children are read
-        for (String resourceId : resourceList) {
-            onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
+        int resourceListLen = 1;
+        for (int i = 0; i < resourceListLen; i++) {
+            onem2mResource = dbResourceTree.retrieveResourceById(resourceList.get(i));
             List<Child> childResourceList = onem2mResource.getChild();
             for (Child childResource : childResourceList) {
                 resourceList.add(childResource.getResourceId());
@@ -434,6 +471,7 @@ public class Onem2mDb implements TransactionChainListener {
                     return resourceList;
                 }
             }
+            resourceListLen += childResourceList.size();
         }
 
         return resourceList;

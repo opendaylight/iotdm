@@ -44,40 +44,6 @@ public class ResourceContainer {
     public static final String LATEST = "la"; // <-- container: head/tail, ci: next/prev
     public static final String OLDEST = "oldest"; // TODO: no short name defined
 
-    // hard code set of acceptable create attributes, short and long name
-    public static final Set<String> createAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(CREATOR); add("creator");
-        add(ResourceContent.LABELS); add("labels");
-        add(MAX_NR_INSTANCES); add("maxNrOfInstances");
-        add(MAX_BYTE_SIZE); add("maxByteSize");
-        add(MAX_INSTANCE_AGE); add("maxInstanceAge");
-        add(ONTOLOGY_REF); add("ontologyRef");
-    }};
-
-    // hard code set of acceptable retrieve attributes, short and long name
-    public static final Set<String> retrieveAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.RESOURCE_TYPE); add("resourceType");
-        add(ResourceContent.RESOURCE_ID); add("resourceID");
-        add(ResourceContent.RESOURCE_NAME); add("resourceName");
-        add(ResourceContent.PARENT_ID); add("parentID");
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LAST_MODIFIED_TIME); add("lastModifiedTime");
-        add(ResourceContent.LABELS); add("labels");
-        add(ResourceContent.STATE_TAG); add("stateTag");
-        add(MAX_NR_INSTANCES); add("maxNrOfInstances");
-        add(MAX_BYTE_SIZE); add("maxByteSize");
-        add(MAX_INSTANCE_AGE); add("maxInstanceAge");
-        add(CURR_NR_INSTANCES); add("currNrOfInstances");
-        add(CURR_BYTE_SIZE); add("currByteSize");
-        add(ONTOLOGY_REF); add("ontologyRef");
-    }
-    };
-
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.

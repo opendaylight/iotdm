@@ -39,36 +39,6 @@ public class ResourceContentInstance  {
     public static final String NEXT = "next";
     public static final String PREV = "prev";
 
-    // hard code set of acceptable create attributes, short and long name
-    public static final Set<String> createAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LABELS); add("labels");
-        add(CONTENT_INFO); add("contentInfo");
-        add(CONTENT); add("content");
-        add(ONTOLOGY_REF); add("ontologyRef");
-    }};
-
-    // hard code set of acceptable retrieve attributes, short and long name
-    public static final Set<String> retrieveAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.RESOURCE_TYPE); add("resourceType");
-        add(ResourceContent.RESOURCE_ID); add("resourceID");
-        add(ResourceContent.RESOURCE_NAME); add("resourceName");
-        add(ResourceContent.PARENT_ID); add("parentID");
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LAST_MODIFIED_TIME); add("lastModifiedTime");
-        add(ResourceContent.STATE_TAG); add("stateTag");
-        add(ResourceContent.LABELS); add("labels");
-        add(CONTENT_INFO); add("contentInfo");
-        add(CONTENT); add("content");
-        add(CONTENT_SIZE); add("contentSize");
-        add(ONTOLOGY_REF); add("ontologyRef");
-    }
-    };
-
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String tempStr;

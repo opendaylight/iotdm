@@ -11,6 +11,7 @@ package org.opendaylight.iotdm.onem2m.core.resource;
 import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.client.Onem2mRequest;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
@@ -39,7 +40,9 @@ import org.slf4j.LoggerFactory;
 public class ResourceAE {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceAE.class);
-    private ResourceAE() {}
+
+    private ResourceAE() {
+    }
 
     // TODO: TS0004_1.0.1  7.3.5 CRUD/N procedures for AE
     // TODO: TS0001_1.5.0 9.6.5 attribute definitions
@@ -51,36 +54,6 @@ public class ResourceAE {
     public static final String POINT_OF_ACCESS = "apn";
     public static final String ONTOLOGY_REF = "or";
     public static final String NODE_LINK = "nl"; // do not support node resource yet
-
-    // hard code set of acceptable create attributes, short and long name
-    public static final Set<String> createAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LABELS); add("labels");
-        add(APP_NAME); add("appName");
-        add(APP_ID); add("App-ID");
-        add(AE_ID); add("AE-ID");
-        add(ONTOLOGY_REF); add("ontologyRef");
-    }};
-
-    // hard code set of acceptable retrieve attributes, short and long name
-    public static final Set<String> retrieveAttributes = new HashSet<String>() {{
-        // short; long
-        add(ResourceContent.RESOURCE_TYPE); add("resourceType");
-        add(ResourceContent.RESOURCE_ID); add("resourceID");
-        add(ResourceContent.RESOURCE_NAME); add("resourceName");
-        add(ResourceContent.PARENT_ID); add("parentID");
-        add(ResourceContent.EXPIRATION_TIME); add("expirationTime");
-        add(ResourceContent.CREATION_TIME); add("creationTime");
-        add(ResourceContent.LAST_MODIFIED_TIME); add("lastModifiedTime");
-        add(ResourceContent.LABELS); add("labels");
-        add(APP_NAME); add("appName");
-        add(APP_ID); add("App-ID");
-        add(AE_ID); add("AE-ID");
-        add(ONTOLOGY_REF); add("ontologyRef");
-    }
-    };
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -131,6 +104,7 @@ public class ResourceAE {
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
      * Maybe the next iteration of code, I'll create json files for each resource.
+     *
      * @param onem2mRequest
      * @param onem2mResponse
      */
@@ -139,8 +113,8 @@ public class ResourceAE {
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
         Iterator<?> keys = resourceContent.getJsonContent().keys();
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
 
             Object o = resourceContent.getJsonContent().get(key);
 
@@ -179,7 +153,8 @@ public class ResourceAE {
 
     /**
      * Parse the CONTENT resource representation for create and update
-     * @param onem2mRequest request
+     *
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
     public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
@@ -203,6 +178,38 @@ public class ResourceAE {
         ResourceAE.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
     }
 
+
+    /**
+     * Generate JSON data for this resource
+     *
+     */
+    public static void produceJsonForAttr(Attr attr, JSONObject j) {
+
+        switch (attr.getName()) {
+            case APP_NAME:
+            case APP_ID:
+            case AE_ID:
+            case ONTOLOGY_REF:
+                j.put(attr.getName(), attr.getValue());
+                break;
+            default:
+                ResourceContent.produceJsonForCommonAttributes(attr, j);
+                break;
+        }
+    }
+
+    /**
+     * Generate JSON data for this attr set
+     */
+    public static void produceJsonForAttrSet(AttrSet attrSet, JSONObject j) {
+
+        switch (attrSet.getName()) {
+            default:
+                ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+                break;
+        }
+    }
+
     /**
      * Generate JSON data for this resource
      * @param onem2mResource this resource
@@ -211,24 +218,10 @@ public class ResourceAE {
     public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
 
         for (Attr attr : onem2mResource.getAttr()) {
-            switch (attr.getName()) {
-                case APP_NAME:
-                case APP_ID:
-                case AE_ID:
-                case ONTOLOGY_REF:
-                    j.put(attr.getName(), attr.getValue());
-                    break;
-                default:
-                    ResourceContent.produceJsonForCommonAttributes(attr, j);
-                    break;
-            }
+            produceJsonForAttr(attr, j);
         }
         for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-            switch (attrSet.getName()) {
-                default:
-                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-                    break;
-            }
+            produceJsonForAttrSet(attrSet, j);
         }
     }
 

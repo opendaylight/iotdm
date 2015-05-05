@@ -167,6 +167,16 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      */
     public void handleOperation(ResponsePrimitive onem2mResponse) {
 
+        // if the request had a REQUEST_IDENTIFIER, return it in the response so client can correlate
+        // this must be the first statement as the rqi must be in the error response
+        String rqi = getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER);
+        if (rqi != null) {
+            onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
+        } else {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "REQUEST_IDENTIFIER(" + RequestPrimitive.REQUEST_IDENTIFIER + ") not specified");
+        }
+
         // make sure the attributes exist
         if (!validatePrimitiveAttributes(onem2mResponse)) {
             return;
@@ -214,15 +224,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
             return;
-        }
-
-        // if the request had a REQUEST_IDENTIFIER, return it in the response so client can correlate
-        String rqi = getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER);
-        if (rqi != null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
-        } else {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "REQUEST_IDENTIFIER(" + RequestPrimitive.REQUEST_IDENTIFIER + ") not specified");
         }
 
         // ensure resource type is present only in CREATE requests
@@ -370,9 +371,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // lookup the resource ... this will be the parent where the new resource will be created
-        if (!Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse)) {
+        String to = getPrimitive(RequestPrimitive.TO);
+        if (!Onem2mDb.getInstance().findResourceUsingURI(to, this, onem2mResponse)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                    "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
+                    "Resource target URI not found: " + to);
             return;
         }
         // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
@@ -445,12 +447,16 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // find the resource using the TO URI ...
-        if (!Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse)) {
+        String to = this.getPrimitive(RequestPrimitive.TO);
+        if (!Onem2mDb.getInstance().findResourceUsingURI(to, this, onem2mResponse)) {
 
-            // TODO: maybe we are trying to find the attribute, write FindResourceUsingURIAndAttribute
+            // check to see if an resource/attribute was specified
+            if (!Onem2mDb.getInstance().findResourceUsingURIAndAttribute(to, this, onem2mResponse)) {
 
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                    "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
+                        "Resource target URI not found: " + to);
+                return;
+            }
             return;
         }
 
@@ -503,10 +509,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         /**
          * Find the resource, fill in the response based on result content
          */
-        if (Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse) == false) {
+        String to = this.getPrimitive(RequestPrimitive.TO);
+        if (Onem2mDb.getInstance().findResourceUsingURI(to, this, onem2mResponse) == false) {
             // TODO: is it idempotent or not ... fail or succeed???
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                    "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
+                    "Resource target URI not found: " + to);
             return;
         }
 
@@ -578,9 +585,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // now find the resource from the database
-        if (Onem2mDb.getInstance().findResourceUsingURI(this, onem2mResponse) == false) {
+        String to = this.getPrimitive(RequestPrimitive.TO);
+        if (Onem2mDb.getInstance().findResourceUsingURI(to, this, onem2mResponse) == false) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                    "Resource target URI not found: " + this.getPrimitive(RequestPrimitive.TO));
+                    "Resource target URI not found: " + to);
             return;
         }
 
