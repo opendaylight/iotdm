@@ -9,7 +9,6 @@ package org.opendaylight.iotdm.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.*;
@@ -82,7 +81,7 @@ public class PerfCrudRpc {
                 .setRequestIdentifier("RQI_1234")
                 .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
-                .setContent(containerString)
+                .setPrimitiveContent(containerString)
                 .build();
 
         /*

@@ -31,12 +31,27 @@ public class Onem2mAEResponse extends Onem2mResponse {
 
     private Onem2mAEResponse() { }
 
-    public Onem2mAEResponse(String jsonContentString) {
-        super(jsonContentString);
+    public Onem2mAEResponse(String jsonContent) {
+        super(jsonContent);
         if (success) {
             success = processJsonContent();
         }
+        if (success && !Onem2m.ResourceType.AE.contentEquals(getResourceType().toString())) {
+            success = false;
+            setError("Cannot construct an AE response with resource type: " + getResourceType());
+        }
     }
+
+    public Onem2mAEResponse(Onem2mResponsePrimitiveClient onem2mResponse) {
+        super(onem2mResponse.getContent());
+        if (success) {
+            success = processJsonContent();
+        }
+        if (success && !onem2mResponse.responseOk()) {
+            success = false;
+        }
+    }
+
     public String getAppName() {
         return appName;
     }

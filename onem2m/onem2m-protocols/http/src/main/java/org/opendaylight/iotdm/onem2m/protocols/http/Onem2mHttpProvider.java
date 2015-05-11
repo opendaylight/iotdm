@@ -12,7 +12,6 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderCo
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
@@ -128,7 +127,7 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
             // take the entire payload text and put it in the CONTENT field; it is the representation of the resource
             String cn = IOUtils.toString(baseRequest.getInputStream()).trim();
             if (cn != null && !cn.contentEquals("")) {
-                clientBuilder.setContent(cn);
+                clientBuilder.setPrimitiveContent(cn);
             }
 
             switch (method) {
@@ -212,6 +211,8 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
                 case Onem2m.ResponseStatusCode.NOT_IMPLEMENTED:
                     return HttpServletResponse.SC_NOT_IMPLEMENTED;
                 case Onem2m.ResponseStatusCode.ALREADY_EXISTS:
+                    return HttpServletResponse.SC_FORBIDDEN;
+                case Onem2m.ResponseStatusCode.TARGET_NOT_SUBSCRIBABLE:
                     return HttpServletResponse.SC_FORBIDDEN;
                 case Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED:
                     return HttpServletResponse.SC_NOT_IMPLEMENTED;

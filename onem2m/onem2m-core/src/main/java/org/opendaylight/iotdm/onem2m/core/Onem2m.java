@@ -10,10 +10,7 @@ package org.opendaylight.iotdm.onem2m.core;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mRequestPrimitiveInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mRequestPrimitiveInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mRequestPrimitiveOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +99,7 @@ public class Onem2m {
 
     }
 
-    // TS0004 sectiopns: 6.3.3.2.9, 6.6
+    // TS0004 sections: 6.3.3.2.9, 6.6, for each new error code, add a mapping error code to CoAP and HTTP
     public class ResponseStatusCode {
         public static final String OK = "2000";
         public static final String CREATED = "2001";
@@ -118,6 +115,7 @@ public class Onem2m {
         public static final String INTERNAL_SERVER_ERROR = "5000";
         public static final String NOT_IMPLEMENTED = "5001";
         public static final String ALREADY_EXISTS = "5106";
+        public static final String TARGET_NOT_SUBSCRIBABLE = "5203";
         public static final String NON_BLOCKING_REQUEST_NOT_SUPPORTED = "5206";
 
         public static final String INVALID_ARGUMENTS = "6023";
@@ -164,7 +162,33 @@ public class Onem2m {
             LOG.error("serviceOnenm2mRequest: RPC exception");
         }
 
-        //Onem2mDb.getInstance().dumpDataStoreToLog();
+        return onem2mResponse;
+    }
+
+    /**
+     * Enable REST clients to provision Cse's
+     * @param onem2mRequest request
+     * @param onem2mService response
+     * @return the response primitives
+     */
+    public static ResponsePrimitive serviceCseProvisioning(RequestPrimitive onem2mRequest, Onem2mService onem2mService) {
+
+        final Logger LOG = LoggerFactory.getLogger(Onem2m.class);
+
+        ResponsePrimitive onem2mResponse;
+
+        Onem2mCseProvisioningInput input = new Onem2mCseProvisioningInputBuilder()
+                .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+
+        try {
+            RpcResult<Onem2mCseProvisioningOutput> rpcResult = onem2mService.onem2mCseProvisioning(input).get();
+            onem2mResponse = new ResponsePrimitive();
+            onem2mResponse.setPrimitivesList(rpcResult.getResult().getOnem2mPrimitive());
+        } catch (Exception e) {
+            onem2mResponse = new ResponsePrimitive();
+            onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");
+            LOG.error("serviceOnenm2mRequest: RPC exception");
+        }
 
         return onem2mResponse;
     }

@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 public class ResourceContentInstanceBuilder extends ResourceContentBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceContentInstanceBuilder.class);
-    /**
-     * The onem2m-protocols use this to create a new RequestPrimitive class
-     */
+
     public ResourceContentInstanceBuilder() {
         super();
     }

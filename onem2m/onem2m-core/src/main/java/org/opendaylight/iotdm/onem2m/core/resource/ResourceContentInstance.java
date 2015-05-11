@@ -275,13 +275,15 @@ public class ResourceContentInstance  {
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
         resourceContent.parse(onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
+        }
 
         if (resourceContent.isJson()) {
             processJsonRetrieveContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
                 return;
+            }
         }
     }
 }

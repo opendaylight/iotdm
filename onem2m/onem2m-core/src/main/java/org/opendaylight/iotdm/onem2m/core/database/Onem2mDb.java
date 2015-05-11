@@ -114,7 +114,10 @@ public class Onem2mDb implements TransactionChainListener {
         dbResourceTree.createCseByName(dbTxn, onem2mRequest.getResourceName(), onem2mRequest.getResourceId());
 
         // now create the resource with the attributes stored in the onem2mRequest
-        dbResourceTree.createResource(dbTxn, onem2mRequest, NULL_RESOURCE_ID);
+        Onem2mResource onem2mResource = dbResourceTree.createResource(dbTxn, onem2mRequest, NULL_RESOURCE_ID);
+
+        // cache the resource
+        onem2mRequest.setOnem2mResource(onem2mResource);
 
         // now commit these to the data store
         return dbTxn.commitTransaction();

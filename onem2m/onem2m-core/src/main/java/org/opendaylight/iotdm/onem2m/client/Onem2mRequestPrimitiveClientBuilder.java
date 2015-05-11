@@ -17,15 +17,17 @@ public class Onem2mRequestPrimitiveClientBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mRequestPrimitiveClient.class);
 
     private Onem2mRequestPrimitiveClient onem2mRequest;
-    /**
-     * The onem2m-protocols use this to create a new RequestPrimitive class
-     */
+    protected boolean isCreate = false;
+    protected boolean isDelete = false;
+
+
     public Onem2mRequestPrimitiveClientBuilder() {
         onem2mRequest = new Onem2mRequestPrimitiveClient();
     }
 
     public Onem2mRequestPrimitiveClientBuilder setOperationCreate() {
         onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.CREATE);
+        isCreate = true;
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationRetrieve() {
@@ -38,6 +40,7 @@ public class Onem2mRequestPrimitiveClientBuilder {
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationDelete() {
         onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.DELETE);
+        isDelete = true;
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationNotify() {
@@ -67,7 +70,7 @@ public class Onem2mRequestPrimitiveClientBuilder {
         return this;
     }
 
-    public Onem2mRequestPrimitiveClientBuilder setContent(String value) {
+    public Onem2mRequestPrimitiveClientBuilder setPrimitiveContent(String value) {
         onem2mRequest.setPrimitive(RequestPrimitive.CONTENT, value);
         return this;
     }

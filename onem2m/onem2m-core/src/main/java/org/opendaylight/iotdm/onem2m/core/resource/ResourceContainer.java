@@ -41,8 +41,8 @@ public class ResourceContainer {
     public static final String CURR_BYTE_SIZE = "cbs";
     //public static final String LOCATION_ID = "li";
     public static final String ONTOLOGY_REF = "or";
-    public static final String LATEST = "la"; // <-- container: head/tail, ci: next/prev
-    public static final String OLDEST = "oldest"; // TODO: no short name defined
+    public static final String LATEST = "la";
+    public static final String OLDEST = "ol";
 
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would

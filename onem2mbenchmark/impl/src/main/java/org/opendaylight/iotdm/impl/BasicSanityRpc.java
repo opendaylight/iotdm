@@ -9,7 +9,6 @@ package org.opendaylight.iotdm.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.*;
@@ -118,7 +117,7 @@ public class BasicSanityRpc {
                 .setRequestIdentifier("RQI_1234")
                 .setResourceType(Onem2m.ResourceType.AE)
                 .setOperationCreate()
-                .setContent(aeString)
+                .setPrimitiveContent(aeString)
                 .setName(AE_APP_NAME)
                 .build();
 
@@ -145,29 +144,27 @@ public class BasicSanityRpc {
 
     private boolean createAETest(List<String> resourceList, String toUri, List<String> resourceNameList) {
 
-        Onem2mAERequest onem2mRequest;
-        boolean success = true;
-
-        onem2mRequest = new Onem2mAERequestBuilder()
-                .setAppName(AE_APP_NAME)
-                .setAEId(AE_ID)
-                .setAppId(AE_APP_ID)
-                .setOntologyRef(AE_ONTOLOGY_REF)
-                .setTo(toUri)
-                .setOperationCreate()
-                .setName(AE_APP_NAME)
-                .build();
+        Onem2mRequestPrimitiveClient aeRequest;
+        Onem2mAERequestBuilder aeBuilder;
 
         resourceNameList.add(toUri + "/" + AE_APP_NAME);
 
-        Onem2mResponsePrimitiveClient onem2mResponse = onem2mRequest.send(onem2mService);
+        aeBuilder = new Onem2mAERequestBuilder();
+        aeBuilder.setTo(toUri);
+        aeBuilder.setOperationCreate();
+        aeBuilder.setName(AE_APP_NAME);
+        aeBuilder.setAppName(AE_APP_NAME);
+        aeBuilder.setAEId(AE_ID);
+        aeBuilder.setAppId(AE_APP_ID);
+        aeBuilder.setOntologyRef(AE_ONTOLOGY_REF);
+        aeRequest = aeBuilder.build();
+        Onem2mResponsePrimitiveClient onem2mResponse = aeRequest.send(onem2mService);
         if (!onem2mResponse.responseOk()) {
-            LOG.error(onem2mResponse.getContent());
-            return false;
-        }
-
+            LOG.error("AE create request: {}", onem2mResponse.getError());
+            return false;        }
         Onem2mAEResponse aeResponse = new Onem2mAEResponse(onem2mResponse.getContent());
         if (!aeResponse.responseOk()) {
+            LOG.error("AE create request: {}", aeResponse.getError());
             return false;
         }
 
@@ -183,50 +180,7 @@ public class BasicSanityRpc {
             return false;
         }
 
-        return success;
-    }
-
-    private boolean createAETest3(List<String> resourceList, String toUri, List<String> resourceNameList) {
-
-        Onem2mAERequest onem2mRequest;
-        boolean success = true;
-
-        onem2mRequest = new Onem2mAERequestBuilder()
-                .setAppName(AE_APP_NAME)
-                .setAEId(AE_ID)
-                .setAppId(AE_APP_ID)
-                .setOntologyRef(AE_ONTOLOGY_REF)
-                .setTo(toUri)
-                .setOperationCreate()
-                .setName(AE_APP_NAME)
-                .build();
-
-        resourceNameList.add(toUri + "/" + AE_APP_NAME);
-
-        Onem2mResponsePrimitiveClient onem2mResponse = onem2mRequest.send(onem2mService);
-        if (!onem2mResponse.responseOk()) {
-            LOG.error(onem2mResponse.getContent());
-            return false;
-        }
-
-        Onem2mAEResponse aeResponse = new Onem2mAEResponse(onem2mResponse.getContent());
-        if (!aeResponse.responseOk()) {
-            return false;
-        }
-
-        String resourceId = aeResponse.getResourceId();
-        if (resourceId == null) {
-            LOG.error("Create cannot parse resourceId for AE create");
-            return false;
-        }
-        resourceList.add(resourceId);
-
-        if (!AE_APP_NAME.contentEquals(aeResponse.getAppName())) {
-            LOG.error("ae_app_name mismatch: expected: {}, received: {}", AE_APP_NAME, aeResponse.getAppName());
-            return false;
-        }
-
-        return success;
+        return true;
     }
 
     /**
@@ -255,7 +209,7 @@ public class BasicSanityRpc {
                 .setRequestIdentifier("RQI_1234")
                 .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
-                .setContent(containerString)
+                .setPrimitiveContent(containerString)
                 .setName(CONTAINER_NAME)
                 .build();
 
@@ -304,7 +258,7 @@ public class BasicSanityRpc {
                 .setRequestIdentifier("RQI_1234")
                 .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
                 .setOperationCreate()
-                .setContent(contentString)
+                .setPrimitiveContent(contentString)
                 .setName(CONTENT_INSTANCE_NAME)
                 .build();
 
@@ -371,6 +325,42 @@ public class BasicSanityRpc {
         return success;
     }
 
+    private boolean retrieveTest2(List<String> resourceList, List<String> resourceNameList) {
+
+        boolean success = true;
+
+        for (int i = 0; i < resourceList.size(); i++) {
+            String resourceId = resourceList.get(i);
+            String resourceName = resourceNameList.get(i);
+
+            Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+                    .setProtocol(Onem2m.Protocol.NATIVEAPP)
+                    .setContentFormat(Onem2m.ContentFormat.JSON)
+                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    .setFrom("")
+                    .setRequestIdentifier("RQI_1234")
+                    .setOperationRetrieve()
+                    .build();
+
+            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+            String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+            try {
+                Onem2mResponse or = new Onem2mResponse(responseContent);
+                JSONObject j = or.getJSONObject();
+                if (!resourceName.contentEquals(j.getString(ResourceContent.RESOURCE_NAME))) {
+                    LOG.error("Retrieve resourceId: {} NOT FOUND name: {} expected: {}",
+                            resourceId, resourceName, j.getString(ResourceContent.RESOURCE_NAME));
+                    success = false;
+                    break;
+                }
+            } catch (JSONException e) {
+                LOG.error("Retrieve parse responseContent error: {}", e);
+                success = false;
+                break;
+            }
+        }
+        return success;
+    }
     /**
      * Delete the previously created resources (again, this ensures the resources  actually existed)
      * @param resourceList
@@ -442,7 +432,7 @@ public class BasicSanityRpc {
                 .setRequestIdentifier("RQI_1234")
                 .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
-                .setContent(containerString)
+                .setPrimitiveContent(containerString)
                 .setName(CONTAINER_NAME)
                 .build();
 
@@ -466,7 +456,7 @@ public class BasicSanityRpc {
                     .setRequestIdentifier("RQI_1234")
                     .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
                     .setOperationCreate()
-                    .setContent(contentString)
+                    .setPrimitiveContent(contentString)
                     .build();
 
             onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);

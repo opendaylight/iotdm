@@ -50,7 +50,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     // for now fall thru and error
                 }
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "REQUEST_PRIMITIVES(" + onem2mResource.getName() + ") not valid");
+                        "REQUEST_PRIMITIVES(" + onem2mResource.getName() + ") not valid/supported");
                 return false;
             }
         }
@@ -300,7 +300,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // perform more specific parameter validation for the operation requested
         switch (operation) {
             case Onem2m.Operation.CREATE:
-                if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+                if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
+                    protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
                     handleOperationCreate(onem2mResponse);
                 } else {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
@@ -371,22 +372,37 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // lookup the resource ... this will be the parent where the new resource will be created
-        String to = getPrimitive(RequestPrimitive.TO);
-        if (!Onem2mDb.getInstance().findResourceUsingURI(to, this, onem2mResponse)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                    "Resource target URI not found: " + to);
-            return;
-        }
-        // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
+        String resourceType = getPrimitive(RequestPrimitive.RESOURCE_TYPE);
+        if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+            String to = getPrimitive(RequestPrimitive.TO);
+            if (!Onem2mDb.getInstance().findResourceUsingURI(to, this, onem2mResponse)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
+                        "Resource target URI not found: " + to);
+                return;
+            }
 
-        // if the a name is provided, ensure it is valid and unique at this hierarchical level
-        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-        if (resourceName != null) {
-            // using the parent, see if this new resource name already exists under this parent resource
-            if (Onem2mDb.getInstance().findResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
-                // TS0004: 7.2.3.2
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
-                        "Resource already exists: " + this.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
+            // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
+
+            // if the a name is provided, ensure it is valid and unique at this hierarchical level
+            String resourceName = this.getPrimitive((RequestPrimitive.NAME));
+            if (resourceName != null) {
+                // using the parent, see if this new resource name already exists under this parent resource
+                if (Onem2mDb.getInstance().findResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
+                    // TS0004: 7.2.3.2
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
+                            "Resource already exists: " + this.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
+                    return;
+                }
+                this.setResourceName(resourceName);
+            }
+        } else {
+            String resourceName = this.getPrimitive((RequestPrimitive.NAME));
+            if (resourceName == null) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name not specified");
+                return;
+            }
+            if (Onem2mDb.getInstance().findCseByName(resourceName)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name already exists: " + resourceName);
                 return;
             }
             this.setResourceName(resourceName);
@@ -517,9 +533,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
+        String protocol = getPrimitive(RequestPrimitive.PROTOCOL);
         DbAttr parentDbAttrs = this.getDbAttrs();
         String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
-        if (rt != null && rt.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+        if (rt != null && rt.contentEquals(Onem2m.ResourceType.CSE_BASE) &&
+                !protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
                     "Not permitted to delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
             return;

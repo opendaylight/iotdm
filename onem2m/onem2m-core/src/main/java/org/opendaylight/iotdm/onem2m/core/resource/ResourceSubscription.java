@@ -67,7 +67,7 @@ public class ResourceSubscription {
             if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
                     rt.contentEquals(Onem2m.ResourceType.CONTAINER) ||
                     rt.contentEquals(Onem2m.ResourceType.AE))) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.TARGET_NOT_SUBSCRIBABLE,
                         "Cannot create Subscription under this resource type: " + rt);
                 return;
             }
@@ -75,6 +75,10 @@ public class ResourceSubscription {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
+        /**
+         * Theoretically, if the notificationURI is different from the Originator, then special processing is
+         * required. TODO: see rules in TS0004 to add this functionality
+         */
         List<Member> memberList = resourceContent.getDbAttrSet(NOTIFICATION_URI);
         if (memberList == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
@@ -164,6 +168,7 @@ public class ResourceSubscription {
                         resourceContent.setDbAttr(key, null);
                     }
                     break;
+
                 case NOTIFICATION_URI:
                     if (!resourceContent.getJsonContent().isNull(key)) {
                         if (!(o instanceof JSONArray)) {
@@ -191,6 +196,7 @@ public class ResourceSubscription {
                         resourceContent.setDbAttrSet(key, null);
                     }
                     break;
+
                 case ResourceContent.LABELS:
                     if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
                             resourceContent,

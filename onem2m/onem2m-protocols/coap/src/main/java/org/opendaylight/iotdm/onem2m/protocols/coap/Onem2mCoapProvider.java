@@ -7,7 +7,6 @@
  */
 package org.opendaylight.iotdm.onem2m.protocols.coap;
 
-import java.util.List;
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.CoapServer;
 import org.eclipse.californium.core.coap.*;
@@ -20,7 +19,6 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
@@ -110,7 +108,7 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
             // take the entire payload text and put it in the CONTENT field; it is the representation of the resource
             String cn = coapExchange.getRequestText().trim();
             if (cn != null && !cn.contentEquals("")) {
-                clientBuilder.setContent(cn);
+                clientBuilder.setPrimitiveContent(cn);
             }
 
             switch (code) {
@@ -231,6 +229,8 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
                     return CoAP.ResponseCode.NOT_IMPLEMENTED;
                 case Onem2m.ResponseStatusCode.ALREADY_EXISTS:
                     return CoAP.ResponseCode.BAD_REQUEST;
+                case Onem2m.ResponseStatusCode.TARGET_NOT_SUBSCRIBABLE:
+                    return CoAP.ResponseCode.FORBIDDEN;
                 case Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED:
                     return CoAP.ResponseCode.INTERNAL_SERVER_ERROR;
 

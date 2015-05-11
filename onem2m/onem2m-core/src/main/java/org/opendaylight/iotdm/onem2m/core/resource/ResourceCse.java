@@ -178,7 +178,7 @@ public class ResourceCse {
                     for (Member member : attrSet.getMember()) {
                         a.put(member.getMember());
                     }
-                    j.put(attrSet.getName(), a); // TODO: enum or string?
+                    j.put(attrSet.getName(), a);
                     break;
                 default:
                     ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);

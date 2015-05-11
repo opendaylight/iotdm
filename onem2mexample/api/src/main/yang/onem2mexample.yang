@@ -1,0 +1,9 @@
+module onem2mexample {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mexample";
+    prefix "onem2mexample";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2mexample model";
+    }
+}

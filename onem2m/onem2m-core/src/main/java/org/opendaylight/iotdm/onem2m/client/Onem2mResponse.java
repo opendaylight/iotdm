@@ -37,6 +37,7 @@ public class Onem2mResponse {
     private Integer resourceType;
     private Integer stateTag;
     private String[] labels;
+    private String errorString;
 
     protected Onem2mResponse() {}
 
@@ -179,6 +180,16 @@ public class Onem2mResponse {
                     this.labels[i] = a.get(i).toString();
                 }
                 break;
+
+            case "error":
+                if (!(o instanceof String)) {
+                    LOG.error("String expected for json key: " + key);
+                    return false;
+                }
+                this.errorString = o.toString();
+                success = false;
+                break;
+
             default:
                 LOG.error("Unexpected json key: " + key);
                 return false;
@@ -211,6 +222,12 @@ public class Onem2mResponse {
     }
     public String[] getLabels() {
         return this.labels;
+    }
+    public String getError() {
+        return this.errorString;
+    }
+    public void setError(String e) {
+        this.errorString = e;
     }
     public boolean responseOk() {
         return success;
