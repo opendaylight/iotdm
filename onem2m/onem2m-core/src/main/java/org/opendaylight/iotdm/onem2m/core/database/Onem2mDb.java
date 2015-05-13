@@ -17,6 +17,7 @@ import org.opendaylight.controller.md.sal.common.api.data.AsyncTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -25,6 +26,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +95,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param name cse name
      * @return found or not
      */
-    public boolean findCseByName(String name) {
+    public synchronized boolean findCseByName(String name) {
         return (dbResourceTree.retrieveCseByName(name) != null) ? true : false;
     }
 
@@ -103,7 +105,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return successful db create
      */
-    public boolean createCseResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public synchronized boolean createCseResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         // generate a unique id for this new resource
         onem2mRequest.setResourceId(generateResourceId());
@@ -132,7 +134,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return successful db create
      */
-    public boolean createResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public synchronized boolean createResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         // generate a unique id for this new resource
         onem2mRequest.setResourceId(generateResourceId());
@@ -151,35 +153,41 @@ public class Onem2mDb implements TransactionChainListener {
         }
 
         String parentId = parentOnem2mResource.getResourceId();
-        String oldestId = parentOnem2mResource.getOldestId();
-        String latestId = parentOnem2mResource.getLatestId();
         String prevId = Onem2mDb.NULL_RESOURCE_ID;
 
-        // need to maintain the oldest and latest, and next-prev children too
-        if (latestId.contains(Onem2mDb.NULL_RESOURCE_ID)) {
+        String resourceType = onem2mRequest.getResourceContent().getDbAttr(ResourceContent.RESOURCE_TYPE);
+        OldestLatest parentOldestLatest =
+                dbResourceTree.retrieveOldestLatestByResourceType(parentId, resourceType);
+        if (parentOldestLatest != null) {
+            String oldestId = parentOldestLatest.getOldestId();
+            String latestId = parentOldestLatest.getLatestId();
 
-            latestId = onem2mRequest.getResourceId();
-            oldestId = onem2mRequest.getResourceId();
-            if (dbTxn == null) {
-                dbTxn = new DbTransaction(bindingTransactionChain);
+            // need to maintain the oldest and latest, and next-prev children too
+            if (latestId.contains(Onem2mDb.NULL_RESOURCE_ID)) {
+
+                latestId = onem2mRequest.getResourceId();
+                oldestId = onem2mRequest.getResourceId();
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(bindingTransactionChain);
+                }
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentId, resourceType, oldestId, latestId);
+
+
+            } else {
+
+                prevId = latestId;
+                Onem2mResource prevOnem2mResource = getResource(prevId);
+
+                latestId = onem2mRequest.getResourceId();
+
+                Child child = dbResourceTree.retrieveChildByName(parentId, prevOnem2mResource.getName());
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(bindingTransactionChain);
+                }
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentId, resourceType, oldestId, latestId);
+                dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentId, child, latestId);
             }
-            dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentOnem2mResource, oldestId, latestId);
-
-
-        } else {
-
-            prevId = latestId;
-            Onem2mResource prevOnem2mResource = getResource(prevId);
-
-            latestId = onem2mRequest.getResourceId();
-
-            Child child = dbResourceTree.retrieveChildByName(parentId, prevOnem2mResource.getName());
-
-            if (dbTxn == null) {
-                dbTxn = new DbTransaction(bindingTransactionChain);
-            }
-            dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentOnem2mResource, oldestId, latestId);
-            dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentId, child, latestId);
         }
 
         if (dbTxn == null) {
@@ -210,7 +218,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return successful update
      */
-    public boolean updateResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public synchronized boolean updateResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         DbTransaction dbTxn = new DbTransaction(bindingTransactionChain);
 
@@ -255,23 +263,26 @@ public class Onem2mDb implements TransactionChainListener {
      * @param resourceName name at this level
      * @return found status
      */
-    public Boolean findResourceUsingIdAndName(String resourceId, String resourceName) {
+    public synchronized Boolean findResourceUsingIdAndName(String resourceId, String resourceName) {
 
         Onem2mResource onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, resourceName);
         return (onem2mResource != null);
     }
 
-    private Onem2mResource checkForLatestOldestContentInstance(Onem2mResource containerOnem2mResource, String resourceName) {
+    private Onem2mResource checkForLatestOldestContentInstance(Onem2mResource containerOnem2mResource,
+                                                               String resourceName) {
 
-        if (resourceName.contentEquals("latest")) {
+        if (resourceName.contentEquals(ResourceContainer.LATEST) || resourceName.contentEquals("latest")) {
             String rt = getResourceType(containerOnem2mResource);
-            /**
-             * We are at a container resource and looking at "latest", check to see if the resource is a
-             * content instance.  Note TODO: need to skip over non-CONTENT-INSTANCE resources
-             * There might be subscription resources so skip until find a CONTENT-INSTANCE
-             */
             if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
-                Onem2mResource onem2mResource = getResource(containerOnem2mResource.getLatestId());
+
+                OldestLatest oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(
+                        containerOnem2mResource.getResourceId(),
+                        Onem2m.ResourceType.CONTENT_INSTANCE);
+                if (oldestLatest == null) {
+                    return null;
+                }
+                Onem2mResource onem2mResource = getResource(oldestLatest.getLatestId());
                 if (onem2mResource != null) {
                     rt = getResourceType(onem2mResource);
                     if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
@@ -279,14 +290,16 @@ public class Onem2mDb implements TransactionChainListener {
                     }
                 }
             }
-        } else if (resourceName.contentEquals("oldest")) {
+        } else if (resourceName.contentEquals(ResourceContainer.OLDEST) || resourceName.contentEquals("oldest")) {
             String rt = getResourceType(containerOnem2mResource);
-            /**
-             * We are at a container resource and looking at "latest", check to see if the resource is a
-             * content instance
-             */
             if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
-                Onem2mResource onem2mResource = getResource(containerOnem2mResource.getOldestId());
+                OldestLatest oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(
+                        containerOnem2mResource.getResourceId(),
+                        Onem2m.ResourceType.CONTENT_INSTANCE);
+                if (oldestLatest == null) {
+                    return null;
+                }
+                Onem2mResource onem2mResource = getResource(oldestLatest.getOldestId());
                 if (onem2mResource != null) {
                     rt = getResourceType(onem2mResource);
                     if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
@@ -304,7 +317,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return found status
      */
-    public Boolean findResourceUsingURI(String targetURI,
+    public synchronized Boolean findResourceUsingURI(String targetURI,
                                         RequestPrimitive onem2mRequest,
                                         ResponsePrimitive onem2mResponse) {
 
@@ -374,7 +387,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return found status
      */
-    public Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
+    public synchronized Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
                                                     RequestPrimitive onem2mRequest,
                                                     ResponsePrimitive onem2mResponse) {
         String trimmedURI = trimURI(uriAndAttribute); // get rid of leading and following "/"
@@ -402,7 +415,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param resourceId resource id
      * @return name of resource using the /cse/resourceId format
      */
-    public String getNonHierarchicalNameForResource(String resourceId) {
+    public synchronized String getNonHierarchicalNameForResource(String resourceId) {
 
         if (resourceId == null || resourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
             return null;
@@ -428,7 +441,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param resourceId the resource id
      * @return name of the resource in hierarchical format
      */
-    public String getHierarchicalNameForResource(String resourceId) {
+    public synchronized String getHierarchicalNameForResource(String resourceId) {
         String hierarchy = "";
 
         Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
@@ -451,7 +464,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param limit enforce a limit of how many are in the list
      * @return the list of resource id's
      */
-    public List<String> getHierarchicalResourceList(String startResourceId, int limit) {
+    public synchronized List<String> getHierarchicalResourceList(String startResourceId, int limit) {
 
         Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(startResourceId);
         if (onem2mResource == null || limit < 1) {
@@ -485,7 +498,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param resourceId the resource id to get
      * @return the resource info for this id
      */
-    public Onem2mResource getResource(String resourceId) {
+    public synchronized Onem2mResource getResource(String resourceId) {
         return dbResourceTree.retrieveResourceById(resourceId);
     }
 
@@ -494,7 +507,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResource the input resource
      * @return the resource type
      */
-    public String getResourceType(Onem2mResource onem2mResource) {
+    public synchronized String getResourceType(Onem2mResource onem2mResource) {
         for (Attr attr : onem2mResource.getAttr()) {
             if (attr.getName().contentEquals(ResourceContent.RESOURCE_TYPE)) {
                 return attr.getValue();
@@ -510,7 +523,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResponse response
      * @return found status
      */
-    public Boolean deleteResourceUsingURI(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public synchronized Boolean deleteResourceUsingURI(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         DbTransaction dbTxn = null;
 
@@ -528,72 +541,78 @@ public class Onem2mDb implements TransactionChainListener {
 
         // build a 'to be Deleted list' by walking the hierarchy
         List<String> resourceIdList = getHierarchicalResourceList(thisResourceId, Onem2m.MAX_RESOURCES + 1);
+        String resourceType = onem2mRequest.getDbAttrs().getAttr(ResourceContent.RESOURCE_TYPE);
+        OldestLatest parentOldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResourceId, resourceType);
 
-        if (parentOnem2mResource.getLatestId().contentEquals(parentOnem2mResource.getOldestId())) {
+        if (parentOldestLatest != null) {
+            if (parentOldestLatest.getLatestId().contentEquals(parentOldestLatest.getOldestId())) {
 
-            if (dbTxn == null) {
-                dbTxn = new DbTransaction(bindingTransactionChain);
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(bindingTransactionChain);
+                }
+
+                // only child, set oldest/latest back to NULL
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentResourceId, resourceType,
+                        Onem2mDb.NULL_RESOURCE_ID,
+                        Onem2mDb.NULL_RESOURCE_ID);
+
+            } else if (parentOldestLatest.getLatestId().contentEquals(thisResourceId)) {
+
+                // deleting the latest, go back to prev and set is next to null, re point latest to prev
+                Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
+                String prevId = curr.getPrevId();
+                Onem2mResource prevOnem2mResource = this.getResource(prevId);
+
+                Child child = dbResourceTree.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(bindingTransactionChain);
+                }
+
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentResourceId, resourceType,
+                        parentOldestLatest.getOldestId(),
+                        prevId);
+                dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+
+            } else if (parentOldestLatest.getOldestId().contentEquals(thisResourceId)) {
+
+                // deleting the oldest, go to next and set its prev to null, re point oldest to next
+                Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
+                String nextId = curr.getNextId();
+                Onem2mResource nextOnem2mResource = this.getResource(nextId);
+
+                Child child = dbResourceTree.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(bindingTransactionChain);
+                }
+
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentResourceId, resourceType,
+                        nextId,
+                        parentOldestLatest.getLatestId());
+                dbResourceTree.updateChildSiblingPrevInfo(dbTxn, parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+
+            } else {
+
+                Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
+
+                String nextId = curr.getNextId();
+                Onem2mResource nextOnem2mResource = this.getResource(nextId);
+                Child prevChild = dbResourceTree.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
+
+
+                String prevId = curr.getPrevId();
+                Onem2mResource prevOnem2mResource = this.getResource(prevId);
+                Child nextChild = dbResourceTree.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
+
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(bindingTransactionChain);
+                }
+
+                dbResourceTree.updateChildSiblingPrevInfo(dbTxn, parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
+                dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
             }
-
-            // only child, set oldest/latest back to NULL
-            dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentOnem2mResource, Onem2mDb.NULL_RESOURCE_ID,
-                    Onem2mDb.NULL_RESOURCE_ID);
-
-        } else if (parentOnem2mResource.getLatestId().contentEquals(thisResourceId)) {
-
-            // deleting the latest, go back to prev and set is next to null, re point latest to prev
-            Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
-            String prevId = curr.getPrevId();
-            Onem2mResource prevOnem2mResource = this.getResource(prevId);
-
-            Child child = dbResourceTree.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-            if (dbTxn == null) {
-                dbTxn = new DbTransaction(bindingTransactionChain);
-            }
-
-            dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentOnem2mResource, parentOnem2mResource.getOldestId(),
-                    prevId);
-            dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
-
-        } else if (parentOnem2mResource.getOldestId().contentEquals(thisResourceId)) {
-
-            // deleting the oldest, go to next and set its prev to null, re point oldest to next
-            Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
-            String nextId = curr.getNextId();
-            Onem2mResource nextOnem2mResource = this.getResource(nextId);
-
-            Child child = dbResourceTree.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
-
-            if (dbTxn == null) {
-                dbTxn = new DbTransaction(bindingTransactionChain);
-            }
-
-            dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentOnem2mResource, nextId,
-                    parentOnem2mResource.getLatestId());
-            dbResourceTree.updateChildSiblingPrevInfo(dbTxn, parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
-
-        } else {
-
-            Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
-
-            String nextId = curr.getNextId();
-            Onem2mResource nextOnem2mResource = this.getResource(nextId);
-            Child prevChild = dbResourceTree.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
-
-
-            String prevId = curr.getPrevId();
-            Onem2mResource prevOnem2mResource = this.getResource(prevId);
-            Child nextChild = dbResourceTree.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-
-            if (dbTxn == null) {
-                dbTxn = new DbTransaction(bindingTransactionChain);
-            }
-
-            dbResourceTree.updateChildSiblingPrevInfo(dbTxn, parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
-            dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
-
         }
 
         if (dbTxn == null) {
@@ -618,7 +637,7 @@ public class Onem2mDb implements TransactionChainListener {
      * Dump resource info the the karaf log
      * @param resourceId resource to start dumping from
      */
-    public void dumpResourceIdLog(String resourceId) {
+    public synchronized void dumpResourceIdLog(String resourceId) {
         dbResourceTree.dumpRawTreeToLog(resourceId);
     }
 
@@ -626,14 +645,14 @@ public class Onem2mDb implements TransactionChainListener {
      * Dump resource info the the karaf log
      * @param resourceId all or starting resource id
      */
-    public void dumpHResourceIdToLog(String resourceId) {
+    public synchronized void dumpHResourceIdToLog(String resourceId) {
         dbResourceTree.dumpHierarchicalTreeToLog(resourceId);
     }
 
     /**
      * Remove all resources from the datastore
      */
-    public void cleanupDataStore() {
+    public synchronized void cleanupDataStore() {
         dbResourceTree.reInitializeDatastore(); // reinitialize the data store.
     }
 

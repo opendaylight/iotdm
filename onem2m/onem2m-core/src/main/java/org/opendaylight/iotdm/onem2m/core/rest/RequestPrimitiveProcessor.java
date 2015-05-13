@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -58,13 +59,19 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     }
 
     /**
-     * Ensure the name is OK
+     * Ensure the name is OK in that it does not contain a / or it is not one of the reserved names
+     * Trying to retrieve the latent content instance in a container would be tricky if one of the valid
+     * names of a contentInstance can be "latest".
      * @param name
      * @return
      */
     private boolean validateResourceName(String name)  {
-        if (name.contentEquals("latest") || name.contentEquals("oldest") ||
-                name.contains("/")) {
+        if (name.contentEquals("latest") ||
+            name.contentEquals(ResourceContainer.LATEST) ||
+            name.contentEquals("oldest") ||
+            name.contentEquals(ResourceContainer.OLDEST) ||
+            name.contentEquals("0") ||
+            name.contains("/")) {
             return false;
         }
         return true;
@@ -398,11 +405,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         } else {
             String resourceName = this.getPrimitive((RequestPrimitive.NAME));
             if (resourceName == null) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name not specified");
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE name not specified");
                 return;
             }
             if (Onem2mDb.getInstance().findCseByName(resourceName)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name already exists: " + resourceName);
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT, "CSE name already exists: " + resourceName);
                 return;
             }
             this.setResourceName(resourceName);
@@ -659,7 +666,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         String cseType = this.getPrimitive("CSE_TYPE");
         if (cseType == null) {
             cseType = "IN-CSE";
-        } else if (!cseType.contentEquals("IN-CSE")) {
+        } else if (!cseType.contentEquals("IN-CSE")) { //TODO: what is the difference between CSE types
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
             return;
         }

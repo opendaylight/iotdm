@@ -64,11 +64,17 @@ module onem2m {
             leaf name { // the onem2m resource name
                 type string;
             }
-            leaf oldest-id {
-                type string;
-            }
-            leaf latest-id {
-                type string;
+            list oldest-latest {
+                key resource-type;
+                leaf resource-type {
+                    type string;
+                }
+                leaf oldest-id {
+                    type string;
+                }
+                leaf latest-id {
+                    type string;
+                }
             }
             list child {
                 key name;

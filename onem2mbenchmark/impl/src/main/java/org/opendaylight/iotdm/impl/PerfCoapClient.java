@@ -150,7 +150,8 @@ public class PerfCoapClient {
 
             coapRequest = new OdlOnem2mCoapRequestPrimitiveBuilder()
                     .setOperationRetrieve()
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    //.setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    .setTo(resourceId)
                     .setFrom("PerfCoap_FROM")
                     .setRequestIdentifier("PerfCoap_RQI")
                     .build();
@@ -199,7 +200,8 @@ public class PerfCoapClient {
 
             coapRequest = new OdlOnem2mCoapRequestPrimitiveBuilder()
                     .setOperationDelete()
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    //.setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    .setTo(resourceId)
                     .setFrom("PerfCoap_FROM")
                     .setRequestIdentifier("PerfCoap_RQI")
                     .build();

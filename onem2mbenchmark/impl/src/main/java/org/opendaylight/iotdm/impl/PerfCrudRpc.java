@@ -7,8 +7,12 @@
  */
 package org.opendaylight.iotdm.impl;
 
+import static java.lang.Thread.sleep;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.*;
@@ -24,10 +28,26 @@ public class PerfCrudRpc {
     private static final Logger LOG = LoggerFactory.getLogger(PerfCrudRpc.class);
     private Onem2mService onem2mService;
     public long createsPerSec, retrievesPerSec, updatesPerSec, deletesPerSec;
+    private final ExecutorService executor;
+    private Integer nextResourceId = 0;
+    private Integer numSuccessful = 0;
+    private Integer numComplete = 0;
+
+    private synchronized Integer getNext() {
+        return ++nextResourceId;
+    }
+    private synchronized void incNumSuccessful() {
+        ++numSuccessful;
+    }
+    private synchronized void incNumComplete() {
+        ++numComplete;
+    }
 
     public PerfCrudRpc(Onem2mService onem2mService) {
         this.onem2mService = onem2mService;
+        executor = Executors.newFixedThreadPool(32);
     }
+
     /**
      * Run a performance test that create 'numResources' and records how long it took, then it will retrieve
      * each of the created resources, then update each of the resources, then finally delete each of the originally
@@ -42,28 +62,15 @@ public class PerfCrudRpc {
      */
     public boolean runPerfTest(int numResources) {
 
-        List<String> resourceList = new ArrayList<String>(numResources);
+        int totalSuccessful = 0;
+        totalSuccessful += createTest(numResources);
+        totalSuccessful += retrieveTest(numResources);
+        totalSuccessful += deleteTest(numResources);
 
-        if (createTest(resourceList, numResources) &&
-            retrieveTest(resourceList, numResources) &&
-            deleteTest(resourceList, numResources)) {
-            LOG.info("runPerfTest: all tests finished");
-        } else {
-            LOG.error("runPerfTest: tests failed early");
-        }
-        return true;
+        return (numResources*3) == totalSuccessful;
     }
 
-    /**
-     * Create sample container resources underneath the special perfTest cse
-     * @param resourceList
-     * @param numResources
-     * @return
-     */
-    private boolean createTest(List<String> resourceList, int numResources) {
-
-        long startTime, endTime, delta;
-        int numProcessed = 0;
+    private boolean createOneTest(Integer resourceId) {
 
         String containerString = new ResourceContainerBuilder()
                 .setCreator("Creator")
@@ -82,135 +89,189 @@ public class PerfCrudRpc {
                 .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
                 .setPrimitiveContent(containerString)
+                .setName(resourceId.toString())
                 .build();
 
-        /*
-        Onem2mAERequest aeRequest = new Onem2mAERequestBuilder()
-                .setTo("/" + Onem2m.SYS_PERF_TEST_CSE)
-                .setOperationCreate()
-                .build();
 
-        aeRequest.send(onem2mService);
-        */
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+        try {
+            Onem2mResponse or = new Onem2mResponse(responseContent);
+            JSONObject j = or.getJSONObject();
+            String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
+            String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId;
+            if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
+                LOG.error("create: resource name error: {}, {}", tempResourceId, resourceName);
+                return false;
+            }
+            incNumSuccessful();
+        } catch (JSONException e) {
+            LOG.error("Create parse responseContent error: {}", e);
+            return false;
+        }
+
+        return true;
+    }
+
+    private int createTest(int numResources) {
+
+        long startTime, endTime, delta;
+        nextResourceId = 0;
+        numComplete = 0;
+        numSuccessful = 0;
+
         startTime = System.nanoTime();
         for (int i = 0; i < numResources; i++) {
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
-            String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-            String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            try {
-                Onem2mResponse or = new Onem2mResponse(responseContent);
-                JSONObject j = or.getJSONObject();
-                String resourceId = j.getString(ResourceContent.RESOURCE_ID);
-                if (resourceId == null) {
-                    LOG.error("Create cannot parse resourceId (iteration: {})", i);
-                    break;
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    createOneTest(getNext());
+                    incNumComplete();
                 }
-                resourceList.add(resourceId);
-                ++numProcessed;
-            } catch (JSONException e) {
-                LOG.error("Create parse responseContent error: {}", e);
-                break;
+            });
+        }
+        while (numComplete != numResources) {
+            try {
+                sleep(1, 0);
+            } catch (InterruptedException e) {
+                LOG.error("sleep error: {}", e);
             }
         }
         endTime = System.nanoTime();
         delta = (endTime-startTime);
         createsPerSec = nPerSecond(numResources, delta);
-        LOG.info("Time to create ... num/total: {}/{}, delta: {}ns, ops/s: {}", numProcessed, numResources, delta, createsPerSec);
-        return numProcessed == numResources;
+        LOG.info("Time to create ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, createsPerSec);
+        return numSuccessful;
     }
 
-    /**
-     * Retrieve all the created resources (this ensures they were created).
-     * @param resourceList
-     * @param numResources
-     * @return
-     */
-    private boolean retrieveTest(List<String> resourceList, int numResources) {
+    private boolean retrieveOneTest(Integer resourceId) {
+
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId;
+
+        Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+                .setProtocol(Onem2m.Protocol.NATIVEAPP)
+                .setContentFormat(Onem2m.ContentFormat.JSON)
+                .setTo(tempResourceId)
+                .setFrom("")
+                .setRequestIdentifier("RQI_1234")
+                .setOperationRetrieve()
+                .build();
+
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+        String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+        try {
+            Onem2mResponse or = new Onem2mResponse(responseContent);
+            JSONObject j = or.getJSONObject();
+            String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
+            if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
+                LOG.error("retrieve: resource name error: {}, {}", tempResourceId, resourceName);
+                return false;
+            }
+            incNumSuccessful();
+        } catch (JSONException e) {
+            LOG.error("Retrieve parse responseContent error: {}", e);
+            return false;
+        }
+        return false;
+    }
+
+
+    private int retrieveTest(int numResources) {
 
         long startTime, endTime, delta;
-        int numProcessed = 0;
+        nextResourceId = 0;
+        numComplete = 0;
+        numSuccessful = 0;
 
         startTime = System.nanoTime();
-        for (String resourceId : resourceList) {
-
-            Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
-                    .setProtocol(Onem2m.Protocol.NATIVEAPP)
-                    .setContentFormat(Onem2m.ContentFormat.JSON)
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
-                    .setFrom("")
-                    .setRequestIdentifier("RQI_1234")
-                    .setOperationRetrieve()
-                    .build();
-
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
-            String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-            try {
-                Onem2mResponse or = new Onem2mResponse(responseContent);
-                JSONObject j = or.getJSONObject();
-                if (!resourceId.contentEquals(j.getString(ResourceContent.RESOURCE_ID))) {
-                    LOG.error("Retrieve resourceId: {} not found", resourceId);
-                    break;
+        for (int i = 0; i < numResources; i++) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    retrieveOneTest(getNext());
+                    incNumComplete();
                 }
-                ++numProcessed;
-            } catch (JSONException e) {
-                LOG.error("Retrieve parse responseContent error: {}", e);
-                break;
+            });
+        }
+        while (numComplete != numResources) {
+            try {
+                sleep(1, 0);
+            } catch (InterruptedException e) {
+                LOG.error("sleep error: {}", e);
             }
         }
         endTime = System.nanoTime();
         delta = (endTime-startTime);
         retrievesPerSec = nPerSecond(numResources, delta);
-        LOG.info("Time to retrieve ... num/total: {}/{}, delta: {}ns, ops/s: {}", numProcessed, numResources, delta, retrievesPerSec);
+        LOG.info("Time to retrieve ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, retrievesPerSec);
 
-        return numProcessed == numResources;
+        return numSuccessful;
     }
 
-    /**
-     * Delete the previously created resources (again, this ensures the resources  actually existed)
-     * @param resourceList
-     * @param numResources
-     * @return
-     */
-    private boolean deleteTest(List<String> resourceList, int numResources) {
+    private boolean deleteOneTest(Integer resourceId) {
+
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId;
+
+        Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+                .setProtocol(Onem2m.Protocol.NATIVEAPP)
+                .setContentFormat(Onem2m.ContentFormat.JSON)
+                .setTo(tempResourceId)
+                .setFrom("")
+                .setRequestIdentifier("RQI_1234")
+                .setOperationDelete()
+                .build();
+
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+        try {
+            Onem2mResponse or = new Onem2mResponse(responseContent);
+            JSONObject j = or.getJSONObject();
+            String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
+            if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
+                LOG.error("delete: resource name error: {}, {}", tempResourceId, resourceName);
+                return false;
+            }
+            incNumSuccessful();
+        } catch (JSONException e) {
+            LOG.error("Delete parse responseContent error: {}", e);
+            return false;
+        }
+        return true;
+    }
+
+    private int deleteTest(int numResources) {
 
         long startTime, endTime, delta;
-        int numProcessed = 0;
+        nextResourceId = 0;
+        numComplete = 0;
+        numSuccessful = 0;
 
         startTime = System.nanoTime();
-        for (String resourceId : resourceList) {
-
-            Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
-                    .setProtocol(Onem2m.Protocol.NATIVEAPP)
-                    .setContentFormat(Onem2m.ContentFormat.JSON)
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
-                    .setFrom("")
-                    .setRequestIdentifier("RQI_1234")
-                    .setOperationDelete()
-                    .build();
-
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
-            String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-            String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            try {
-                Onem2mResponse or = new Onem2mResponse(responseContent);
-                JSONObject j = or.getJSONObject();
-                if (!resourceId.contentEquals(j.getString(ResourceContent.RESOURCE_ID))) {
-                    LOG.error("Delete resourceId: {} not found", resourceId);
-                    break;
+        for (int i = 0; i < numResources; i++) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    deleteOneTest(getNext());
+                    incNumComplete();
                 }
-                ++numProcessed;
-            } catch (JSONException e) {
-                LOG.error("Delete parse responseContent error: {}", e);
-                break;
+            });
+        }
+        while (numComplete != numResources) {
+            try {
+                sleep(1, 0);
+            } catch (InterruptedException e) {
+                LOG.error("sleep error: {}", e);
             }
         }
         endTime = System.nanoTime();
         delta = (endTime-startTime);
         deletesPerSec = nPerSecond(numResources, delta);
-        LOG.info("Time to delete ... num/total: {}/{}, delta: {}ns, ops/s: {}", numProcessed, numResources, delta, deletesPerSec);
+        LOG.info("Time to delete ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, deletesPerSec);
 
-        return numProcessed == numResources;
+        return numSuccessful;
     }
 
     /**

@@ -68,6 +68,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
 
         long numResources;
         String serverUri;
+        StartTestOutput output;
 
         switch (input.getOperation()) {
 
@@ -75,21 +76,19 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                 numResources = input.getNumResources();
                 LOG.info("Test started: numResources: {}", numResources);
                 PerfCrudRpc perfCrudRpc = new PerfCrudRpc(onem2mService);
-                if (perfCrudRpc.runPerfTest((int) numResources)) {
-                    setTestOperData(ExecStatus.Idle);
-                    execStatus.set(ExecStatus.Idle);
+                boolean status = perfCrudRpc.runPerfTest((int) numResources);
+                setTestOperData(ExecStatus.Idle);
+                execStatus.set(ExecStatus.Idle);
 
-                    StartTestOutput output = new StartTestOutputBuilder()
-                            .setStatus(StartTestOutput.Status.OK)
-                            .setCreatesPerSec(perfCrudRpc.createsPerSec)
-                            .setRetrievesPerSec(perfCrudRpc.retrievesPerSec)
-                            .setUpdatesPerSec(perfCrudRpc.updatesPerSec)
-                            .setDeletesPerSec(perfCrudRpc.deletesPerSec)
-                            .build();
+                output = new StartTestOutputBuilder()
+                        .setStatus(status ? StartTestOutput.Status.OK : StartTestOutput.Status.FAILED)
+                        .setCreatesPerSec(perfCrudRpc.createsPerSec)
+                        .setRetrievesPerSec(perfCrudRpc.retrievesPerSec)
+                        .setUpdatesPerSec(perfCrudRpc.updatesPerSec)
+                        .setDeletesPerSec(perfCrudRpc.deletesPerSec)
+                        .build();
 
-                    return RpcResultBuilder.success(output).buildFuture();
-                }
-                break;
+                return RpcResultBuilder.success(output).buildFuture();
 
             case PERFCOAP:
                 numResources = input.getNumResources();
@@ -100,7 +99,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                     setTestOperData(ExecStatus.Idle);
                     execStatus.set(ExecStatus.Idle);
 
-                    StartTestOutput output = new StartTestOutputBuilder()
+                    output = new StartTestOutputBuilder()
                             .setStatus(StartTestOutput.Status.OK)
                             .setCreatesPerSec(perfCoapClient.createsPerSec)
                             .setRetrievesPerSec(perfCoapClient.retrievesPerSec)
@@ -120,7 +119,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                     setTestOperData(ExecStatus.Idle);
                     execStatus.set(ExecStatus.Idle);
 
-                    StartTestOutput output = new StartTestOutputBuilder()
+                    output = new StartTestOutputBuilder()
                             .setStatus(StartTestOutput.Status.OK)
                             .setCreatesPerSec(perfHttpClient.createsPerSec)
                             .setRetrievesPerSec(perfHttpClient.retrievesPerSec)
@@ -139,7 +138,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                     setTestOperData(ExecStatus.Idle);
                     execStatus.set(ExecStatus.Idle);
 
-                    StartTestOutput output = new StartTestOutputBuilder()
+                    output = new StartTestOutputBuilder()
                             .setStatus(StartTestOutput.Status.OK)
                             .build();
 

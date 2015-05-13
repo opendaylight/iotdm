@@ -8,10 +8,12 @@
 
 package org.opendaylight.iotdm.onem2m.core.database;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.BindingTransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseListBuilder;
@@ -90,17 +92,41 @@ public class DbResourceTree {
      */
     public Onem2mResource createResource(DbTransaction dbTxn, RequestPrimitive onem2mRequest, String parentResourceId) {
 
+        /**
+         * Initialize empty oldestlatest lists for contentInstances, and subscriptions as these are the two sets
+         * of lists that we need quick access to when processing requests for container/latest and notifications
+         * These act like the head/tail of a linked list where the key of the list is the resource type
+         */
+        List<OldestLatest> oldestLatestList = new ArrayList<OldestLatest>();
+
+        OldestLatest oldestLatestContentInstance = new OldestLatestBuilder()
+                .setKey(new OldestLatestKey(Onem2m.ResourceType.CONTENT_INSTANCE))
+                .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
+                .setLatestId(Onem2mDb.NULL_RESOURCE_ID)
+                .setOldestId(Onem2mDb.NULL_RESOURCE_ID)
+                .build();
+        oldestLatestList.add(oldestLatestContentInstance);
+
+        OldestLatest oldestLatestSubscription = new OldestLatestBuilder()
+                .setKey(new OldestLatestKey(Onem2m.ResourceType.SUBSCRIPTION))
+                .setResourceType(Onem2m.ResourceType.SUBSCRIPTION)
+                .setLatestId(Onem2mDb.NULL_RESOURCE_ID)
+                .setOldestId(Onem2mDb.NULL_RESOURCE_ID)
+                .build();
+        oldestLatestList.add(oldestLatestSubscription);
+
+        /**
+         * Initialize the resource
+         */
         Onem2mResource onem2mResource = new Onem2mResourceBuilder()
                 .setKey(new Onem2mResourceKey(onem2mRequest.getResourceId()))
                 .setResourceId(onem2mRequest.getResourceId())
                 .setName(onem2mRequest.getResourceName())
                 .setParentId(parentResourceId) // parent resource
-                .setLatestId((Onem2mDb.NULL_RESOURCE_ID))
-                .setOldestId((Onem2mDb.NULL_RESOURCE_ID))
+                .setOldestLatest(oldestLatestList)
                 .setChild(Collections.<Child>emptyList()) // new resource has NO children
                 .setAttr(onem2mRequest.getResourceContent().getAttrList())
                 .setAttrSet(onem2mRequest.getResourceContent().getAttrSetList())
-                //.setAttrSet(Collections.<AttrSet>emptyList())
                 .build();
 
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
@@ -111,30 +137,48 @@ public class DbResourceTree {
         return onem2mResource;
     }
 
-    /**
+    /** 
      * Update the pointers to the oldest and latest children
      * @param dbTxn transaction id
-     * @param onem2mResource the current parameters
+     * @param resourceId the resource id
      * @param oldest pointer to the tail
      * @param latest pointer to the head
      * @return the resource
      */
-    public Onem2mResource updateResourceOldestLatestInfo(DbTransaction dbTxn,
-                                                         Onem2mResource onem2mResource,
+    public OldestLatest updateResourceOldestLatestInfo(DbTransaction dbTxn,
+                                                         String resourceId,
+                                                         String resourceType,
                                                          String oldest,
                                                          String latest) {
 
-        Onem2mResource updateOnem2mResource = new Onem2mResourceBuilder(onem2mResource)
+        OldestLatest oldestlatest = new OldestLatestBuilder()
+                .setKey(new OldestLatestKey(resourceType))
+                .setResourceType(resourceType)
                 .setLatestId(latest)
                 .setOldestId(oldest)
                 .build();
 
-        InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                .child(Onem2mResource.class, onem2mResource.getKey());
+        InstanceIdentifier<OldestLatest> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(OldestLatest.class, oldestlatest.getKey());
 
-        dbTxn.update(iid, updateOnem2mResource, LogicalDatastoreType.OPERATIONAL);
+        dbTxn.update(iid, oldestlatest, LogicalDatastoreType.OPERATIONAL);
+        return oldestlatest;
+    }
 
-        return updateOnem2mResource;
+    /**
+     * Retrieve the OldestLatest structure using its resource type
+     * @param resourceId this id
+     * @param resourceType name of child
+     * @return the child
+     */
+    public OldestLatest retrieveOldestLatestByResourceType(String resourceId, String resourceType) {
+
+        InstanceIdentifier<OldestLatest> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(OldestLatest.class, new OldestLatestKey(resourceType));
+
+        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
@@ -228,7 +272,7 @@ public class DbResourceTree {
 
 
     /**
-     * Retrieve teh child using its resource name
+     * Retrieve the child using its resource name
      * @param resourceId this id
      * @param childName name of child
      * @return the child
@@ -387,9 +431,14 @@ public class DbResourceTree {
      * @param dumpChildList child verbose dump option
      */
     public void dumpResourceToLog(Onem2mResource onem2mResource, boolean dumpChildList) {
-        LOG.info("    Resource: id: {}, name: {}, parentId: {}, latestId: {}, oldestId: {}",
-                onem2mResource.getResourceId(), onem2mResource.getName(), onem2mResource.getParentId(),
-                onem2mResource.getLatestId(), onem2mResource.getOldestId());
+        LOG.info("    Resource: id: {}, name: {}, parentId: {}",
+                onem2mResource.getResourceId(), onem2mResource.getName(), onem2mResource.getParentId());
+        List<OldestLatest> oldestLatestList = onem2mResource.getOldestLatest();
+        LOG.info("    OldestLatest List: count: {}", oldestLatestList.size());
+        for (OldestLatest oldestLatest : oldestLatestList) {
+            LOG.info("        oldestLatest: resource type: {}, oldest: {}, latest: {}",
+                    oldestLatest.getResourceType(), oldestLatest.getOldestId(), oldestLatest.getLatestId());
+        }
         List<Child> childList = onem2mResource.getChild();
         LOG.info("    Child List: count: {}", childList.size());
         if (dumpChildList) {
