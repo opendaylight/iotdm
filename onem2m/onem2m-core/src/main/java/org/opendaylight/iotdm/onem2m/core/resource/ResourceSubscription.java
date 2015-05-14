@@ -94,6 +94,15 @@ public class ResourceSubscription {
             }
         }
 
+        String subUri = resourceContent.getDbAttr(SUBSCRIBER_URI);
+        if (subUri != null) {
+            if (!validateUri(subUri)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "SUBSCRIBER_URI not valid URI: " + subUri);
+                return;
+            }
+        }
+
         tempStr = resourceContent.getDbAttr(NOTIFICATION_CONTENT_TYPE);
         if (tempStr != null) {
             if (!tempStr.contentEquals(Onem2m.NotificationContentType.MODIFIED_ATTRIBUTES) &&
@@ -157,6 +166,7 @@ public class ResourceSubscription {
                     break;
 
                 case ResourceContent.EXPIRATION_TIME:
+                case SUBSCRIBER_URI:
                     if (!resourceContent.getJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -248,12 +258,15 @@ public class ResourceSubscription {
 
         for (Attr attr : onem2mResource.getAttr()) {
             switch (attr.getName()) {
-                case NOTIFICATION_EVENT_CAT:
+                case SUBSCRIBER_URI:
                     j.put(attr.getName(), attr.getValue());
                     break;
                 case NOTIFICATION_CONTENT_TYPE:
+                case NOTIFICATION_EVENT_CAT:
+
                     j.put(attr.getName(), Integer.valueOf(attr.getValue()));
                     break;
+
                 default:
                     ResourceContent.produceJsonForCommonAttributes(attr, j);
             }
@@ -324,7 +337,6 @@ public class ResourceSubscription {
 
                 case NOTIFICATION_CONTENT_TYPE:
                 case NOTIFICATION_EVENT_CAT:
-
                     if (!(o instanceof Integer)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") integer expected for json key: " + key);

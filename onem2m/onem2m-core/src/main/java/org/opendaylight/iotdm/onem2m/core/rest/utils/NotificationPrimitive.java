@@ -20,12 +20,8 @@ public class NotificationPrimitive extends BasePrimitive {
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificationPrimitive.class);
 
-    public static final String OPERATION = "operation";
     public static final String URI = "uri";
-    public static final String SUBSCRIPTION_DELETION = "subscriptionDeletion";
-    public static final String RESOURCE_REPRESENTATION = "representation";
-    public static final String ORIGINATOR = "originator";
-    public static final String SUBSCRIPTION_REFERENCE = "subscriptionReference";
+    public static final String CONTENT = "notification";
 
     public NotificationPrimitive() {
         super();

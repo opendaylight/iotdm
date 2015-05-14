@@ -259,6 +259,6 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
         request.setURI(url);
         request.setPayload(payload);
         request.send();
-        LOG.info("CoAP: Send notification uri: {}, payload: {}:", url, payload);
+        LOG.debug("CoAP: Send notification uri: {}, payload: {}:", url, payload);
     }
 }

@@ -249,7 +249,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
         ex.setURL(url);
         ex.setRequestContentSource(new ByteArrayInputStream(payload.getBytes()));
         ex.setMethod("post");
-        LOG.info("HTTP: Send notification uri: {}, payload: {}:", url, payload);
+        LOG.debug("HTTP: Send notification uri: {}, payload: {}:", url, payload);
         try {
             client.send(ex);
         } catch (IOException e) {
