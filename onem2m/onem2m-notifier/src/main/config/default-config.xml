@@ -8,23 +8,23 @@ terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
 <snapshot>
-  <required-capabilities>
-      <capability>urn:opendaylight:params:xml:ns:yang:onem2m:notifier?module=onem2m-notifier&amp;revision=2014-12-10</capability>
-      <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
-  </required-capabilities>
-  <configuration>
+    <required-capabilities>
+        <capability>urn:opendaylight:params:xml:ns:yang:onem2m:notifier?module=onem2m-notifier&amp;revision=2014-12-10</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
+    </required-capabilities>
+    <configuration>
 
-    <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-      <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
-        <module>
-          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:onem2m:notifier">prefix:onem2m-notifier</type>
-          <name>onem2m-default</name>
-          <broker>
-            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-broker-osgi-registry</type>
-            <name>binding-osgi-broker</name>
-          </broker>
-        </module>
-      </modules>
-    </data>
-  </configuration>
+        <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+                <module>
+                    <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:onem2m:notifier">prefix:onem2m-notifier</type>
+                    <name>onem2m-default</name>
+                    <notification-service>
+                        <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-notification-service</type>
+                        <name>binding-notification-broker</name>
+                    </notification-service>
+                </module>
+            </modules>
+        </data>
+    </configuration>
 </snapshot>

@@ -27,6 +27,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <version>${project.version}</version>
     </dependency>
       <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>onem2m-notifier</artifactId>
+          <version>${project.version}</version>
+      </dependency>
+      <dependency>
           <groupId>org.eclipse.jetty.aggregate</groupId>
           <artifactId>jetty-all-server</artifactId>
           <!--<version>8.1.14.v20131031</version>-->

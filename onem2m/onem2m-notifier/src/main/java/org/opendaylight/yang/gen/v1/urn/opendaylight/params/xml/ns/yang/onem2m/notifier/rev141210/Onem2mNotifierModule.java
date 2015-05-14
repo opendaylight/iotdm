@@ -1,6 +1,6 @@
 package org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.notifier.rev141210;
 
-import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierProvider;
+import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
 
 public class Onem2mNotifierModule extends org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.notifier.rev141210.AbstractOnem2mNotifierModule {
     public Onem2mNotifierModule(org.opendaylight.controller.config.api.ModuleIdentifier identifier, org.opendaylight.controller.config.api.DependencyResolver dependencyResolver) {
@@ -18,9 +18,9 @@ public class Onem2mNotifierModule extends org.opendaylight.yang.gen.v1.urn.opend
 
     @Override
     public java.lang.AutoCloseable createInstance() {
-        Onem2mNotifierProvider provider = new Onem2mNotifierProvider();
-        getBrokerDependency().registerProvider(provider);
-        return provider;
+        Onem2mNotifierService instance = Onem2mNotifierService.getInstance();
+        getNotificationServiceDependency().registerNotificationListener(instance);
+        return instance;
     }
 
 }

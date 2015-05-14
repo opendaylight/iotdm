@@ -424,6 +424,9 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // now format a response based on result content desired
         ResultContentProcessor.handleCreate(this, onem2mResponse);
 
+        // not process notifications
+        NotificationProcessor.handleCreate(this);
+
         // TODO: see TS0004 6.8
         // if the create was successful, ie no error has already happened, set CREATED for status code here
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
@@ -555,6 +558,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
+        NotificationProcessor.handleDelete(this);
+
         // now delete the resource from the database
         // TODO: idempotent so who cares if cannot find the resource ... is this true?
         if (Onem2mDb.getInstance().deleteResourceUsingURI(this, onem2mResponse) == false) {
@@ -562,8 +567,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     "Resource target URI data store delete error: " + this.getPrimitive(RequestPrimitive.TO));
             return;
         }
-
-        // need to figure out notification strategy
 
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back OK
@@ -634,7 +637,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
-        // need to figure out notification strategy
+
+        NotificationProcessor.handleUpdate(this);
 
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back CHANGED

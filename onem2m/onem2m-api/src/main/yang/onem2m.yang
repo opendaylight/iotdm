@@ -208,4 +208,11 @@ module onem2m {
               }
         }
     }
+
+    notification resourceChanged{
+        uses onem2m-primitive-list;
+    }
+    notification subscriptionDeleted{
+        uses onem2m-primitive-list;
+    }
 }

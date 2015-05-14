@@ -20,11 +20,13 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierPlugin;
+import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvider, AutoCloseable {
+public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlugin, BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapProvider.class);
     protected Onem2mService onem2mService;
@@ -32,6 +34,8 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
     @Override
     public void onSessionInitiated(ProviderContext session) {
         onem2mService = session.getRpcService(Onem2mService.class);
+        Onem2mNotifierService.getInstance().pluginRegistration(this);
+
         start();
         LOG.info("Onem2mCoapProvider Session Initiated");
     }
@@ -241,5 +245,20 @@ public class Onem2mCoapProvider extends CoapServer implements BindingAwareProvid
             }
             return CoAP.ResponseCode.BAD_REQUEST;
         }
+    }
+
+    // implement the Onem2mNotifierPlugin interface
+    @Override
+    public String getNotifierPluginName() {
+        return "coap";
+    }
+
+    @Override
+    public void sendNotification(String url, String payload) {
+        Request request = Request.newPost();
+        request.setURI(url);
+        request.setPayload(payload);
+        request.send();
+        LOG.info("CoAP: Send notification uri: {}, payload: {}:", url, payload);
     }
 }

@@ -14,6 +14,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -31,6 +32,11 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     private BindingAwareBroker.RpcRegistration<Onem2mService> rpcReg;
     private DataBroker dataBroker;
     private Onem2mDb db;
+    private static NotificationProviderService notifierService;
+
+    public static NotificationProviderService getNotifier() {
+        return Onem2mCoreProvider.notifierService;
+    }
 
     /**
      * Perform session initialization
@@ -40,6 +46,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
     public void onSessionInitiated(ProviderContext session) {
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
+        this.notifierService = session.getSALService(NotificationProviderService.class);
 
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);

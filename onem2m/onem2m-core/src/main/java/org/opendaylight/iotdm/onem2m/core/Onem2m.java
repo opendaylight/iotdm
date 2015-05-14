@@ -29,7 +29,7 @@ public class Onem2m {
     public static final int MAX_TREE_WIDTH = 10000;
     public static final int MAX_TREE_LEVEL = 20;
     public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
-    public static final boolean USE_JSON_ANY_SYNTAX = true;
+    public static final boolean USE_JSON_ANY_SYNTAX = false;
 
     public class Operation {
         public static final String CREATE = "1";

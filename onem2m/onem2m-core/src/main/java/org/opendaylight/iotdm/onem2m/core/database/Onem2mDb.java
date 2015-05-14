@@ -19,6 +19,7 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListen
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.NotificationPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
@@ -631,6 +632,46 @@ public class Onem2mDb implements TransactionChainListener {
 
         // commit the deleteFest!
         return dbTxn.commitTransaction();
+    }
+
+    /**
+     * Find a list of subscription resources for this resource.  First look at the same level for a subscription list.
+     * If there isnt one, then use the parent to see if it has a subscription list
+     */
+    public synchronized List<String> findSubscriptionResources(RequestPrimitive onem2mRequest) {
+
+        List<String> subscriptionResourceList = new ArrayList<String>();
+        OldestLatest oldestLatest;
+
+        String thisResourceId = onem2mRequest.getOnem2mResource().getResourceId();
+        oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(thisResourceId,
+                Onem2m.ResourceType.SUBSCRIPTION);
+        if (oldestLatest != null) {
+            String subscriptionResourceId = oldestLatest.getLatestId();
+            while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+                subscriptionResourceList.add(subscriptionResourceId);
+                // keep getting prev until NULL
+                Onem2mResource onem2mResource = getResource(subscriptionResourceId);
+                Child child = dbResourceTree.retrieveChildByName(thisResourceId, onem2mResource.getName());
+                subscriptionResourceId = child.getPrevId();
+            }
+        }
+        if (subscriptionResourceList.size() == 0) {
+            String parentResourceId = onem2mRequest.getOnem2mResource().getParentId();
+            oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResourceId,
+                    Onem2m.ResourceType.SUBSCRIPTION);
+            if (oldestLatest != null) {
+                String subscriptionResourceId = oldestLatest.getLatestId();
+                while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+                    subscriptionResourceList.add(subscriptionResourceId);
+                    // keep getting prev until NULL
+                    Onem2mResource onem2mResource = getResource(subscriptionResourceId);
+                    Child child = dbResourceTree.retrieveChildByName(parentResourceId, onem2mResource.getName());
+                    subscriptionResourceId = child.getPrevId();
+                }
+            }
+        }
+        return subscriptionResourceList;
     }
 
     /**

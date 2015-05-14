@@ -22,11 +22,11 @@ module onem2m-notifier {
     augment "/config:modules/config:module/config:configuration" {
         case onem2m-notifier {
             when "/config:modules/config:module/config:type = 'onem2m-notifier'";
-            container broker {
+            container notification-service {
                 uses config:service-ref {
                     refine type {
                         mandatory true;
-                        config:required-identity md-sal-binding:binding-broker-osgi-registry;
+                        config:required-identity md-sal-binding:binding-notification-service;
                     }
                 }
             }

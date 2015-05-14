@@ -1,10 +1,13 @@
 package org.opendaylight.iotdm.onem2m.protocols.http;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.jetty.client.ContentExchange;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -14,16 +17,20 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierPlugin;
+import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
+public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpProvider.class);
     protected Onem2mService onem2mService;
     private Server server;
     private final int PORT = 8282;
+    private HttpClient client;
+
 
     public static final String X_M2M_ORIGIN = "X-M2M-Origin";
     public static final String X_M2M_RI = "X-M2M-RI";
@@ -36,6 +43,8 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
     @Override
     public void onSessionInitiated(ProviderContext session) {
         onem2mService = session.getRpcService(Onem2mService.class);
+        Onem2mNotifierService.getInstance().pluginRegistration(this);
+
         try {
             server.start();
         } catch (Exception e) {
@@ -52,6 +61,8 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
     public Onem2mHttpProvider() {
         server = new Server(PORT);
         server.setHandler(new MyHandler());
+        client = new HttpClient();
+
     }
 
     public class MyHandler extends AbstractHandler {
@@ -223,6 +234,26 @@ public class Onem2mHttpProvider implements BindingAwareProvider, AutoCloseable {
                     return HttpServletResponse.SC_BAD_REQUEST;
             }
             return HttpServletResponse.SC_BAD_REQUEST;
+        }
+    }
+
+    // implement the Onem2mNotifierPlugin interface
+    @Override
+    public String getNotifierPluginName() {
+        return "http";
+    }
+
+    @Override
+    public void sendNotification(String url, String payload) {
+        ContentExchange ex = new ContentExchange();
+        ex.setURL(url);
+        ex.setRequestContentSource(new ByteArrayInputStream(payload.getBytes()));
+        ex.setMethod("post");
+        LOG.info("HTTP: Send notification uri: {}, payload: {}:", url, payload);
+        try {
+            client.send(ex);
+        } catch (IOException e) {
+            LOG.error("Dropping notification: uri: {}, payload: {}", url, payload);
         }
     }
 }
