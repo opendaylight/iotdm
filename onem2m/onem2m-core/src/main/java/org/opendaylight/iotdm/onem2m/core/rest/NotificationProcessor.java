@@ -184,7 +184,7 @@ public class NotificationProcessor {
     }
 
     public static void handleCreate(RequestPrimitive onem2mRequest) {
-        handleOperation(onem2mRequest, Onem2m.Operation.UPDATE);
+        handleOperation(onem2mRequest, Onem2m.Operation.CREATE);
     }
 
     public static void handleUpdate(RequestPrimitive onem2mRequest) {
