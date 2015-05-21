@@ -41,6 +41,14 @@ public class DbAttr {
         }
     }
 
+    public void replaceAttr(String attrName, String attrValue) {
+        if (attrMap.containsKey(attrName)) {
+            attrMap.remove(attrName);
+            attrsList.remove(attrName);
+            setAttr(attrName, attrValue);
+        }
+    }
+
     public void setAttr(String attrName, String attrValue) {
         String temp = getAttr(attrName);
         if (temp != null) {

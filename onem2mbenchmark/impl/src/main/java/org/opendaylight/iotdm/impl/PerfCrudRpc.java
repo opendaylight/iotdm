@@ -73,11 +73,10 @@ public class PerfCrudRpc {
     private boolean createOneTest(Integer resourceId) {
 
         String containerString = new ResourceContainerBuilder()
-                .setCreator("Creator")
+                .setCreator(null)
                 .setMaxNrInstances(5)
                 .setOntologyRef("http://ontology/ref")
                 .setMaxByteSize(100)
-                .setMaxInstanceAge(1)
                 .build();
 
         Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()

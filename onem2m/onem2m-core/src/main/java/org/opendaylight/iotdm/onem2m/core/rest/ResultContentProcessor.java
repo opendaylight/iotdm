@@ -150,10 +150,10 @@ public class ResultContentProcessor {
                                                            ResponsePrimitive onem2mResponse,
                                                            JSONObject j) {
 
+        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
 
-        if (FilterCriteria.matches(onem2mRequest, onem2mResource)) {
+        if (FilterCriteria.matches(onem2mRequest, onem2mResource, resourceType)) {
 
-            String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
             String id;
 
             id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getParentId());
@@ -199,7 +199,7 @@ public class ResultContentProcessor {
 
             Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
             String resourceType = Onem2mDb.getInstance().getResourceType(childResource);
-            if (!FilterCriteria.matches(onem2mRequest, childResource)) {
+            if (!FilterCriteria.matches(onem2mRequest, childResource, resourceType)) {
                 continue;
             }
 
@@ -238,7 +238,8 @@ public class ResultContentProcessor {
             Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
 
             // only include the resources that pass filter criteria
-            if (!FilterCriteria.matches(onem2mRequest, childResource)) {
+            String resourceType = Onem2mDb.getInstance().getResourceType(childResource);
+            if (!FilterCriteria.matches(onem2mRequest, childResource, resourceType)) {
                 continue;
             }
 

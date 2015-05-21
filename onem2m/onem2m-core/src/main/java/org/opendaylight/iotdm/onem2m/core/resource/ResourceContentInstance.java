@@ -36,8 +36,7 @@ public class ResourceContentInstance  {
     public static final String CONTENT_SIZE = "cs";
     public static final String CONTENT = "con";
     public static final String ONTOLOGY_REF = "or";
-    public static final String NEXT = "next";
-    public static final String PREV = "prev";
+    public static final String CREATOR = "cr";
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -45,15 +44,15 @@ public class ResourceContentInstance  {
         Integer tempInt;
         Integer newByteSize;
 
+        // no need to handle update in this file as update is not allowed for content instances
+
         // verify this resource can be created under the target resource
         DbAttr containerDbAttrs = onem2mRequest.getDbAttrs();
-        if (onem2mRequest.isCreate) {
-            String rt = containerDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
-            if (rt == null || !rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create ContentInstance under this resource type: " + rt);
-                return;
-            }
+        String rt = containerDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+        if (rt == null || !rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                    "Cannot create ContentInstance under this resource type: " + rt);
+            return;
         }
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
@@ -74,25 +73,44 @@ public class ResourceContentInstance  {
             resourceContent.setDbAttr(CONTENT_SIZE, newByteSize.toString());
         }
 
-        // initialize state tag to 0
+        // state tag is read only
         tempStr = resourceContent.getDbAttr(ResourceContent.STATE_TAG);
         if (tempStr != null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "STATE_TAG read-only parameter");
             return;
         }
-        tempInt = 0;
-        resourceContent.setDbAttr(ResourceContent.STATE_TAG, tempInt.toString());
 
-        /**
-         * Ensure its OK to add this new contentInstance under this container ...
-         */
-        if (!ResourceContainer.validateNewContentInstance(containerDbAttrs, newByteSize, onem2mResponse)) {
-            return;
+        // the state tag of the ci is the incremented value of its parent container
+        tempStr = containerDbAttrs.getAttr(ResourceContent.STATE_TAG);
+        Integer containerStateTagValue = Integer.valueOf(tempStr);
+        containerStateTagValue++;
+        resourceContent.setDbAttr(ResourceContent.STATE_TAG, containerStateTagValue.toString());
+
+        // verify this content instance does not exceed the container's max byte size
+        tempStr = containerDbAttrs.getAttr(ResourceContainer.MAX_BYTE_SIZE);
+        if (tempStr != null) {
+            Integer mbs = Integer.valueOf(tempStr);
+            if (newByteSize > mbs) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "content size: " + newByteSize + " exceeds its containers max byte size: " + mbs);
+                return;
+            }
+
         }
 
-        /**
-         * Use special routine to create cin as it needs help from its container and sibling cin's
-         */
+        // verify this content instance does not exceed the container's max byte size
+        tempStr = containerDbAttrs.getAttr(ResourceContainer.MAX_NR_INSTANCES);
+        if (tempStr != null) {
+            Integer mni = Integer.valueOf(tempStr);
+            if (mni < 1) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Exceeds containers max instances: " + mni);
+                return;
+            }
+
+        }
+
+        ResourceContainer.setCurrValuesForThisCreatedContentInstance(onem2mRequest, containerDbAttrs, newByteSize);
+
         if (onem2mRequest.isCreate) {
             if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
@@ -106,6 +124,9 @@ public class ResourceContentInstance  {
                 return;
             }
         }
+
+        // may have to remove content instances to make room for this latest instance
+        ResourceContainer.checkAndFixCurrMaxRules(onem2mRequest.getPrimitive(RequestPrimitive.TO));
     }
 
     /**
@@ -130,7 +151,6 @@ public class ResourceContentInstance  {
                 case CONTENT_INFO:
                 case ONTOLOGY_REF:
                 case CONTENT:
-                case ResourceContent.EXPIRATION_TIME:
                     if (!resourceContent.getJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -140,6 +160,15 @@ public class ResourceContentInstance  {
                         resourceContent.setDbAttr(key, o.toString());
                     } else {
                         resourceContent.setDbAttr(key, null);
+                    }
+                    break;
+                case CREATOR:
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
+                        return;
+                    } else {
+                        resourceContent.setDbAttr(key, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
                 case ResourceContent.LABELS:

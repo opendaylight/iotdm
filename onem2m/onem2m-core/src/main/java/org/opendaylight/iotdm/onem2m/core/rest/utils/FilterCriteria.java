@@ -11,7 +11,9 @@ import java.util.List;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
@@ -30,7 +32,7 @@ public class FilterCriteria {
      * @param onem2mResource response
      * @return matches true or false
      */
-    public static boolean matches(RequestPrimitive onem2mRequest, Onem2mResource onem2mResource) {
+    public static boolean matches(RequestPrimitive onem2mRequest, Onem2mResource onem2mResource, String resourceType) {
 
         DbAttr dbAttrs = new DbAttr(onem2mResource.getAttr());
         DbAttrSet dbAttrSets = new DbAttrSet(onem2mResource.getAttrSet());
@@ -67,12 +69,67 @@ public class FilterCriteria {
             }
         }
 
-        // TODO: add state tag checks here
+        String sts = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER);
+        if (sts != null) {
+            String st = dbAttrs.getAttr(ResourceContent.STATE_TAG);
+            if (st != null) {
+                if (Integer.valueOf(st) >= Integer.valueOf(sts))
+                return false;
+            }
+        }
 
-        String rty = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
-        if (rty != null) {
-            String rt = dbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
-            if (rt != null && !rt.contentEquals(rty)) {
+        String stb = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER);
+        if (stb != null) {
+            String st = dbAttrs.getAttr(ResourceContent.STATE_TAG);
+            if (st != null) {
+                if (Integer.valueOf(st) <= Integer.valueOf(stb))
+                    return false;
+            }
+        }
+
+        // hack, see if resource has a cbs or cs attr
+        String sza = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE);
+        if (sza != null) {
+            String cbs = dbAttrs.getAttr(ResourceContainer.CURR_BYTE_SIZE);
+            if (cbs != null) {
+                if (Integer.valueOf(cbs) <= Integer.valueOf(sza))
+                    return false;
+            } else {
+                String cs = dbAttrs.getAttr(ResourceContentInstance.CONTENT_SIZE);
+                if (cs != null) {
+                    if (Integer.valueOf(cs) <= Integer.valueOf(sza))
+                        return false;
+                }
+            }
+        }
+
+        // hack, see if resource has a cbs or cs attr
+        String szb = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW);
+        if (szb != null) {
+            String cbs = dbAttrs.getAttr(ResourceContainer.CURR_BYTE_SIZE);
+            if (cbs != null) {
+                if (Integer.valueOf(cbs) >= Integer.valueOf(szb))
+                    return false;
+            } else {
+                String cs = dbAttrs.getAttr(ResourceContentInstance.CONTENT_SIZE);
+                if (cs != null) {
+                    if (Integer.valueOf(cs) >= Integer.valueOf(szb))
+                        return false;
+                }
+            }
+        }
+
+        // for each resource in the filter criteria array, see if it matches our resource rtype
+        List<String> filterResourceTypes = onem2mRequest.getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
+        if (filterResourceTypes != null) {
+            boolean foundResource = false;
+            for (String filterResource : filterResourceTypes) {
+                if (resourceType.contentEquals(filterResource)) {
+                    foundResource = true;
+                    break;
+                }
+            }
+            if (!foundResource) {
                 return false;
             }
         }
@@ -101,6 +158,7 @@ public class FilterCriteria {
                 return false;
             }
         }
+
         return true;
     }
 }

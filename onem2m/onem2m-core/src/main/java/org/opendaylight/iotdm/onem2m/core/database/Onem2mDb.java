@@ -19,15 +19,13 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListen
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.NotificationPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,6 +124,41 @@ public class Onem2mDb implements TransactionChainListener {
         return dbTxn.commitTransaction();
     }
 
+
+    private void updateParentLastModifiedTime(DbTransaction dbTxn, RequestPrimitive onem2mRequest, String parentResourceId) {
+
+        Attr attr = new AttrBuilder()
+                .setKey(new AttrKey(ResourceContent.LAST_MODIFIED_TIME))
+                .setName(ResourceContent.LAST_MODIFIED_TIME)
+                .setValue(onem2mRequest.getResourceContent().getDbAttr(ResourceContent.CREATION_TIME))
+                .build();
+        dbResourceTree.updateAttr(dbTxn, parentResourceId, attr);
+    }
+
+    private void adjustContainerCurrValues(DbTransaction dbTxn, RequestPrimitive onem2mRequest, String containerResourceId) {
+
+        Attr attr = new AttrBuilder()
+                .setKey(new AttrKey(ResourceContainer.CURR_BYTE_SIZE))
+                .setName(ResourceContainer.CURR_BYTE_SIZE)
+                .setValue(onem2mRequest.containerCbs.toString())
+                .build();
+        dbResourceTree.updateAttr(dbTxn, containerResourceId, attr);
+
+        attr = new AttrBuilder()
+                .setKey(new AttrKey(ResourceContainer.CURR_NR_INSTANCES))
+                .setName(ResourceContainer.CURR_NR_INSTANCES)
+                .setValue(onem2mRequest.containerCni.toString())
+                .build();
+        dbResourceTree.updateAttr(dbTxn, containerResourceId, attr);
+
+        attr = new AttrBuilder()
+                .setKey(new AttrKey(ResourceContent.STATE_TAG))
+                .setName(ResourceContent.STATE_TAG)
+                .setValue(onem2mRequest.containerSt.toString())
+                .build();
+        dbResourceTree.updateAttr(dbTxn, containerResourceId, attr);
+    }
+
     /**
      * The create resource is carried out by this routine.  The onem2mRequest has the parameters in it to effect the
      * creation request.  The resource specific routines have in .../core/resource already vetted the parameters so
@@ -195,6 +228,16 @@ public class Onem2mDb implements TransactionChainListener {
             dbTxn = new DbTransaction(bindingTransactionChain);
         }
 
+        // see if a content instance creation caused the container to be updated
+        if (onem2mRequest.mustUpdateContainer) {
+            this.adjustContainerCurrValues(dbTxn, onem2mRequest, parentId);
+        }
+
+        // update the lmt of the parent to be the creation time of the child being created
+        if (!parentId.contains(Onem2mDb.NULL_RESOURCE_ID)) {
+            updateParentLastModifiedTime(dbTxn, onem2mRequest, parentId);
+        }
+
         // create a childEntry on the parent resourceId, <child-name, child-resourceId>
         dbResourceTree.createParentChildLink(dbTxn,
                 parentId, // parent
@@ -253,7 +296,7 @@ public class Onem2mDb implements TransactionChainListener {
         Onem2mResource onem2mResource = getResource(onem2mRequest.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
         onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
-        //onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
+        onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
 
         return success;
     }
@@ -342,6 +385,7 @@ public class Onem2mDb implements TransactionChainListener {
         if (hierarchy.length == 1) { // case 1
             onem2mRequest.setOnem2mResource(dbResourceTree.retrieveResourceById(cse.getResourceId()));
             onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
+            onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
             onem2mRequest.setResourceId(cse.getResourceId());
             return true;
         }
@@ -378,6 +422,7 @@ public class Onem2mDb implements TransactionChainListener {
         onem2mRequest.setResourceId(onem2mResource.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
         onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
+        onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
         return true;
     }
 
@@ -517,6 +562,20 @@ public class Onem2mDb implements TransactionChainListener {
         return null;
     }
 
+    private void deleteContentInstance(DbTransaction dbTxn,
+                                       RequestPrimitive onem2mRequest,
+                                       Onem2mResource containerResource) {
+
+        String containerResourceId = containerResource.getResourceId();
+        DbAttr containerDbAttrs = new DbAttr(containerResource.getAttr());
+
+        String csString = onem2mRequest.getDbAttrs().getAttr(ResourceContentInstance.CONTENT_SIZE);
+        ResourceContainer.setCurrValuesForThisDeletedContentInstance(onem2mRequest,
+                containerDbAttrs,
+                Integer.valueOf(csString));
+        adjustContainerCurrValues(dbTxn, onem2mRequest, containerResourceId);
+    }
+
     /**
      * Deletes are idempotent.  This routine is called after the requestProcessor has grabbed all info it needed
      * for the delete operation so now it is a bulk delete.
@@ -618,6 +677,11 @@ public class Onem2mDb implements TransactionChainListener {
 
         if (dbTxn == null) {
             dbTxn = new DbTransaction(bindingTransactionChain);
+        }
+
+        // adjust the curr values in the parent container resource
+        if (resourceType.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+            deleteContentInstance(dbTxn, onem2mRequest, parentOnem2mResource);
         }
 
         // now in a transaction, smoke all the resources under this ResourceId
