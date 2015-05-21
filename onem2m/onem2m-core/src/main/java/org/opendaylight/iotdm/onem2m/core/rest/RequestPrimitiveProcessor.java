@@ -9,6 +9,7 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -91,6 +92,16 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         return true;
     }
 
+    private boolean validateUInt(String intString)  {
+        try {
+            Integer foo = Integer.parseInt(intString);
+            if (foo < 0) return false;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
+
     private boolean validateFilterCriteria(ResponsePrimitive onem2mResponse)  {
 
         boolean found_filter_criteria = false;
@@ -139,7 +150,60 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             found_filter_criteria = true;
         }
 
-        // TODO: add state tag validation here
+        String sts = getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER);
+        if (sts != null) {
+            if (!validateUInt(sts)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_STATE_TAG_SMALLER(" + RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER +
+                                ") not valid format: " + sts);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String stb = getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER);
+        if (stb != null) {
+            if (!validateUInt(stb)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_STATE_TAG_BIGGER(" + RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER +
+                                ") not valid format: " + stb);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String sza = getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE);
+        if (sza != null) {
+            if (!validateUInt(sza)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_SIZE_ABOVE(" + RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE +
+                                ") not valid format: " + sza);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String szb = getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW);
+        if (szb != null) {
+            if (!validateUInt(szb)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_SIZE_BELOW(" + RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW +
+                                ") not valid format: " + szb);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
+        String lim = getPrimitive(RequestPrimitive.FILTER_CRITERIA_LIMIT);
+        if (lim != null) {
+            if (!validateUInt(lim)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_LIMIT(" + RequestPrimitive.FILTER_CRITERIA_LIMIT +
+                                ") not valid format: " + lim);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
 
         String fu = getPrimitive(RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE);
         if (fu != null) {
@@ -150,6 +214,16 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                                 ") not valid value: " + fu);
                 return true;
             }
+            found_filter_criteria = true;
+        }
+
+        List<String> tempList = getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
+        if (tempList != null && tempList.size() > 0) {
+            found_filter_criteria = true;
+        }
+
+        tempList = getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_LABELS);
+        if (tempList != null && tempList.size() > 0) {
             found_filter_criteria = true;
         }
 

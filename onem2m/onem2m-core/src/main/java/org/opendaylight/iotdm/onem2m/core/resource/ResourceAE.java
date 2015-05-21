@@ -68,16 +68,18 @@ public class ResourceAE {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        String appId = resourceContent.getDbAttr(APP_ID);
-        if (appId == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID missing parameter");
-            return;
-        }
+        if (onem2mRequest.isCreate) {
+            String appId = resourceContent.getDbAttr(APP_ID);
+            if (appId == null) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID missing parameter");
+                return;
+            }
 
-        String aeId = resourceContent.getDbAttr(AE_ID);
-        if (aeId == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID missing parameter");
-            return;
+            String aeId = resourceContent.getDbAttr(AE_ID);
+            if (aeId == null) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID missing parameter");
+                return;
+            }
         }
 
         /**
@@ -122,7 +124,6 @@ public class ResourceAE {
                 case AE_ID:
                 case ONTOLOGY_REF:
                 case APP_ID:
-                case ResourceContent.EXPIRATION_TIME:
                     if (!resourceContent.getJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,

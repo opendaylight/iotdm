@@ -43,10 +43,6 @@ public class ResourceContentBuilder {
         jsonContent.put(ResourceContent.PARENT_ID, value);
         return this;
     }
-    public ResourceContentBuilder setExpirationTime(String value) {
-        jsonContent.put(ResourceContent.EXPIRATION_TIME, value);
-        return this;
-    }
     public ResourceContentBuilder setCreationTime(String value) {
         jsonContent.put(ResourceContent.CREATION_TIME, value);
         return this;

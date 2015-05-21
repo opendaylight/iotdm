@@ -253,7 +253,7 @@ public class Onem2mexampleProvider implements BindingAwareProvider, AutoCloseabl
         b.setTo("/" + ONEM2M_EXAMPLE_CSE_NAME + "/" + AENAME);
         b.setOperationCreate();
         b.setName(CONTAINER_NAME);
-        b.setCreator("myCreator");
+        b.setCreator(null);
         b.setMaxNrInstances(10);
         b.setMaxByteSize(500);
         Onem2mRequestPrimitiveClient req = b.build();

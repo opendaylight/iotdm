@@ -33,10 +33,6 @@ public class ResourceContainerBuilder extends ResourceContentBuilder {
         jsonContent.put(ResourceContainer.MAX_BYTE_SIZE, value);
         return this;
     }
-    public ResourceContainerBuilder setMaxInstanceAge(Integer value) {
-        jsonContent.put(ResourceContainer.MAX_INSTANCE_AGE, value);
-        return this;
-    }
     public ResourceContainerBuilder setOntologyRef(String value) {
         jsonContent.put(ResourceContainer.ONTOLOGY_REF, value);
         return this;

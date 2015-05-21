@@ -32,7 +32,6 @@ public class Onem2mResponse {
     private String resourceId;
     private String resourceName;
     private String creationTime;
-    private String expirationTime;
     private String lastModifiedTime;
     private Integer resourceType;
     private Integer stateTag;
@@ -136,13 +135,6 @@ public class Onem2mResponse {
                 }
                 this.creationTime = o.toString();
                 break;
-            case ResourceContent.EXPIRATION_TIME:
-                if (!(o instanceof String)) {
-                    LOG.error("String expected for json key: " + key);
-                    return false;
-                }
-                this.expirationTime = o.toString();
-                break;
             case ResourceContent.LAST_MODIFIED_TIME:
                 if (!(o instanceof String)) {
                     LOG.error("String expected for json key: " + key);
@@ -207,9 +199,6 @@ public class Onem2mResponse {
     }
     public String getCreationTime() {
         return this.creationTime;
-    }
-    public String getExpirationTime() {
-        return this.expirationTime;
     }
     public String getLastModifiedTime() {
         return this.lastModifiedTime;

@@ -86,11 +86,10 @@ public class PerfCoapClient {
         OdlOnem2mCoapClient coapClient = new OdlOnem2mCoapClient(serverUri);
 
         String containerString = new ResourceContainerBuilder()
-                .setCreator("Creator")
+                .setCreator(null)
                 .setMaxNrInstances(5)
                 .setOntologyRef("http://ontology/ref")
                 .setMaxByteSize(100)
-                .setMaxInstanceAge(1)
                 .build();
 
         startTime = System.nanoTime();

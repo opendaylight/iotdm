@@ -36,7 +36,6 @@ public class BasicSanityRpc {
     public static final String AE_APP_NAME = "APP_NAME";
     public static final String AENAME = "AE_NAME";
     public static final String CONTAINER_NAME = "CONTAINER_NAME";
-    public static final String CONTAINER_CREATOR = "Creator";
     public static final Integer CONTAINER_MAX_NR_INSTANCES = 5;
     public static final String CONTAINER_ONTOLOGY_REF = "http://ontology/container";
     public static final String CONTENT_INSTANCE_NAME = "ContentInstanceName";
@@ -194,11 +193,10 @@ public class BasicSanityRpc {
         boolean success = true;
 
         String containerString = new ResourceContainerBuilder()
-            .setCreator(CONTAINER_CREATOR)
+            .setCreator(null)
             .setMaxNrInstances(CONTAINER_MAX_NR_INSTANCES)
             .setOntologyRef(CONTAINER_ONTOLOGY_REF)
             .setMaxByteSize(100)
-            .setMaxInstanceAge(1)
             .build();
 
         onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
@@ -299,7 +297,7 @@ public class BasicSanityRpc {
             Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
                     .setProtocol(Onem2m.Protocol.NATIVEAPP)
                     .setContentFormat(Onem2m.ContentFormat.JSON)
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    .setTo(resourceId)
                     .setFrom("")
                     .setRequestIdentifier("RQI_1234")
                     .setOperationRetrieve()
@@ -336,7 +334,7 @@ public class BasicSanityRpc {
             Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
                     .setProtocol(Onem2m.Protocol.NATIVEAPP)
                     .setContentFormat(Onem2m.ContentFormat.JSON)
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    .setTo(resourceId)
                     .setFrom("")
                     .setRequestIdentifier("RQI_1234")
                     .setOperationRetrieve()
@@ -378,7 +376,7 @@ public class BasicSanityRpc {
             Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
                     .setProtocol(Onem2m.Protocol.NATIVEAPP)
                     .setContentFormat(Onem2m.ContentFormat.JSON)
-                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    .setTo(resourceId)
                     .setFrom("")
                     .setRequestIdentifier("RQI_1234")
                     .setOperationDelete()
@@ -417,11 +415,10 @@ public class BasicSanityRpc {
 
         String toURI = "/" + Onem2m.SYS_PERF_TEST_CSE;
         String containerString = new ResourceContainerBuilder()
-                .setCreator(CONTAINER_CREATOR)
+                .setCreator(null)
                 .setMaxNrInstances(CONTAINER_MAX_NR_INSTANCES)
                 .setOntologyRef(CONTAINER_ONTOLOGY_REF)
                 .setMaxByteSize(100)
-                .setMaxInstanceAge(1)
                 .build();
 
         onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()

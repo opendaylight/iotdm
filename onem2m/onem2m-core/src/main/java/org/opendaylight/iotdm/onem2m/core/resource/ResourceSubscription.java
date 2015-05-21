@@ -165,7 +165,6 @@ public class ResourceSubscription {
                     }
                     break;
 
-                case ResourceContent.EXPIRATION_TIME:
                 case SUBSCRIBER_URI:
                     if (!resourceContent.getJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
