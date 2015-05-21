@@ -144,7 +144,7 @@ public class NotificationProcessor {
 
             JSONObject notification = new JSONObject();
             JSONObject notificationEvent = new JSONObject();
-            JSONObject representation = new JSONObject();
+            JSONObject representation;
             JSONObject operationMonitor = new JSONObject();
 
             NotificationPrimitive onem2mNotification = new NotificationPrimitive();
@@ -184,7 +184,7 @@ public class NotificationProcessor {
     }
 
     public static void handleCreate(RequestPrimitive onem2mRequest) {
-        handleOperation(onem2mRequest, Onem2m.Operation.UPDATE);
+        handleOperation(onem2mRequest, Onem2m.Operation.CREATE);
     }
 
     public static void handleUpdate(RequestPrimitive onem2mRequest) {

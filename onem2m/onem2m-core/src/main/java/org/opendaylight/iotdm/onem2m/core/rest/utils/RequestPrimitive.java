@@ -9,6 +9,7 @@ package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
 import java.util.*;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
+import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -94,6 +95,8 @@ public class RequestPrimitive extends BasePrimitive {
         add(FILTER_CRITERIA_STATE_TAG_BIGGER);
         add(FILTER_CRITERIA_LABELS);
         add(FILTER_CRITERIA_RESOURCE_TYPE);
+        add(FILTER_CRITERIA_SIZE_ABOVE);
+        add(FILTER_CRITERIA_SIZE_BELOW);
         add(FILTER_CRITERIA_FILTER_USAGE);
         add(FILTER_CRITERIA_LIMIT);
         add(DISCOVERY_RESULT_TYPE);
@@ -147,6 +150,7 @@ public class RequestPrimitive extends BasePrimitive {
         for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
             switch (onem2mPrimitive.getName()) {
                 case FILTER_CRITERIA_LABELS:
+                case FILTER_CRITERIA_RESOURCE_TYPE:
                     setPrimitiveMany(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
                     break;
                 default:
@@ -200,6 +204,14 @@ public class RequestPrimitive extends BasePrimitive {
         return this.dbAttrs;
     }
 
+    protected DbAttrSet dbAttrSets;
+    public void setDbAttrSets(DbAttrSet dbAttrSets) {
+        this.dbAttrs = dbAttrs;
+    }
+    public DbAttrSet getDbAttrSets() {
+        return this.dbAttrSets;
+    }
+
     protected ResourceContent resourceContent;
     public void setResourceContent(ResourceContent rc) {
         this.resourceContent = rc;
@@ -231,4 +243,17 @@ public class RequestPrimitive extends BasePrimitive {
     public String getRetrieveByAttrName() {
         return this.retrieveByAttrName;
     }
+
+    public boolean mustUpdateContainer;
+    public Integer containerCbs;
+    public Integer containerCni;
+    public Integer containerSt;
+    public void setCurrContainerValues(Integer cbs, Integer cni, Integer st) {
+
+        this.mustUpdateContainer = true;
+        this.containerCbs = cbs;
+        this.containerCni = cni;
+        this.containerSt = st;
+    }
+
 }

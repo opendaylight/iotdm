@@ -41,7 +41,6 @@ public class ResourceContent {
     public static final String RESOURCE_ID = "ri";
     public static final String RESOURCE_NAME = "rn";
     public static final String PARENT_ID = "pi";
-    public static final String EXPIRATION_TIME = "et";
     public static final String CREATION_TIME = "ct";
     public static final String LAST_MODIFIED_TIME = "lt";
     public static final String LABELS = "lbl";
@@ -194,22 +193,6 @@ public class ResourceContent {
             }
         }
 
-        // if expiration time not provided, make one
-        String et = this.getDbAttr(ResourceContent.EXPIRATION_TIME);
-        if (et != null) {
-            if (!Onem2mDateTime.isValidDateTime(et)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "Invalid ISO8601 date/time format: (YYYYMMDDTHHMMSSZ) " + et);
-                return;
-            } else if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "Cannot set time in the past " + et);
-                return;
-            }
-        } else {
-            this.setDbAttr(ResourceContent.EXPIRATION_TIME, currDateTime /* + ONEM2M_FUTURE_EXPIRY */);
-        }
-
         // always update lmt at create or update
         String lmt = this.getDbAttr(ResourceContent.LAST_MODIFIED_TIME);
         if (lmt != null) {
@@ -281,7 +264,6 @@ public class ResourceContent {
 
         switch (attr.getName()) {
             case ResourceContent.CREATION_TIME:
-            case ResourceContent.EXPIRATION_TIME:
             case ResourceContent.LAST_MODIFIED_TIME:
                 j.put(attr.getName(), attr.getValue());
                 break;
@@ -360,7 +342,6 @@ public class ResourceContent {
         switch (key) {
 
             case CREATION_TIME:
-            case EXPIRATION_TIME:
             case LAST_MODIFIED_TIME:
             case RESOURCE_ID:
             case RESOURCE_NAME:
@@ -423,6 +404,10 @@ public class ResourceContent {
 
     public void setDbAttr(String name, String value) {
         this.dbAttrs.setAttr(name, value);
+    }
+
+    public void replaceDbAttr(String name, String value) {
+        this.dbAttrs.replaceAttr(name, value);
     }
 
     public List<Attr> getAttrList() {

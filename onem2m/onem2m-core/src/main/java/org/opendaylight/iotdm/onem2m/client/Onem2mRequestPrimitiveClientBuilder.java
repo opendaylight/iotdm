@@ -149,7 +149,8 @@ public class Onem2mRequestPrimitiveClientBuilder {
                     key = param[0];
                     if (param.length > 1) {
                         value = param[1];
-                        if (key.contentEquals(RequestPrimitive.FILTER_CRITERIA_LABELS)) {
+                        if (key.contentEquals(RequestPrimitive.FILTER_CRITERIA_LABELS) ||
+                            key.contentEquals(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE)) {
                             onem2mRequest.setPrimitiveMany(key, value);
                         } else {
                             onem2mRequest.setPrimitive(key, value);

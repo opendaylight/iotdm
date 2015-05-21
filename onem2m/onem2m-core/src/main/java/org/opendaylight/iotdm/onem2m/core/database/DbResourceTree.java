@@ -251,7 +251,7 @@ public class DbResourceTree {
                 .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
                 .child(AttrSet.class, attrSet.getKey());
 
-        dbTxn.update(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
+        dbTxn.create(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
