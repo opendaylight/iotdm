@@ -171,15 +171,17 @@ public class ResourceCse {
             }
         }
 
+        // hard code the response for the supported resource types
+        JSONArray a = new JSONArray();
+        a.put(Integer.valueOf(Onem2m.ResourceType.CSE_BASE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.AE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.CONTAINER));
+        a.put(Integer.valueOf(Onem2m.ResourceType.CONTENT_INSTANCE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.SUBSCRIPTION));
+        j.put(SUPPORTED_RESOURCE_TYPES, a);
+
         for (AttrSet attrSet : onem2mResource.getAttrSet()) {
             switch (attrSet.getName()) {
-                case SUPPORTED_RESOURCE_TYPES:
-                    JSONArray a = new JSONArray();
-                    for (Member member : attrSet.getMember()) {
-                        a.put(member.getMember());
-                    }
-                    j.put(attrSet.getName(), a);
-                    break;
                 default:
                     ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
                     break;

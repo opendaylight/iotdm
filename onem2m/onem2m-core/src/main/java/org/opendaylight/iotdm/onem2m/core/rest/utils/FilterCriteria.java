@@ -34,6 +34,11 @@ public class FilterCriteria {
      */
     public static boolean matches(RequestPrimitive onem2mRequest, Onem2mResource onem2mResource, String resourceType) {
 
+        // if there is NO filter criteria specified then return early
+        if (!onem2mRequest.getHasFilterCriteria()) {
+            return true;
+        }
+
         DbAttr dbAttrs = new DbAttr(onem2mResource.getAttr());
         DbAttrSet dbAttrSets = new DbAttrSet(onem2mResource.getAttrSet());
 
