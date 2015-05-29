@@ -29,6 +29,7 @@ public class Onem2m {
     public static final int MAX_TREE_WIDTH = 10000;
     public static final int MAX_TREE_LEVEL = 20;
     public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
+    public static final int MAX_DISCOVERY_LIMIT  = 1000;
     public static final boolean USE_JSON_ANY_SYNTAX = false;
 
     public class Operation {
@@ -95,7 +96,7 @@ public class Onem2m {
     // TODO: Filter Usage
     public class FilterUsageType {
         public static final String DISCOVERY = "1";
-        public static final String EVENT_NOTIFICATION_CRITERIA = "2";
+        public static final String CONDITIONAL_RETRIEVAL = "2";
 
     }
 

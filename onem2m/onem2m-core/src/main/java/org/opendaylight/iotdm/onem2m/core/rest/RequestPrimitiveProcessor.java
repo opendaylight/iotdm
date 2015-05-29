@@ -205,16 +205,30 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             found_filter_criteria = true;
         }
 
+        String off = getPrimitive(RequestPrimitive.FILTER_CRITERIA_OFFSET);
+        if (off != null) {
+            if (!validateUInt(off)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "FILTER_CRITERIA_OFFSET(" + RequestPrimitive.FILTER_CRITERIA_OFFSET +
+                                ") not valid format: " + off);
+                return true;
+            }
+            found_filter_criteria = true;
+        }
+
         String fu = getPrimitive(RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE);
         if (fu != null) {
             if (!fu.contentEquals(Onem2m.FilterUsageType.DISCOVERY) &&
-                !fu.contentEquals(Onem2m.FilterUsageType.EVENT_NOTIFICATION_CRITERIA)) {
+                !fu.contentEquals(Onem2m.FilterUsageType.CONDITIONAL_RETRIEVAL)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "FILTER_CRITERIA_FILTER_USAGE(" + RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE +
                                 ") not valid value: " + fu);
                 return true;
             }
             found_filter_criteria = true;
+            if (fu.contentEquals(Onem2m.FilterUsageType.DISCOVERY)) {
+                setFUDiscovery(true);
+            }
         }
 
         List<String> tempList = getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
@@ -348,15 +362,9 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
         }
 
-        // filter criteria only valid for RETRIEVE
-        boolean found_filter_criteria = validateFilterCriteria(onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-            return;
-        }
-        if (found_filter_criteria) {
-            if (!operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA not permitted for operation: " + operation);
+        if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
+            setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
                 return;
             }
         }

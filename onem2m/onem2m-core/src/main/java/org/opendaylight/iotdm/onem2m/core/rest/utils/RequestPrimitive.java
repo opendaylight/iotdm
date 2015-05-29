@@ -59,6 +59,7 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String FILTER_CRITERIA_ATTRIBUTE = "atr";
     public static final String FILTER_CRITERIA_FILTER_USAGE = "fu";
     public static final String FILTER_CRITERIA_LIMIT = "lim";
+    public static final String FILTER_CRITERIA_OFFSET = "off";
     public static final String DISCOVERY_RESULT_TYPE = "drt";
 
     // helper attributes
@@ -99,6 +100,7 @@ public class RequestPrimitive extends BasePrimitive {
         add(FILTER_CRITERIA_SIZE_BELOW);
         add(FILTER_CRITERIA_FILTER_USAGE);
         add(FILTER_CRITERIA_LIMIT);
+        add(FILTER_CRITERIA_OFFSET);
         add(DISCOVERY_RESULT_TYPE);
         add(PROTOCOL);
         add(CONTENT_FORMAT);
@@ -136,6 +138,7 @@ public class RequestPrimitive extends BasePrimitive {
         put("attribute", FILTER_CRITERIA_ATTRIBUTE);
         put("filterUsage", FILTER_CRITERIA_FILTER_USAGE);
         put("limit", FILTER_CRITERIA_LIMIT);
+        put("offset", FILTER_CRITERIA_OFFSET);
         put("discoveryResultType", DISCOVERY_RESULT_TYPE);
         put("protocol", PROTOCOL);
         put("contentFormat", CONTENT_FORMAT);
@@ -256,4 +259,18 @@ public class RequestPrimitive extends BasePrimitive {
         this.containerSt = st;
     }
 
-}
+    private boolean hasFilterCriteria;
+    public void setHasFilterCriteria(boolean hasFilterCriteria) {
+        this.hasFilterCriteria = hasFilterCriteria;
+    }
+    public boolean getHasFilterCriteria() {
+        return this.hasFilterCriteria;
+    }
+
+    private boolean fuDiscovery;
+    public void setFUDiscovery(boolean fuDiscovery) {
+        this.fuDiscovery = fuDiscovery;
+    }
+    public boolean getFUDiscovery() {
+        return this.fuDiscovery;
+    }}
