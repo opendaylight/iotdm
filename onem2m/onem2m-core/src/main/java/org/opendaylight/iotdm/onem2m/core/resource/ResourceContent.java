@@ -46,7 +46,7 @@ public class ResourceContent {
     public static final String LABELS = "lbl";
     public static final String STATE_TAG = "st";
     public static final String CHILD_RESOURCE = "ch";
-    public static final String CHILD_RESOURCE_REF = "chr";
+    public static final String CHILD_RESOURCE_REF = "ch";
 
     private DbAttr dbAttrs;
     private DbAttrSet dbAttrSets;
@@ -176,21 +176,15 @@ public class ResourceContent {
 
         String currDateTime = Onem2mDateTime.getCurrDateTime();
 
+        String ct = this.getDbAttr(ResourceContent.CREATION_TIME);
+        if (ct != null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "CREATION_TIME: read-only parameter");
+            return;
+        }
+
         if (onem2mRequest.isCreate) {
-            String ct = this.getDbAttr(ResourceContent.CREATION_TIME);
-            if (ct != null) {
-                if (!Onem2mDateTime.isValidDateTime(ct)) {
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                            "Invalid ISO8601 date/time format (YYYYMMDDTHHMMSSZ): " + ct);
-                    return;
-                } else if (Onem2mDateTime.dateCompare(ct, currDateTime) > 0) {
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                            "Cannot set time in the future " + ct);
-                    return;
-                }
-            } else {
-                this.setDbAttr(ResourceContent.CREATION_TIME, currDateTime);
-            }
+            this.setDbAttr(ResourceContent.CREATION_TIME, currDateTime);
         }
 
         // always update lmt at create or update

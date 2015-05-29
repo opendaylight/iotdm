@@ -98,7 +98,7 @@ public class ResourceContentInstance  {
 
         }
 
-        // verify this content instance does not exceed the container's max byte size
+        // special case: max_nr_instances == 0 --> seems like a way to block content instances from creation
         tempStr = containerDbAttrs.getAttr(ResourceContainer.MAX_NR_INSTANCES);
         if (tempStr != null) {
             Integer mni = Integer.valueOf(tempStr);

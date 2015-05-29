@@ -68,18 +68,22 @@ public class ResourceAE {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        if (onem2mRequest.isCreate) {
-            String appId = resourceContent.getDbAttr(APP_ID);
-            if (appId == null) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID missing parameter");
-                return;
-            }
+        String appId = resourceContent.getDbAttr(APP_ID);
+        if (appId == null && onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID missing parameter");
+            return;
+        } else if (appId != null && !onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID cannot be updated");
+            return;
+        }
 
-            String aeId = resourceContent.getDbAttr(AE_ID);
-            if (aeId == null) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID missing parameter");
-                return;
-            }
+        String aeId = resourceContent.getDbAttr(AE_ID);
+        if (aeId == null && onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID missing parameter");
+            return;
+        } else if (aeId != null && !onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID cannot be updated");
+            return;
         }
 
         /**
