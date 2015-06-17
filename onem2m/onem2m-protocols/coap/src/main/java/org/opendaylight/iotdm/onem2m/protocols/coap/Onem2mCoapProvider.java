@@ -19,6 +19,7 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierPlugin;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
@@ -83,6 +84,9 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
 
             clientBuilder.setProtocol(Onem2m.Protocol.COAP);
 
+            Onem2mStats.getInstance().endpointInc(coapExchange.getSourceAddress().toString());
+            Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS);
+
             if (options.getContentFormat() == MediaTypeRegistry.APPLICATION_JSON) {
                 clientBuilder.setContentFormat(Onem2m.ContentFormat.JSON);
             } else if (options.getContentFormat() == MediaTypeRegistry.APPLICATION_XML) {
@@ -92,6 +96,8 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
 
                 //coapExchange.respond(CoAP.ResponseCode.NOT_ACCEPTABLE, "Unknown media type: " +
                 //        options.getContentFormat());
+                //Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
+
                 //return;
             }
 
@@ -106,6 +112,7 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
             // M3 Boolean resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(options.getUriQueryString());
             if (resourceTypePresent && code != CoAP.Code.POST) {
                 coapExchange.respond(CoAP.ResponseCode.BAD_REQUEST, "Specifying resource type not permitted.");
+                Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                 return;
             }
 
@@ -118,22 +125,32 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
             switch (code) {
                 case GET:
                     clientBuilder.setOperationRetrieve();
+                    Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_RETRIEVE);
                     break;
+
                 case POST:
                     if (resourceTypePresent) {
                         clientBuilder.setOperationCreate();
+                        Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_CREATE);
                     } else {
                         clientBuilder.setOperationNotify();
+                        Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_NOTIFY);
                     }
                     break;
+
                 case PUT:
                     clientBuilder.setOperationUpdate();
+                    Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_UPDATE);
                     break;
+
                 case DELETE:
                     clientBuilder.setOperationDelete();
+                    Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_DELETE);
                     break;
+
                 default:
                     coapExchange.respond(CoAP.ResponseCode.BAD_REQUEST, "Unknown code: " + code);
+                    Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                     return;
             }
 
@@ -163,6 +180,12 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
             } else {
                 exchange.respond(coapRSC);
             }
+            if (rscString.charAt(0) =='2') {
+                Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_OK);
+            } else {
+                Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
+            }
+
         }
 
         /**

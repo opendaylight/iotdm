@@ -137,6 +137,16 @@ public class Onem2m {
         public static final int ONEM2M_GID = 266;
     }
 
+    public class HttpHeaders {
+        public static final String X_M2M_ORIGIN = "X-M2M-Origin";
+        public static final String X_M2M_RI = "X-M2M-RI";
+        public static final String X_M2M_NM = "X-M2M-NM";
+        public static final String X_M2M_GID = "X-M2M-GID";
+        public static final String X_M2M_RTU = "X-M2M-RTU";
+        public static final String X_M2M_OT = "X-M2M-OT";
+        public static final String X_M2M_RSC = "X-M2M-RSC";
+    }
+
     /**
      * Routine to allow REST clients to invoke the MDSAL RPC which will process the RequestPrimitive accessed via
      * the Onem2mService.

@@ -9,6 +9,7 @@
 package org.opendaylight.iotdm.onem2m.core.rest;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -40,18 +41,23 @@ public class ResourceContentProcessor {
 
             case Onem2m.ResourceType.AE:
                 ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_CREATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
                 ResourceContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTAINER_CREATE);
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 ResourceContentInstance.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTENT_INSTANCE_CREATE);
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
                 ResourceSubscription.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_SUBSCRIPTION_CREATE);
                 break;
             case Onem2m.ResourceType.CSE_BASE:
                 ResourceCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_CREATE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
@@ -61,37 +67,29 @@ public class ResourceContentProcessor {
     }
 
     /**
-     * This routine parses the ResourceContent.  The RequestPrimitive contains a resource specific representation
-     * of a particular resource encoded in some format.  Each of the resource specific handlers is responsible for
-     * parsing its own content.
+     * Collect stats on retrieve on a per resource type basis.
      *
      * @param onem2mRequest request
      * @param onem2mResponse response
      */
     public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        String pc = onem2mRequest.getPrimitive(RequestPrimitive.CONTENT);
-        if (pc == null) {
-            return;
-        }
         String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
-
         switch (resourceType) {
-
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleRetrieve(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_RETRIEVE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
-                ResourceContainer.handleRetrieve(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTAINER_RETRIEVE);
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
-                ResourceContentInstance.handleRetrieve(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTENT_INSTANCE_RETRIEVE);
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
-                ResourceSubscription.handleRetrieve(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_SUBSCRIPTION_RETRIEVE);
                 break;
             case Onem2m.ResourceType.CSE_BASE:
-                ResourceCse.handleRetrieve(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_RETRIEVE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
@@ -115,21 +113,57 @@ public class ResourceContentProcessor {
         onem2mRequest.isCreate = false;
 
         switch (resourceType) {
-
             case Onem2m.ResourceType.AE:
                 ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_UPDATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
                 ResourceContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTAINER_UPDATE);
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 ResourceContentInstance.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTENT_INSTANCE_UPDATE);
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
                 ResourceSubscription.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_SUBSCRIPTION_UPDATE);
                 break;
             case Onem2m.ResourceType.CSE_BASE:
                 ResourceCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_UPDATE);
+                break;
+            default:
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
+                        "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
+                break;
+        }
+    }
+
+    /**
+     * Collect stats on retrieve on a per resource type basis.
+     *
+     * @param onem2mRequest request
+     * @param onem2mResponse response
+     */
+    public static void handleDelete(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+
+        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
+        switch (resourceType) {
+            case Onem2m.ResourceType.AE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_DELETE);
+                break;
+            case Onem2m.ResourceType.CONTAINER:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTAINER_DELETE);
+                break;
+            case Onem2m.ResourceType.CONTENT_INSTANCE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTENT_INSTANCE_DELETE);
+                break;
+            case Onem2m.ResourceType.SUBSCRIPTION:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_SUBSCRIPTION_DELETE);
+                break;
+            case Onem2m.ResourceType.CSE_BASE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_DELETE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,

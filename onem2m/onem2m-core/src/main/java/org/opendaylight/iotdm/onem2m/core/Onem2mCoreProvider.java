@@ -21,16 +21,18 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, AutoCloseable {
+public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBean, BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoreProvider.class);
     private BindingAwareBroker.RpcRegistration<Onem2mService> rpcReg;
     private DataBroker dataBroker;
+    private Onem2mStats stats;
     private Onem2mDb db;
     private static NotificationProviderService notifierService;
 
@@ -48,6 +50,7 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
         this.dataBroker = session.getSALService(DataBroker.class);
         this.notifierService = session.getSALService(NotificationProviderService.class);
 
+        stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);
         initializePerfCse();
@@ -194,5 +197,10 @@ public class Onem2mCoreProvider implements Onem2mService, BindingAwareProvider, 
                 break;
         }
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
+    }
+
+    @Override
+    public String getOnem2mStats() {
+        return stats.getStats().toString();
     }
 }

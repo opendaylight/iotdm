@@ -40,4 +40,15 @@ module onem2m-core {
             }
         }
     }
+
+    augment "/config:modules/config:module/config:state" {
+        case onem2m-core {
+            when "/config:modules/config:module/config:type = 'onem2m-core'";
+
+            leaf onem2m-stats {
+                type string;
+            }
+
+        }
+    }
 }

@@ -16,6 +16,7 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
+import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierPlugin;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
@@ -30,15 +31,6 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
     private Server server;
     private final int PORT = 8282;
     private HttpClient client;
-
-
-    public static final String X_M2M_ORIGIN = "X-M2M-Origin";
-    public static final String X_M2M_RI = "X-M2M-RI";
-    public static final String X_M2M_NM = "X-M2M-NM";
-    public static final String X_M2M_GID = "X-M2M-GID";
-    public static final String X_M2M_RTU = "X-M2M-RTU";
-    public static final String X_M2M_OT = "X-M2M-OT";
-    public static final String X_M2M_RSC = "X-M2M-RSC";
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
@@ -86,7 +78,12 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
 
             clientBuilder.setProtocol(Onem2m.Protocol.HTTP);
 
-            String contentType = httpRequest.getContentType().toLowerCase();
+            Onem2mStats.getInstance().endpointInc(baseRequest.getRemoteAddr());
+            Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS);
+
+            String contentType = httpRequest.getContentType();
+            if (contentType == null) contentType = "json";
+            contentType = contentType.toLowerCase();
             if (contentType.contains("json")) {
                 clientBuilder.setContentFormat(Onem2m.ContentFormat.JSON);
             } else if (contentType.contains("xml")) {
@@ -96,33 +93,34 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
                 httpResponse.getWriter().println("Unsupported media type: " + contentType);
                 httpResponse.setContentType("text/json;charset=utf-8");
                 baseRequest.setHandled(true);
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
                 return;
             }
 
             clientBuilder.setTo(httpRequest.getRequestURI());
 
             // pull fields out of the headers
-            headerValue = httpRequest.getHeader(X_M2M_ORIGIN);
+            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
             if (headerValue != null) {
                 clientBuilder.setFrom(headerValue);
             }
-            headerValue = httpRequest.getHeader(X_M2M_RI);
+            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RI);
             if (headerValue != null) {
                 clientBuilder.setRequestIdentifier(headerValue);
             }
-            headerValue = httpRequest.getHeader(X_M2M_NM);
+            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_NM);
             if (headerValue != null) {
                 clientBuilder.setName(headerValue);
             }
-            headerValue = httpRequest.getHeader(X_M2M_GID);
+            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_GID);
             if (headerValue != null) {
                 clientBuilder.setGroupRequestIdentifier(headerValue);
             }
-            headerValue = httpRequest.getHeader(X_M2M_RTU);
+            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RTU);
             if (headerValue != null) {
                 clientBuilder.setResponseType(headerValue);
             }
-            headerValue = httpRequest.getHeader(X_M2M_OT);
+            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_OT);
             if (headerValue != null) {
                 clientBuilder.setOriginatingTimestamp(headerValue);
             }
@@ -132,6 +130,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             if (resourceTypePresent && !method.contentEquals("post")) {
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpResponse.getWriter().println("Specifying resource type not permitted.");
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
                 return;
             }
 
@@ -144,26 +143,31 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             switch (method) {
                 case "get":
                     clientBuilder.setOperationRetrieve();
-
+                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_RETRIEVE);
                     break;
                 case "post":
                     if (resourceTypePresent) {
                         clientBuilder.setOperationCreate();
+                        Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_CREATE);
                     } else {
                         clientBuilder.setOperationNotify();
+                        Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_NOTIFY);
                     }
                     break;
                 case "put":
                     clientBuilder.setOperationUpdate();
+                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_UPDATE);
                     break;
                 case "delete":
                     clientBuilder.setOperationDelete();
+                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_DELETE);
                     break;
                 default:
                     httpResponse.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
                     httpResponse.getWriter().println("Unsupported method type: " + method);
                     httpResponse.setContentType("text/json;charset=utf-8");
                     baseRequest.setHandled(true);
+                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
                     return;
             }
 
@@ -184,7 +188,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             // the content is already in the required format ...
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            httpResponse.setHeader(X_M2M_RI, onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
+            httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
 
             int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
             if (content != null) {
@@ -193,11 +197,16 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             } else {
                 httpResponse.setStatus(httpRSC);
             }
+            if (rscString.charAt(0) =='2') {
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_OK);
+            } else {
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
+            }
         }
 
         private int mapCoreResponseToHttpResponse(HttpServletResponse httpResponse, String rscString) {
 
-            httpResponse.setHeader(X_M2M_RSC, rscString);
+            httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RSC, rscString);
             switch (rscString) {
                 case Onem2m.ResponseStatusCode.OK:
                     return HttpServletResponse.SC_OK;
