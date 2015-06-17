@@ -113,9 +113,10 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
 
             case PERFHTTP:
                 numResources = input.getNumResources();
+                serverUri = input.getServerUri();
                 LOG.info("Test started: numResources: {}", numResources);
                 PerfHttpClient perfHttpClient = new PerfHttpClient();
-                if (perfHttpClient.runPerfTest((int) numResources)) {
+                if (perfHttpClient.runPerfTest((int) numResources, serverUri)) {
                     setTestOperData(ExecStatus.Idle);
                     execStatus.set(ExecStatus.Idle);
 

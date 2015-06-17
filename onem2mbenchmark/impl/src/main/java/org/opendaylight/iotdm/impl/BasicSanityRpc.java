@@ -70,6 +70,7 @@ public class BasicSanityRpc {
             LOG.info("runTestSuite: all tests finished");
         } else {
             LOG.error("runTestSuite: tests failed early");
+            return false;
         }
         return true;
     }

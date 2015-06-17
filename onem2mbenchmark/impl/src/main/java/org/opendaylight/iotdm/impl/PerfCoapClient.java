@@ -67,6 +67,7 @@ public class PerfCoapClient {
             LOG.info("runPerfTest: all tests finished");
         } else {
             LOG.error("runPerfTest: tests failed early");
+            return false;
         }
         return true;
     }

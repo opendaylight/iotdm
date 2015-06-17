@@ -635,6 +635,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
+        ResourceContentProcessor.handleDelete(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
+
         ResultContentProcessor.handleDelete(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
