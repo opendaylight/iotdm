@@ -170,8 +170,21 @@ module onem2m {
     * Convenient way to reset the data store to EMPTY
     */
     rpc onem2m-cleanup-store {
+        description "Delete the onem2m datastore";
+    }
+
+    /*
+    * Set and/or get debug info
+    */
+    rpc onem2m-debug {
         description
-          "Delete the onem2m datastore";
+          "Set or get debug info";
+        input {
+            uses onem2m-primitive-list;
+        }
+        output {
+            uses onem2m-primitive-list;
+        }
     }
 
     /*
