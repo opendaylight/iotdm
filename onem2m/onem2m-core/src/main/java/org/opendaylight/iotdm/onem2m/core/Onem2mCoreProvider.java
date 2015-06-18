@@ -199,6 +199,39 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }
 
+    /**
+     * This is a generic debug function ... it allows input and output parameters
+     * @param input
+     * @return
+     */
+    @Override
+    public Future<RpcResult<Onem2mDebugOutput>> onem2mDebug(Onem2mDebugInput input) {
+
+        LOG.info("RPC: begin handle onem2mDebug ...");
+
+        List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
+        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+
+        String op = onem2mRequest.getPrimitive("op");
+        if (op == null) {
+            onem2mResponse.setRSC("Unknown op", "(op) not set in input list");
+        } else if (op.contentEquals("stats-get")) {
+            onem2mResponse.setPrimitive("stats", getOnem2mStats());
+        } else {
+            onem2mResponse.setRSC("unknown op", op);
+        }
+
+        onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
+        Onem2mDebugOutput output = new Onem2mDebugOutputBuilder()
+                .setOnem2mPrimitive(onem2mPrimitiveList).build();
+
+        LOG.info("RPC: end handle onem2mDebug ...");
+
+        return RpcResultBuilder.success(output).buildFuture();
+    }
+
     @Override
     public String getOnem2mStats() {
         return stats.getStats().toString();
