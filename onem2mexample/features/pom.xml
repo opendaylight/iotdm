@@ -14,7 +14,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   </parent>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2mexample-features</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <modelVersion>4.0.0</modelVersion>
   <prerequisites>
@@ -23,7 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <properties>
     <mdsal.version>1.3.0-SNAPSHOT</mdsal.version>
     <yangtools.version>0.8.0-SNAPSHOT</yangtools.version>
-    <onem2m.version>0.0.2-SNAPSHOT</onem2m.version>
+    <onem2m.version>0.1.0-SNAPSHOT</onem2m.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>
