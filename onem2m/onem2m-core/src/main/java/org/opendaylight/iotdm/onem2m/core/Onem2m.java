@@ -46,6 +46,11 @@ public class Onem2m {
         public static final String XML = "xml";
     }
 
+    public class ContentType {
+        public static final String APP_VND_RES_JSON = "application/vnd.onem2m-res+json";
+        public static final String APP_VND_NTFY_JSON = "application/vnd.onem2m-ntfy+json";
+    }
+
     public class Protocol {
         public static final String COAP = "Coap";
         public static final String MQTT = "Mqtt";
@@ -169,7 +174,7 @@ public class Onem2m {
             onem2mResponse.setPrimitivesList(rpcResult.getResult().getOnem2mPrimitive());
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
-            onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");
+            onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
             LOG.error("serviceOnenm2mRequest: RPC exception");
         }
 
@@ -197,7 +202,7 @@ public class Onem2m {
             onem2mResponse.setPrimitivesList(rpcResult.getResult().getOnem2mPrimitive());
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
-            onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception");
+            onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
             LOG.error("serviceOnenm2mRequest: RPC exception");
         }
 

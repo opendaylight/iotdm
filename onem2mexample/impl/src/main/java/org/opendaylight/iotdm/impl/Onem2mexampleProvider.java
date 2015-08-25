@@ -151,7 +151,6 @@ public class Onem2mexampleProvider implements BindingAwareProvider, AutoCloseabl
         b.setOperationCreate();
         b.setName(AENAME);
         b.setAppName(AENAME);
-        b.setAEId(AENAME);
         b.setAppId(AENAME);
         Onem2mRequestPrimitiveClient req = b.build();
         Onem2mResponsePrimitiveClient res = req.send(onem2mService);

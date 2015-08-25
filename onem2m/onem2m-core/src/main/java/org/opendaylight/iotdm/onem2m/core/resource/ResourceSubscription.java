@@ -207,6 +207,7 @@ public class ResourceSubscription {
                     break;
 
                 case ResourceContent.LABELS:
+                case ResourceContent.EXPIRATION_TIME:
                     if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {

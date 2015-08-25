@@ -30,7 +30,6 @@ public class BasicSanityRpc {
     }
 
     // these are constants for test purposes
-    public static final String AE_ID = "AE-ID";
     public static final String AE_APP_ID = "APP_ID";
     public static final String AE_ONTOLOGY_REF = "http://ontology/ae";
     public static final String AE_APP_NAME = "APP_NAME";
@@ -104,7 +103,6 @@ public class BasicSanityRpc {
 
         String aeString = new ResourceAEBuilder()
             .setAppName(AE_APP_NAME)
-            .setAEId(AE_ID)
             .setAppId(AE_APP_ID)
             .setOntologyRef(AE_ONTOLOGY_REF)
             .build();
@@ -118,6 +116,7 @@ public class BasicSanityRpc {
                 .setResourceType(Onem2m.ResourceType.AE)
                 .setOperationCreate()
                 .setPrimitiveContent(aeString)
+                .setResultContent("1")
                 .setName(AE_APP_NAME)
                 .build();
 
@@ -154,9 +153,9 @@ public class BasicSanityRpc {
         aeBuilder.setOperationCreate();
         aeBuilder.setName(AE_APP_NAME);
         aeBuilder.setAppName(AE_APP_NAME);
-        aeBuilder.setAEId(AE_ID);
         aeBuilder.setAppId(AE_APP_ID);
         aeBuilder.setOntologyRef(AE_ONTOLOGY_REF);
+        aeBuilder.setResultContent("1");
         aeRequest = aeBuilder.build();
         Onem2mResponsePrimitiveClient onem2mResponse = aeRequest.send(onem2mService);
         if (!onem2mResponse.responseOk()) {
@@ -209,6 +208,7 @@ public class BasicSanityRpc {
                 .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
                 .setPrimitiveContent(containerString)
+                .setResultContent("1")
                 .setName(CONTAINER_NAME)
                 .build();
 
@@ -258,6 +258,7 @@ public class BasicSanityRpc {
                 .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
                 .setOperationCreate()
                 .setPrimitiveContent(contentString)
+                .setResultContent("1")
                 .setName(CONTENT_INSTANCE_NAME)
                 .build();
 
@@ -302,6 +303,7 @@ public class BasicSanityRpc {
                     .setFrom("")
                     .setRequestIdentifier("RQI_1234")
                     .setOperationRetrieve()
+                    .setResultContent("1")
                     .build();
 
             ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
@@ -339,6 +341,7 @@ public class BasicSanityRpc {
                     .setFrom("")
                     .setRequestIdentifier("RQI_1234")
                     .setOperationRetrieve()
+                    .setResultContent("1")
                     .build();
 
             ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
@@ -380,6 +383,7 @@ public class BasicSanityRpc {
                     .setTo(resourceId)
                     .setFrom("")
                     .setRequestIdentifier("RQI_1234")
+                    .setResultContent("1")
                     .setOperationDelete()
                     .build();
 
@@ -432,6 +436,7 @@ public class BasicSanityRpc {
                 .setOperationCreate()
                 .setPrimitiveContent(containerString)
                 .setName(CONTAINER_NAME)
+                .setResultContent("1")
                 .build();
 
         ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
@@ -455,6 +460,7 @@ public class BasicSanityRpc {
                     .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
                     .setOperationCreate()
                     .setPrimitiveContent(contentString)
+                    .setResultContent("1")
                     .build();
 
             onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);

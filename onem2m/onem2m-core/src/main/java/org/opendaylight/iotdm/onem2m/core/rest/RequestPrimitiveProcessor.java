@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.core.rest;
 
+import com.google.common.util.concurrent.Monitor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
@@ -32,10 +34,15 @@ import org.slf4j.LoggerFactory;
 public class RequestPrimitiveProcessor extends RequestPrimitive {
 
     private static final Logger LOG = LoggerFactory.getLogger(RequestPrimitiveProcessor.class);
+    private Monitor crudMonitor;
 
     public RequestPrimitiveProcessor() {
         super();
         resourceContent = new ResourceContent();
+    }
+
+    public void createUpdateDeleteMonitorSet(Monitor monitor) {
+        this.crudMonitor = monitor;
     }
 
     /**
@@ -310,16 +317,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        String from = getPrimitive(RequestPrimitive.FROM);
-        if (from == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "FROM(" + RequestPrimitive.FROM + ") not specified");
-            return;
-        } else if (!validateUri(from)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
-            return;
-        }
 
         // ensure resource type is present only in CREATE requests
         String resourceType = getPrimitive(RequestPrimitive.RESOURCE_TYPE);
@@ -337,6 +334,18 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
             // resource type value will be verified later
         }
+
+        String from = getPrimitive(RequestPrimitive.FROM);
+        if (from == null && !resourceType.contentEquals(Onem2m.ResourceType.AE)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "FROM(" + RequestPrimitive.FROM + ") not specified");
+            return;
+        } else if (!validateUri(from)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
+            return;
+        }
+
 
         // this is an optional parameter but we will reject unsupported values
         // only support blocking requests at this time, if not provided we default to blocking anyway
@@ -386,25 +395,39 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
         }
 
-        // perform more specific parameter validation for the operation requested
         switch (operation) {
             case Onem2m.Operation.CREATE:
-                if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
-                    protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
-                    handleOperationCreate(onem2mResponse);
-                } else {
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                            "Cannot create a CSE Base, it must be provisioned separately!");
+                this.crudMonitor.enter();
+                try {
+                    if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
+                            protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
+                        handleOperationCreate(onem2mResponse);
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "Cannot create a CSE Base, it must be provisioned separately!");
+                    }
+                } finally {
+                    this.crudMonitor.leave();
                 }
                 break;
             case Onem2m.Operation.RETRIEVE:
                 handleOperationRetrieve(onem2mResponse);
                 break;
             case Onem2m.Operation.UPDATE:
-                handleOperationUpdate(onem2mResponse);
+                this.crudMonitor.enter();
+                try {
+                    handleOperationUpdate(onem2mResponse);
+                } finally {
+                    this.crudMonitor.leave();
+                }
                 break;
             case Onem2m.Operation.DELETE:
-                handleOperationDelete(onem2mResponse);
+                this.crudMonitor.enter();
+                try {
+                    handleOperationDelete(onem2mResponse);
+                } finally {
+                    this.crudMonitor.leave();
+                }
                 break;
             case Onem2m.Operation.NOTIFY:
                 handleOperationNotify(onem2mResponse);
@@ -415,6 +438,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "OPERATION(" + RequestPrimitive.OPERATION + ") not valid: " + operation);
         }
+
 
         // TODO: at this point we could support returning the optional TO/FROM/OT/RET/EC but we will wait
     }
@@ -440,11 +464,16 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     "CONTENT_FORMAT(" + RequestPrimitive.CONTENT_FORMAT + ") not accepted (" + cf + ")");
             return;
         }
+
         String cn = getPrimitive(RequestPrimitive.CONTENT);
         if (cn == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "CONTENT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
-            return;
+            if (cf.contentEquals(Onem2m.ContentFormat.JSON)) {
+                this.setPrimitive(RequestPrimitive.CONTENT, "{}");
+            } else {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "CONTENT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
+                return;
+            }
         }
 
         // validate result content options for create
@@ -472,8 +501,16 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
             // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
 
-            // if the a name is provided, ensure it is valid and unique at this hierarchical level
+            // special case for AE resources ... where resource name is derived from FROM parameter
             String resourceName = this.getPrimitive((RequestPrimitive.NAME));
+            if (resourceName == null && resourceType.contentEquals(Onem2m.ResourceType.AE)) {
+                String from = this.getPrimitive(RequestPrimitive.FROM);
+                if (from != null) {
+                    resourceName = from;
+                }
+            }
+
+            // if the a name is provided, ensure it is valid and unique at this hierarchical level
             if (resourceName != null) {
                 // using the parent, see if this new resource name already exists under this parent resource
                 if (Onem2mDb.getInstance().findResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
@@ -749,49 +786,54 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      */
     public void provisionCse(ResponsePrimitive onem2mResponse) {
 
-        String cseId = this.getPrimitive("CSE_ID");
-        if (cseId == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID not specified!");
-            return;
-        }
-        String cseType = this.getPrimitive("CSE_TYPE");
-        if (cseType == null) {
-            cseType = "IN-CSE";
-        } else if (!cseType.contentEquals("IN-CSE")) { //TODO: what is the difference between CSE types
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
-            return;
-        }
+        this.crudMonitor.enter();
+        try {
+            String cseId = this.getPrimitive("CSE_ID");
+            if (cseId == null) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID not specified!");
+                return;
+            }
+            String cseType = this.getPrimitive("CSE_TYPE");
+            if (cseType == null) {
+                cseType = "IN-CSE";
+            } else if (!cseType.contentEquals("IN-CSE")) { //TODO: what is the difference between CSE types
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
+                return;
+            }
 
-        this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
-        this.setPrimitive(RequestPrimitive.NAME, cseId);
-        this.setResourceName(cseId);
+            this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
+            this.setPrimitive(RequestPrimitive.NAME, cseId);
+            this.setResourceName(cseId);
 
-        if (Onem2mDb.getInstance().findCseByName(cseId)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name already exists: " + cseId);
-            return;
-        }
+            if (Onem2mDb.getInstance().findCseByName(cseId)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name already exists: " + cseId);
+                return;
+            }
 
-        this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
-        JSONObject jCse = new JSONObject();
-        jCse.put(ResourceCse.CSE_ID, cseId);
-        jCse.put(ResourceCse.CSE_TYPE, cseType);
-        JSONArray anyArray = new JSONArray();
-        anyArray.put(jCse);
-        JSONObject j = new JSONObject();
-        j.put("any", anyArray);
-        this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
+            this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+            JSONObject jCse = new JSONObject();
+            jCse.put(ResourceCse.CSE_ID, cseId);
+            jCse.put(ResourceCse.CSE_TYPE, cseType);
+            JSONArray anyArray = new JSONArray();
+            anyArray.put(jCse);
+            JSONObject j = new JSONObject();
+            j.put("any", anyArray);
+            this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
-        // process the resource specific attributes
-        ResourceContentProcessor.handleCreate(this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-            return;
-        }
+            // process the resource specific attributes
+            ResourceContentProcessor.handleCreate(this, onem2mResponse);
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                return;
+            }
 
-        // TODO: see TS0004 6.8
-        // if the create was successful, ie no error has already happened, set CREATED for status code here
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
-                    "Provisioned cseBase: " + cseId + " type: " + cseType);
+            // TODO: see TS0004 6.8
+            // if the create was successful, ie no error has already happened, set CREATED for status code here
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
+                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
+                        "Provisioned cseBase: " + cseId + " type: " + cseType);
+            }
+        } finally {
+            this.crudMonitor.leave();
         }
     }
 }

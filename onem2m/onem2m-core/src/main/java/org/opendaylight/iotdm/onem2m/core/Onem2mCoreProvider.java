@@ -8,6 +8,7 @@
 package org.opendaylight.iotdm.onem2m.core;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.Monitor;
 import java.util.List;
 import java.util.concurrent.Future;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -35,6 +36,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private Onem2mStats stats;
     private Onem2mDb db;
     private static NotificationProviderService notifierService;
+    private Monitor crudMonitor;
 
     public static NotificationProviderService getNotifier() {
         return Onem2mCoreProvider.notifierService;
@@ -49,6 +51,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
         this.notifierService = session.getSALService(NotificationProviderService.class);
+        crudMonitor = new Monitor();
 
         stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();
@@ -75,6 +78,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private void initializePerfCse() {
         if (!Onem2mDb.getInstance().findCseByName(Onem2m.SYS_PERF_TEST_CSE)) {
             RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+            onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
             onem2mRequest.setPrimitive("CSE_TYPE", "IN-CSE");
             ResponsePrimitive onem2mResponse = new ResponsePrimitive();
@@ -103,6 +107,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
+        onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
 
         onem2mRequest.handleOperation(onem2mResponse);
@@ -136,6 +141,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         onem2mRequest.setPrimitivesList(csePrimitiveList);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+        onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
 
         onem2mRequest.provisionCse(onem2mResponse);
 

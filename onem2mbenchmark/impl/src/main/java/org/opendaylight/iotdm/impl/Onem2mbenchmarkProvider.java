@@ -67,6 +67,8 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
         }
 
         long numResources;
+        long numThreads;
+        long numOpsPerThread;
         String serverUri;
         StartTestOutput output;
 
@@ -74,9 +76,14 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
 
             case PERFRPC:
                 numResources = input.getNumResources();
-                LOG.info("Test started: numResources: {}", numResources);
+                if (numResources <= 0) numResources = 1;
+                numThreads = input.getNumThreads();
+                if (numThreads <= 0) numThreads = 1;
+
+                LOG.info("Test started: numResources: {} numThreads: {}",
+                        numResources, numThreads);
                 PerfCrudRpc perfCrudRpc = new PerfCrudRpc(onem2mService);
-                boolean status = perfCrudRpc.runPerfTest((int) numResources);
+                boolean status = perfCrudRpc.runPerfTest((int) numResources, (int)numThreads);
                 setTestOperData(ExecStatus.Idle);
                 execStatus.set(ExecStatus.Idle);
 
@@ -84,7 +91,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                         .setStatus(status ? StartTestOutput.Status.OK : StartTestOutput.Status.FAILED)
                         .setCreatesPerSec(perfCrudRpc.createsPerSec)
                         .setRetrievesPerSec(perfCrudRpc.retrievesPerSec)
-                        .setUpdatesPerSec(perfCrudRpc.updatesPerSec)
+                        .setCrudsPerSec(perfCrudRpc.crudsPerSec)
                         .setDeletesPerSec(perfCrudRpc.deletesPerSec)
                         .build();
 
@@ -103,7 +110,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                             .setStatus(StartTestOutput.Status.OK)
                             .setCreatesPerSec(perfCoapClient.createsPerSec)
                             .setRetrievesPerSec(perfCoapClient.retrievesPerSec)
-                            .setUpdatesPerSec(perfCoapClient.updatesPerSec)
+                            .setCrudsPerSec(perfCoapClient.crudsPerSec)
                             .setDeletesPerSec(perfCoapClient.deletesPerSec)
                             .build();
 
@@ -124,7 +131,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                             .setStatus(StartTestOutput.Status.OK)
                             .setCreatesPerSec(perfHttpClient.createsPerSec)
                             .setRetrievesPerSec(perfHttpClient.retrievesPerSec)
-                            .setUpdatesPerSec(perfHttpClient.updatesPerSec)
+                            .setCrudsPerSec(perfHttpClient.crudsPerSec)
                             .setDeletesPerSec(perfHttpClient.deletesPerSec)
                             .build();
 

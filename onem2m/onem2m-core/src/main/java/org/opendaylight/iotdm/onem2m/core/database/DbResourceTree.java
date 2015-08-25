@@ -8,11 +8,15 @@
 
 package org.opendaylight.iotdm.onem2m.core.database;
 
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.opendaylight.controller.md.sal.binding.api.BindingTransactionChain;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
@@ -40,14 +44,14 @@ public class DbResourceTree {
 
     private final Logger LOG = LoggerFactory.getLogger(DbResourceTree.class);
 
-    private BindingTransactionChain bindingTransactionChain;
+    private DataBroker dataBroker;
 
     /**
-     * Pass the bindingTransactionChain to the resource tree and cache it for db retrieve txns.
-     * @param bindingTransactionChain transaction chain
+     * Pass the data broker to the resource tree and cache it for db retrieve txns.
+     * @param dataBroker data broker
      */
-    public DbResourceTree(BindingTransactionChain bindingTransactionChain) {
-        this.bindingTransactionChain = bindingTransactionChain;
+    public DbResourceTree(DataBroker dataBroker) {
+        this.dataBroker = dataBroker;
     }
 
     /**
@@ -80,7 +84,7 @@ public class DbResourceTree {
         InstanceIdentifier<Onem2mCse> iid = InstanceIdentifier.create(Onem2mCseList.class)
                 .child(Onem2mCse.class, new Onem2mCseKey(name));
 
-        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
@@ -178,7 +182,7 @@ public class DbResourceTree {
                 .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
                 .child(OldestLatest.class, new OldestLatestKey(resourceType));
 
-        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
@@ -191,7 +195,7 @@ public class DbResourceTree {
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mResource.class, new Onem2mResourceKey(resourceId));
 
-        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
@@ -206,7 +210,7 @@ public class DbResourceTree {
                 .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
                 .child(Attr.class, new AttrKey(attrName));
 
-        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
@@ -283,7 +287,7 @@ public class DbResourceTree {
                 .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
                 .child(Child.class, new ChildKey(childName));
 
-        return DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
     /**
@@ -386,7 +390,7 @@ public class DbResourceTree {
                 .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
                 .child(Child.class, new ChildKey(name));
 
-        Child child = DbTransaction.retrieve(bindingTransactionChain, iid, LogicalDatastoreType.OPERATIONAL);
+        Child child = DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
         if (child == null)
             return null;
 
@@ -419,7 +423,7 @@ public class DbResourceTree {
         InstanceIdentifier<Onem2mResourceTree> iidTreeList = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
         Onem2mResourceTree tree = new Onem2mResourceTreeBuilder().setOnem2mResource(Collections.<Onem2mResource>emptyList()).build();
 
-        DbTransaction dbTxn = new DbTransaction(bindingTransactionChain);
+        DbTransaction dbTxn = new DbTransaction(dataBroker);
         dbTxn.create(iidCseList, cseList, LogicalDatastoreType.OPERATIONAL);
         dbTxn.create(iidTreeList, tree, LogicalDatastoreType.OPERATIONAL);
         dbTxn.commitTransaction();
@@ -486,11 +490,11 @@ public class DbResourceTree {
 
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
 
-        Onem2mCseList cseList = DbTransaction.retrieve(bindingTransactionChain, iidCseList, LogicalDatastoreType.OPERATIONAL);
+        Onem2mCseList cseList = DbTransaction.retrieve(dataBroker, iidCseList, LogicalDatastoreType.OPERATIONAL);
 
         InstanceIdentifier<Onem2mResourceTree> iidTree = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
 
-        Onem2mResourceTree tree = DbTransaction.retrieve(bindingTransactionChain, iidTree, LogicalDatastoreType.OPERATIONAL);
+        Onem2mResourceTree tree = DbTransaction.retrieve(dataBroker, iidTree, LogicalDatastoreType.OPERATIONAL);
 
         LOG.info("Dumping Resource Tree: Start ...");
         List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();
@@ -531,7 +535,7 @@ public class DbResourceTree {
         }
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
 
-        Onem2mCseList cseList = DbTransaction.retrieve(bindingTransactionChain, iidCseList, LogicalDatastoreType.OPERATIONAL);
+        Onem2mCseList cseList = DbTransaction.retrieve(dataBroker, iidCseList, LogicalDatastoreType.OPERATIONAL);
 
         LOG.info("Dumping Hierarchical Resource Tree: Start ...");
         List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();
@@ -542,4 +546,5 @@ public class DbResourceTree {
         }
         LOG.info("Dumping Hierarchical Resource Tree: End ...");
     }
+
 }

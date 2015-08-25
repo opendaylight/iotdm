@@ -77,14 +77,15 @@ public class ResourceAE {
             return;
         }
 
-        String aeId = resourceContent.getDbAttr(AE_ID);
-        if (aeId == null && onem2mRequest.isCreate) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID missing parameter");
-            return;
-        } else if (aeId != null && !onem2mRequest.isCreate) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID cannot be updated");
-            return;
-        }
+        /**
+         * Construct the AE_ID field ... using some rules
+         * 1) FROM field is null --> generate an aei using either the resource name which must be unique, or
+         * if the resource name is not provided, gerate one via generate, then apply it to the aei and res name.
+         * 2) if the FROM field has something, then use it in the aei, and the resource name if the res name is
+         * null.
+         *
+         * This logic will runs in the createResource as it can generate unique id's
+         */
 
         /**
          * The resource has been filled in with any attributes that need to be written to the database
@@ -125,7 +126,6 @@ public class ResourceAE {
             switch (key) {
 
                 case APP_NAME:
-                case AE_ID:
                 case ONTOLOGY_REF:
                 case APP_ID:
                     if (!resourceContent.getJsonContent().isNull(key)) {
@@ -140,11 +140,14 @@ public class ResourceAE {
                     }
                     break;
                 case ResourceContent.LABELS:
+                case ResourceContent.EXPIRATION_TIME:
                     if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
                         return;
                     }
+                    break;
+                case AE_ID: // ignore its value as it is not settable
                     break;
                 default:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
