@@ -37,6 +37,8 @@ public class ResponsePrimitive extends BasePrimitive {
     public static final String ORIGINATING_TIMESTAMP = "ot";
     public static final String RESULT_EXPIRATION_TIMESTAMP = "rset";
     public static final String EVENT_CATEGORY = "ec";
+    public static final String HTTP_CONTENT_TYPE = "http_content_type";
+    public static final String HTTP_CONTENT_LOCATION = "http_content_location";
 
     public ResponsePrimitive() {
         super();

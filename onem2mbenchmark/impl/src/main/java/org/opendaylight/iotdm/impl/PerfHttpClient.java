@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class PerfHttpClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(PerfHttpClient.class);
-    public long createsPerSec, retrievesPerSec, updatesPerSec, deletesPerSec;
+    public long createsPerSec, retrievesPerSec, crudsPerSec, deletesPerSec;
 
     public PerfHttpClient() {
     }
@@ -88,6 +88,7 @@ public class PerfHttpClient {
                     .setRequestIdentifier("Perfhttp_RQI")
                     .setContent(containerString)
                     .setResourceType(3) // container
+                    .setResultContent("1")
                     .build();
 
             ContentExchange httpResponse = httpClient.sendRequest(serverUri, httpRequest);
@@ -146,6 +147,7 @@ public class PerfHttpClient {
                     .setTo(resourceId)
                     .setFrom("Perfhttp_FROM")
                     .setRequestIdentifier("Perfhttp_RQI")
+                    .setResultContent("1")
                     .build();
 
             ContentExchange httpResponse = httpClient.sendRequest(serverUri, httpRequest);
@@ -203,6 +205,7 @@ public class PerfHttpClient {
                     .setTo(resourceId)
                     .setFrom("Perfhttp_FROM")
                     .setRequestIdentifier("Perfhttp_RQI")
+                    .setResultContent("1")
                     .build();
 
             ContentExchange httpResponse = httpClient.sendRequest(serverUri, httpRequest);

@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 public class PerfCoapClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(PerfCoapClient.class);
-    public long createsPerSec, retrievesPerSec, updatesPerSec, deletesPerSec;
+    public long createsPerSec, retrievesPerSec, crudsPerSec, deletesPerSec;
 
     public PerfCoapClient() {
     }
@@ -102,6 +102,7 @@ public class PerfCoapClient {
                     .setFrom("PerfCoap_FROM")
                     .setRequestIdentifier("PerfCoap_RQI")
                     .setContent(containerString, MediaTypeRegistry.APPLICATION_JSON)
+                    .setResultContent("1")
                     .setResourceType(3) // container
                     .build();
 
@@ -153,6 +154,7 @@ public class PerfCoapClient {
                     //.setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
                     .setTo(resourceId)
                     .setFrom("PerfCoap_FROM")
+                    .setResultContent("1")
                     .setRequestIdentifier("PerfCoap_RQI")
                     .build();
 
@@ -204,6 +206,7 @@ public class PerfCoapClient {
                     .setTo(resourceId)
                     .setFrom("PerfCoap_FROM")
                     .setRequestIdentifier("PerfCoap_RQI")
+                    .setResultContent("1")
                     .build();
 
             CoapResponse coapResponse = coapClient.sendRequest(coapRequest);

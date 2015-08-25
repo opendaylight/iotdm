@@ -59,15 +59,19 @@ module onem2mbenchmark {
             leaf numResources {
                 type uint32;
                 default 100000;
-                description
-                  "Number of resources to test";
-              }
+                description "Number of resources to test";
+            }
+            leaf numThreads {
+                type uint32;
+                default 32;
+                description "Number of threads to use";
+            }
             leaf serverUri {
                 type string;
                 default "coap://localhost";
                 description
                   "Example: for coap://localhost, for http://localhost:8282";
-              }
+            }
         }
         output {
             leaf status {
@@ -98,19 +102,18 @@ module onem2mbenchmark {
                 description
                   "retrieves/second";
               }
-            leaf updatesPerSec {
-                type uint32;
-                default 1;
-                description
-                  "updates/second";
-              }
             leaf deletesPerSec {
                 type uint32;
                 default 1;
                 description
                   "deletes/second";
               }
-
+            leaf crudsPerSec {
+                type uint32;
+                default 1;
+                description
+                  "cruds/second";
+              }
         }
     }
 }

@@ -38,11 +38,12 @@ public class ResourceContent {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceContent.class);
 
-    public static final String RESOURCE_TYPE = "rty";
+    public static final String RESOURCE_TYPE = "ty";
     public static final String RESOURCE_ID = "ri";
     public static final String RESOURCE_NAME = "rn";
     public static final String PARENT_ID = "pi";
     public static final String CREATION_TIME = "ct";
+    public static final String EXPIRATION_TIME = "et";
     public static final String LAST_MODIFIED_TIME = "lt";
     public static final String LABELS = "lbl";
     public static final String STATE_TAG = "st";
@@ -196,6 +197,16 @@ public class ResourceContent {
             return;
         }
         this.setDbAttr(ResourceContent.LAST_MODIFIED_TIME, currDateTime);
+
+        // validate expiration time
+        String et = this.getDbAttr(ResourceContent.EXPIRATION_TIME);
+        if (et != null) {
+            if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "EXPIRATION_TIME: cannot be less than current time");
+                return;
+            }
+        }
     }
 
     /**
@@ -242,6 +253,21 @@ public class ResourceContent {
                     resourceContent.setDbAttrSet(key, null);
                 }
                 break;
+
+            case EXPIRATION_TIME:
+                if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!(o instanceof String) || !Onem2mDateTime.isValidDateTime(o.toString())) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") DATE (YYYYMMDDTHHMMSSZ) string expected for expiration time: " + key);
+                        return false;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+
+                } else {
+                    resourceContent.setDbAttr(key, null);
+                }
+                break;
+
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                         "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
@@ -260,6 +286,7 @@ public class ResourceContent {
         switch (attr.getName()) {
             case ResourceContent.CREATION_TIME:
             case ResourceContent.LAST_MODIFIED_TIME:
+            case ResourceContent.EXPIRATION_TIME:
                 j.put(attr.getName(), attr.getValue());
                 break;
             case ResourceContent.RESOURCE_TYPE:
@@ -338,6 +365,7 @@ public class ResourceContent {
 
             case CREATION_TIME:
             case LAST_MODIFIED_TIME:
+            case EXPIRATION_TIME:
             case RESOURCE_ID:
             case RESOURCE_NAME:
             case PARENT_ID:

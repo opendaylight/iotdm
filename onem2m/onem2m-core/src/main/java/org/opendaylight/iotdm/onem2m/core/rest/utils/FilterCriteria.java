@@ -62,7 +62,7 @@ public class FilterCriteria {
         String ms = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE);
         if (ms != null) {
             String mt = dbAttrs.getAttr(ResourceContent.LAST_MODIFIED_TIME);
-            if (mt != null && Onem2mDateTime.dateCompare(mt, ms) >= 0) {
+            if (mt != null && Onem2mDateTime.dateCompare(mt, ms) <= 0) {
                 return false;
             }
         }
@@ -70,7 +70,7 @@ public class FilterCriteria {
         String ums = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE);
         if (ums != null) {
             String mt = dbAttrs.getAttr(ResourceContent.LAST_MODIFIED_TIME);
-            if (mt != null && Onem2mDateTime.dateCompare(mt, ums) <= 0) {
+            if (mt != null && Onem2mDateTime.dateCompare(mt, ums) >= 0) {
                 return false;
             }
         }

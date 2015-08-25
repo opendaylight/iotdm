@@ -25,6 +25,7 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierPlugin;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
@@ -47,6 +48,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
 
         try {
             server.start();
+            client.start();
         } catch (Exception e) {
             LOG.info("Exception: {}", e.toString());
         }
@@ -55,6 +57,8 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
 
     @Override
     public void close() throws Exception {
+        server.stop();
+        client.stop();
         LOG.info("Onem2mHttpProvider Closed");
     }
 
@@ -133,8 +137,17 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
                 clientBuilder.setOriginatingTimestamp(headerValue);
             }
 
+            // the contentType string can have ty=val attached to it so we should handle this case
+            Boolean resourceTypePresent = false;
+            String contentTypeResourceString = parseContentTypeForResourceType(contentType);
+            if (contentTypeResourceString != null) {
+                resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(contentTypeResourceString);
+            }
             String method = httpRequest.getMethod().toLowerCase();
-            Boolean resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+            // look in query string if didnt find it in contentType header
+            if (!resourceTypePresent) {
+                resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+            }
             if (resourceTypePresent && !method.contentEquals("post")) {
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpResponse.getWriter().println("Specifying resource type not permitted.");
@@ -186,7 +199,6 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             // now place the fields from the onem2m result response back in the http fields, and send
             sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
 
-            httpResponse.setContentType("text/json;charset=utf-8");
             baseRequest.setHandled(true);
         }
 
@@ -209,6 +221,15 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
                 Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_OK);
             } else {
                 Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
+            }
+
+            String ct = onem2mResponse.getPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE);
+            if (ct != null) {
+                httpResponse.setContentType(ct);
+            }
+            String cl = onem2mResponse.getPrimitive(ResponsePrimitive.HTTP_CONTENT_LOCATION);
+            if (cl != null) {
+                httpResponse.setHeader("Content-Location", cl);
             }
         }
 
@@ -260,11 +281,18 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
         return "http";
     }
 
+    /**
+     * HTTP notifications will be set out to subscribers interested in resources from the tree where they have have hung
+     * onem2m subscription resources
+     * @param url where do i send this onem2m notify message
+     * @param payload contents of the notification
+     */
     @Override
     public void sendNotification(String url, String payload) {
         ContentExchange ex = new ContentExchange();
         ex.setURL(url);
         ex.setRequestContentSource(new ByteArrayInputStream(payload.getBytes()));
+        ex.setRequestContentType(Onem2m.ContentType.APP_VND_NTFY_JSON);
         ex.setMethod("post");
         LOG.debug("HTTP: Send notification uri: {}, payload: {}:", url, payload);
         try {
@@ -272,5 +300,14 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
         } catch (IOException e) {
             LOG.error("Dropping notification: uri: {}, payload: {}", url, payload);
         }
+    }
+
+    private String parseContentTypeForResourceType(String contentType) {
+
+        String split[] = contentType.trim().split(";");
+        if (split.length != 2) {
+            return null;
+        }
+        return split[1];
     }
 }

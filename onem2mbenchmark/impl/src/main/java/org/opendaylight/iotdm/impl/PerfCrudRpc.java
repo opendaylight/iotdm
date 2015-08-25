@@ -27,14 +27,14 @@ public class PerfCrudRpc {
 
     private static final Logger LOG = LoggerFactory.getLogger(PerfCrudRpc.class);
     private Onem2mService onem2mService;
-    public long createsPerSec, retrievesPerSec, updatesPerSec, deletesPerSec;
-    private final ExecutorService executor;
-    private Integer nextResourceId = 0;
+    public long createsPerSec, retrievesPerSec, crudsPerSec, deletesPerSec;
+    private ExecutorService executor;
+    private Integer nextQueueId = 0;
     private Integer numSuccessful = 0;
     private Integer numComplete = 0;
 
-    private synchronized Integer getNext() {
-        return ++nextResourceId;
+    private synchronized Integer getNextQ() {
+        return nextQueueId++;
     }
     private synchronized void incNumSuccessful() {
         ++numSuccessful;
@@ -45,7 +45,21 @@ public class PerfCrudRpc {
 
     public PerfCrudRpc(Onem2mService onem2mService) {
         this.onem2mService = onem2mService;
-        executor = Executors.newFixedThreadPool(32);
+        executor = null;
+    }
+
+    private ArrayList<ArrayList<Integer>> resourceIdQueues;
+    private void buildResourceIdQueues(int numQueues, int numResources) {
+        resourceIdQueues = new ArrayList<ArrayList<Integer>>(numQueues);
+        for (int i = 0; i < numQueues; ++i) {
+            ArrayList<Integer> resourceArray = new ArrayList<Integer>(numResources/numQueues+1);
+            resourceIdQueues.add(resourceArray);
+        }
+        for (int i = 0; i < numResources; i++) {
+            int q = i%numQueues;
+            ArrayList<Integer> resourceArray = resourceIdQueues.get(q);
+            resourceArray.add(i+1);
+        }
     }
 
     /**
@@ -60,14 +74,85 @@ public class PerfCrudRpc {
      * @param numResources
      * @return
      */
-    public boolean runPerfTest(int numResources) {
+    public boolean runPerfTest(int numResources, int numThreads) {
 
         int totalSuccessful = 0;
-        totalSuccessful += createTest(numResources);
-        totalSuccessful += retrieveTest(numResources);
-        totalSuccessful += deleteTest(numResources);
+        totalSuccessful += createTest(numResources, numThreads);
+        totalSuccessful += retrieveTest(numResources, numThreads);
+        totalSuccessful += deleteTest(numResources, numThreads);
+        totalSuccessful += crudTest(numResources, numThreads);
 
-        return (numResources*3) == totalSuccessful;
+        return (numResources*4) == totalSuccessful;
+    }
+
+
+    private int createTest(int numResources, final int numThreads) {
+
+        long startTime, endTime, delta;
+        nextQueueId = 0;
+        numComplete = 0;
+        numSuccessful = 0;
+
+        executor = Executors.newFixedThreadPool(numThreads);
+
+        buildResourceIdQueues(numThreads, numResources);
+
+        startTime = System.nanoTime();
+
+        for (int i = 0; i < numThreads; i++) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    runCreateTests(getNextQ());
+                }
+            });
+        }
+
+        while (numComplete != numResources) {
+            try {
+                sleep(1, 0);
+            } catch (InterruptedException e) {
+                LOG.error("sleep error: {}", e);
+            }
+        }
+        endTime = System.nanoTime();
+        delta = (endTime-startTime);
+        createsPerSec = nPerSecond(numResources, delta);
+        LOG.info("Time to create ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, createsPerSec);
+
+        executor.shutdown(); // kill the threads
+
+        return numSuccessful;
+    }
+
+    private void runCreateTests(Integer q) {
+        ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
+        for (Integer resourceId : resourceIdArray) {
+            if (createOneTest(resourceId)) {
+                incNumSuccessful();
+            }
+            incNumComplete();
+        }
+    }
+
+    private void runRetrieveTests(Integer q) {
+        ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
+        for (Integer resourceId : resourceIdArray) {
+            if (retrieveOneTest(resourceId)) {
+                incNumSuccessful();
+            }
+            incNumComplete();
+        }
+    }
+
+    private void runDeleteTests(Integer q) {
+        ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
+        for (Integer resourceId : resourceIdArray) {
+            if (deleteOneTest(resourceId)) {
+                incNumSuccessful();
+            }
+            incNumComplete();
+        }
     }
 
     private boolean createOneTest(Integer resourceId) {
@@ -87,24 +172,30 @@ public class PerfCrudRpc {
                 .setRequestIdentifier("RQI_1234")
                 .setResourceType(Onem2m.ResourceType.CONTAINER)
                 .setOperationCreate()
+                .setResultContent("1")
                 .setPrimitiveContent(containerString)
-                .setName(resourceId.toString())
+                .setName("RN_" + resourceId.toString())
                 .build();
 
 
         ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
         String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
         String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+        if (rscString == null || rscString.charAt(0) != '2') {
+            LOG.error("create: error code returned: {}, {}", rscString, responseContent);
+            return false;
+        }
         try {
             Onem2mResponse or = new Onem2mResponse(responseContent);
             JSONObject j = or.getJSONObject();
             String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
-            String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId;
+            String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/RN_" + resourceId;
             if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
-                LOG.error("create: resource name error: {}, {}", tempResourceId, resourceName);
+                LOG.error("create: resource name error: expected {}, received {}, json: {}",
+                        tempResourceId, resourceName, j.toString());
                 return false;
             }
-            incNumSuccessful();
+            //LOG.info("create: OK: {}",resourceName);
         } catch (JSONException e) {
             LOG.error("Create parse responseContent error: {}", e);
             return false;
@@ -113,40 +204,9 @@ public class PerfCrudRpc {
         return true;
     }
 
-    private int createTest(int numResources) {
-
-        long startTime, endTime, delta;
-        nextResourceId = 0;
-        numComplete = 0;
-        numSuccessful = 0;
-
-        startTime = System.nanoTime();
-        for (int i = 0; i < numResources; i++) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    createOneTest(getNext());
-                    incNumComplete();
-                }
-            });
-        }
-        while (numComplete != numResources) {
-            try {
-                sleep(1, 0);
-            } catch (InterruptedException e) {
-                LOG.error("sleep error: {}", e);
-            }
-        }
-        endTime = System.nanoTime();
-        delta = (endTime-startTime);
-        createsPerSec = nPerSecond(numResources, delta);
-        LOG.info("Time to create ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, createsPerSec);
-        return numSuccessful;
-    }
-
     private boolean retrieveOneTest(Integer resourceId) {
 
-        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId;
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/RN_" + resourceId;
 
         Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
                 .setProtocol(Onem2m.Protocol.NATIVEAPP)
@@ -160,37 +220,46 @@ public class PerfCrudRpc {
         ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
         String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
         String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+        if (rscString == null || rscString.charAt(0) != '2') {
+            LOG.error("retrieve: error code returned: {}, {}", rscString, responseContent);
+            return false;
+        }
         try {
             Onem2mResponse or = new Onem2mResponse(responseContent);
             JSONObject j = or.getJSONObject();
             String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
             if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
-                LOG.error("retrieve: resource name error: {}, {}", tempResourceId, resourceName);
+                LOG.error("retrieve: resource name error: expected {}, received {}, json: {}",
+                        tempResourceId, resourceName, j.toString());
                 return false;
             }
-            incNumSuccessful();
+            //LOG.info("retrieve: OK: {}",resourceName);
         } catch (JSONException e) {
             LOG.error("Retrieve parse responseContent error: {}", e);
             return false;
         }
-        return false;
+        return true;
     }
 
 
-    private int retrieveTest(int numResources) {
+    private int retrieveTest(int numResources, final int numThreads) {
 
         long startTime, endTime, delta;
-        nextResourceId = 0;
+        nextQueueId = 0;
         numComplete = 0;
         numSuccessful = 0;
 
+        executor = Executors.newFixedThreadPool(numThreads);
+
+        buildResourceIdQueues(numThreads, numResources);
+
         startTime = System.nanoTime();
-        for (int i = 0; i < numResources; i++) {
+
+        for (int i = 0; i < numThreads; i++) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    retrieveOneTest(getNext());
-                    incNumComplete();
+                    runRetrieveTests(getNextQ());
                 }
             });
         }
@@ -206,18 +275,21 @@ public class PerfCrudRpc {
         retrievesPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to retrieve ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, retrievesPerSec);
 
+        executor.shutdown(); // kill the threads
+
         return numSuccessful;
     }
 
     private boolean deleteOneTest(Integer resourceId) {
 
-        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId;
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/RN_" + resourceId;
 
         Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
                 .setProtocol(Onem2m.Protocol.NATIVEAPP)
                 .setContentFormat(Onem2m.ContentFormat.JSON)
                 .setTo(tempResourceId)
                 .setFrom("")
+                .setResultContent("1")
                 .setRequestIdentifier("RQI_1234")
                 .setOperationDelete()
                 .build();
@@ -225,15 +297,20 @@ public class PerfCrudRpc {
         ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
         String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
         String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+        if (rscString == null || rscString.charAt(0) != '2') {
+            LOG.error("delete: error code returned: {}, {}", rscString, responseContent);
+            return false;
+        }
         try {
             Onem2mResponse or = new Onem2mResponse(responseContent);
             JSONObject j = or.getJSONObject();
             String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
             if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
-                LOG.error("delete: resource name error: {}, {}", tempResourceId, resourceName);
+                LOG.error("delete: resource name error: expected {}, received {}, json: {}",
+                        tempResourceId, resourceName, j.toString());
                 return false;
             }
-            incNumSuccessful();
+            //LOG.info("delete: OK: {}",resourceName);
         } catch (JSONException e) {
             LOG.error("Delete parse responseContent error: {}", e);
             return false;
@@ -241,20 +318,24 @@ public class PerfCrudRpc {
         return true;
     }
 
-    private int deleteTest(int numResources) {
+    private int deleteTest(int numResources, final int numThreads) {
 
         long startTime, endTime, delta;
-        nextResourceId = 0;
+        nextQueueId = 0;
         numComplete = 0;
         numSuccessful = 0;
 
+        executor = Executors.newFixedThreadPool(numThreads);
+
+        buildResourceIdQueues(numThreads, numResources);
+
         startTime = System.nanoTime();
-        for (int i = 0; i < numResources; i++) {
+
+        for (int i = 0; i < numThreads; i++) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    deleteOneTest(getNext());
-                    incNumComplete();
+                    runDeleteTests(getNextQ());
                 }
             });
         }
@@ -270,40 +351,74 @@ public class PerfCrudRpc {
         deletesPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to delete ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, deletesPerSec);
 
+        executor.shutdown(); // kill the threads
+
         return numSuccessful;
     }
 
-    /**
-     * There must be a better way of discerning how many ops per sec.  The delta is measured in nanoseconds.
-     *
-     * @param num
-     * @param delta
-     * @return
-     */
-    private long nPerSecond(int num, long delta) {
-        long n;
+    private boolean crudOneTest(Integer resourceId) {
 
-        if (delta >= 1000000000) {
-            n = num / (delta / 1000000000);
-        } else if (delta >= 100000000) {
-            n =  (num * 10)/ (delta / 100000000);
-        } else if (delta >= 10000000) {
-            n =  (num * 100)/ (delta / 10000000);
-        } else if (delta >= 1000000) {
-            n =  (num * 1000)/ (delta / 1000000);
-        } else if (delta >= 100000) {
-            n =  (num * 10000)/ (delta / 100000);
-        } else if (delta >= 10000) {
-            n = (num * 100000)/ (delta / 10000);
-        } else if (delta >= 1000) {
-            n = (num * 1000000)/ (delta / 1000);
-        } else if (delta >= 100) {
-            n = (num * 10000000)/ (delta / 100);
-        } else if (delta >= 10) {
-            n = (num * 100000000)/ (delta / 10);
-        } else {
-            n = num * 1000000000 / delta;
+        if (createOneTest(resourceId) && retrieveOneTest(resourceId) && deleteOneTest(resourceId)) {
+            return true;
         }
-        return n;
+
+        return false;
+    }
+
+    private int crudTest(int numResources, final int numThreads) {
+
+        long startTime, endTime, delta;
+        nextQueueId = 0;
+        numComplete = 0;
+        numSuccessful = 0;
+
+        executor = Executors.newFixedThreadPool(numThreads);
+
+        buildResourceIdQueues(numThreads, numResources);
+
+        startTime = System.nanoTime();
+
+        for (int i = 0; i < numThreads; i++) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    runCrudTests(getNextQ());
+                }
+            });
+        }
+
+        while (numComplete != numResources) {
+            try {
+                sleep(1, 0);
+            } catch (InterruptedException e) {
+                LOG.error("sleep error: {}", e);
+            }
+        }
+        endTime = System.nanoTime();
+        delta = (endTime-startTime);
+        crudsPerSec = nPerSecond(numResources, delta);
+        LOG.info("Time to CRUD ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, crudsPerSec);
+
+        executor.shutdown(); // kill the threads
+
+        return numSuccessful;
+    }
+
+    private void runCrudTests(Integer q) {
+        ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
+        for (Integer resourceId : resourceIdArray) {
+            if (crudOneTest(resourceId)) {
+                incNumSuccessful();
+            }
+            incNumComplete();
+        }
+    }
+
+    private long nPerSecond(int num, long delta) {
+
+        double secondsTotal = (double)delta / (double)1000000000;
+        return (long) (((double)num / secondsTotal));
+
+
     }
 }
