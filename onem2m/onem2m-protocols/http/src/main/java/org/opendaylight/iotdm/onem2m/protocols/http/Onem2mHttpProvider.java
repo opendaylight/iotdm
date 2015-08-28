@@ -147,6 +147,8 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             // look in query string if didnt find it in contentType header
             if (!resourceTypePresent) {
                 resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+            } else {
+                clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
             }
             if (resourceTypePresent && !method.contentEquals("post")) {
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
