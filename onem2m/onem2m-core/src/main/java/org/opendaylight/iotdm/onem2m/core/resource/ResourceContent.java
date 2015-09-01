@@ -49,6 +49,9 @@ public class ResourceContent {
     public static final String STATE_TAG = "st";
     public static final String CHILD_RESOURCE = "ch";
     public static final String CHILD_RESOURCE_REF = "ch";
+    public static final String MEMBER_URI = "val";
+    public static final String MEMBER_NAME = "nm";
+    public static final String MEMBER_TYPE = "typ";
 
     private DbAttr dbAttrs;
     private DbAttrSet dbAttrSets;
@@ -299,6 +302,27 @@ public class ResourceContent {
     }
 
     /**
+     * Generate JSON for this attr for Create Only
+     * @param attr this attr
+     * @param j the obj
+     */
+    public static void produceJsonForCommonAttributesCreate(Attr attr, JSONObject j) {
+
+        switch (attr.getName()) {
+            case ResourceContent.CREATION_TIME:
+            case ResourceContent.LAST_MODIFIED_TIME:
+            case ResourceContent.EXPIRATION_TIME:
+                j.put(attr.getName(), attr.getValue());
+                break;
+//            case ResourceContent.RESOURCE_TYPE:
+//                j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+//                break;
+            case ResourceContent.STATE_TAG:
+                j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+                break;
+        }
+    }
+    /**
      * Generate JSON for this attribute set
      * @param attrSet attr set
      * @param j json obj
@@ -346,6 +370,35 @@ public class ResourceContent {
         }
     }
 
+    /**
+     * Generate resource specific JSON for creation only
+     * @param resourceType input resource type
+     * @param onem2mResource the resource info
+     * @param j json obj
+     */
+    public static void produceJsonForResourceCreate(String resourceType,
+                                              Onem2mResource onem2mResource,
+                                              JSONObject j) {
+
+        switch (resourceType) {
+
+            case Onem2m.ResourceType.AE:
+                ResourceAE.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.CONTAINER:
+                ResourceContainer.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.CONTENT_INSTANCE:
+                ResourceContentInstance.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.SUBSCRIPTION:
+                ResourceSubscription.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.CSE_BASE:
+                ResourceCse.produceJsonForResource(onem2mResource, j);
+                break;
+        }
+    }
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.

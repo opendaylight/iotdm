@@ -49,7 +49,7 @@ public class ResourceAE {
     public static final String APP_NAME = "apn";
     public static final String APP_ID = "api";
     public static final String AE_ID = "aei";
-    public static final String POINT_OF_ACCESS = "apn";
+    public static final String POINT_OF_ACCESS = "poa";
     public static final String ONTOLOGY_REF = "or";
     public static final String NODE_LINK = "nl"; // do not support node resource yet
 
@@ -68,6 +68,16 @@ public class ResourceAE {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
+        /**
+         * When create AE, AE_ID is assigned by the system, if the customer include aei in the
+         * Create, should return error immediately.
+         */
+        String aei = resourceContent.getDbAttr(AE_ID);
+        if (aei != null && !onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID cannot be updated");
+            return;
+        }
+
         String appId = resourceContent.getDbAttr(APP_ID);
         if (appId == null && onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID missing parameter");
@@ -76,6 +86,23 @@ public class ResourceAE {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID cannot be updated");
             return;
         }
+
+        /**
+         * Check the From, if
+         * (1) the From is xxx:// yyyy, remove xxx://
+         * (2) if yyyy still contains / return error.
+         */
+        String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
+        String[] splitStrins = from.split("//");
+        // does not need to concern 2 //, we will check valid URI in the following steps
+        if (splitStrins.length == 2) {
+            String removedHead = splitStrins[1];
+            if (removedHead.contains("/")) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "From cannot contain / ");
+                return;
+            }
+        }
+
 
         /**
          * Construct the AE_ID field ... using some rules
@@ -147,8 +174,10 @@ public class ResourceAE {
                         return;
                     }
                     break;
-                case AE_ID: // ignore its value as it is not settable
-                    break;
+                case AE_ID: // return error message if detect this attribute
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") AE_ID should be assigned by the system, please do not include " + key);
+                    return;
                 default:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
@@ -221,14 +250,42 @@ public class ResourceAE {
      * @param onem2mResource this resource
      * @param j the object to put the json into
      */
-    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
+public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
+
+    for (Attr attr : onem2mResource.getAttr()) {
+        produceJsonForAttr(attr, j);
+    }
+
+    for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+        produceJsonForAttrSet(attrSet, j);
+    }
+}
+
+    /**
+     * Generate JSON data for this resource Creation Only
+     * @param onem2mResource this resource
+     * @param j the object to put the json into
+     */
+    public static void produceJsonForResourceCreate(Onem2mResource onem2mResource, JSONObject j) {
 
         for (Attr attr : onem2mResource.getAttr()) {
-            produceJsonForAttr(attr, j);
+            switch (attr.getName()) {
+                //case APP_NAME:
+                case APP_ID:
+                case AE_ID:
+                //case ONTOLOGY_REF:
+                    j.put(attr.getName(), attr.getValue());
+                    break;
+                default:
+                    ResourceContent.produceJsonForCommonAttributesCreate(attr, j);
+                    break;
+            }
         }
-        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-            produceJsonForAttrSet(attrSet, j);
-        }
+
+        // attSet is always set by the customer, so do not need to return
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            produceJsonForAttrSet(attrSet, j);
+//        }
     }
 
     /**
