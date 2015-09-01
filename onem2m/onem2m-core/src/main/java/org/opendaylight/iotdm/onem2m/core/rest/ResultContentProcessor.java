@@ -85,7 +85,7 @@ public class ResultContentProcessor {
             if (onem2mRequest.getPrimitive(RequestPrimitive.OPERATION).contentEquals(Onem2m.Operation.RETRIEVE)) {
                 rc = Onem2m.ResultContent.ATTRIBUTES;
             } else {
-                rc = Onem2m.ResultContent.NOTHING;
+                rc = Onem2m.ResultContent.ATTRIBUTES;
             }
         }
         switch (rc) {
@@ -111,6 +111,8 @@ public class ResultContentProcessor {
             case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
                 onem2mResponse.setUseHierarchicalAddressing(true);
                 produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                // add the address
+                produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jo);
                 onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 break;
 
@@ -178,7 +180,7 @@ public class ResultContentProcessor {
 
         String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
 
-        j.put(ResourceContent.RESOURCE_NAME, h);
+        j.put(ResourceContent.MEMBER_URI, h);
     }
 
     /**
@@ -202,21 +204,34 @@ public class ResultContentProcessor {
                 j.put(ResourceContent.PARENT_ID, id);
             }
 
-            id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
+//            id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
+            id = onem2mResource.getResourceId();
             j.put(ResourceContent.RESOURCE_ID, id);
 
             String name;
-            if (onem2mResponse.useHierarchicalAddressing()) {
-                name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
-            } else {
-                name = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
-            }
-            j.put(ResourceContent.RESOURCE_NAME, name);
+//            if (onem2mResponse.useHierarchicalAddressing()) {
+//                name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
+//            } else {
+//                name = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
+//            }
+            //if (onem2mRequest.isCreate && onem2mRequest.NAME)
+
 
             // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
 
-            ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
-
+            if (onem2mRequest.isCreate) {
+                // if the create contains NAME in the header, do not return name
+                if (onem2mRequest.getPrimitive(RequestPrimitive.NAME) == null) {
+                    name = onem2mResource.getName();
+                    j.put(ResourceContent.RESOURCE_NAME, name);
+                }
+                ResourceContent.produceJsonForResourceCreate(resourceType, onem2mResource, j);
+            } else {
+                // TODO: if need to support update return less attribute, need to add "isUpdate"
+                name = onem2mResource.getName();
+                j.put(ResourceContent.RESOURCE_NAME, name);
+                ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
+            }
             return true;
         }
 
@@ -280,8 +295,9 @@ public class ResultContentProcessor {
         } else {
             h = Onem2mDb.getInstance().getNonHierarchicalNameForResource(resourceId);
         }
-        j.put(ResourceContent.RESOURCE_NAME, h);
-        j.put(ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
+        j.put(ResourceContent.MEMBER_URI, h);
+        j.put(ResourceContent.MEMBER_NAME,onem2mResource.getName());
+        j.put(ResourceContent.MEMBER_TYPE, Integer.valueOf(resourceType));
 
         return true;
     }

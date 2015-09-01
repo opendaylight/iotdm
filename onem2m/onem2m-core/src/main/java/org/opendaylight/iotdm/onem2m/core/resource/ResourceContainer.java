@@ -279,6 +279,39 @@ public class ResourceContainer {
         }
     }
 
+    /**
+     * Generate JSON for this resource Creation Only
+     * @param onem2mResource this resource
+     * @param j JSON obj to put teh formatted json into
+     */
+    public static void produceJsonForResourceCreate(Onem2mResource onem2mResource, JSONObject j) {
+
+        for (Attr attr : onem2mResource.getAttr()) {
+            switch (attr.getName()) {
+                case CREATOR:
+                    //case ONTOLOGY_REF:
+                    j.put(attr.getName(), attr.getValue());
+                    break;
+                case MAX_NR_INSTANCES:
+                case MAX_BYTE_SIZE:
+                case CURR_NR_INSTANCES:
+                case CURR_BYTE_SIZE:
+                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+                    break;
+                default:
+                    ResourceContent.produceJsonForCommonAttributesCreate(attr, j);
+                    break;
+            }
+        }
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            switch (attrSet.getName()) {
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+//                    break;
+//            }
+//        }
+    }
+
     private static boolean removeOldestContentInstance(String containerUri) {
         String oldestContentInstanceUri = containerUri + "/oldest";
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();

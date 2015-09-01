@@ -164,6 +164,7 @@ public class RequestPrimitive extends BasePrimitive {
     }
 
     public boolean isCreate;
+    public boolean isUpdate;
     /**
      * The following section is used to hold attributes for the data store.  In the case of create, when the parent
      * resource is read from the database, it is stored in the 'Onem2mResource onem2mResource' variable.
