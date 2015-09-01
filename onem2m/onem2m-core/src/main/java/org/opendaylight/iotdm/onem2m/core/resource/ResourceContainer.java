@@ -256,7 +256,7 @@ public class ResourceContainer {
         for (Attr attr : onem2mResource.getAttr()) {
             switch (attr.getName()) {
                 case CREATOR:
-                case ONTOLOGY_REF:
+                //case ONTOLOGY_REF:
                     j.put(attr.getName(), attr.getValue());
                     break;
                 case MAX_NR_INSTANCES:
@@ -270,13 +270,13 @@ public class ResourceContainer {
                     break;
             }
         }
-        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-            switch (attrSet.getName()) {
-                default:
-                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-                    break;
-            }
-        }
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            switch (attrSet.getName()) {
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+//                    break;
+//            }
+//        }
     }
 
     private static boolean removeOldestContentInstance(String containerUri) {

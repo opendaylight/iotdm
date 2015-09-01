@@ -223,11 +223,11 @@ public class ResourceContentInstance  {
 
         for (Attr attr : onem2mResource.getAttr()) {
             switch (attr.getName()) {
-                case CONTENT:
-                case ONTOLOGY_REF:
-                case CONTENT_INFO:
-                    j.put(attr.getName(), attr.getValue());
-                    break;
+//                case CONTENT:
+//                case ONTOLOGY_REF:
+//                case CONTENT_INFO:
+//                    j.put(attr.getName(), attr.getValue());
+//                    break;
                 case CONTENT_SIZE:
                     j.put(attr.getName(), Integer.valueOf(attr.getValue()));
                     break;
@@ -236,13 +236,13 @@ public class ResourceContentInstance  {
                     break;
             }
         }
-        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-            switch (attrSet.getName()) {
-                default:
-                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-                    break;
-            }
-        }
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            switch (attrSet.getName()) {
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+//                    break;
+//            }
+//        }
     }
 
     /**

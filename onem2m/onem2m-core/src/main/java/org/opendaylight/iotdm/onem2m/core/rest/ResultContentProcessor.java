@@ -85,7 +85,7 @@ public class ResultContentProcessor {
             if (onem2mRequest.getPrimitive(RequestPrimitive.OPERATION).contentEquals(Onem2m.Operation.RETRIEVE)) {
                 rc = Onem2m.ResultContent.ATTRIBUTES;
             } else {
-                rc = Onem2m.ResultContent.NOTHING;
+                rc = Onem2m.ResultContent.ATTRIBUTES;
             }
         }
         switch (rc) {
