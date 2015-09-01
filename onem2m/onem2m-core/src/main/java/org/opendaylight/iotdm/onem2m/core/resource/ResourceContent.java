@@ -346,6 +346,35 @@ public class ResourceContent {
     }
 
     /**
+     * Generate resource specific JSON for creation only
+     * @param resourceType input resource type
+     * @param onem2mResource the resource info
+     * @param j json obj
+     */
+    public static void produceJsonForResourceCreate(String resourceType,
+                                              Onem2mResource onem2mResource,
+                                              JSONObject j) {
+
+        switch (resourceType) {
+
+            case Onem2m.ResourceType.AE:
+                ResourceAE.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.CONTAINER:
+                ResourceContainer.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.CONTENT_INSTANCE:
+                ResourceContentInstance.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.SUBSCRIPTION:
+                ResourceSubscription.produceJsonForResourceCreate(onem2mResource, j);
+                break;
+            case Onem2m.ResourceType.CSE_BASE:
+                ResourceCse.produceJsonForResource(onem2mResource, j);
+                break;
+        }
+    }
+    /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
      * Maybe the next iteration of code, I'll create json files for each resource.

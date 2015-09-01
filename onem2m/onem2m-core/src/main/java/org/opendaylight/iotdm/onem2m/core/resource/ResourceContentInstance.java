@@ -245,6 +245,37 @@ public class ResourceContentInstance  {
         }
     }
 
+
+    /**
+     * Generate JSON for this resource Creation Only
+     * @param onem2mResource this resource
+     * @param j JSON obj
+     */
+    public static void produceJsonForResourceCreate(Onem2mResource onem2mResource, JSONObject j) {
+
+        for (Attr attr : onem2mResource.getAttr()) {
+            switch (attr.getName()) {
+//                case CONTENT:
+//                case ONTOLOGY_REF:
+//                case CONTENT_INFO:
+//                    j.put(attr.getName(), attr.getValue());
+//                    break;
+                case CONTENT_SIZE:
+                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+                    break;
+                default:
+                    ResourceContent.produceJsonForCommonAttributes(attr, j);
+                    break;
+            }
+        }
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            switch (attrSet.getName()) {
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+//                    break;
+//            }
+//        }
+    }
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.

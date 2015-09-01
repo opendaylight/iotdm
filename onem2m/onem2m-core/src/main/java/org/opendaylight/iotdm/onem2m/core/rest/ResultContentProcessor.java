@@ -85,7 +85,7 @@ public class ResultContentProcessor {
             if (onem2mRequest.getPrimitive(RequestPrimitive.OPERATION).contentEquals(Onem2m.Operation.RETRIEVE)) {
                 rc = Onem2m.ResultContent.ATTRIBUTES;
             } else {
-                rc = Onem2m.ResultContent.NOTHING;
+                rc = Onem2m.ResultContent.ATTRIBUTES;
             }
         }
         switch (rc) {
@@ -215,8 +215,13 @@ public class ResultContentProcessor {
 
             // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
 
-            ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
+            // TODO: if need to support update return less attribute, need to add "isUpdate"
 
+            if (onem2mRequest.isCreate) {
+                ResourceContent.produceJsonForResourceCreate(resourceType, onem2mResource, j);
+            } else {
+                ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
+            }
             return true;
         }
 

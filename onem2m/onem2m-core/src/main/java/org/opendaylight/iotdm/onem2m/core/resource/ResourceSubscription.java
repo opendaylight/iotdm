@@ -288,6 +288,46 @@ public class ResourceSubscription {
         }
     }
 
+
+
+    /**
+     * Generate JSON for this resource Creation Only
+     * @param onem2mResource this resource
+     * @param j JSON obj
+     */
+    public static void produceJsonForResourceCreate(Onem2mResource onem2mResource, JSONObject j) {
+
+        for (Attr attr : onem2mResource.getAttr()) {
+            switch (attr.getName()) {
+//                case SUBSCRIBER_URI:
+//                    j.put(attr.getName(), attr.getValue());
+//                    break;
+//                case NOTIFICATION_CONTENT_TYPE:
+//                case NOTIFICATION_EVENT_CAT:
+//
+//                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+//                    break;
+
+                default:
+                    ResourceContent.produceJsonForCommonAttributes(attr, j);
+            }
+        }
+
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            switch (attrSet.getName()) {
+//                case NOTIFICATION_URI:
+//                    JSONArray a = new JSONArray();
+//                    for (Member member : attrSet.getMember()) {
+//                        a.put(member.getMember());
+//                    }
+//                    j.put(attrSet.getName(), a);
+//                    break;
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+//                    break;
+//            }
+//        }
+    }
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
