@@ -504,12 +504,12 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
             // special case for AE resources ... where resource name is derived from FROM parameter
             String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-            if (resourceName == null && resourceType.contentEquals(Onem2m.ResourceType.AE)) {
-                String from = this.getPrimitive(RequestPrimitive.FROM);
-                if (from != null) {
-                    resourceName = from;
-                }
-            }
+//            if (resourceName == null && resourceType.contentEquals(Onem2m.ResourceType.AE)) {
+//                String from = this.getPrimitive(RequestPrimitive.FROM);
+//                if (from != null) {
+//                    resourceName = from;
+//                }
+//            }
 
             // if the a name is provided, ensure it is valid and unique at this hierarchical level
             if (resourceName != null) {
