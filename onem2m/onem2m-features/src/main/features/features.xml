@@ -13,6 +13,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/${mdsal.model.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.dlux/features-dlux/${dlux.version}/xml/features</repository>
     <repository>mvn:org.ops4j.pax.web/pax-web-features/${pax.web.version}/xml/features</repository> <!-- jetty -->
@@ -20,7 +21,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
     <!-- the onem2m yang model and rpc's  -->
     <feature name='odl-onem2m-api' version='${project.version}' description='OpenDaylight :: onem2m :: api '>
-        <feature version='${yangtools.version}'>odl-yangtools-models</feature>
+        <feature version='${yangtools.version}'>odl-mdsal-models</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-api/${project.version}</bundle>
     </feature>
 
