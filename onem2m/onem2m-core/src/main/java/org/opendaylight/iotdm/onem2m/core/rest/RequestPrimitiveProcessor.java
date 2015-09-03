@@ -796,12 +796,15 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
             String cseType = this.getPrimitive("CSE_TYPE");
             if (cseType == null) {
-                cseType = "IN-CSE";
-            } else if (!cseType.contentEquals("IN-CSE")) { //TODO: what is the difference between CSE types
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
-                return;
+                cseType = Onem2m.CseType.IN_CSE;
+            } else if (!cseType.contentEquals(Onem2m.CseType.IN_CSE)) { //TODO: what is the difference between CSE types
+                if (cseType.contentEquals("IN-CSE")) { //what is the code for different between CSE types
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Use '1' for 'IN-CSE'");
+                    return;
+                } else {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
+                }
             }
-
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
             this.setPrimitive(RequestPrimitive.NAME, cseId);
             this.setResourceName(cseId);

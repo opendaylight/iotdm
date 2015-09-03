@@ -152,6 +152,12 @@ public class Onem2m {
         public static final String X_M2M_OT = "X-M2M-OT";
         public static final String X_M2M_RSC = "X-M2M-RSC";
     }
+    
+    public class CseType {
+        public static final String IN_CSE = "1"; //"IN_CSE";
+        public static final String MN_CSE = "2"; //"MN_CSE";
+        public static final String ASN_CSE = "3"; //"ASN_CSE";
+    }
 
     /**
      * Routine to allow REST clients to invoke the MDSAL RPC which will process the RequestPrimitive accessed via
