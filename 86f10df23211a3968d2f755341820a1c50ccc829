@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a79b1b5_f71c8f79",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/RequestPrimitiveProcessor.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2015-09-03T14:24:07Z",
+      "side": 1,
+      "message": "the code style seems not match ours?\nI think we use \nif (  ) {\n    dddd\n} else {\n    dddd\n}",
+      "range": {
+        "startLine": 802,
+        "startChar": 16,
+        "endLine": 805,
+        "endChar": 8
+      },
+      "revId": "86f10df23211a3968d2f755341820a1c50ccc829",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
