@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a79b1b5_485fe441",
+        "filename": "onem2m/onem2m-features/src/main/features/features.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 3127
+      },
+      "writtenOn": "2015-09-04T14:14:12Z",
+      "side": 1,
+      "message": "odl-mdsal-apidocs is a part of features-restconf aswell, we should change the version to restconf.version incase one of these changes",
+      "range": {
+        "startLine": 89,
+        "startChar": 8,
+        "endLine": 89,
+        "endChar": 71
+      },
+      "revId": "2f9cbf96ba7e304a560c8f783a0abc81886ed1a7",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a79b1b5_685ae051",
+        "filename": "onem2mbenchmark/features/src/main/features/features.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 3127
+      },
+      "writtenOn": "2015-09-04T14:14:12Z",
+      "side": 1,
+      "message": "same applies here",
+      "range": {
+        "startLine": 39,
+        "startChar": 8,
+        "endLine": 39,
+        "endChar": 71
+      },
+      "revId": "2f9cbf96ba7e304a560c8f783a0abc81886ed1a7",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a79b1b5_2854e81f",
+        "filename": "onem2mexample/features/src/main/features/features.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 3127
+      },
+      "writtenOn": "2015-09-04T14:14:12Z",
+      "side": 1,
+      "message": "and here",
+      "range": {
+        "startLine": 35,
+        "startChar": 4,
+        "endLine": 35,
+        "endChar": 67
+      },
+      "revId": "2f9cbf96ba7e304a560c8f783a0abc81886ed1a7",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
