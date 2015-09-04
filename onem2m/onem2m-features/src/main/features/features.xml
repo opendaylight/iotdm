@@ -13,7 +13,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.controller/features-restconf/${mdsal.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.dlux/features-dlux/${dlux.version}/xml/features</repository>
     <repository>mvn:org.ops4j.pax.web/pax-web-features/${pax.web.version}/xml/features</repository> <!-- jetty -->
 
@@ -77,14 +77,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <!-- use this to test core only with restconf -->
     <feature name='odl-onem2m-core-rest' version='${project.version}' description='OpenDaylight :: onem2m :: core :: REST '>
         <feature version="${project.version}">odl-onem2m-core</feature>
-        <feature version="${mdsal.version}">odl-restconf</feature>
+        <feature version="${restconf.version}">odl-restconf</feature>
         <!-- TODO: uncomment to enable data store persistence -->
         <!--<feature version='${mdsal.version}'>odl-mdsal-clustering</feature>-->
     </feature>
 
     <!-- access via restconf, enable xsql, and api-docs -->
     <feature name='odl-onem2m-ui' version='${project.version}' description='OpenDaylight :: onem2m :: UI'>
-        <feature version="${mdsal.version}">odl-restconf</feature>
+        <feature version="${restconf.version}">odl-restconf</feature>
         <!-- use http://localhost:8181/apidoc/explorer/index.html to access api docs -->
         <feature version="${mdsal.version}">odl-mdsal-apidocs</feature>
         <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
