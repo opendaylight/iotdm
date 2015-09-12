@@ -638,11 +638,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // validate result content options
+        // validate result content options for delete
         String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
         if (rc != null) {
             if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
-                    rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES) ||
                     rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
                     rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
@@ -723,11 +722,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // validate result content options
+        // validate result content options for Update
         String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
         if (rc != null) {
             if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
-                    rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES) ||
                     rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
                     rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
                     rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
