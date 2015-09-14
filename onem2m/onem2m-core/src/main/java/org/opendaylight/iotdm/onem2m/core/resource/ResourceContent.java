@@ -75,14 +75,14 @@ public class ResourceContent {
      * @param onem2mRequest request
      * @param onem2mResponse response
      */
-    public void parse(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void parse(String resourceType, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         String cf = onem2mRequest.getPrimitive(RequestPrimitive.CONTENT_FORMAT);
         switch (cf) {
             case Onem2m.ContentFormat.JSON:
-                jsonContent = parseJson(onem2mRequest, onem2mResponse);
+                jsonContent = parseJson(resourceType, onem2mRequest, onem2mResponse);
                 break;
             case Onem2m.ContentFormat.XML:
-                xmlContent = parseXml(onem2mRequest, onem2mResponse);
+                xmlContent = parseXml(resourceType, onem2mRequest, onem2mResponse);
                 break;
         }
     }
@@ -94,7 +94,9 @@ public class ResourceContent {
      * @param onem2mResponse response
      * @return the json obj
      */
-    private JSONObject parseJson(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private JSONObject parseJson(String resourceType,
+                                 RequestPrimitive onem2mRequest,
+                                 ResponsePrimitive onem2mResponse) {
 
         jsonContent = null;
         String jsonContentString = onem2mRequest.getPrimitive(RequestPrimitive.CONTENT);
@@ -112,53 +114,68 @@ public class ResourceContent {
             return null;
         }
 
-        // the json should be an array of objects called "any", we support only one element in the array so pull
-        // that element in the array out and place it in jsonContent
-        return processJsonAnyArray(jsonContent, onem2mResponse);
+        /**
+         * Each resource in the CONTENT has a JSON key of "ae" or "m2m:ae" if the reource is an AE.  This
+         * routine plucks off the "resourceType" and returns its contents
+         */
+        return proceessResourceSpecificContent(resourceType, jsonContent, onem2mResponse);
     }
 
-    private JSONObject processJsonAnyArray(JSONObject jAnyArray, ResponsePrimitive onem2mResponse) {
+    private JSONObject proceessResourceSpecificContent(String resourceType,
+                                                       JSONObject jsonContent,
+                                                       ResponsePrimitive onem2mResponse) {
 
-        onem2mResponse.setUseJsonAnySyntax(false);
+        JSONObject resourceJsonObject = null;
 
-        Iterator<?> keys = jAnyArray.keys();
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
-            Object o = jAnyArray.get(key);
+        Iterator<?> keys = jsonContent.keys();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
+
+            Object o = jsonContent.get(key);
+
+            if (!(o instanceof JSONObject)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "CONTENT(" + RequestPrimitive.CONTENT + ") JSON object expected for json key: " + key);
+                return null;
+            }
+            if (resourceJsonObject != null) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "CONTENT(" + RequestPrimitive.CONTENT + ") too many json keys");
+                return null;
+            }
 
             switch (key) {
+                case Onem2m.ResourceTypeString.AE:
+                case "m2m:" + Onem2m.ResourceTypeString.AE:
+                case Onem2m.ResourceTypeString.CONTAINER:
+                case "m2m:" + Onem2m.ResourceTypeString.CONTAINER:
+                case Onem2m.ResourceTypeString.CONTENT_INSTANCE:
+                case "m2m:" + Onem2m.ResourceTypeString.CONTENT_INSTANCE:
+                case Onem2m.ResourceTypeString.SUBSCRIPTION:
+                case "m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION:
+                case Onem2m.ResourceTypeString.CSE_BASE:
+                case "m2m:" + Onem2m.ResourceTypeString.CSE_BASE:
 
-                case "any":
-                    if (!(o instanceof JSONArray)) {
+                    if (resourceType.contentEquals(key)) {
+                        resourceJsonObject = (JSONObject) o;
+                        onem2mResponse.setUseM2MPrefix(false);
+                    } else if (key.contentEquals("m2m:"+ resourceType)) {
+                        resourceJsonObject = (JSONObject) o;
+                        onem2mResponse.setUseM2MPrefix(true);
+                    } else {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") resource type mismatch");
                         return null;
                     }
-                    JSONArray array = (JSONArray) o;
-                    if (array.length() != 1) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") too many elements: json array length: " +
-                                        array.length());
-                        return null;
-                    }
-                    if (!(array.get(0) instanceof JSONObject)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") JSONObject expected");
-                        return null;
-                    }
-                    onem2mResponse.setUseJsonAnySyntax(true);
-                    return (JSONObject) array.get(0);
+                    break;
 
                 default:
-                    /**
-                     * in the spirit of supporting more clients, if they dont use the "any" array syntax for their
-                     * request, but just list the jsonObject attributes, then we should try to support that format also
-                     * So, simply return the JSON object that was passed in as it is not a JSON "any" array.
-                     */
-                    return jAnyArray;
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
+                    return null;
             }
         }
-        return null;
+        return resourceJsonObject;
     }
 
     /**
@@ -203,11 +220,13 @@ public class ResourceContent {
         // validate expiration time
         String et = this.getDbAttr(ResourceContent.EXPIRATION_TIME);
         if (et != null) {
+            /* for now avoid checking format of et, when we find out actual time format
             if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "EXPIRATION_TIME: cannot be less than current time");
                 return;
             }
+            */
         }
     }
 
@@ -258,7 +277,7 @@ public class ResourceContent {
 
             case EXPIRATION_TIME:
                 if (!resourceContent.getJsonContent().isNull(key)) {
-                    if (!(o instanceof String) || !Onem2mDateTime.isValidDateTime(o.toString())) {
+                    if (!(o instanceof String) /*|| !Onem2mDateTime.isValidDateTime(o.toString())*/) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") DATE (YYYYMMDDTHHMMSSZ) string expected for expiration time: " + key);
                         return false;
@@ -345,28 +364,58 @@ public class ResourceContent {
      * @param onem2mResource the resource info
      * @param j json obj
      */
-    public static void produceJsonForResource(String resourceType,
-                                              Onem2mResource onem2mResource,
-                                              JSONObject j) {
+    public static JSONObject produceJsonForResource(String resourceType,
+                                                    Onem2mResource onem2mResource,
+                                                    Boolean needM2MPrefix,
+                                                    JSONObject j) {
+
+        JSONObject resourceJsonObject = new JSONObject();
 
         switch (resourceType) {
 
             case Onem2m.ResourceType.AE:
                 ResourceAE.produceJsonForResource(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.AE, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.AE, j);
+                }
                 break;
             case Onem2m.ResourceType.CONTAINER:
                 ResourceContainer.produceJsonForResource(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.CONTAINER, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.CONTAINER, j);
+                }
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 ResourceContentInstance.produceJsonForResource(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.CONTENT_INSTANCE, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.CONTENT_INSTANCE, j);
+                }
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
                 ResourceSubscription.produceJsonForResource(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.SUBSCRIPTION, j);
+                }
                 break;
             case Onem2m.ResourceType.CSE_BASE:
                 ResourceCse.produceJsonForResource(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.CSE_BASE, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.CSE_BASE, j);
+                }
                 break;
         }
+
+        return resourceJsonObject;
     }
 
     /**
@@ -375,28 +424,58 @@ public class ResourceContent {
      * @param onem2mResource the resource info
      * @param j json obj
      */
-    public static void produceJsonForResourceCreate(String resourceType,
-                                              Onem2mResource onem2mResource,
-                                              JSONObject j) {
+    public static JSONObject produceJsonForResourceCreate(String resourceType,
+                                                          Onem2mResource onem2mResource,
+                                                          Boolean needM2MPrefix,
+                                                          JSONObject j) {
+
+        JSONObject resourceJsonObject = new JSONObject();
 
         switch (resourceType) {
 
             case Onem2m.ResourceType.AE:
                 ResourceAE.produceJsonForResourceCreate(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.AE, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.AE, j);
+                }
                 break;
             case Onem2m.ResourceType.CONTAINER:
                 ResourceContainer.produceJsonForResourceCreate(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.CONTAINER, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.CONTAINER, j);
+                }
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 ResourceContentInstance.produceJsonForResourceCreate(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.CONTENT_INSTANCE, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.CONTENT_INSTANCE, j);
+                }
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
                 ResourceSubscription.produceJsonForResourceCreate(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.SUBSCRIPTION, j);
+                }
                 break;
             case Onem2m.ResourceType.CSE_BASE:
                 ResourceCse.produceJsonForResource(onem2mResource, j);
+                if (needM2MPrefix) {
+                    resourceJsonObject.put("m2m:" + Onem2m.ResourceTypeString.CSE_BASE, j);
+                } else {
+                    resourceJsonObject.put(Onem2m.ResourceTypeString.CSE_BASE, j);
+                }
                 break;
         }
+
+        return resourceJsonObject;
     }
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
@@ -467,7 +546,7 @@ public class ResourceContent {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private String parseXml(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private String parseXml(String resourceType, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                 "CONTENT(" + RequestPrimitive.CONTENT + ") xml not supported yet");
         return null;

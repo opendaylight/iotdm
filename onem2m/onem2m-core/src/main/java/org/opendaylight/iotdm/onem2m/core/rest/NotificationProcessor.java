@@ -120,7 +120,7 @@ public class NotificationProcessor {
         String name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
         j.put(ResourceContent.RESOURCE_NAME, name);
 
-        ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
+        j = ResourceContent.produceJsonForResource(resourceType, onem2mResource, Onem2m.USE_M2M_PREFIX, j);
     }
 
     /**

@@ -284,7 +284,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        onem2mResponse.setUseJsonAnySyntax(Onem2m.USE_JSON_ANY_SYNTAX);
+        onem2mResponse.setUseM2MPrefix(Onem2m.USE_M2M_PREFIX);
 
         // Use table TS0004: 7.1.1.1-1 to validate mandatory parameters
 
@@ -814,10 +814,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             JSONObject jCse = new JSONObject();
             jCse.put(ResourceCse.CSE_ID, cseId);
             jCse.put(ResourceCse.CSE_TYPE, cseType);
-            JSONArray anyArray = new JSONArray();
-            anyArray.put(jCse);
             JSONObject j = new JSONObject();
-            j.put("any", anyArray);
+            j.put(Onem2m.ResourceTypeString.CSE_BASE, jCse);
             this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
             // process the resource specific attributes

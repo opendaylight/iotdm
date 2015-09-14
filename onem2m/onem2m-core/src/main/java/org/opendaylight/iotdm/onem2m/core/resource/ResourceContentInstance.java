@@ -198,7 +198,7 @@ public class ResourceContentInstance  {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.CONTENT_INSTANCE, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
@@ -336,7 +336,7 @@ public class ResourceContentInstance  {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.CONTENT_INSTANCE, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
