@@ -230,7 +230,7 @@ public class ResourceContainer {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.CONTAINER, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
@@ -505,7 +505,7 @@ public class ResourceContainer {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.CONTAINER, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 

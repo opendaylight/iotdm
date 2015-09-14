@@ -52,6 +52,7 @@ public class ResourceAE {
     public static final String POINT_OF_ACCESS = "poa";
     public static final String ONTOLOGY_REF = "or";
     public static final String NODE_LINK = "nl"; // do not support node resource yet
+    public static final String REQUEST_REACHABILITY = "rr";
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -84,6 +85,12 @@ public class ResourceAE {
             return;
         } else if (appId != null && !onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID cannot be updated");
+            return;
+        }
+
+        String rr = resourceContent.getDbAttr(REQUEST_REACHABILITY);
+        if (rr == null && onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "REQUEST_REACHABILITY missing parameter");
             return;
         }
 
@@ -166,6 +173,18 @@ public class ResourceAE {
                         resourceContent.setDbAttr(key, null);
                     }
                     break;
+                case REQUEST_REACHABILITY:
+                    if (!resourceContent.getJsonContent().isNull(key)) {
+                        if (!(o instanceof Boolean)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
+                            return;
+                        }
+                        resourceContent.setDbAttr(key, o.toString());
+                    } else {
+                        resourceContent.setDbAttr(key, null);
+                    }
+                    break;
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
                     if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
@@ -196,7 +215,7 @@ public class ResourceAE {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.AE, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
@@ -226,6 +245,9 @@ public class ResourceAE {
             case AE_ID:
             case ONTOLOGY_REF:
                 j.put(attr.getName(), attr.getValue());
+                break;
+            case REQUEST_REACHABILITY:
+                j.put(attr.getName(), Boolean.valueOf(attr.getValue()));
                 break;
             default:
                 ResourceContent.produceJsonForCommonAttributes(attr, j);
@@ -320,6 +342,14 @@ public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObj
                     }
                     resourceContent.setDbAttr(key, o.toString());
                     break;
+                case REQUEST_REACHABILITY:
+                    if (!(o instanceof Boolean)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
+                        return;
+                    }
+                    resourceContent.setDbAttr(key, o.toString());
+                    break;
                 default:
                     if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
                         return;
@@ -338,7 +368,7 @@ public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObj
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.AE, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 

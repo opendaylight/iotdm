@@ -31,7 +31,7 @@ public class Onem2m {
     public static final int MAX_TREE_LEVEL = 20;
     public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
     public static final int MAX_DISCOVERY_LIMIT  = 1000;
-    public static final boolean USE_JSON_ANY_SYNTAX = false;
+    public static final boolean USE_M2M_PREFIX = true;
 
     public class Operation {
         public static final String CREATE = "1";
@@ -66,6 +66,13 @@ public class Onem2m {
         public static final String CSE_BASE = "5"; //"csb";
         public static final String CONTENT_INSTANCE = "4"; //"cin";
         public static final String SUBSCRIPTION = "23"; //"sub";
+    }
+    public class ResourceTypeString {
+        public static final String AE = "ae";
+        public static final String CONTAINER = "cnt";
+        public static final String CSE_BASE = "csb";
+        public static final String CONTENT_INSTANCE = "cin";
+        public static final String SUBSCRIPTION = "sub";
     }
 
     public class ResponseType { // TS0001 section 8.2.1

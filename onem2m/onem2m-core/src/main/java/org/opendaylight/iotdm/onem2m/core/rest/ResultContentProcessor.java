@@ -98,7 +98,7 @@ public class ResultContentProcessor {
                     discoveryJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, ja);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
                 break;
@@ -110,7 +110,7 @@ public class ResultContentProcessor {
 
             case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
                 onem2mResponse.setUseHierarchicalAddressing(true);
-                produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                 // add the address
                 produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jo);
                 onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
@@ -121,7 +121,7 @@ public class ResultContentProcessor {
                     discoveryJsonResultContentAttributesAndChildResources(onem2mRequest, onem2mResource, onem2mResponse, ja);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                     produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
@@ -132,7 +132,7 @@ public class ResultContentProcessor {
                     discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, ja, true);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
-                    produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                     produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
@@ -188,16 +188,16 @@ public class ResultContentProcessor {
      * @param onem2mResource
      * @param onem2mResponse
      */
-    private static boolean produceJsonResultContentAttributes(RequestPrimitive onem2mRequest,
+    private static JSONObject produceJsonResultContentAttributes(RequestPrimitive onem2mRequest,
                                                            Onem2mResource onem2mResource,
-                                                           ResponsePrimitive onem2mResponse,
-                                                           JSONObject j) {
+                                                           ResponsePrimitive onem2mResponse) {
 
         String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
 
         if (FilterCriteria.matches(onem2mRequest, onem2mResource, resourceType)) {
 
             String id;
+            JSONObject j = new JSONObject();
 
             id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getParentId());
             if (id != null) {
@@ -225,17 +225,17 @@ public class ResultContentProcessor {
                     name = onem2mResource.getName();
                     j.put(ResourceContent.RESOURCE_NAME, name);
                 }
-                ResourceContent.produceJsonForResourceCreate(resourceType, onem2mResource, j);
+                j = ResourceContent.produceJsonForResourceCreate(resourceType, onem2mResource, onem2mResponse.useM2MPrefix(), j);
             } else {
                 // TODO: if need to support update return less attribute, need to add "isUpdate"
                 name = onem2mResource.getName();
                 j.put(ResourceContent.RESOURCE_NAME, name);
-                ResourceContent.produceJsonForResource(resourceType, onem2mResource, j);
+                j = ResourceContent.produceJsonForResource(resourceType, onem2mResource, onem2mResponse.useM2MPrefix(), j);
             }
-            return true;
+            return j;
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -261,8 +261,8 @@ public class ResultContentProcessor {
         for (String resourceId : resourceIdList) {
             if (limStr == null || count < lim) {
                 Onem2mResource resource = Onem2mDb.getInstance().getResource(resourceId);
-                JSONObject jContent = new JSONObject();
-                if (produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse, jContent)) {
+                JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse);
+                if (jContent != null) {
                     ja.put(jContent);
                     if (++count == lim)
                         break;
@@ -371,10 +371,11 @@ public class ResultContentProcessor {
             if (limStr == null || count < lim) {
                 String resourceId = resourceIdList.get(i);
                 Onem2mResource resource = Onem2mDb.getInstance().getResource(resourceId);
-                JSONObject jContent = new JSONObject();
                 if (i == 0) {
                     if (showRootAttrs) {
-                        if (produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse, jContent)) {
+                        JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse);
+
+                        if (jContent != null) {
                             ja.put(jContent);
                             if (++count == lim)
                                 break;
@@ -382,6 +383,7 @@ public class ResultContentProcessor {
                     }
                 } else {
                     // child resources
+                    JSONObject jContent = new JSONObject();
                     if (produceJsonResultContentChildResourceRef(onem2mRequest, resource, onem2mResponse, jContent)) {
                         ja.put(jContent);
                         if (++count == lim)
@@ -420,9 +422,10 @@ public class ResultContentProcessor {
             if (limStr == null || count < lim) {
                 String resourceId = child.getResourceId();
 
-                JSONObject jContent = new JSONObject();
                 Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
-                if (produceJsonResultContentAttributes(onem2mRequest, childResource, onem2mResponse, jContent)) {
+
+                JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, childResource, onem2mResponse);
+                if (jContent != null) {
                     ja.put(jContent);
                     if (++count == lim)
                         break;
@@ -460,8 +463,8 @@ public class ResultContentProcessor {
             if (limStr == null || count < lim) {
                 String resourceId = resourceIdList.get(i);
                 Onem2mResource resource = Onem2mDb.getInstance().getResource(resourceId);
-                JSONObject jContent = new JSONObject();
-                if (produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse, jContent)) {
+                JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse);
+                if (jContent != null) {
                     ja.put(jContent);
                     if (++count == lim)
                     break;

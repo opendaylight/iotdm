@@ -70,11 +70,11 @@ public class ResponsePrimitive extends BasePrimitive {
     }
 
     // the original resourceContent used to return content based on result content requested
-    protected boolean useJsonAnySyntax;
-    public void setUseJsonAnySyntax(boolean any) {
-        this.useJsonAnySyntax = any;
+    protected boolean useM2MPrefix;
+    public void setUseM2MPrefix(boolean useM2MPrefix) {
+        this.useM2MPrefix = useM2MPrefix;
     }
-    public boolean useJsonAnySyntax() {
-        return this.useJsonAnySyntax;
+    public boolean useM2MPrefix() {
+        return this.useM2MPrefix;
     }
 }
