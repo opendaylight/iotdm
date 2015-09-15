@@ -1,0 +1,9 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+1: Cangji Wu <canwu@cisco.com>
+Code-Review+2: John Burns <johnburn@cisco.com>
+Code-Review+2: Lionel Florit <lflorit@cisco.com>
+Submitted-by: Lionel Florit <lflorit@cisco.com>
+Submitted-at: Tue, 15 Sep 2015 12:06:50 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/26939
+Project: iotdm
+Branch: refs/heads/stable/lithium
