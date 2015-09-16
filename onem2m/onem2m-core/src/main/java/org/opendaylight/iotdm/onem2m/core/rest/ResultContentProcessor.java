@@ -214,7 +214,7 @@ public class ResultContentProcessor {
 //            } else {
 //                name = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
 //            }
-            //if (onem2mRequest.isCreate && onem2mRequest.NAME)
+//            if (onem2mRequest.isCreate && onem2mRequest.NAME)
 
 
             // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
