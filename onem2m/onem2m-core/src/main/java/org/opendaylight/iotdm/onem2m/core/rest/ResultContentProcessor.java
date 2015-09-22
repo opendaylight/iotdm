@@ -104,15 +104,16 @@ public class ResultContentProcessor {
                 break;
 
             case Onem2m.ResultContent.HIERARCHICAL_ADDRESS:
+                // todo: update method here
                 produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jo);
                 onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 break;
 
             case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
                 onem2mResponse.setUseHierarchicalAddressing(true);
-                jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                 // add the address
                 produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
                 onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 break;
 
@@ -121,8 +122,8 @@ public class ResultContentProcessor {
                     discoveryJsonResultContentAttributesAndChildResources(onem2mRequest, onem2mResource, onem2mResponse, ja);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
-                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                     produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
                 break;
@@ -132,8 +133,8 @@ public class ResultContentProcessor {
                     discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, ja, true);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
-                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
                     produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
                 break;
@@ -238,6 +239,56 @@ public class ResultContentProcessor {
         return null;
     }
 
+    /**
+     * another choice for produce json result. For putting ch into the resource.
+     * @param onem2mRequest
+     * @param onem2mResource
+     * @param onem2mResponse
+     * @param j
+     * @return
+     */
+    private static JSONObject produceJsonResultContentAttributes(RequestPrimitive onem2mRequest,
+                                                                 Onem2mResource onem2mResource,
+                                                                 ResponsePrimitive onem2mResponse,
+                                                                 JSONObject j) {
+
+        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
+
+        if (FilterCriteria.matches(onem2mRequest, onem2mResource, resourceType)) {
+
+            String id;
+
+
+            id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getParentId());
+            if (id != null) {
+                j.put(ResourceContent.PARENT_ID, id);
+            }
+
+            id = onem2mResource.getResourceId();
+            j.put(ResourceContent.RESOURCE_ID, id);
+
+            String name;
+
+            // TODO: might have to filter attributes based on CONTENT (eg get can specify which attrs)
+
+            if (onem2mRequest.isCreate) {
+                // if the create contains NAME in the header, do not return name
+                if (onem2mRequest.getPrimitive(RequestPrimitive.NAME) == null) {
+                    name = onem2mResource.getName();
+                    j.put(ResourceContent.RESOURCE_NAME, name);
+                }
+                j = ResourceContent.produceJsonForResourceCreate(resourceType, onem2mResource, onem2mResponse.useM2MPrefix(), j);
+            } else {
+                // TODO: if need to support update return less attribute, need to add "isUpdate"
+                name = onem2mResource.getName();
+                j.put(ResourceContent.RESOURCE_NAME, name);
+                j = ResourceContent.produceJsonForResource(resourceType, onem2mResource, onem2mResponse.useM2MPrefix(), j);
+            }
+            return j;
+        }
+
+        return null;
+    }
     /**
      * Start at the root resource and find a hierarchical set of resources then generate the attributes for each of those
      * resources in an "any" array of json objects where each json object is the set of resource specific attrs

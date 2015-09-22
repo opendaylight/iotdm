@@ -69,7 +69,7 @@ public class Onem2m {
     public class ResourceTypeString {
         public static final String AE = "ae";
         public static final String CONTAINER = "cnt";
-        public static final String CSE_BASE = "csb";
+        public static final String CSE_BASE = "cb";
         public static final String CONTENT_INSTANCE = "cin";
         public static final String SUBSCRIPTION = "sub";
     }
