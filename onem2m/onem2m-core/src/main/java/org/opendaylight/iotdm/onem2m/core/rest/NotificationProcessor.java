@@ -41,10 +41,10 @@ import org.slf4j.LoggerFactory;
 public class NotificationProcessor {
 
     public static final String NOTIFICATION_EVENT = "nev";
-    public static final String REPRESENTATION = "representation";
-    public static final String OPERATION_MONITOR = "operationMonitor";
+    public static final String REPRESENTATION = "rep";
+    public static final String OPERATION_MONITOR = "om";
     public static final String OPERATION = "op";
-    public static final String ORIGINATOR = "org";
+    public static final String ORIGINATOR = "or";
     public static final String SUBSCRIPTION_DELETION = "sud";
     public static final String SUBSCRIPTION_REFERENCE = "sur";
 
