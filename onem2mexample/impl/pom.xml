@@ -11,14 +11,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>config-parent</artifactId>
-    <version>0.3.2-SNAPSHOT</version>
+    <version>0.3.2-Lithium-SR2</version>
     <relativePath/>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2mexample-impl</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.0.3-Lithium-SR2</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
@@ -29,12 +29,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <dependency>
           <groupId>org.opendaylight.iotdm</groupId>
           <artifactId>onem2m-core</artifactId>
-          <version>0.0.3-SNAPSHOT</version>
+          <version>0.0.3-Lithium-SR2</version>
       </dependency>
       <dependency>
           <groupId>org.opendaylight.iotdm</groupId>
           <artifactId>onem2m-notifier</artifactId>
-          <version>0.0.3-SNAPSHOT</version>
+          <version>0.0.3-Lithium-SR2</version>
       </dependency>
     <!-- Testing Dependencies -->
     <dependency>
