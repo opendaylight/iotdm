@@ -351,6 +351,9 @@ public class ResourceContainer {
                         if (!removeOldestContentInstance(containerUri)) {
                             stillMoreToDelete = false;
                         }
+                        onem2mRequest = new RequestPrimitiveProcessor();
+                        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
+                        onem2mResponse = new ResponsePrimitive();
                         if (!Onem2mDb.getInstance().findResourceUsingURI(containerUri, onem2mRequest, onem2mResponse)) {
                             LOG.error("Somehow the resource container is gone! : " + containerUri);
                             return;
@@ -362,6 +365,14 @@ public class ResourceContainer {
             } else {
                 stillMoreToDelete = false;
             }
+        }
+
+        onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
+        onem2mResponse = new ResponsePrimitive();
+        if (!Onem2mDb.getInstance().findResourceUsingURI(containerUri, onem2mRequest, onem2mResponse)) {
+            LOG.error("Somehow the resource container is gone! : " + containerUri);
+            return;
         }
 
         stillMoreToDelete = true;
@@ -378,6 +389,9 @@ public class ResourceContainer {
                         if (!removeOldestContentInstance(containerUri)) {
                             stillMoreToDelete = false;
                         }
+                        onem2mRequest = new RequestPrimitiveProcessor();
+                        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
+                        onem2mResponse = new ResponsePrimitive();
                         if (!Onem2mDb.getInstance().findResourceUsingURI(containerUri, onem2mRequest, onem2mResponse)) {
                             LOG.error("Somehow the resource container is gone! : " + containerUri);
                             return;

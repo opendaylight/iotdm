@@ -39,10 +39,10 @@ public class Onem2mContainerResponse extends Onem2mResponse {
         if (success) {
             success = processJsonContent();
         }
-        if (success && !Onem2m.ResourceType.CONTAINER.contentEquals(getResourceType().toString())) {
-            success = false;
-            setError("Cannot construct an CONTAINER response with resource type: " + getResourceType());
-        }
+//        if (success && !Onem2m.ResourceType.CONTAINER.contentEquals(getResourceType().toString())) {
+//            success = false;
+//            setError("Cannot construct an CONTAINER response with resource type: " + getResourceType());
+//        }
     }
 
     public Onem2mContainerResponse(Onem2mResponsePrimitiveClient onem2mResponse) {
@@ -75,6 +75,20 @@ public class Onem2mContainerResponse extends Onem2mResponse {
     }
 
     private boolean processJsonContent() {
+
+//        JSONObject j = jsonContent.getJSONObject("m2m:" + Onem2m.ResourceTypeString.CONTAINER);
+//        if (j == null) {
+//            j = jsonContent.getJSONObject(Onem2m.ResourceTypeString.CONTAINER);
+//        }
+//        if (j == null) {
+//            LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.CONTAINER,Onem2m.ResourceTypeString.CONTAINER);
+//            return false;
+//        }
+//        jsonContent = j;
+        if (!Onem2m.ResourceTypeString.CONTAINER.contentEquals(resourceTypeString)) {
+            LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.CONTAINER, Onem2m.ResourceTypeString.CONTAINER);
+            return false;
+        }
 
         Iterator<?> keys = jsonContent.keys();
         while (keys.hasNext()) {
