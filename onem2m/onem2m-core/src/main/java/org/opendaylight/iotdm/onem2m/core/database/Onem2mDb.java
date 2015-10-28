@@ -21,6 +21,7 @@ import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
+import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.NotificationPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -241,7 +242,7 @@ public class Onem2mDb implements TransactionChainListener {
             String latestId = parentOldestLatest.getLatestId();
 
             // need to maintain the oldest and latest, and next-prev children too
-            if (latestId.contains(Onem2mDb.NULL_RESOURCE_ID)) {
+            if (latestId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
 
                 latestId = onem2mRequest.getResourceId();
                 oldestId = onem2mRequest.getResourceId();
@@ -278,7 +279,7 @@ public class Onem2mDb implements TransactionChainListener {
         }
 
         // update the lmt of the parent to be the creation time of the child being created
-        if (!parentId.contains(Onem2mDb.NULL_RESOURCE_ID)) {
+        if (!parentId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
             updateParentLastModifiedTime(dbTxn, onem2mRequest, parentId);
         }
 
@@ -743,9 +744,53 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     /**
-     * Find a list of subscription resources for this resource.  First look at the same level for a subscription list.
-     * If there isnt one, then use the parent to see if it has a subscription list
+     * Dump content instances for the container Uri from Head to Tail.  Then again, from Tail to Head
      */
+    public void dumpContentInstancesForContainer(String containerUri) {
+
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
+        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+
+        if (!Onem2mDb.getInstance().findResourceUsingURI(containerUri, onem2mRequest, onem2mResponse)) {
+            LOG.error("dumpContentInstancesForContainer: cannot find container: {}", containerUri);
+            return;
+        }
+
+        String resourceType = onem2mRequest.getDbAttrs().getAttr(ResourceContent.RESOURCE_TYPE);
+        if (!resourceType.contentEquals(Onem2m.ResourceType.CONTAINER)) {
+            LOG.error("dumpContentInstancesForContainer: resource is not a container: {}", containerUri, resourceType);
+        }
+        Onem2mResource o = onem2mRequest.getOnem2mResource();
+        String containerResourceId = onem2mRequest.getOnem2mResource().getResourceId();
+
+        OldestLatest containerOldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(containerResourceId,
+                Onem2m.ResourceType.CONTENT_INSTANCE);
+
+        if (containerOldestLatest != null) {
+            LOG.error("dumpContentInstancesForContainer: dumping oldest to latest: containerResourceUri:{}, containerId: {}, oldest={}, latest={}",
+                    containerUri, containerResourceId,
+                    containerOldestLatest.getOldestId(), containerOldestLatest.getLatestId());
+            String resourceId = containerOldestLatest.getOldestId();
+            while (resourceId != Onem2mDb.NULL_RESOURCE_ID) {
+                Onem2mResource tempResource = getResource(resourceId);
+                Child child = dbResourceTree.retrieveChildByName(containerResourceId, tempResource.getName());
+                LOG.error("dumpContentInstancesForContainer: prev:{}, next:{} ", child.getPrevId(), child.getNextId());
+                resourceId = child.getNextId();
+            }
+            LOG.error("dumpContentInstancesForContainer: dumping latest to oldest: containerResourceUri:{}, containerId: {}, oldest={}, latest={}",
+                    containerUri, containerResourceId,
+                    containerOldestLatest.getOldestId(), containerOldestLatest.getLatestId());
+            resourceId = containerOldestLatest.getLatestId();
+            while (resourceId != Onem2mDb.NULL_RESOURCE_ID) {
+                Onem2mResource tempResource = getResource(resourceId);
+                Child child = dbResourceTree.retrieveChildByName(containerResourceId, tempResource.getName());
+                LOG.error("dumpContentInstancesForContainer: prev:{}, next:{} ", child.getPrevId(), child.getNextId());
+                resourceId = child.getPrevId();
+            }
+        }
+    }
+
     public List<String> findSubscriptionResources(RequestPrimitive onem2mRequest) {
 
         List<String> subscriptionResourceList = new ArrayList<String>();

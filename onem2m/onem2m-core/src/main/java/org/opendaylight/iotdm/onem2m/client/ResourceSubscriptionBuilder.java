@@ -8,6 +8,8 @@
 package org.opendaylight.iotdm.onem2m.client;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,8 @@ public class ResourceSubscriptionBuilder extends ResourceContentBuilder {
     }
     public String build() {
         jsonContent.put(ResourceSubscription.NOTIFICATION_URI, nUriArray);
-        return super.build();
+        JSONObject j = new JSONObject();
+        j.put("m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION, jsonContent);
+        return (j.toString());
     }
 }

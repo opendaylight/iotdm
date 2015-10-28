@@ -143,8 +143,8 @@ public class PerfHttpClient {
 
             httpRequest = new OdlOnem2mHttpRequestPrimitiveBuilder()
                     .setOperationRetrieve()
-                            //.setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
-                    .setTo(resourceId)
+                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    //.setTo(resourceId)
                     .setFrom("Perfhttp_FROM")
                     .setRequestIdentifier("Perfhttp_RQI")
                     .setResultContent("1")
@@ -201,8 +201,8 @@ public class PerfHttpClient {
 
             httpRequest = new OdlOnem2mHttpRequestPrimitiveBuilder()
                     .setOperationDelete()
-                            //.setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
-                    .setTo(resourceId)
+                    .setTo("/" + Onem2m.SYS_PERF_TEST_CSE + "/" + resourceId)
+                    //.setTo(resourceId)
                     .setFrom("Perfhttp_FROM")
                     .setRequestIdentifier("Perfhttp_RQI")
                     .setResultContent("1")

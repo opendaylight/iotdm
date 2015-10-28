@@ -44,6 +44,11 @@ public class Onem2mAERequestBuilder extends Onem2mRequestPrimitiveClientBuilder 
         return this;
     }
 
+    public Onem2mAERequestBuilder setRequestReachability(Boolean value) {
+        b.setRequestReachability(value);
+        return this;
+    }
+
     public Onem2mAERequestBuilder setOntologyRef(String value) {
         b.setOntologyRef(value);
         return this;

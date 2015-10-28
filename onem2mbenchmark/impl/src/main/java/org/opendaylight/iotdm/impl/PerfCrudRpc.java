@@ -157,47 +157,26 @@ public class PerfCrudRpc {
 
     private boolean createOneTest(Integer resourceId) {
 
-        String containerString = new ResourceContainerBuilder()
-                .setCreator(null)
-                .setMaxNrInstances(5)
-                .setOntologyRef("http://ontology/ref")
-                .setMaxByteSize(100)
-                .build();
+        Onem2mContainerRequestBuilder b;
 
-        Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
-                .setProtocol(Onem2m.Protocol.NATIVEAPP)
-                .setContentFormat(Onem2m.ContentFormat.JSON)
-                .setTo("/" + Onem2m.SYS_PERF_TEST_CSE)
-                .setFrom("")
-                .setRequestIdentifier("RQI_1234")
-                .setResourceType(Onem2m.ResourceType.CONTAINER)
-                .setOperationCreate()
-                .setResultContent("1")
-                .setPrimitiveContent(containerString)
-                .setName("RN_" + resourceId.toString())
-                .build();
+        b = new Onem2mContainerRequestBuilder();
+        b.setTo("/" + Onem2m.SYS_PERF_TEST_CSE);
+        b.setOperationCreate();
+        b.setMaxNrInstances(5);
+        b.setCreator(null);
+        b.setMaxByteSize(100);
+        b.setOntologyRef("http:/whoa/nelly");
+        b.setName("RN_" + resourceId);
+        Onem2mRequestPrimitiveClient req = b.build();
 
-
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
-        String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-        if (rscString == null || rscString.charAt(0) != '2') {
-            LOG.error("create: error code returned: {}, {}", rscString, responseContent);
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
             return false;
         }
-        try {
-            Onem2mResponse or = new Onem2mResponse(responseContent);
-            JSONObject j = or.getJSONObject();
-            String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
-            String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/RN_" + resourceId;
-            if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
-                LOG.error("create: resource name error: expected {}, received {}, json: {}",
-                        tempResourceId, resourceName, j.toString());
-                return false;
-            }
-            //LOG.info("create: OK: {}",resourceName);
-        } catch (JSONException e) {
-            LOG.error("Create parse responseContent error: {}", e);
+        Onem2mContainerResponse ctrResponse = new Onem2mContainerResponse(res.getContent());
+        if (!ctrResponse.responseOk()) {
+            LOG.error("Container create request: {}", ctrResponse.getError());
             return false;
         }
 
@@ -228,16 +207,17 @@ public class PerfCrudRpc {
             Onem2mResponse or = new Onem2mResponse(responseContent);
             JSONObject j = or.getJSONObject();
             String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
-            if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
+            String expectedResourceName = "RN_" + resourceId;
+            if (resourceName == null || !resourceName.contentEquals(expectedResourceName)) {
                 LOG.error("retrieve: resource name error: expected {}, received {}, json: {}",
-                        tempResourceId, resourceName, j.toString());
+                        expectedResourceName, resourceName, j.toString());
                 return false;
             }
-            //LOG.info("retrieve: OK: {}",resourceName);
         } catch (JSONException e) {
             LOG.error("Retrieve parse responseContent error: {}", e);
             return false;
         }
+
         return true;
     }
 
@@ -305,12 +285,12 @@ public class PerfCrudRpc {
             Onem2mResponse or = new Onem2mResponse(responseContent);
             JSONObject j = or.getJSONObject();
             String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
-            if (resourceName == null || !resourceName.contentEquals(tempResourceId)) {
+            String expectedResourceName = "RN_" + resourceId;
+            if (resourceName == null || !resourceName.contentEquals(expectedResourceName)) {
                 LOG.error("delete: resource name error: expected {}, received {}, json: {}",
-                        tempResourceId, resourceName, j.toString());
+                        expectedResourceName, resourceName, j.toString());
                 return false;
             }
-            //LOG.info("delete: OK: {}",resourceName);
         } catch (JSONException e) {
             LOG.error("Delete parse responseContent error: {}", e);
             return false;

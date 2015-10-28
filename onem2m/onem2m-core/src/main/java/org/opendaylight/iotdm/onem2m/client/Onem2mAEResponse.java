@@ -28,6 +28,7 @@ public class Onem2mAEResponse extends Onem2mResponse {
     private String appId;
     private String aeId;
     private String ontologyRef;
+    private Boolean requestReachability;
 
     private Onem2mAEResponse() { }
 
@@ -36,10 +37,10 @@ public class Onem2mAEResponse extends Onem2mResponse {
         if (success) {
             success = processJsonContent();
         }
-        if (success && !Onem2m.ResourceType.AE.contentEquals(getResourceType().toString())) {
-            success = false;
-            setError("Cannot construct an AE response with resource type: " + getResourceType());
-        }
+//        if (success && !Onem2m.ResourceType.AE.contentEquals(getResourceType().toString())) {
+//            success = false;
+//            setError("Cannot construct an AE response with resource type: " + getResourceType());
+//        }
     }
 
     public Onem2mAEResponse(Onem2mResponsePrimitiveClient onem2mResponse) {
@@ -64,7 +65,23 @@ public class Onem2mAEResponse extends Onem2mResponse {
     public String getOntologyRef() {
         return ontologyRef;
     }
+    public Boolean getRequestReachability() {
+        return requestReachability;
+    }
     private boolean processJsonContent() {
+
+        //JSONObject j = jsonContent.getJSONObject("m2m:" + Onem2m.ResourceTypeString.AE);
+        //if (j == null) {
+        //    j = jsonContent.getJSONObject(Onem2m.ResourceTypeString.AE);
+        //}
+        //if (j == null) {
+        //    LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.AE,Onem2m.ResourceTypeString.AE);
+        //    return false;
+        //}
+        if (!Onem2m.ResourceTypeString.AE.contentEquals(resourceTypeString)) {
+            LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.AE,Onem2m.ResourceTypeString.AE);
+            return false;
+        }
 
         Iterator<?> keys = jsonContent.keys();
         while (keys.hasNext()) {
@@ -80,6 +97,13 @@ public class Onem2mAEResponse extends Onem2mResponse {
                         return false;
                     }
                     this.appName = o.toString();
+                    break;
+                case ResourceAE.REQUEST_REACHABILITY:
+                    if (!(o instanceof Boolean)) {
+                        LOG.error("Boolean expected for json key: " + key);
+                        return false;
+                    }
+                    this.requestReachability = Boolean.valueOf(o.toString());
                     break;
                 case ResourceAE.AE_ID:
                     if (!(o instanceof String)) {
