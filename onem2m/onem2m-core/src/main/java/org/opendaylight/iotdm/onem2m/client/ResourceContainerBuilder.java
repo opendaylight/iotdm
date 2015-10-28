@@ -8,6 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,5 +39,10 @@ public class ResourceContainerBuilder extends ResourceContentBuilder {
     public ResourceContainerBuilder setOntologyRef(String value) {
         jsonContent.put(ResourceContainer.ONTOLOGY_REF, value);
         return this;
+    }
+    public String build() {
+        JSONObject j = new JSONObject();
+        j.put("m2m:" + Onem2m.ResourceTypeString.CONTAINER, jsonContent);
+        return (j.toString());
     }
 }

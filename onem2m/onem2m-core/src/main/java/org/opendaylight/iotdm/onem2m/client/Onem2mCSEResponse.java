@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.client;
 
 import java.util.Iterator;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
 import org.slf4j.Logger;
@@ -31,10 +32,10 @@ public class Onem2mCSEResponse extends Onem2mResponse {
         if (success) {
             success = processJsonContent();
         }
-        if (success && !Onem2m.ResourceType.CSE_BASE.contentEquals(getResourceType().toString())) {
-            success = false;
-            setError("Cannot construct an CSE response with resource type: " + getResourceType());
-        }
+//        if (success && !Onem2m.ResourceType.CSE_BASE.contentEquals(getResourceType().toString())) {
+//            success = false;
+//            setError("Cannot construct an CSE response with resource type: " + getResourceType());
+//        }
     }
     public Onem2mCSEResponse(Onem2mResponsePrimitiveClient onem2mResponse) {
         super(onem2mResponse.getContent());
@@ -60,7 +61,19 @@ public class Onem2mCSEResponse extends Onem2mResponse {
     }
 
     private boolean processJsonContent() {
-
+//        JSONObject j = jsonContent.getJSONObject("m2m:" + Onem2m.ResourceTypeString.CSE_BASE);
+//        if (j == null) {
+//            j = jsonContent.getJSONObject(Onem2m.ResourceTypeString.CSE_BASE);
+//        }
+//        if (j == null) {
+//            LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.CSE_BASE,Onem2m.ResourceTypeString.CSE_BASE);
+//            return false;
+//        }
+//        jsonContent = j;
+        if (!Onem2m.ResourceTypeString.CSE_BASE.contentEquals(resourceTypeString)) {
+            LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.CSE_BASE, Onem2m.ResourceTypeString.CSE_BASE);
+            return false;
+        }
         Iterator<?> keys = jsonContent.keys();
         while (keys.hasNext()) {
             String key = (String) keys.next();

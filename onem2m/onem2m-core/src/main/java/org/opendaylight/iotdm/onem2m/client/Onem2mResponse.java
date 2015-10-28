@@ -39,6 +39,7 @@ public class Onem2mResponse {
     private Integer stateTag;
     private String[] labels;
     private String errorString;
+    protected String resourceTypeString = null;
 
     protected Onem2mResponse() {}
 
@@ -65,39 +66,50 @@ public class Onem2mResponse {
 
         // the json should be an array of objects called "any", we support only one element in the array so pull
         // that element in the array out and place it in jsonContent
-        return processJsonAnyArray(jsonContent);
+        return processJsonResourceType(jsonContent);
     }
 
-    private JSONObject processJsonAnyArray(JSONObject jAnyArray) {
+    private JSONObject processJsonResourceType(JSONObject j) {
 
-        Iterator<?> keys = jAnyArray.keys();
+        Iterator<?> keys = j.keys();
         while( keys.hasNext() ) {
             String key = (String)keys.next();
-            Object o = jAnyArray.get(key);
-
+            Object o = j.get(key);
+            if (!(o instanceof JSONObject)) {
+                return j;
+            }
             switch (key) {
 
-                case "any":
-                    if (!(o instanceof JSONArray)) {
-                        LOG.error("Array expected for json key: " + key);
-                        return null;
-                    }
-                    JSONArray array = (JSONArray) o;
-                    if (array.length() != 1) {
-                        LOG.error("Too many elements: json array length: " + array.length());
-                        return null;
-                    }
-                    if (!(array.get(0) instanceof JSONObject)) {
-                        LOG.error("JSONObject expected");
-                        return null;
-                    }
-                    return (JSONObject) array.get(0);
+                case "m2m:" + Onem2m.ResourceTypeString.AE:
+                case Onem2m.ResourceTypeString.AE:
+                    resourceTypeString = Onem2m.ResourceTypeString.AE;
+                    return (JSONObject) o;
+
+                case "m2m:" + Onem2m.ResourceTypeString.CONTAINER:
+                case Onem2m.ResourceTypeString.CONTAINER:
+                    resourceTypeString = Onem2m.ResourceTypeString.CONTAINER;
+                    return (JSONObject) o;
+
+                case "m2m:" + Onem2m.ResourceTypeString.CONTENT_INSTANCE:
+                case Onem2m.ResourceTypeString.CONTENT_INSTANCE:
+                    resourceTypeString = Onem2m.ResourceTypeString.CONTENT_INSTANCE;
+                    return (JSONObject) o;
+
+                case "m2m:" + Onem2m.ResourceTypeString.CSE_BASE:
+                case Onem2m.ResourceTypeString.CSE_BASE:
+                    resourceTypeString = Onem2m.ResourceTypeString.CSE_BASE;
+                    return (JSONObject) o;
+
+                case "m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION:
+                case Onem2m.ResourceTypeString.SUBSCRIPTION:
+                    resourceTypeString = Onem2m.ResourceTypeString.SUBSCRIPTION;
+                    return (JSONObject) o;
 
                 default:
                     /**
-                     * If the server does not respond with an "any" array, then return the JSONObject as is
+                     * If the server does not respond with a resource object,
                      */
-                    return jAnyArray;
+                    return j;
             }
         }
         return null;

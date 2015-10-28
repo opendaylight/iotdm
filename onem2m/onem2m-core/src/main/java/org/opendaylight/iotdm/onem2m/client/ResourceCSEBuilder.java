@@ -8,7 +8,10 @@
 
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,5 +30,10 @@ public class ResourceCSEBuilder extends ResourceContentBuilder {
     public ResourceCSEBuilder setCseType(String value) {
         jsonContent.put(ResourceCse.CSE_TYPE, value);
         return this;
+    }
+    public String build() {
+        JSONObject j = new JSONObject();
+        j.put("m2m:" + Onem2m.ResourceTypeString.CSE_BASE, jsonContent);
+        return (j.toString());
     }
 }

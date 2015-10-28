@@ -8,6 +8,9 @@
 
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +27,10 @@ public class ResourceAEBuilder extends ResourceContentBuilder {
         jsonContent.put(ResourceAE.APP_NAME, value);
         return this;
     }
+    public ResourceAEBuilder setRequestReachability(Boolean value) {
+        jsonContent.put(ResourceAE.REQUEST_REACHABILITY, value);
+        return this;
+    }
     public ResourceAEBuilder setAppId(String value) {
         jsonContent.put(ResourceAE.APP_ID, value);
         return this;
@@ -35,5 +42,10 @@ public class ResourceAEBuilder extends ResourceContentBuilder {
     public ResourceAEBuilder setOntologyRef(String value) {
         jsonContent.put(ResourceAE.ONTOLOGY_REF, value);
         return this;
+    }
+    public String build() {
+        JSONObject j = new JSONObject();
+        j.put("m2m:" + Onem2m.ResourceTypeString.AE, jsonContent);
+        return (j.toString());
     }
 }
