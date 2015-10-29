@@ -159,7 +159,7 @@ public class Onem2m {
         public static final String X_M2M_OT = "X-M2M-OT";
         public static final String X_M2M_RSC = "X-M2M-RSC";
     }
-    
+
     public class MqttMessageType {
         public static final String RESPONSE = "resp";
         public static final String REQUEST = "req";
