@@ -57,9 +57,17 @@ public class Onem2mStats {
     public static final int RESOURCE_CSE_BASE_UPDATE = 34;
     public static final int RESOURCE_CSE_BASE_DELETE = 35;
 
-    // this should be the latest entry one plus 1
-    private static final int MAX_STATS = 36;
+    public static final int MQTT_REQUESTS = 36;
+    public static final int MQTT_REQUESTS_OK = 37;
+    public static final int MQTT_REQUESTS_ERROR = 38;
+    public static final int MQTT_REQUESTS_CREATE = 39;
+    public static final int MQTT_REQUESTS_RETRIEVE = 40;
+    public static final int MQTT_REQUESTS_UPDATE = 41;
+    public static final int MQTT_REQUESTS_DELETE = 42;
+    public static final int MQTT_REQUESTS_NOTIFY = 43;
 
+    // this should be the latest entry one plus 1
+    private static final int MAX_STATS = 44;
     private static Onem2mStats s;
 
     private Integer[] statsArray;

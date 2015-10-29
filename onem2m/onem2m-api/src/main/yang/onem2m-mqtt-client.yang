@@ -1,0 +1,40 @@
+/*
+ * Copyright(c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ *
+ */
+module onem2m-mqtt-client {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:onem2m:mqtt";
+    prefix "onem2m";
+
+    revision "2015-01-05" {
+        description "Initial revision of the IoTDM onem2m mqtt client parameters";
+    }
+
+    rpc onem2m-mqtt-config {
+        description
+          "Perform an onem2m mqtt client config request";
+
+        input {
+            leaf mqtt-broker {
+                type string;
+                description "tcp:<ipaddr>:<port> of the internal or external mqtt broker";
+            }
+            list cse-list {
+                leaf cse-id {
+                    type string;
+                    description "list of csi-id's for mqtt subscription";
+                }
+            }
+        }
+        output {
+            leaf status {
+                type string;
+            }
+        }
+    }
+}

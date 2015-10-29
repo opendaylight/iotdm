@@ -71,6 +71,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/${mqttclient.version}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/${project.version}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-protocol-mqtt.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/${project.version}/xml/config</configfile>
     </feature>

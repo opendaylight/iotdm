@@ -139,6 +139,27 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                 }
                 break;
 
+            case PERFMQTT:
+                numResources = input.getNumResources();
+                serverUri = input.getServerUri();
+                LOG.info("Test started: numResources: {}", numResources);
+                PerfMqttClient perfMqttClient = new PerfMqttClient();
+                if (perfMqttClient.runPerfTest((int) numResources, serverUri)) {
+                    setTestOperData(ExecStatus.Idle);
+                    execStatus.set(ExecStatus.Idle);
+
+                    output = new StartTestOutputBuilder()
+                            .setStatus(StartTestOutput.Status.OK)
+                            .setCreatesPerSec(perfMqttClient.createsPerSec)
+                            .setRetrievesPerSec(perfMqttClient.retrievesPerSec)
+                            .setCrudsPerSec(perfMqttClient.crudsPerSec)
+                            .setDeletesPerSec(perfMqttClient.deletesPerSec)
+                            .build();
+
+                    return RpcResultBuilder.success(output).buildFuture();
+                }
+                break;
+
             case BASICSANITY:
                 LOG.info("Test started: ...");
                 BasicSanityRpc perfBasicSanity = new BasicSanityRpc(onem2mService);

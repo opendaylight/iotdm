@@ -8,22 +8,18 @@
 
 package org.opendaylight.iotdm.onem2m.odlclient;
 
-import org.eclipse.jetty.client.ContentExchange;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OdlOnem2mHttpRequestPrimitive {
+public class OdlOnem2mMqttRequestPrimitive {
 
-    private static final Logger LOG = LoggerFactory.getLogger(OdlOnem2mHttpRequestPrimitive.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OdlOnem2mMqttRequestPrimitive.class);
 
-    ContentExchange httpRequest;
-    String uriQueryString;
-    String to;
+    JSONObject mqttRequest;
 
-    public OdlOnem2mHttpRequestPrimitive() {
-        httpRequest = new ContentExchange(true);
-        uriQueryString = "";
-        to = "";
+    public OdlOnem2mMqttRequestPrimitive() {
+        mqttRequest = new JSONObject();
     }
 
 }

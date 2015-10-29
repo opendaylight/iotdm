@@ -47,8 +47,13 @@ module onem2mbenchmark {
                         description
                           "The CRUD performance test using HTTP";
                     }
-                    enum "BASIC SANITY" {
+                    enum "PERF MQTT" {
                         value 4;
+                        description
+                          "The CRUD performance test using MQTT";
+                    }
+                    enum "BASIC SANITY" {
+                        value 5;
                         description
                           "CRUD one of each resource type";
                     }

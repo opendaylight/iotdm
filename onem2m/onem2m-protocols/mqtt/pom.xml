@@ -26,6 +26,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <artifactId>onem2m-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>onem2m-notifier</artifactId>
+          <version>${project.version}</version>
+      </dependency>
+      <dependency>
+      <groupId>org.eclipse.paho</groupId>
+      <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
   </dependencies>
 
 </project>

@@ -166,5 +166,10 @@ public class Onem2mRequestPrimitiveClientBuilder {
     public Onem2mRequestPrimitiveClient build() {
         return (onem2mRequest);
     }
+
+	public  Onem2mRequestPrimitiveClientBuilder setPrimitiveNameValue(String key, String value) {
+		onem2mRequest.setPrimitive(key, value);
+        return this;
+	}
 }
 

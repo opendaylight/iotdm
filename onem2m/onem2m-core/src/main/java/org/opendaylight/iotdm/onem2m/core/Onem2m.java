@@ -159,6 +159,17 @@ public class Onem2m {
         public static final String X_M2M_OT = "X-M2M-OT";
         public static final String X_M2M_RSC = "X-M2M-RSC";
     }
+    
+    public class MqttMessageType {
+        public static final String RESPONSE = "resp";
+        public static final String REQUEST = "req";
+    }
+
+    public class MqttOptions {
+        public static final int QOS1 = 1;
+        public static final boolean RETAINED = true;
+    }
+
 
     /**
      * Routine to allow REST clients to invoke the MDSAL RPC which will process the RequestPrimitive accessed via
