@@ -8,8 +8,7 @@
 package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
 import java.util.*;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -165,12 +164,13 @@ public class RequestPrimitive extends BasePrimitive {
 
     public boolean isCreate;
     public boolean isUpdate;
+
     /**
      * The following section is used to hold attributes for the data store.  In the case of create, when the parent
      * resource is read from the database, it is stored in the 'Onem2mResource onem2mResource' variable.
      * IN the case of read, update, and delete, when the resource is found in the database, the actual resource
      * is stored in 'Onem2mResource onem2mResource' variable.
-     * When creating a new resource, the DbAttrs and DbAttrSets are used to "build" the attributes that will go into
+     * When creating a new resource, the ResourceContent inJsonContent are used to "build" the attributes that will go into
      * the database.
      */
     protected String resourceId; // filled in by onem2mDb.CRUD routines, even if read hURI or nhURI
@@ -199,23 +199,6 @@ public class RequestPrimitive extends BasePrimitive {
         return this.onem2mResource;
     }
 
-    // parent for C, actual resource for RUD, this is what is in the data store
-    protected DbAttr dbAttrs;
-    public void setDbAttrs(DbAttr dbAttrs) {
-        this.dbAttrs = dbAttrs;
-    }
-    public DbAttr getDbAttrs() {
-        return this.dbAttrs;
-    }
-
-    protected DbAttrSet dbAttrSets;
-    public void setDbAttrSets(DbAttrSet dbAttrSets) {
-        this.dbAttrs = dbAttrs;
-    }
-    public DbAttrSet getDbAttrSets() {
-        return this.dbAttrSets;
-    }
-
     protected ResourceContent resourceContent;
     public void setResourceContent(ResourceContent rc) {
         this.resourceContent = rc;
@@ -230,6 +213,14 @@ public class RequestPrimitive extends BasePrimitive {
     }
     public String getRequestType() {
         return this.requestType;
+    }
+
+    private JSONObject jsonResourceContent;
+    public void setJsonResourceContent(String jsonResourceContentString) {
+        this.jsonResourceContent = new JSONObject(jsonResourceContentString);
+    }
+    public JSONObject getJsonResourceContent() {
+        return this.jsonResourceContent;
     }
 
     private Set<String> validAttributes;
@@ -274,4 +265,5 @@ public class RequestPrimitive extends BasePrimitive {
     }
     public boolean getFUDiscovery() {
         return this.fuDiscovery;
-    }}
+    }
+}

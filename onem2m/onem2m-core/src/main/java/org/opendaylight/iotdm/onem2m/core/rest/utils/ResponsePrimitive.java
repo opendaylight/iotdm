@@ -76,4 +76,15 @@ public class ResponsePrimitive extends BasePrimitive {
     public boolean useM2MPrefix() {
         return this.useM2MPrefix;
     }
+
+    private JSONObject jsonResourceContent;
+    public void setJsonResourceContent(String jsonResourceContentString) {
+        this.jsonResourceContent = new JSONObject(jsonResourceContentString);
+    }
+    public void setJsonResourceContent(JSONObject jsonResourceContent) {
+        this.jsonResourceContent = jsonResourceContent;
+    }
+    public JSONObject getJsonResourceContent() {
+        return this.jsonResourceContent;
+    }
 }

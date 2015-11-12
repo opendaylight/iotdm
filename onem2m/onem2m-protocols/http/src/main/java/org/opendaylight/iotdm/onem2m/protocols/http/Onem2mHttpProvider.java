@@ -202,7 +202,10 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
             // the content is already in the required format ...
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
+            String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
+            if (rqi != null) {
+                httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, rqi);
+            }
 
             int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
             if (content != null) {
@@ -287,6 +290,8 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
         ex.setURL(url);
         ex.setRequestContentSource(new ByteArrayInputStream(payload.getBytes()));
         ex.setRequestContentType(Onem2m.ContentType.APP_VND_NTFY_JSON);
+        Integer cl = payload != null ?  payload.length() : 0;
+        ex.setRequestHeader("Content-Length", cl.toString());
         ex.setMethod("post");
         LOG.debug("HTTP: Send notification uri: {}, payload: {}:", url, payload);
         try {

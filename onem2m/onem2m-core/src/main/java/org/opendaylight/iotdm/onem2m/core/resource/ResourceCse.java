@@ -11,18 +11,11 @@ package org.opendaylight.iotdm.onem2m.core.resource;
 import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,12 +42,20 @@ public class ResourceCse {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        String cseId = resourceContent.getDbAttr(CSE_ID);
+        String cseId = resourceContent.getInJsonContent().optString(CSE_ID, null);
         if (cseId == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID missing parameter");
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID: missing parameter");
             return;
         }
 
+        // hard code the supported resource types
+        JSONArray a = new JSONArray();
+        a.put(Integer.valueOf(Onem2m.ResourceType.CSE_BASE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.AE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.CONTAINER));
+        a.put(Integer.valueOf(Onem2m.ResourceType.CONTENT_INSTANCE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.SUBSCRIPTION));
+        resourceContent.getInJsonContent().put(SUPPORTED_RESOURCE_TYPES, a);
         /**
          * The resource has been filled in with any attributes that need to be written to the database
          */
@@ -81,34 +82,34 @@ public class ResourceCse {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private static void processJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        Iterator<?> keys = resourceContent.getInJsonContent().keys();
         while( keys.hasNext() ) {
+
             String key = (String)keys.next();
 
-            Object o = resourceContent.getJsonContent().get(key);
+            resourceContent.jsonCreateKeys.add(key);
+
+            Object o = resourceContent.getInJsonContent().get(key);
 
             switch (key) {
 
                 case CSE_ID:
                 case CSE_TYPE:
                 case ResourceContent.CREATION_TIME:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
                             return;
                         }
-                        resourceContent.setDbAttr(key, o.toString());
-                    } else {
-                        resourceContent.setDbAttr(key, null);
                     }
                     break;
                 case ResourceContent.LABELS:
-                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
                         return;
@@ -137,7 +138,7 @@ public class ResourceCse {
             return;
 
         if (resourceContent.isJson()) {
-            processJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
+            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
@@ -149,129 +150,35 @@ public class ResourceCse {
 
     }
 
-    /**
-     * Generate JSON for this resource
-     * @param onem2mResource this resource
-     * @param j JSON obj
-     */
-    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
-
-        for (Attr attr : onem2mResource.getAttr()) {
-            switch (attr.getName()) {
-                case CSE_ID:
-                case CSE_TYPE:
-                    j.put(attr.getName(), attr.getValue());
-                    break;
-                case NOTIFICATION_CONGESTION_POLICY:
-                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
-                    break;
-                default:
-                    ResourceContent.produceJsonForCommonAttributes(attr, j);
-                    break;
-            }
-        }
-
-        // hard code the response for the supported resource types
-        JSONArray a = new JSONArray();
-        a.put(Integer.valueOf(Onem2m.ResourceType.CSE_BASE));
-        a.put(Integer.valueOf(Onem2m.ResourceType.AE));
-        a.put(Integer.valueOf(Onem2m.ResourceType.CONTAINER));
-        a.put(Integer.valueOf(Onem2m.ResourceType.CONTENT_INSTANCE));
-        a.put(Integer.valueOf(Onem2m.ResourceType.SUBSCRIPTION));
-        j.put(SUPPORTED_RESOURCE_TYPES, a);
-
-        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-            switch (attrSet.getName()) {
-                default:
-                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-                    break;
-            }
-        }
-    }
-
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     *
-     * This routine enforces the mandatory and option parameters
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void processJsonRetrieveContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        Iterator<?> keys = resourceContent.getJsonContent().keys();
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
-
-            Object o = resourceContent.getJsonContent().get(key);
-
-            switch (key) {
-
-                case CSE_TYPE:
-                case CSE_ID:
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                    resourceContent.setDbAttr(key, o.toString());
-                    break;
-
-                case SUPPORTED_RESOURCE_TYPES:
-                    if (!(o instanceof JSONArray)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
-                        return;
-                    }
-                    JSONArray array = (JSONArray) o;
-                    for (int i = 0; i < array.length(); i++) {
-                        if (!(array.get(i) instanceof String)) {
-                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
-                            return;
-                        }
-                        //resourceContent.setDbAttr(key, array.get(i));
-                    }
-                    break;
-
-                case NOTIFICATION_CONGESTION_POLICY:
-                    if (!(o instanceof Integer)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") integer expected for json key: " + key);
-                        return;
-                    }
-                    resourceContent.setDbAttr(key, o.toString());
-                    break;
-
-                default:
-                    if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
-                        return;
-                    }
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Parse the CONTENT resource representation.
-     * @param onem2mRequest request
-     * @param onem2mResponse response
-     */
-    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.CSE_BASE, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-            return;
-
-        if (resourceContent.isJson()) {
-            processJsonRetrieveContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-                return;
-        }
-    }
+//    /**
+//     * Generate JSON for this resource
+//     * @param onem2mResource this resource
+//     * @param j JSON obj
+//     */
+//    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
+//
+//        for (Attr attr : onem2mResource.getAttr()) {
+//            switch (attr.getName()) {
+//                case CSE_ID:
+//                case CSE_TYPE:
+//                    j.put(attr.getName(), attr.getValue());
+//                    break;
+//                case NOTIFICATION_CONGESTION_POLICY:
+//                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
+//                    break;
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributes(attr, j);
+//                    break;
+//            }
+//        }
+//
+//
+//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
+//            switch (attrSet.getName()) {
+//                default:
+//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
+//                    break;
+//            }
+//        }
+//    }
 }

@@ -171,8 +171,10 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
             CoAP.ResponseCode coapRSC = mapCoreResponseToCoapResponse(rscString);
             // return the request id in the return option
-            options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RQI,
-                    onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER)));
+            String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
+            if (rqi != null) {
+                options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RQI, rqi));
+            }
             // put the onem2m response code into the RSC option and return it too
             options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RSC, Integer.parseInt(rscString)));
             if (content != null) {
@@ -185,7 +187,6 @@ public class Onem2mCoapProvider extends CoapServer implements Onem2mNotifierPlug
             } else {
                 Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
             }
-
         }
 
         /**

@@ -14,7 +14,6 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
@@ -662,8 +661,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         String protocol = getPrimitive(RequestPrimitive.PROTOCOL);
-        DbAttr parentDbAttrs = this.getDbAttrs();
-        String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+        String rt = this.getOnem2mResource().getResourceType();
         if (rt != null && rt.contentEquals(Onem2m.ResourceType.CSE_BASE) &&
                 !protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
@@ -742,15 +740,14 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // cannot update contentInstance resources
-        DbAttr parentDbAttrs = this.getDbAttrs();
-        String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+        // cannot update contentInstance resources so check resource type
+        String rt = this.getOnem2mResource().getResourceType();
         if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
                     "Not permitted to update content instance: " + this.getPrimitive(RequestPrimitive.TO));
             return;
         }
-        //
+
         ResourceContentProcessor.handleUpdate(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
