@@ -1,0 +1,7 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+2: Lionel Florit <lflorit@cisco.com>
+Submitted-by: Lionel Florit <lflorit@cisco.com>
+Submitted-at: Fri, 13 Nov 2015 02:05:05 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/29614
+Project: iotdm
+Branch: refs/heads/stable/lithium
