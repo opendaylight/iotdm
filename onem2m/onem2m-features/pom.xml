@@ -10,21 +10,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>features-parent</artifactId>
-        <version>1.5.3-SNAPSHOT</version>
+        <version>1.5.3-Lithium-SR3</version>
         <relativePath/>
     </parent>
     <groupId>org.opendaylight.iotdm</groupId>
     <artifactId>onem2m-features</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.0.4-Lithium-SR3</version>
     <name>${project.artifactId}</name>
     <modelVersion>4.0.0</modelVersion>
     <prerequisites>
         <maven>3.1.1</maven>
     </prerequisites>
     <properties>
-        <mdsal.version>1.2.3-SNAPSHOT</mdsal.version>
-        <yangtools.version>0.7.3-SNAPSHOT</yangtools.version>
-        <dlux.version>0.2.3-SNAPSHOT</dlux.version>
+        <mdsal.version>1.2.3-Lithium-SR3</mdsal.version>
+        <yangtools.version>0.7.3-Lithium-SR3</yangtools.version>
+        <dlux.version>0.2.3-Lithium-SR3</dlux.version>
         <pax.web.version>3.1.4</pax.web.version>
         <!--<californium.version>1.0.0-M3</californium.version>-->
         <californium.version>1.0.0-M1</californium.version>
