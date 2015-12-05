@@ -140,6 +140,7 @@ public class Onem2mDb implements TransactionChainListener {
 
         // cache the resource
         onem2mRequest.setOnem2mResource(onem2mResource);
+        onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
 
         // now commit these to the data store
         return dbTxn.commitTransaction();
