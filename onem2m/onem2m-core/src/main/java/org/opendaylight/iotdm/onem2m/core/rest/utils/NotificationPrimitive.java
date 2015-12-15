@@ -9,8 +9,7 @@
 package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
 import java.util.List;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -66,19 +65,12 @@ public class NotificationPrimitive extends BasePrimitive {
         return this.subscriptionResource;
     }
 
-    protected DbAttr dbAttr;
-    public void setDbAttrs(DbAttr attrs) {
-        this.dbAttr = attrs;
+    private JSONObject jsonSubscriptionResourceContent;
+    public void setJsonSubscriptionResourceContent(String jsonubscriptionResourceContentString) {
+        this.jsonSubscriptionResourceContent = new JSONObject(jsonubscriptionResourceContentString);
     }
-    public DbAttr getDbAttrs() {
-        return this.dbAttr;
+    public JSONObject getJsonSubscriptionResourceContent() {
+        return this.jsonSubscriptionResourceContent;
     }
 
-    protected DbAttrSet dbAttrSet;
-    public void setDbAttrSets(DbAttrSet attrSets) {
-        this.dbAttrSet = attrSets;
-    }
-    public DbAttrSet getDbAttrSets() {
-        return this.dbAttrSet;
-    }
 }

@@ -10,8 +10,8 @@ package org.opendaylight.iotdm.onem2m.core.database;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
@@ -22,13 +22,11 @@ import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.NotificationPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,10 +129,14 @@ public class Onem2mDb implements TransactionChainListener {
         // allocate a transaction, for the series of updates and creates to the data store
         DbTransaction dbTxn = new DbTransaction(dataBroker);
 
+        onem2mRequest.getResourceContent().getInJsonContent().put(ResourceContent.RESOURCE_ID, onem2mRequest.getResourceId());
+        onem2mRequest.getResourceContent().getInJsonContent().put(ResourceContent.RESOURCE_NAME, onem2mRequest.getResourceName());
+
         dbResourceTree.createCseByName(dbTxn, onem2mRequest.getResourceName(), onem2mRequest.getResourceId());
 
         // now create the resource with the attributes stored in the onem2mRequest
-        Onem2mResource onem2mResource = dbResourceTree.createResource(dbTxn, onem2mRequest, NULL_RESOURCE_ID);
+        Onem2mResource onem2mResource = dbResourceTree.createResource(dbTxn, onem2mRequest,
+                NULL_RESOURCE_ID, Onem2m.ResourceType.CSE_BASE);
 
         // cache the resource
         onem2mRequest.setOnem2mResource(onem2mResource);
@@ -144,38 +146,24 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
 
-    private void updateParentLastModifiedTime(DbTransaction dbTxn, RequestPrimitive onem2mRequest, String parentResourceId) {
-
-        Attr attr = new AttrBuilder()
-                .setKey(new AttrKey(ResourceContent.LAST_MODIFIED_TIME))
-                .setName(ResourceContent.LAST_MODIFIED_TIME)
-                .setValue(onem2mRequest.getResourceContent().getDbAttr(ResourceContent.CREATION_TIME))
-                .build();
-        dbResourceTree.updateAttr(dbTxn, parentResourceId, attr);
+    private void updateParentLastModifiedTime(DbTransaction dbTxn, RequestPrimitive onem2mRequest,
+                                              String parentResourceId,  JSONObject parentJsonContent) {
+        parentJsonContent.put(ResourceContent.LAST_MODIFIED_TIME,
+                onem2mRequest.getResourceContent().getInJsonContent().getString(ResourceContent.CREATION_TIME));
+        dbResourceTree.updateJsonResourceContentString(dbTxn,
+                parentResourceId,
+                parentJsonContent.toString());
     }
 
-    private void adjustContainerCurrValues(DbTransaction dbTxn, RequestPrimitive onem2mRequest, String containerResourceId) {
+    private void adjustContainerCurrValues(DbTransaction dbTxn, RequestPrimitive onem2mRequest,
+                                           String containerResourceId, JSONObject containerJsonContent) {
 
-        Attr attr = new AttrBuilder()
-                .setKey(new AttrKey(ResourceContainer.CURR_BYTE_SIZE))
-                .setName(ResourceContainer.CURR_BYTE_SIZE)
-                .setValue(onem2mRequest.containerCbs.toString())
-                .build();
-        dbResourceTree.updateAttr(dbTxn, containerResourceId, attr);
-
-        attr = new AttrBuilder()
-                .setKey(new AttrKey(ResourceContainer.CURR_NR_INSTANCES))
-                .setName(ResourceContainer.CURR_NR_INSTANCES)
-                .setValue(onem2mRequest.containerCni.toString())
-                .build();
-        dbResourceTree.updateAttr(dbTxn, containerResourceId, attr);
-
-        attr = new AttrBuilder()
-                .setKey(new AttrKey(ResourceContent.STATE_TAG))
-                .setName(ResourceContent.STATE_TAG)
-                .setValue(onem2mRequest.containerSt.toString())
-                .build();
-        dbResourceTree.updateAttr(dbTxn, containerResourceId, attr);
+        containerJsonContent.put(ResourceContainer.CURR_BYTE_SIZE, onem2mRequest.containerCbs);
+        containerJsonContent.put(ResourceContainer.CURR_NR_INSTANCES, onem2mRequest.containerCni);
+        containerJsonContent.put(ResourceContent.STATE_TAG, onem2mRequest.containerSt);
+        dbResourceTree.updateJsonResourceContentString(dbTxn,
+                containerResourceId,
+                containerJsonContent.toString());
     }
 
     /**
@@ -196,13 +184,13 @@ public class Onem2mDb implements TransactionChainListener {
         DbTransaction dbTxn = null;
 
         Onem2mResource parentOnem2mResource = onem2mRequest.getOnem2mResource();
-
-
-
         String parentId = parentOnem2mResource.getResourceId();
         String prevId = Onem2mDb.NULL_RESOURCE_ID;
 
-        String resourceType = onem2mRequest.getResourceContent().getDbAttr(ResourceContent.RESOURCE_TYPE);
+        String resourceType = String.valueOf(onem2mRequest
+                .getResourceContent()
+                .getInJsonContent()
+                .getInt(ResourceContent.RESOURCE_TYPE));
         String resourceName = onem2mRequest.getResourceName();
 
         // see resourceAE for comments on why AE_IDs have these naming rules
@@ -212,7 +200,7 @@ public class Onem2mDb implements TransactionChainListener {
                 if (resourceName == null) {
                     onem2mRequest.setResourceName("C" + onem2mRequest.getResourceId());
                 }
-                onem2mRequest.getResourceContent().setDbAttr(ResourceAE.AE_ID, onem2mRequest.getResourceName());
+                onem2mRequest.getResourceContent().getInJsonContent().put(ResourceAE.AE_ID, onem2mRequest.getResourceName());
             } else {
                 // in the last Design:
                 // if from !=null, since  resourceName at least = from, how can the following happen?
@@ -224,7 +212,7 @@ public class Onem2mDb implements TransactionChainListener {
                     onem2mRequest.setResourceName(removedHead);
                 }
                 //TODo : do we want to set the AE-ID like http://xxx/yyy  or  xxx?
-                onem2mRequest.getResourceContent().setDbAttr(ResourceAE.AE_ID, onem2mRequest.getResourceName());
+                onem2mRequest.getResourceContent().getInJsonContent().put(ResourceAE.AE_ID, onem2mRequest.getResourceName());
             }
         }
 
@@ -234,6 +222,12 @@ public class Onem2mDb implements TransactionChainListener {
         if (onem2mRequest.getResourceName() == null) {
             onem2mRequest.setResourceName(onem2mRequest.getResourceId());
         }
+
+        if (!parentId.contentEquals(NULL_RESOURCE_ID)) {
+            onem2mRequest.getResourceContent().getInJsonContent().put(ResourceContent.PARENT_ID, parentId);
+        }
+        onem2mRequest.getResourceContent().getInJsonContent().put(ResourceContent.RESOURCE_ID, onem2mRequest.getResourceId());
+        onem2mRequest.getResourceContent().getInJsonContent().put(ResourceContent.RESOURCE_NAME, onem2mRequest.getResourceName());
 
         OldestLatest parentOldestLatest =
                 dbResourceTree.retrieveOldestLatestByResourceType(parentId, resourceType);
@@ -273,14 +267,15 @@ public class Onem2mDb implements TransactionChainListener {
             dbTxn = new DbTransaction(dataBroker);
         }
 
-        // see if a content instance creation caused the container to be updated
+        // see if a content instance creation caused the container to be updated, note that the parent is the
+        // container, and the request has the container's json object representing its resource content
         if (onem2mRequest.mustUpdateContainer) {
-            this.adjustContainerCurrValues(dbTxn, onem2mRequest, parentId);
+            this.adjustContainerCurrValues(dbTxn, onem2mRequest, parentId, onem2mRequest.getJsonResourceContent());
         }
 
         // update the lmt of the parent to be the creation time of the child being created
         if (!parentId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
-            updateParentLastModifiedTime(dbTxn, onem2mRequest, parentId);
+            updateParentLastModifiedTime(dbTxn, onem2mRequest, parentId, onem2mRequest.getJsonResourceContent());
         }
 
         // create a childEntry on the parent resourceId, <child-name, child-resourceId>
@@ -291,17 +286,20 @@ public class Onem2mDb implements TransactionChainListener {
                 prevId, Onem2mDb.NULL_RESOURCE_ID); // siblings
 
         // now create the resource with the attributes stored in the onem2mRequest
-        Onem2mResource onem2mResource = dbResourceTree.createResource(dbTxn, onem2mRequest, parentId);
+        Onem2mResource onem2mResource = dbResourceTree.createResource(dbTxn, onem2mRequest, parentId, resourceType);
 
         // now save this newly created resource
         onem2mRequest.setOnem2mResource(onem2mResource);
+        onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
 
         // now commit these to the data store
         return dbTxn.commitTransaction();
     }
 
     /**
-     * The update resource is carried out by this routine.
+     * The update resource is carried out by this routine.  The update uses the original JSON content in
+     * onem2mRequest.getJSONResourceContent, then it cycles through each value in the new ResourceContent JSON obj
+     * to see what has changed, and applies the change to the old resoruce.
      *
      * @param onem2mRequest request
      * @param onem2mResponse response
@@ -309,39 +307,24 @@ public class Onem2mDb implements TransactionChainListener {
      */
     public boolean updateResource(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
+        for (String newKey : JSONObject.getNames(onem2mRequest.getResourceContent().getInJsonContent())) {
+            if (onem2mRequest.getResourceContent().getInJsonContent().isNull(newKey)) {
+                onem2mRequest.getJsonResourceContent().remove(newKey);
+            } else {
+                onem2mRequest.getJsonResourceContent().put(newKey, onem2mRequest.getResourceContent().getInJsonContent().get(newKey));
+            }
+        }
+
         DbTransaction dbTxn = new DbTransaction(dataBroker);
 
-        /**
-         * For each new attribute in the update list, replace it in the existing resource.  If the attr is null, then
-         * remove it from the existing resource.
-         */
-        List<Attr> attrList = onem2mRequest.getResourceContent().getAttrList();
-        for (Attr attr : attrList) {
-            String value = attr.getValue();
-            if (value != null) {
-                dbResourceTree.updateAttr(dbTxn, onem2mRequest.getResourceId(), attr);
-
-            } else {
-                dbResourceTree.deleteAttr(dbTxn, onem2mRequest.getResourceId(), attr.getName());
-            }
-        }
-        List<AttrSet> attrSetList = onem2mRequest.getResourceContent().getAttrSetList();
-        for (AttrSet attrSet : attrSetList) {
-            List<Member> member = attrSet.getMember();
-            if (member != null) {
-                dbResourceTree.updateAttrSet(dbTxn, onem2mRequest.getResourceId(), attrSet);
-
-            } else {
-                dbResourceTree.deleteAttrSet(dbTxn, onem2mRequest.getResourceId(), attrSet.getName());
-            }
-        }
+        dbResourceTree.updateJsonResourceContentString(dbTxn,
+                onem2mRequest.getResourceId(),
+                onem2mRequest.getJsonResourceContent().toString());
 
         boolean success = dbTxn.commitTransaction();
 
         Onem2mResource onem2mResource = getResource(onem2mRequest.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
-        onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
-        onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
 
         return success;
     }
@@ -362,7 +345,7 @@ public class Onem2mDb implements TransactionChainListener {
                                                                String resourceName) {
 
         if (resourceName.contentEquals(ResourceContainer.LATEST) || resourceName.contentEquals("latest")) {
-            String rt = getResourceType(containerOnem2mResource);
+            String rt = containerOnem2mResource.getResourceType();
             if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
 
                 OldestLatest oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(
@@ -373,14 +356,14 @@ public class Onem2mDb implements TransactionChainListener {
                 }
                 Onem2mResource onem2mResource = getResource(oldestLatest.getLatestId());
                 if (onem2mResource != null) {
-                    rt = getResourceType(onem2mResource);
+                    rt = onem2mResource.getResourceType();
                     if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
                         return onem2mResource;
                     }
                 }
             }
         } else if (resourceName.contentEquals(ResourceContainer.OLDEST) || resourceName.contentEquals("oldest")) {
-            String rt = getResourceType(containerOnem2mResource);
+            String rt = containerOnem2mResource.getResourceType();
             if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
                 OldestLatest oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(
                         containerOnem2mResource.getResourceId(),
@@ -390,7 +373,7 @@ public class Onem2mDb implements TransactionChainListener {
                 }
                 Onem2mResource onem2mResource = getResource(oldestLatest.getOldestId());
                 if (onem2mResource != null) {
-                    rt = getResourceType(onem2mResource);
+                    rt = onem2mResource.getResourceType();
                     if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
                         return onem2mResource;
                     }
@@ -429,8 +412,7 @@ public class Onem2mDb implements TransactionChainListener {
          */
         if (hierarchy.length == 1) { // case 1
             onem2mRequest.setOnem2mResource(dbResourceTree.retrieveResourceById(cse.getResourceId()));
-            onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
-            onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
+            onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
             onem2mRequest.setResourceId(cse.getResourceId());
             return true;
         }
@@ -466,8 +448,7 @@ public class Onem2mDb implements TransactionChainListener {
 
         onem2mRequest.setResourceId(onem2mResource.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
-        onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
-        onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
+        onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
         return true;
     }
 
@@ -481,23 +462,6 @@ public class Onem2mDb implements TransactionChainListener {
     public Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
                                                     RequestPrimitive onem2mRequest,
                                                     ResponsePrimitive onem2mResponse) {
-        String trimmedURI = trimURI(uriAndAttribute); // get rid of leading and following "/"
-        String hierarchy[] = trimmedURI.split("/"); // split the URI into its hierarchy of path component strings
-        if (hierarchy.length <= 1) {
-            return false;
-        }
-        String targetAttribute = hierarchy[hierarchy.length-1];
-        String targetURI = "";
-        for (int i = 0; i < hierarchy.length-1; i++) {
-            targetURI += "/" + hierarchy[i];
-        }
-        if (findResourceUsingURI(targetURI, onem2mRequest, onem2mResponse)) {
-            String value = onem2mRequest.getDbAttrs().getAttr(targetAttribute);
-            if (value != null) {
-                onem2mRequest.setRetrieveByAttrName(targetAttribute);
-                return false;// TODO: need more downstream work to support this
-            }
-        }
         return false;
     }
 
@@ -593,32 +557,16 @@ public class Onem2mDb implements TransactionChainListener {
         return dbResourceTree.retrieveResourceById(resourceId);
     }
 
-    /**
-     * Find the resource type in the list of attrs
-     * @param onem2mResource the input resource
-     * @return the resource type
-     */
-    public String getResourceType(Onem2mResource onem2mResource) {
-        for (Attr attr : onem2mResource.getAttr()) {
-            if (attr.getName().contentEquals(ResourceContent.RESOURCE_TYPE)) {
-                return attr.getValue();
-            }
-        }
-        return null;
-    }
-
     private void deleteContentInstance(DbTransaction dbTxn,
                                        RequestPrimitive onem2mRequest,
                                        Onem2mResource containerResource) {
 
         String containerResourceId = containerResource.getResourceId();
-        DbAttr containerDbAttrs = new DbAttr(containerResource.getAttr());
-
-        String csString = onem2mRequest.getDbAttrs().getAttr(ResourceContentInstance.CONTENT_SIZE);
+        JSONObject containerResourceContent = new JSONObject(containerResource.getResourceContentJsonString());
         ResourceContainer.setCurrValuesForThisDeletedContentInstance(onem2mRequest,
-                containerDbAttrs,
-                Integer.valueOf(csString));
-        adjustContainerCurrValues(dbTxn, onem2mRequest, containerResourceId);
+                containerResourceContent,
+                onem2mRequest.getJsonResourceContent().getInt(ResourceContentInstance.CONTENT_SIZE));
+        adjustContainerCurrValues(dbTxn, onem2mRequest, containerResourceId, containerResourceContent);
     }
 
     /**
@@ -646,7 +594,7 @@ public class Onem2mDb implements TransactionChainListener {
 
         // build a 'to be Deleted list' by walking the hierarchy
         List<String> resourceIdList = getHierarchicalResourceList(thisResourceId, Onem2m.MAX_RESOURCES + 1);
-        String resourceType = onem2mRequest.getDbAttrs().getAttr(ResourceContent.RESOURCE_TYPE);
+        String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
         OldestLatest parentOldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResourceId, resourceType);
 
         if (parentOldestLatest != null) {
@@ -757,7 +705,7 @@ public class Onem2mDb implements TransactionChainListener {
             return;
         }
 
-        String resourceType = onem2mRequest.getDbAttrs().getAttr(ResourceContent.RESOURCE_TYPE);
+        String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
         if (!resourceType.contentEquals(Onem2m.ResourceType.CONTAINER)) {
             LOG.error("dumpContentInstancesForContainer: resource is not a container: {}", containerUri, resourceType);
         }
@@ -772,7 +720,7 @@ public class Onem2mDb implements TransactionChainListener {
                     containerUri, containerResourceId,
                     containerOldestLatest.getOldestId(), containerOldestLatest.getLatestId());
             String resourceId = containerOldestLatest.getOldestId();
-            while (resourceId != Onem2mDb.NULL_RESOURCE_ID) {
+            while (!resourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
                 Onem2mResource tempResource = getResource(resourceId);
                 Child child = dbResourceTree.retrieveChildByName(containerResourceId, tempResource.getName());
                 LOG.error("dumpContentInstancesForContainer: prev:{}, next:{} ", child.getPrevId(), child.getNextId());
@@ -782,7 +730,7 @@ public class Onem2mDb implements TransactionChainListener {
                     containerUri, containerResourceId,
                     containerOldestLatest.getOldestId(), containerOldestLatest.getLatestId());
             resourceId = containerOldestLatest.getLatestId();
-            while (resourceId != Onem2mDb.NULL_RESOURCE_ID) {
+            while (!resourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
                 Onem2mResource tempResource = getResource(resourceId);
                 Child child = dbResourceTree.retrieveChildByName(containerResourceId, tempResource.getName());
                 LOG.error("dumpContentInstancesForContainer: prev:{}, next:{} ", child.getPrevId(), child.getNextId());
@@ -855,7 +803,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param uri the URI of the target
      * @return stripped URI
      */
-    private static String trimURI(String uri) {
+    public static String trimURI(String uri) {
         uri = uri.trim();
         uri = uri.startsWith("/") ? uri.substring("/".length()) : uri;
         uri = uri.endsWith("/") ? uri.substring(0,uri.length()-1) : uri;

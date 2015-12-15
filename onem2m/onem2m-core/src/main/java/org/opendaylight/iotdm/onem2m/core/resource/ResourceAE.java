@@ -9,23 +9,12 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.*;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.MemberKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +47,10 @@ public class ResourceAE {
 
         // ensure resource can be created under the target resource
         if (onem2mRequest.isCreate) {
-            DbAttr parentDbAttrs = onem2mRequest.getDbAttrs();
-            String rt = parentDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
-            if (rt == null || !rt.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+            String parentResourceType = onem2mRequest.getOnem2mResource().getResourceType();
+            if (parentResourceType == null || !parentResourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create AE under this resource type: " + rt);
+                        "Cannot create AE under this resource type: " + parentResourceType);
                 return;
             }
         }
@@ -70,16 +58,10 @@ public class ResourceAE {
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
         /**
-         * When create AE, AE_ID is assigned by the system, if the customer include aei in the
-         * Create, should return error immediately.
+         * AE_ID is checked at parse time ... no need to check for it here
          */
-        String aei = resourceContent.getDbAttr(AE_ID);
-        if (aei != null && !onem2mRequest.isCreate) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "AE_ID cannot be updated");
-            return;
-        }
 
-        String appId = resourceContent.getDbAttr(APP_ID);
+        String appId = resourceContent.getInJsonContent().optString(APP_ID, null);
         if (appId == null && onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "APP_ID missing parameter");
             return;
@@ -88,7 +70,7 @@ public class ResourceAE {
             return;
         }
 
-        String rr = resourceContent.getDbAttr(REQUEST_REACHABILITY);
+        String rr = resourceContent.getInJsonContent().optString(REQUEST_REACHABILITY, null);
         if (rr == null && onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "REQUEST_REACHABILITY missing parameter");
             return;
@@ -147,54 +129,51 @@ public class ResourceAE {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private static void processJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        Iterator<?> keys = resourceContent.getInJsonContent().keys();
         while (keys.hasNext()) {
+
             String key = (String) keys.next();
 
-            Object o = resourceContent.getJsonContent().get(key);
+            resourceContent.jsonCreateKeys.add(key);
+
+            Object o = resourceContent.getInJsonContent().get(key);
 
             switch (key) {
 
                 case APP_NAME:
                 case ONTOLOGY_REF:
                 case APP_ID:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
                             return;
                         }
-                        resourceContent.setDbAttr(key, o.toString());
-                    } else {
-                        resourceContent.setDbAttr(key, null);
                     }
                     break;
                 case REQUEST_REACHABILITY:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof Boolean)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
                             return;
                         }
-                        resourceContent.setDbAttr(key, o.toString());
-                    } else {
-                        resourceContent.setDbAttr(key, null);
                     }
                     break;
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
-                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
                         return;
                     }
                     break;
                 case AE_ID: // return error message if detect this attribute
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") AE_ID should be assigned by the system, please do not include " + key);
                     return;
                 default:
@@ -220,7 +199,7 @@ public class ResourceAE {
             return;
 
         if (resourceContent.isJson()) {
-            processJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
+            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
@@ -230,152 +209,5 @@ public class ResourceAE {
             return;
 
         ResourceAE.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
-    }
-
-
-    /**
-     * Generate JSON data for this resource
-     *
-     */
-    public static void produceJsonForAttr(Attr attr, JSONObject j) {
-
-        switch (attr.getName()) {
-            case APP_NAME:
-            case APP_ID:
-            case AE_ID:
-            case ONTOLOGY_REF:
-                j.put(attr.getName(), attr.getValue());
-                break;
-            case REQUEST_REACHABILITY:
-                j.put(attr.getName(), Boolean.valueOf(attr.getValue()));
-                break;
-            default:
-                ResourceContent.produceJsonForCommonAttributes(attr, j);
-                break;
-        }
-    }
-
-    /**
-     * Generate JSON data for this attr set
-     */
-    public static void produceJsonForAttrSet(AttrSet attrSet, JSONObject j) {
-
-        switch (attrSet.getName()) {
-            default:
-                ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-                break;
-        }
-    }
-
-    /**
-     * Generate JSON data for this resource
-     * @param onem2mResource this resource
-     * @param j the object to put the json into
-     */
-public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
-
-    for (Attr attr : onem2mResource.getAttr()) {
-        produceJsonForAttr(attr, j);
-    }
-
-    for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-        produceJsonForAttrSet(attrSet, j);
-    }
-}
-
-    /**
-     * Generate JSON data for this resource Creation Only
-     * @param onem2mResource this resource
-     * @param j the object to put the json into
-     */
-    public static void produceJsonForResourceCreate(Onem2mResource onem2mResource, JSONObject j) {
-
-        for (Attr attr : onem2mResource.getAttr()) {
-            switch (attr.getName()) {
-                //case APP_NAME:
-                case APP_ID:
-                case AE_ID:
-                //case ONTOLOGY_REF:
-                    j.put(attr.getName(), attr.getValue());
-                    break;
-                default:
-                    ResourceContent.produceJsonForCommonAttributesCreate(attr, j);
-                    break;
-            }
-        }
-
-        // attSet is always set by the customer, so do not need to return
-//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-//            produceJsonForAttrSet(attrSet, j);
-//        }
-    }
-
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     *
-     * This routine enforces the mandatory and option parameters
-     * @param onem2mRequest request
-     * @param onem2mResponse response
-     */
-    private static void processJsonRetrieveContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        Iterator<?> keys = resourceContent.getJsonContent().keys();
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
-
-            Object o = resourceContent.getJsonContent().get(key);
-
-            switch (key) {
-
-                case APP_NAME:
-                case AE_ID:
-                case ONTOLOGY_REF:
-                case APP_ID:
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                    resourceContent.setDbAttr(key, o.toString());
-                    break;
-                case REQUEST_REACHABILITY:
-                    if (!(o instanceof Boolean)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
-                        return;
-                    }
-                    resourceContent.setDbAttr(key, o.toString());
-                    break;
-                default:
-                    if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
-                        return;
-                    }
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Parse the CONTENT resource representation.
-     * @param onem2mRequest request
-     * @param onem2mResponse response
-     */
-    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.AE, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-            return;
-
-        if (resourceContent.isJson()) {
-            processJsonRetrieveContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-                return;
-        }
     }
 }

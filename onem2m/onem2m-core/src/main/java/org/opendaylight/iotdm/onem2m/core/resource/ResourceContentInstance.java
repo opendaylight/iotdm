@@ -8,19 +8,13 @@
 
 package org.opendaylight.iotdm.onem2m.core.resource;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Attr;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +38,10 @@ public class ResourceContentInstance  {
         Integer tempInt;
         Integer newByteSize;
 
-        // no need to handle update in this file as update is not allowed for content instances
+        // no need to handle update requests in this file as update is not allowed for content instances
 
         // verify this resource can be created under the target resource
-        DbAttr containerDbAttrs = onem2mRequest.getDbAttrs();
-        String rt = containerDbAttrs.getAttr(ResourceContent.RESOURCE_TYPE);
+        String rt = onem2mRequest.getOnem2mResource().getResourceType();
         if (rt == null || !rt.contentEquals(Onem2m.ResourceType.CONTAINER)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
                     "Cannot create ContentInstance under this resource type: " + rt);
@@ -57,39 +50,26 @@ public class ResourceContentInstance  {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        tempStr = resourceContent.getDbAttr(CONTENT_SIZE);
-        if (tempStr != null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CONTENT_SIZE read-only parameter");
-            return;
-        }
-
-        tempStr = resourceContent.getDbAttr(CONTENT);
+        tempStr = resourceContent.getInJsonContent().optString(CONTENT, null);
         if (tempStr == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CONTENT missing parameter");
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CONTENT: missing parameter");
             return;
         } else {
             // record the size of the content in the CONTENT_SIZE attribute
             newByteSize = tempStr.length();
-            resourceContent.setDbAttr(CONTENT_SIZE, newByteSize.toString());
+            resourceContent.getInJsonContent().put(CONTENT_SIZE, newByteSize);
         }
 
-        // state tag is read only
-        tempStr = resourceContent.getDbAttr(ResourceContent.STATE_TAG);
-        if (tempStr != null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "STATE_TAG read-only parameter");
-            return;
-        }
+        JSONObject containerResourceContent = onem2mRequest.getJsonResourceContent();
 
-        // the state tag of the ci is the incremented value of its parent container
-        tempStr = containerDbAttrs.getAttr(ResourceContent.STATE_TAG);
-        Integer containerStateTagValue = Integer.valueOf(tempStr);
-        containerStateTagValue++;
-        resourceContent.setDbAttr(ResourceContent.STATE_TAG, containerStateTagValue.toString());
+        // the state tag of the cin is the incremented value of its parent container resource
+        Integer containerStateTag = containerResourceContent.optInt(ResourceContent.STATE_TAG);
+        containerStateTag++;
+        resourceContent.getInJsonContent().put(ResourceContent.STATE_TAG, containerStateTag);
 
         // verify this content instance does not exceed the container's max byte size
-        tempStr = containerDbAttrs.getAttr(ResourceContainer.MAX_BYTE_SIZE);
-        if (tempStr != null) {
-            Integer mbs = Integer.valueOf(tempStr);
+        Integer mbs = containerResourceContent.optInt(ResourceContainer.MAX_BYTE_SIZE, -1);
+        if (mbs != -1) {
             if (newByteSize > mbs) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "content size: " + newByteSize + " exceeds its containers max byte size: " + mbs);
@@ -99,9 +79,8 @@ public class ResourceContentInstance  {
         }
 
         // special case: max_nr_instances == 0 --> seems like a way to block content instances from creation
-        tempStr = containerDbAttrs.getAttr(ResourceContainer.MAX_NR_INSTANCES);
-        if (tempStr != null) {
-            Integer mni = Integer.valueOf(tempStr);
+        Integer mni = containerResourceContent.optInt(ResourceContainer.MAX_NR_INSTANCES, -1);
+        if (mni != -1) {
             if (mni < 1) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Exceeds containers max instances: " + mni);
                 return;
@@ -109,7 +88,8 @@ public class ResourceContentInstance  {
 
         }
 
-        ResourceContainer.setCurrValuesForThisCreatedContentInstance(onem2mRequest, containerDbAttrs, newByteSize);
+        ResourceContainer.setCurrValuesForThisCreatedContentInstance(onem2mRequest, containerResourceContent,
+                newByteSize);
 
         if (onem2mRequest.isCreate) {
             if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
@@ -136,45 +116,50 @@ public class ResourceContentInstance  {
      * @param onem2mRequest
      * @param onem2mResponse
      */
-    private static void processJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        Iterator<?> keys = resourceContent.getJsonContent().keys();
+        Iterator<?> keys = resourceContent.getInJsonContent().keys();
         while( keys.hasNext() ) {
+
             String key = (String)keys.next();
 
-            Object o = resourceContent.getJsonContent().get(key);
+            resourceContent.jsonCreateKeys.add(key);
+
+            Object o = resourceContent.getInJsonContent().get(key);
 
             switch (key) {
+
+                case CONTENT_SIZE:
+                case ResourceContent.STATE_TAG:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, key + ": read-only parameter");
+                    return;
 
                 case CONTENT_INFO:
                 case ONTOLOGY_REF:
                 case CONTENT:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
                             return;
                         }
-                        resourceContent.setDbAttr(key, o.toString());
-                    } else {
-                        resourceContent.setDbAttr(key, null);
                     }
                     break;
                 case CREATOR:
-                    if (!resourceContent.getJsonContent().isNull(key)) {
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
-                        resourceContent.setDbAttr(key, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+                        resourceContent.getInJsonContent().remove(key);
+                        resourceContent.getInJsonContent().put(key, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
-
-                    if (!ResourceContent.processJsonCommonCreateUpdateContent(key,
+                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
                         return;
@@ -203,7 +188,7 @@ public class ResourceContentInstance  {
             return;
 
         if (resourceContent.isJson()) {
-            processJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
+            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
@@ -212,140 +197,5 @@ public class ResourceContentInstance  {
             return;
 
         ResourceContentInstance.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
-    }
-
-    /**
-     * Generate JSON for this resource
-     * @param onem2mResource this resource
-     * @param j JSON obj
-     */
-    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
-
-        for (Attr attr : onem2mResource.getAttr()) {
-            switch (attr.getName()) {
-                case CONTENT:
-                case ONTOLOGY_REF:
-                case CONTENT_INFO:
-                    j.put(attr.getName(), attr.getValue());
-                    break;
-                case CONTENT_SIZE:
-                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
-                    break;
-                default:
-                    ResourceContent.produceJsonForCommonAttributes(attr, j);
-                    break;
-            }
-        }
-        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-            switch (attrSet.getName()) {
-                default:
-                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-                    break;
-            }
-        }
-    }
-
-
-    /**
-     * Generate JSON for this resource Creation Only
-     * @param onem2mResource this resource
-     * @param j JSON obj
-     */
-    public static void produceJsonForResourceCreate(Onem2mResource onem2mResource, JSONObject j) {
-
-        for (Attr attr : onem2mResource.getAttr()) {
-            switch (attr.getName()) {
-//                case CONTENT:
-//                case ONTOLOGY_REF:
-//                case CONTENT_INFO:
-//                    j.put(attr.getName(), attr.getValue());
-//                    break;
-                case CONTENT_SIZE:
-                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
-                    break;
-                default:
-                    ResourceContent.produceJsonForCommonAttributesCreate(attr, j);
-                    break;
-            }
-        }
-//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-//            switch (attrSet.getName()) {
-//                default:
-//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-//                    break;
-//            }
-//        }
-    }
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     *
-     * This routine enforces the mandatory and option parameters
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void processJsonRetrieveContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        Iterator<?> keys = resourceContent.getJsonContent().keys();
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
-
-            Object o = resourceContent.getJsonContent().get(key);
-
-            switch (key) {
-
-                case ONTOLOGY_REF:
-                case CONTENT_INFO:
-                case CONTENT:
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                    resourceContent.setDbAttr(key, o.toString());
-                    break;
-
-                case CONTENT_SIZE:
-
-                    if (!(o instanceof Integer)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") integer expected for json key: " + key);
-                        return;
-                    }
-                    resourceContent.setDbAttr(key, o.toString());
-                    break;
-
-                default:
-                    if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
-                        return;
-                    }
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Parse the CONTENT resource representation.
-     * @param onem2mRequest request
-     * @param onem2mResponse response
-     */
-    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.CONTENT_INSTANCE, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-            return;
-        }
-
-        if (resourceContent.isJson()) {
-            processJsonRetrieveContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-                return;
-            }
-        }
     }
 }

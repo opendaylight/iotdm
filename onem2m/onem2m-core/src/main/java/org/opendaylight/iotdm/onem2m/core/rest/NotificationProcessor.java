@@ -13,8 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttr;
-import org.opendaylight.iotdm.onem2m.core.database.DbAttrSet;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
@@ -26,8 +24,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SubscriptionDeleted;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SubscriptionDeletedBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.AttrSet;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,67 +56,62 @@ public class NotificationProcessor {
      */
     private static JSONObject produceJsonContent(RequestPrimitive onem2mRequest, NotificationPrimitive onem2mNotification) {
 
-        JSONObject content = new JSONObject();
+        JSONObject content = null;
 
         Onem2mResource onem2mResource = onem2mRequest.getOnem2mResource();
 
-        // cache the resourceContent so resultContent options can be restricted
-        onem2mNotification.setResourceContent(onem2mRequest.getResourceContent());
 
-        Onem2mResource subscriptionResource = onem2mNotification.getSubscriptionResource();
-        DbAttr subAttrList =  onem2mNotification.getDbAttrs();
-        DbAttrSet subAttrSetList =  onem2mNotification.getDbAttrSets();
 
-        String nct = subAttrList.getAttr(ResourceSubscription.NOTIFICATION_CONTENT_TYPE);
+        String nct = onem2mNotification.getJsonSubscriptionResourceContent()
+                .optString(ResourceSubscription.NOTIFICATION_CONTENT_TYPE, null);
         if (nct == null) {
             nct = Onem2m.NotificationContentType.WHOLE_RESOURCE;
         }
         switch (nct) {
             case Onem2m.NotificationContentType.MODIFIED_ATTRIBUTES:
-                produceJsonContentWholeResource(onem2mRequest, onem2mResource, onem2mNotification, content);
+                // cache the resourceContent so input json keys are known for modified attrs
+                // onem2mNotification.setResourceContent(onem2mRequest.getResourceContent());
+                // TODO: support modified ... needs a little more effort
+                content = produceJsonContentWholeResource(onem2mRequest, onem2mResource);
                 break;
             case Onem2m.NotificationContentType.WHOLE_RESOURCE:
-                produceJsonContentWholeResource(onem2mRequest, onem2mResource, onem2mNotification, content);
+                content = produceJsonContentWholeResource(onem2mRequest, onem2mResource);
                 break;
             case Onem2m.NotificationContentType.REFERENCE_ONLY:
-                produceJsonContentResourceReference(onem2mRequest, onem2mResource, onem2mNotification, content);
+                content = produceJsonContentResourceReference(onem2mResource);
                 break;
         }
-
 
         return content;
     }
 
-    private static void produceJsonContentResourceReference(RequestPrimitive onem2mRequest,
-                                                            Onem2mResource onem2mResource,
-                                                            NotificationPrimitive onem2mNotification,
-                                                            JSONObject j) {
+    private static JSONObject produceJsonContentResourceReference(Onem2mResource onem2mResource) {
+
+        JSONObject j = new JSONObject();
 
         String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
 
         j.put(ResourceContent.RESOURCE_NAME, h);
+
+        return j;
     }
 
-    private static void produceJsonContentWholeResource(RequestPrimitive onem2mRequest,
-                                                        Onem2mResource onem2mResource,
-                                                        NotificationPrimitive onem2mNotification,
-                                                        JSONObject j) {
+    private static JSONObject produceJsonContentWholeResource(RequestPrimitive onem2mRequest,
+                                                        Onem2mResource onem2mResource) {
 
-        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
-        String id;
+        JSONObject j = new JSONObject();
 
-        id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getParentId());
-        if (id != null) {
-            j.put(ResourceContent.PARENT_ID, id);
-        }
-
-        id = Onem2mDb.getInstance().getNonHierarchicalNameForResource(onem2mResource.getResourceId());
-        j.put(ResourceContent.RESOURCE_ID, id);
+        String resourceType = onem2mResource.getResourceType();
 
         String name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
-        j.put(ResourceContent.RESOURCE_NAME, name);
+        onem2mRequest.getJsonResourceContent().put(ResourceContent.RESOURCE_NAME, name);
 
-        j = ResourceContent.produceJsonForResource(resourceType, onem2mResource, Onem2m.USE_M2M_PREFIX, j);
+        String m2mPrefixString = Onem2m.USE_M2M_PREFIX ? "m2m:" : "";
+
+        JSONObject wholeresource = new JSONObject(onem2mResource.getResourceContentJsonString());
+        j.put(m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), wholeresource);
+
+        return j;
     }
 
     /**
@@ -151,16 +142,12 @@ public class NotificationProcessor {
 
             Onem2mResource subscriptionResource = Onem2mDb.getInstance().getResource(subscriptionResourceId);
             onem2mNotification.setSubscriptionResource(subscriptionResource);
+            onem2mNotification.setJsonSubscriptionResourceContent(subscriptionResource.getResourceContentJsonString());
 
-            DbAttr subAttrList =  new DbAttr(subscriptionResource.getAttr());
-            onem2mNotification.setDbAttrs(subAttrList);
-
-            DbAttrSet subAttrSetList =  new DbAttrSet(subscriptionResource.getAttrSet());
-            onem2mNotification.setDbAttrSets(subAttrSetList);
-
-            List<Member> uriList = subAttrSetList.getAttrSet(ResourceSubscription.NOTIFICATION_URI);
-            for (Member uri : uriList) {
-                onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uri.getMember());
+            JSONArray uriArray = onem2mNotification.getJsonSubscriptionResourceContent()
+                    .getJSONArray(ResourceSubscription.NOTIFICATION_URI);
+            for (int i = 0; i < uriArray.length(); i++) {
+                onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uriArray.getString(i));
             }
 
             representation = produceJsonContent(onem2mRequest, onem2mNotification);
@@ -199,15 +186,13 @@ public class NotificationProcessor {
      */
     public static void handleDeleteSubscription(RequestPrimitive onem2mRequest, Onem2mResource onem2mResource) {
 
-        DbAttr subAttrList =  new DbAttr(onem2mResource.getAttr());
-
-        String uri = subAttrList.getAttr(ResourceSubscription.SUBSCRIBER_URI);
+        String uri = onem2mRequest.getJsonResourceContent().optString(ResourceSubscription.SUBSCRIBER_URI, null);
         if (uri == null) {
             return;
         }
         NotificationPrimitive onem2mNotification = new NotificationPrimitive();
 
-        onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, subAttrList.getAttr(ResourceSubscription.SUBSCRIBER_URI));
+        onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uri);
 
         JSONObject notification = new JSONObject();
 
@@ -233,7 +218,7 @@ public class NotificationProcessor {
     public static void handleDelete(RequestPrimitive onem2mRequest) {
 
         Onem2mResource onem2mResource = onem2mRequest.getOnem2mResource();
-        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mResource);
+        String resourceType = onem2mResource.getResourceType();
         if (resourceType.contentEquals(Onem2m.ResourceType.SUBSCRIPTION)) {
             handleDeleteSubscription(onem2mRequest, onem2mResource);
         } else {

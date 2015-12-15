@@ -13,11 +13,13 @@ import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseListBuilder;
@@ -30,7 +32,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.attr.set.Member;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +95,8 @@ public class DbResourceTree {
      * @param parentResourceId id of the parent resource
      * @return this new resource
      */
-    public Onem2mResource createResource(DbTransaction dbTxn, RequestPrimitive onem2mRequest, String parentResourceId) {
+    public Onem2mResource createResource(DbTransaction dbTxn, RequestPrimitive onem2mRequest,
+                                         String parentResourceId, String resourceType) {
 
         /**
          * Initialize empty oldestlatest lists for contentInstances, and subscriptions as these are the two sets
@@ -126,11 +128,11 @@ public class DbResourceTree {
                 .setKey(new Onem2mResourceKey(onem2mRequest.getResourceId()))
                 .setResourceId(onem2mRequest.getResourceId())
                 .setName(onem2mRequest.getResourceName())
+                .setResourceType(resourceType)
                 .setParentId(parentResourceId) // parent resource
                 .setOldestLatest(oldestLatestList)
                 .setChild(Collections.<Child>emptyList()) // new resource has NO children
-                .setAttr(onem2mRequest.getResourceContent().getAttrList())
-                .setAttrSet(onem2mRequest.getResourceContent().getAttrSetList())
+                .setResourceContentJsonString(onem2mRequest.getResourceContent().getInJsonContent().toString())
                 .build();
 
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
@@ -141,7 +143,7 @@ public class DbResourceTree {
         return onem2mResource;
     }
 
-    /**
+    /** 
      * Update the pointers to the oldest and latest children
      * @param dbTxn transaction id
      * @param resourceId the resource id
@@ -198,82 +200,84 @@ public class DbResourceTree {
         return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
-    /**
-     * Retrieve the attr by name from the data store
-     * @param resourceId resource id of the attr
-     * @param attrName name of attr
-     * @return Attr
-     */
-    public Attr retrieveAttrByName(String resourceId, String attrName) {
-
-        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-                .child(Attr.class, new AttrKey(attrName));
-
-        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
-    }
-
-    /**
-     * Delete the attr by name from the data store
-     * @param dbTxn transaction id
-     * @param resourceId this resource
-     * @param attrName name
-     */
-    public void deleteAttr(DbTransaction dbTxn, String resourceId, String attrName) {
-
-        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-                .child(Attr.class, new AttrKey(attrName));
-
-        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-    }
-
-    /**
-     *
-     * @param dbTxn transaction id
-     * @param resourceId this resource
-     * @param attr updated attr
-     */
-    public void updateAttr(DbTransaction dbTxn, String resourceId, Attr attr) {
-
-        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-                .child(Attr.class, attr.getKey());
-
-        dbTxn.update(iid, attr, LogicalDatastoreType.OPERATIONAL);
-    }
-
+//    /**
+//     * Retrieve the attr by name from the data store
+//     * @param resourceId resource id of the attr
+//     * @param attrName name of attr
+//     * @return Attr
+//     */
+//    public Attr retrieveAttrByName(String resourceId, String attrName) {
+//
+//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+//                .child(Attr.class, new AttrKey(attrName));
+//
+//        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
+//    }
+//
+//    /**
+//     * Delete the attr by name from the data store
+//     * @param dbTxn transaction id
+//     * @param resourceId this resource
+//     * @param attrName name
+//     */
+//    public void deleteAttr(DbTransaction dbTxn, String resourceId, String attrName) {
+//
+//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+//                .child(Attr.class, new AttrKey(attrName));
+//
+//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
+//    }
+//
     /**
      *
      * @param dbTxn transaction id
      * @param resourceId this resource
-     * @param attrSet updated memberList
+     * @param jsonResourceContent serailized JSON object
      */
-    public void updateAttrSet(DbTransaction dbTxn, String resourceId, AttrSet attrSet) {
+    public void updateJsonResourceContentString(DbTransaction dbTxn, String resourceId, String jsonResourceContent) {
 
-        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-                .child(AttrSet.class, attrSet.getKey());
+        Onem2mResource onem2mResource = new Onem2mResourceBuilder()
+                .setKey(new Onem2mResourceKey(resourceId))
+                .setResourceContentJsonString(jsonResourceContent)
+                .build();
 
-        dbTxn.create(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
+        InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, onem2mResource.getKey());
+
+        dbTxn.update(iid, onem2mResource, LogicalDatastoreType.OPERATIONAL);
     }
 
-    /**
-     * Delete the attr by name from the data store
-     * @param dbTxn transaction id
-     * @param resourceId this resource
-     * @param attrSetName name
-     */
-    public void deleteAttrSet(DbTransaction dbTxn, String resourceId, String attrSetName) {
-
-        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-                .child(AttrSet.class, new AttrSetKey(attrSetName));
-
-        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-    }
-
-
+//    /**
+//     *
+//     * @param dbTxn transaction id
+//     * @param resourceId this resource
+//     * @param attrSet updated memberList
+//     */
+//    public void updateAttrSet(DbTransaction dbTxn, String resourceId, AttrSet attrSet) {
+//
+//        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+//                .child(AttrSet.class, attrSet.getKey());
+//
+//        dbTxn.create(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
+//    }
+//
+//    /**
+//     * Delete the attr by name from the data store
+//     * @param dbTxn transaction id
+//     * @param resourceId this resource
+//     * @param attrSetName name
+//     */
+//    public void deleteAttrSet(DbTransaction dbTxn, String resourceId, String attrSetName) {
+//
+//        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+//                .child(AttrSet.class, new AttrSetKey(attrSetName));
+//
+//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
+//    }
 
     /**
      * Retrieve the child using its resource name
@@ -452,21 +456,7 @@ public class DbResourceTree {
                         child.getPrevId(), child.getNextId());
             }
         }
-        List<Attr> attrList = onem2mResource.getAttr();
-        LOG.info("    Attr List: count: {}", attrList.size());
-        for (Attr attr : attrList) {
-            LOG.info("        Attr: name: {}, value: {}", attr.getName(), attr.getValue());
-        }
-        List<AttrSet> attrSetList = onem2mResource.getAttrSet();
-        LOG.info("    AttrSet List: count: {}", attrSetList.size());
-        for (AttrSet attrSet : attrSetList) {
-            LOG.info("        AttrSet: name: {}", attrSet.getName());
-            List<Member> memberList = attrSet.getMember();
-            LOG.info("        AttrSet: name: {}, count: {}", attrSet.getName(), memberList.size());
-            for (Member member : memberList) {
-                LOG.info("            Member: name: {}", member.getMember());
-            }
-        }
+        LOG.info("    Resource Content: {}", onem2mResource.getResourceContentJsonString());
     }
 
     /**
