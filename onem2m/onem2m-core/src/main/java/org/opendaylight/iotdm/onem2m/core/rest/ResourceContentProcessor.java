@@ -74,7 +74,7 @@ public class ResourceContentProcessor {
      */
     public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
+        String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
         switch (resourceType) {
             case Onem2m.ResourceType.AE:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_RETRIEVE);
@@ -108,7 +108,8 @@ public class ResourceContentProcessor {
      */
     public static void handleUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
+        //String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
+        String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
 
         onem2mRequest.isCreate = false;
 
@@ -148,7 +149,7 @@ public class ResourceContentProcessor {
      */
     public static void handleDelete(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
+        String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
         switch (resourceType) {
             case Onem2m.ResourceType.AE:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_DELETE);

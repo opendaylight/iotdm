@@ -8,6 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -70,10 +72,20 @@ public class Onem2m {
     public class ResourceTypeString {
         public static final String AE = "ae";
         public static final String CONTAINER = "cnt";
-        public static final String CSE_BASE = "csb";
+        public static final String CSE_BASE = "cb";
         public static final String CONTENT_INSTANCE = "cin";
         public static final String SUBSCRIPTION = "sub";
     }
+
+    // hard code set of long to short name
+    public static final Map<String,String> resourceTypeToString = new HashMap<String,String>() {{
+        // type; string
+        put(ResourceType.AE, ResourceTypeString.AE);
+        put(ResourceType.CONTAINER, ResourceTypeString.CONTAINER);
+        put(ResourceType.CSE_BASE, ResourceTypeString.CSE_BASE);
+        put(ResourceType.CONTENT_INSTANCE, ResourceTypeString.CONTENT_INSTANCE);
+        put(ResourceType.SUBSCRIPTION, ResourceTypeString.SUBSCRIPTION);
+    }};
 
     public class ResponseType { // TS0001 section 8.2.1
         public static final String NON_BLOCKING_REQUEST_SYNCH = "1";
