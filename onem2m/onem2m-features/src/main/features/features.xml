@@ -11,36 +11,36 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
 
-    <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/${mdsal.model.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.dlux/features-dlux/${dlux.version}/xml/features</repository>
-    <repository>mvn:org.ops4j.pax.web/pax-web-features/${pax.web.version}/xml/features</repository> <!-- jetty -->
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.ops4j.pax.web/pax-web-features/{{VERSION}}/xml/features</repository> <!-- jetty -->
 
     <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
     <!-- the onem2m yang model and rpc's  -->
     <feature name='odl-onem2m-api' version='${project.version}' description='OpenDaylight :: onem2m :: api '>
         <feature version='${yangtools.version}'>odl-mdsal-models</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-api/${project.version}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-api/{{VERSION}}</bundle>
     </feature>
 
     <!-- the provider of the onem2m service, implementation of the rpc's -->
     <feature name='odl-onem2m-core' version='${project.version}' description='OpenDaylight :: onem2m :: core '>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-core/${project.version}</bundle>
-        <bundle>wrap:mvn:org.json/json/${org.json.version}</bundle>
-        <bundle>wrap:mvn:joda-time/joda-time/${joda.version}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-core.xml"> mvn:org.opendaylight.iotdm/onem2m-core/${project.version}/xml/config
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.json/json/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:joda-time/joda-time/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-core.xml"> mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}/xml/config
         </configfile>
     </feature>
 
     <feature name='odl-onem2m-notifier' version='${project.version}' description='OpenDaylight :: onem2m :: notifier'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-notifier/${project.version}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-notifier.xml">mvn:org.opendaylight.iotdm/onem2m-notifier/${project.version}/xml/config</configfile>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-notifier/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-notifier.xml">mvn:org.opendaylight.iotdm/onem2m-notifier/{{VERSION}}/xml/config</configfile>
     </feature>
 
     <!-- OneM2M Messaging over CoAP protocol -->
@@ -49,9 +49,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
-        <bundle>mvn:org.eclipse.californium/californium-osgi/${californium.version}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap/${project.version}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-coap.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-coap/${project.version}/xml/config</configfile>
+        <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-protocol-coap.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-coap/{{VERSION}}/xml/config</configfile>
         <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->
     </feature>
 
@@ -62,8 +62,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
         <feature version='${pax.web.version}'>pax-http</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http/${project.version}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-http.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-http/${project.version}/xml/config</configfile>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-protocol-http.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}/xml/config</configfile>
     </feature>
 
     <!-- oneM2M messaging over MQTT protocol -->
@@ -71,9 +71,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/${mqttclient.version}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/${project.version}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-mqtt.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/${project.version}/xml/config</configfile>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-protocol-mqtt.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/{{VERSION}}/xml/config</configfile>
     </feature>
 
     <!-- use this to test core only with restconf -->
