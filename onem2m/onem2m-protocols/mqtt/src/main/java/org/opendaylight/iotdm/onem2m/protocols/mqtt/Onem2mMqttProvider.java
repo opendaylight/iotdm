@@ -223,7 +223,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         public boolean registerCseAsMqttSubscriber(String cseId) {
 
             Boolean status = true;
-            String topic = "/oneM2M/" + Onem2m.MqttMessageType.REQUEST + "/+/" + cseId;
+            String topic = "/oneM2M/" + Onem2m.MqttMessageType.REQUEST + "/+/" + cseId + "/+" ;
             try {
                 client.subscribe(topic, 1);
             } catch (MqttException e) {
@@ -266,7 +266,16 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
 
                     @Override
                     public void messageArrived(String topic, MqttMessage message) throws Exception {
-                        handleMqttMessage(topic, message.toString());
+                        //check if Qos is not 0
+                        if ((message.isRetained()==false)&&(message.getQos() ==1)){
+                            handleMqttMessage(topic, message.toString());
+                        }
+                        if (message.getQos() !=1){
+                            sendResponse(topic, "QoS must be 1");
+                        }
+                        if (message.isRetained()==true){
+                            sendResponse(topic, "Message retained should be false");
+                        }
                     }
 
                     @Override
@@ -312,16 +321,28 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         void handleMqttMessage(String topic, String message) {
 
             String mqttMessageType = null;
+            String mqttMessageFormat=null;
+            String to=null;
+            String from=null;
             String hierarchyTopic[] = parseTopicString(topic);
+            mqttMessageFormat=hierarchyTopic[4];
                 if (hierarchyTopic[1].contains("req")) {
                     mqttMessageType= Onem2m.MqttMessageType.REQUEST;
                 } else if (hierarchyTopic[1].contains("resp")) {
                     mqttMessageType= Onem2m.MqttMessageType.RESPONSE;
                 }
+                if (hierarchyTopic[4].contains("json")) {
+                    mqttMessageFormat= Onem2m.ContentFormat.JSON;
+                } else if (hierarchyTopic[4].contains("xml")) {
+                    mqttMessageFormat= Onem2m.ContentFormat.XML;
+                }
+
+            to=hierarchyTopic[2].replace(":", "/");
+            from=hierarchyTopic[3].replace(":", "/");
 
             switch (mqttMessageType) {
                 case Onem2m.MqttMessageType.REQUEST:
-                    handleRequest(topic, message, hierarchyTopic[2], hierarchyTopic[3]);
+                    handleRequest(topic, message, to, from);
                     break;
                 case Onem2m.MqttMessageType.RESPONSE:
                     break;
@@ -338,7 +359,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             // split the topic into its hierarchy of path component strings
             String hierarchy[] = topic.split("/");
 
-            if (hierarchy.length != 4) {
+            if (hierarchy.length != 5) {
             LOG.error("Length of topics is less than expected");
             }
 
@@ -347,6 +368,10 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             }
             if (!hierarchy[1].contains("req")){
                 LOG.error("Topic must contain req or resp");
+            }
+            if(!(hierarchy[4].equalsIgnoreCase("json")||(hierarchy[4].equalsIgnoreCase("xml"))))
+            {
+                LOG.error("Topic must include type as either json or xml only");
             }
             return hierarchy;
 
@@ -365,8 +390,18 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
             clientBuilder.setProtocol(Onem2m.Protocol.MQTT);
             Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS);
-
-            String operation = processJsonRequestPrimitive(message, clientBuilder);
+            String hierarchy[]=parseTopicString(topic);
+            String mqttMessageFormat=hierarchy[4];
+            String operation=null;
+            if(mqttMessageFormat.contains(Onem2m.ContentFormat.JSON))
+            {
+                operation = processJsonRequestPrimitive(message, clientBuilder);
+            }
+            if(mqttMessageFormat.contains(Onem2m.ContentFormat.XML))
+            {
+                operation = processXMLRequestPrimitive(message, clientBuilder);
+                sendResponse(topic, "XML format is not supported yet");
+            }
 
             switch (operation) {
                 case Onem2m.Operation.RETRIEVE:
@@ -398,14 +433,24 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
             ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
             // Now place the fields from the onem2m result response back in the mqtt fields, and send
-            sendMqttResponseFromOnem2mResponse(topic, onem2mResponse);
+            if(mqttMessageFormat.contains(Onem2m.ContentFormat.JSON))
+            {
+                sendMqttJsonResponseFromOnem2mResponse(topic, onem2mResponse);
+            }
         }
 
-        /**
+          private String processXMLRequestPrimitive(String message,
+                  Onem2mRequestPrimitiveClientBuilder clientBuilder) {
+                  // TODO Auto-generated method stub
+                  return null;
+          }
+
+         /**
          * The payload is a json string containing the request primitive attributes.
          * All the error checking is done in one place in the core.
          */
-        private String processJsonRequestPrimitive(String message , Onem2mRequestPrimitiveClientBuilder clientBuilder) {
+        private String processJsonRequestPrimitive(String message,
+                Onem2mRequestPrimitiveClientBuilder clientBuilder) {
             JSONObject jsonContent = null;
             String operation = null;
             if (message == null) {
@@ -435,7 +480,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             return operation ;
         }
 
-        private void sendMqttResponseFromOnem2mResponse(String topic,ResponsePrimitive onem2mResponse){
+        private void sendMqttJsonResponseFromOnem2mResponse(String topic,ResponsePrimitive onem2mResponse){
 
             JSONObject responseJsonObject = new JSONObject();
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
@@ -457,9 +502,11 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         void sendResponse(String requestTopic, String message) {
 
             String hierarchyTopic[] = trimTopic(requestTopic).split("/");
-            String cse_name = hierarchyTopic[3];
-            String resource_name = hierarchyTopic[2];
-            String responseTopic ="/oneM2M/" + Onem2m.MqttMessageType.RESPONSE + "/" + cse_name + "/" + resource_name;
+            String format_type=hierarchyTopic[4];
+            String cse_name = hierarchyTopic[3].replace("/", ":");
+            String resource_name = hierarchyTopic[2].replace("/", ":");
+            String responseTopic ="/oneM2M/" + Onem2m.MqttMessageType.RESPONSE + "/" + resource_name + "/" + cse_name + "/" +format_type;
+
             IMqttActionListener pubListener=new IMqttActionListener() {
 
                 @Override
