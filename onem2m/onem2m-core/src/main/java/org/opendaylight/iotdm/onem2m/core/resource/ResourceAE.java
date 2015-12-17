@@ -12,6 +12,7 @@ import java.util.*;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -42,6 +43,8 @@ public class ResourceAE {
     public static final String ONTOLOGY_REF = "or";
     public static final String NODE_LINK = "nl"; // do not support node resource yet
     public static final String REQUEST_REACHABILITY = "rr";
+    public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
+
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -75,6 +78,18 @@ public class ResourceAE {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "REQUEST_REACHABILITY missing parameter");
             return;
         }
+
+        String acpids = resourceContent.getInJsonContent().optString(ACCESS_CONTROL_POLICY_IDS, null);
+        if (acpids == null && onem2mRequest.isCreate) {
+            // store the default ACPID info into this place.
+            String CSEid = onem2mRequest.getOnem2mResource().getResourceId();
+            // to should be an CSE
+            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
+            // if defaultACP is a list or jsonarray, use "put" method
+            resourceContent.getInJsonContent().append(ACCESS_CONTROL_POLICY_IDS,defaultACPID);
+
+        }
+
 
         /**
          * Check the From, if
@@ -165,6 +180,9 @@ public class ResourceAE {
                     }
                     break;
                 case ResourceContent.LABELS:
+
+                case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
+
                 case ResourceContent.EXPIRATION_TIME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
@@ -203,10 +221,14 @@ public class ResourceAE {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
+        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
 
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
+
 
         ResourceAE.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
     }

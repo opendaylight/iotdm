@@ -18,6 +18,7 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceGroup;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
@@ -383,6 +384,29 @@ public class Onem2mDb implements TransactionChainListener {
         return null;
     }
 
+
+    private Onem2mResource checkForFanOutPoint(Onem2mResource groupOnem2mResource,
+                                                               String resourceName) {
+
+        if (resourceName.contentEquals(ResourceGroup.FAN_OUT_POINT) || resourceName.equalsIgnoreCase("fanoutpoint")) {
+            String rt = groupOnem2mResource.getResourceType();
+            if (rt != null && rt.contentEquals(Onem2m.ResourceType.GROUP)) {
+                // if parent's resourceType is group
+                return groupOnem2mResource;
+                // todo : do the group operaion
+            }
+        }
+        return null;
+    }
+
+    public String getCSEid (String targetURI) {
+        targetURI = trimURI(targetURI); // get rid of leading and following "/"
+        String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
+
+        Onem2mCse cse = dbResourceTree.retrieveCseByName(hierarchy[0]);
+        return cse.getResourceId();
+    }
+
     /**
      * Using the target URI, find the resource
      * @param onem2mRequest request
@@ -433,7 +457,11 @@ public class Onem2mDb implements TransactionChainListener {
             for (int hierarchyIndex = 1; hierarchyIndex < hierarchy.length; hierarchyIndex++) {
                 onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, hierarchy[hierarchyIndex]);
                 if (onem2mResource == null) {
+                    // check "/latest" in the URI
                     onem2mResource = checkForLatestOldestContentInstance(saveOnem2mResource, hierarchy[hierarchyIndex]);
+                    if (onem2mResource == null) {
+                        onem2mResource = checkForFanOutPoint(saveOnem2mResource, hierarchy[hierarchyIndex]);
+                    }
                     if (onem2mResource == null) {
                         break;
                     }
@@ -555,6 +583,11 @@ public class Onem2mDb implements TransactionChainListener {
      */
     public Onem2mResource getResource(String resourceId) {
         return dbResourceTree.retrieveResourceById(resourceId);
+    }
+
+
+    public String getChildResourceID(String cseid, String childName) {
+        return dbResourceTree.retrieveChildResourceIDByName(cseid, childName);
     }
 
     private void deleteContentInstance(DbTransaction dbTxn,
@@ -845,4 +878,6 @@ public class Onem2mDb implements TransactionChainListener {
         LOG.info("Db closed successfully, chain {} BUT WHY, closed unintentionally", chain);
         assert(false);
     }
+
+
 }

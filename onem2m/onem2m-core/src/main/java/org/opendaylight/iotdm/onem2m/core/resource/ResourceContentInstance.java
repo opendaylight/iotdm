@@ -12,6 +12,7 @@ import java.util.Iterator;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -192,6 +193,9 @@ public class ResourceContentInstance  {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
+        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;

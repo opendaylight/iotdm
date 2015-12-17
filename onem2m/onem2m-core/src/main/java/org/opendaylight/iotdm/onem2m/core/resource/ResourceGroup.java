@@ -8,36 +8,38 @@
 
 package org.opendaylight.iotdm.onem2m.core.resource;
 
-import java.util.Iterator;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.json.JSONArray;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceContainer {
+import java.util.Iterator;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResourceContainer.class);
-    private ResourceContainer() {}
+public class ResourceGroup {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceGroup.class);
+    private ResourceGroup() {}
 
     // taken from CDT-container-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO: ts0001 9.6.6-2
 
 
     public static final String CREATOR = "cr";
-    public static final String MAX_NR_INSTANCES = "mni";
-    public static final String MAX_BYTE_SIZE = "mbs";
-    public static final String CURR_NR_INSTANCES = "cni";
-    public static final String CURR_BYTE_SIZE = "cbs";
-    public static final String ONTOLOGY_REF = "or";
-    public static final String LATEST = "la";
-    public static final String OLDEST = "ol";
+    public static final String MEMBER_TYPE = "mt";
+    public static final String CURR_NR_MEMBERS = "cnm";
+    public static final String MAX_NR_MEMBERS = "mnm";
+    public static final String MEMBERS_IDS = "mid";
+    public static final String MEMBERS_ACCESS_CONTROL_POLICY_IDS = "macp";
+    public static final String MEMBER_TYPE_VALIDATED = "mtv";
+    public static final String CONSISTENCY_STRATEGY = "csy";
+    public static final String GROUP_NAME = "gn";
+    public static final String FAN_OUT_POINT = "fopt";    // this is not an attribute
 
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
@@ -60,15 +62,24 @@ public class ResourceContainer {
             Object o = resourceContent.getInJsonContent().get(key);
 
             switch (key) {
-
-                case CURR_BYTE_SIZE:
-                case CURR_NR_INSTANCES:
-                case ResourceContent.STATE_TAG:
+                // read only
+                case MEMBER_TYPE_VALIDATED:
+                case CURR_NR_MEMBERS:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, key + ": read-only parameter");
                     return;
+                // integer
+                case MEMBER_TYPE:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof Integer)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
+                            return;
+                        }
+                    }
+                    break;
 
-                case MAX_NR_INSTANCES:
-                case MAX_BYTE_SIZE:
+                // integer > 0
+                case MAX_NR_MEMBERS:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof Integer)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -82,17 +93,20 @@ public class ResourceContainer {
                     }
                     break;
 
+
+                // special String
                 case CREATOR:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
                         resourceContent.getInJsonContent().put(CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
 
-                case ONTOLOGY_REF:
+                // String
+                case GROUP_NAME:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -101,10 +115,30 @@ public class ResourceContainer {
                         }
                     }
                     break;
+
+
+                // list
+                case MEMBERS_IDS:
+                case MEMBERS_ACCESS_CONTROL_POLICY_IDS:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.get(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            }
+                        }
+                    }
+                    break;
+
+                // default attributes in ResourceContent
                 case ResourceContent.LABELS:
-
-                case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
-
                 case ResourceContent.EXPIRATION_TIME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
@@ -155,39 +189,42 @@ public class ResourceContainer {
         if (tempStr != null && !onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CREATOR cannot be updated");
             return;
-
         }
 
-        String acpids = resourceContent.getInJsonContent().optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null);
-        if (acpids == null && onem2mRequest.isCreate) {
-            // store the default ACPID info into this place.
-            // if parent resource contains acpi, use parent's acpi otherwise use default.
-            JSONObject jsonContent = new JSONObject(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
-            if (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) !=null) {
-                JSONArray acpiArray = jsonContent.getJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
-                resourceContent.getInJsonContent().put(resourceContent.ACCESS_CONTROL_POLICY_IDS, acpiArray);
-
-            } else {
-                // parent resource does not contain acpid
-                String targetURI = onem2mRequest.getPrimitive(RequestPrimitive.TO);
-                String CSEid = Onem2mDb.getInstance().getCSEid(targetURI);
-                String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid, "_defaultACP");
-
-                resourceContent.getInJsonContent().append(resourceContent.ACCESS_CONTROL_POLICY_IDS, defaultACPID);
-            }
-
+        // 1 & WO
+        String memberType = resourceContent.getInJsonContent().optString(MEMBER_TYPE, null);
+        if (memberType == null && onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "MEMBERTYPE missing parameter");
+            return;
+        } else if (memberType != null && !onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "MEMBERTYPE cannot be updated");
+            return;
         }
 
+        // 1 & RW
+        String mnm = resourceContent.getInJsonContent().optString(MAX_NR_MEMBERS, null);
+        if (mnm == null && onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "MAX NUMBER OF MEMBERS missing parameter");
+            return;
+        }
+
+        // 1 & List
+        String mids = resourceContent.getInJsonContent().optString(MEMBERS_IDS, null);
+        if (mids == null && onem2mRequest.isCreate) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "MEMBER IDS missing parameter");
+            return;
+        }
+
+        // set the Cur number when created
         if (onem2mRequest.isCreate) {
-            // initialize state tag to 0
-            tempInt = 0;
-            resourceContent.getInJsonContent().put(ResourceContent.STATE_TAG, tempInt);
-            resourceContent.getInJsonContent().put(CURR_NR_INSTANCES, tempInt);
-            resourceContent.getInJsonContent().put(CURR_BYTE_SIZE, tempInt);
-        } else {
-            // update the existing state tag as the resource is being updated
-            tempInt = onem2mRequest.getJsonResourceContent().getInt (ResourceContent.STATE_TAG);
-            resourceContent.getInJsonContent().put(ResourceContent.STATE_TAG, ++tempInt);
+            // initialize cur number of members to 0
+            tempInt = resourceContent.getInJsonContent().getJSONArray(MEMBERS_IDS).length();
+            resourceContent.getInJsonContent().put(CURR_NR_MEMBERS, tempInt);
+        }else {
+            // update the existing current number of members as the resource is being updated
+            tempInt = resourceContent.getInJsonContent().getJSONArray(MEMBERS_IDS).length();
+            resourceContent.getInJsonContent().put(CURR_NR_MEMBERS, tempInt);
+            // todo: they are the same...
         }
 
         if (onem2mRequest.isCreate) {
@@ -202,11 +239,11 @@ public class ResourceContainer {
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
-            // may have to remove content instances as mbs and mni may have been reduced
-            ResourceContainer.checkAndFixCurrMaxRules(onem2mRequest.getPrimitive(RequestPrimitive.TO));
-            Onem2mResource containerResource = Onem2mDb.getInstance().getResource(onem2mRequest.getResourceId());
-            onem2mRequest.setOnem2mResource(containerResource);
-            onem2mRequest.setJsonResourceContent(containerResource.getResourceContentJsonString());
+//            // may have to remove content instances as mbs and mni may have been reduced
+//            ResourceGroup.checkAndFixCurrMaxRules(onem2mRequest.getPrimitive(RequestPrimitive.TO));
+//            Onem2mResource containerResource = Onem2mDb.getInstance().getResource(onem2mRequest.getResourceId());
+//            onem2mRequest.setOnem2mResource(containerResource);
+//            onem2mRequest.setJsonResourceContent(containerResource.getResourceContentJsonString());
         }
     }
 
@@ -219,7 +256,7 @@ public class ResourceContainer {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        resourceContent.parse(Onem2m.ResourceTypeString.CONTAINER, onem2mRequest, onem2mResponse);
+        resourceContent.parse(Onem2m.ResourceTypeString.GROUP, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
@@ -233,8 +270,8 @@ public class ResourceContainer {
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-                    return;
-        ResourceContainer.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+            return;
+        ResourceGroup.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
 
     }
 
@@ -258,6 +295,7 @@ public class ResourceContainer {
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+
         if (!Onem2mDb.getInstance().findResourceUsingURI(containerUri, onem2mRequest, onem2mResponse)) {
             LOG.error("Somehow the resource container is gone! : " + containerUri);
             return;
@@ -338,11 +376,12 @@ public class ResourceContainer {
      */
     public static void setCurrValuesForThisCreatedContentInstance(RequestPrimitive onem2mRequest,
                                                                   JSONObject containerResourceContent,
-                                                                 Integer newByteSize) {
+                                                                  Integer newByteSize) {
 
         Integer cni = containerResourceContent.getInt(ResourceContainer.CURR_NR_INSTANCES);
         Integer cbs = containerResourceContent.getInt(ResourceContainer.CURR_BYTE_SIZE);
         Integer st = containerResourceContent.getInt(ResourceContent.STATE_TAG);
+
         cni++;
         cbs += newByteSize;
         st++;

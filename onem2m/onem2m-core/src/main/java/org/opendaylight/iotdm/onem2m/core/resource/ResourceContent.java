@@ -14,6 +14,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
+
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
@@ -44,6 +47,8 @@ public class ResourceContent {
     public static final String MEMBER_URI = "val";
     public static final String MEMBER_NAME = "nm";
     public static final String MEMBER_TYPE = "typ";
+    public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
+
 
     private JSONObject inJsonContent;
     private String xmlContent;
@@ -164,7 +169,6 @@ public class ResourceContent {
      * @param onem2mResponse response
      */
     public void processCommonCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
         if (onem2mRequest.isCreate) {
 
             String resourceType = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
@@ -213,6 +217,8 @@ public class ResourceContent {
         switch (key) {
 
             case LABELS:
+            case ACCESS_CONTROL_POLICY_IDS:
+
                 if (!resourceContent.getInJsonContent().isNull(key)) {
                     if (!(o instanceof JSONArray)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,

@@ -16,10 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
+import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
@@ -539,6 +536,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
+//        CheckAccessControlProcessor.handleCreate(this, onem2mResponse);
+//        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+//            return;
+//        }
 
         // now format a response based on result content desired
         ResultContentProcessor.handleCreate(this, onem2mResponse);
@@ -753,6 +754,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
+
         ResultContentProcessor.handleUpdate(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
@@ -826,6 +828,170 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
                         "Provisioned cseBase: " + cseId + " type: " + cseType);
             }
+
+            // TODO: add default ACP here?
+//            RequestPrimitive defaultACPrequest = new RequestPrimitive();
+//            defaultACPrequest.setPrimitive("protocol","Http");
+//            defaultACPrequest.setPrimitive("contentFormat","json");
+//            defaultACPrequest.setPrimitive("to","/"+ cseId);
+//            defaultACPrequest.setPrimitive("fr","//localhost:10000");
+//            defaultACPrequest.setPrimitive("rqi","12345");
+//            defaultACPrequest.setPrimitive("ot","NOW");
+//            defaultACPrequest.setPrimitive("ty","1");
+//            defaultACPrequest.setPrimitive("rcn","1");
+//            defaultACPrequest.setPrimitive("op","1");
+//            defaultACPrequest.setPrimitive("pc","{\n" +
+//                    "\n" +
+//                    "    \"m2m:acp\":{\n" +
+//                    "      \"pv\":\n" +
+//                    "        {\"acr\":[{\n" +
+//                    "              \n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \"acop\":35\n" +
+//                    "              \n" +
+//                    "        },\n" +
+//                    "         {\n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \n" +
+//                    "          \"acop\":35\n" +
+//                    "         }\n" +
+//                    "        \n" +
+//                    "        ]},\n" +
+//                    "        \n" +
+//                    "      \"pvs\":\n" +
+//                    "        {\"acr\":[{\n" +
+//                    "              \n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \"acop\":7\n" +
+//                    "              \n" +
+//                    "        },\n" +
+//                    "         {\n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \"acop\":9\n" +
+//                    "         }\n" +
+//                    "        \n" +
+//                    "        ]}\n" +
+//                    "       \n" +
+//                    "    }\n" +
+//                    "  \n" +
+//                    "}");
+//            ResourceContentProcessor.handleCreate(defaultACPrequest, onem2mResponse);
+
+
+//            this.setPrimitive("to","/"+ cseId);
+//            this.setPrimitive("ty","1");
+//            this.setPrimitive("pc","{\n" +
+//                    "\n" +
+//                    "    \"m2m:acp\":{\n" +
+//                    "      \"pv\":\n" +
+//                    "        {\"acr\":[{\n" +
+//                    "              \n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \"acop\":35\n" +
+//                    "              \n" +
+//                    "        },\n" +
+//                    "         {\n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \n" +
+//                    "          \"acop\":35\n" +
+//                    "         }\n" +
+//                    "        \n" +
+//                    "        ]},\n" +
+//                    "        \n" +
+//                    "      \"pvs\":\n" +
+//                    "        {\"acr\":[{\n" +
+//                    "              \n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \"acop\":7\n" +
+//                    "              \n" +
+//                    "        },\n" +
+//                    "         {\n" +
+//                    "          \"acor\" : [\"111\",\"222\"],\n" +
+//                    "          \"acop\":9\n" +
+//                    "         }\n" +
+//                    "        \n" +
+//                    "        ]}\n" +
+//                    "       \n" +
+//                    "    }\n" +
+//                    "  \n" +
+//                    "}");
+//            ResourceContentProcessor.handleCreate(this, onem2mResponse);
+        } finally {
+            this.crudMonitor.leave();
+        }
+    }
+
+    public void createDefaultACP(ResponsePrimitive onem2mResponse) {
+
+        this.crudMonitor.enter();
+        try {
+            String cseId = this.getPrimitive("CSE_ID");
+
+            this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
+            this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
+            this.setResourceName("_defaultACP");
+            this.setPrimitive("to", "/" + cseId);
+            this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+            this.isCreate = true;
+            // store the parent resource into onem2mresource.
+            if (!Onem2mDb.getInstance().findResourceUsingURI("/" + cseId, this, onem2mResponse)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
+                        "Resource target URI not found: " + "/" + cseId);
+                return;
+            }
+            this.setPrimitive(RequestPrimitive.CONTENT, "{\n" +
+                    "\n" +
+                    "    \"m2m:acp\":{\n" +
+                    "      \"pv\":\n" +
+                    "        {\"acr\":[{\n" +
+                    "              \n" +
+                    "          \"acor\" : [\"Test_AE_ID\",\"//iotsandbox.cisco.com:10000\"],\n" +
+                    "          \"acop\":63\n" +
+                    "              \n" +
+                    "        },\n" +
+                    "         {\n" +
+                    "          \"acor\" : [\"111\",\"222\"],\n" +
+                    "          \n" +
+                    "          \"acop\":35\n" +
+                    "         }\n" +
+                    "        \n" +
+                    "        ]},\n" +
+                    "        \n" +
+                    "      \"pvs\":\n" +
+                    "        {\"acr\":[{\n" +
+                    "              \n" +
+                    "          \"acor\" : [\"111\",\"222\"],\n" +
+                    "          \"acop\":7\n" +
+                    "              \n" +
+                    "        },\n" +
+                    "         {\n" +
+                    "          \"acor\" : [\"111\",\"222\"],\n" +
+                    "          \"acop\":9\n" +
+                    "         }\n" +
+                    "        \n" +
+                    "        ]}\n" +
+                    "       \n" +
+                    "    }\n" +
+                    "  \n" +
+                    "}");
+
+            // process the resource specific attributes
+            //ResourceContentProcessor.handleCreate(this, onem2mResponse);
+            ResourceAccessControlPolicy.handleDefaultCreate(this, onem2mResponse);
+
+            // add the ACP response
+            ResultContentProcessor.handleCreate(this, onem2mResponse);
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                return;
+            }
+
+            // TODO: the below code does not run, can modify to get the default ACP's URI
+            // if the create was successful, ie no error has already happened, set CREATED for status code here
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
+                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
+                        "Provisioned default ACP: " + cseId + " name: " + "deaultACP");
+            }
+
         } finally {
             this.crudMonitor.leave();
         }

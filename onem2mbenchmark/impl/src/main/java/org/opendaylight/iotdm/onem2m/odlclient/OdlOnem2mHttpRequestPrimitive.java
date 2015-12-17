@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 public class OdlOnem2mHttpRequestPrimitive {
 
     private static final Logger LOG = LoggerFactory.getLogger(OdlOnem2mHttpRequestPrimitive.class);
-
     ContentExchange httpRequest;
     String uriQueryString;
     String to;

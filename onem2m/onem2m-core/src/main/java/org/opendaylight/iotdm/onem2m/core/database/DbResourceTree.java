@@ -401,6 +401,20 @@ public class DbResourceTree {
         return retrieveResourceById(child.getResourceId());
     }
 
+
+
+    public String retrieveChildResourceIDByName(String resourceId, String name) {
+
+        InstanceIdentifier<Child> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(Child.class, new ChildKey(name));
+
+        Child child = DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
+        if (child == null)
+            return null;
+
+        return child.getResourceId();
+    }
     /**
      * Delete the resource using its id
      * @param dbTxn transaction id

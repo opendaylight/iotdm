@@ -200,10 +200,8 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, BindingAwarePro
 
             // now place the fields from the onem2m result response back in the http fields, and send
             sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
-
             httpResponse.addHeader("Access-Control-Allow-Origin", "*");
             httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
-
             baseRequest.setHandled(true);
         }
 
