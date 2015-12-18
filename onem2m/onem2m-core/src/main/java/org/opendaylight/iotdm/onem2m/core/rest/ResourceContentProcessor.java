@@ -59,6 +59,18 @@ public class ResourceContentProcessor {
                 ResourceCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_CREATE);
                 break;
+            case Onem2m.ResourceType.NODE:
+                ResourceNode.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_NODE_CREATE);
+                break;
+            case Onem2m.ResourceType.GROUP:
+                ResourceGroup.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_GROUP_CREATE);
+                break;
+            case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
+                ResourceAccessControlPolicy.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_CREATE);
+                break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
@@ -90,6 +102,15 @@ public class ResourceContentProcessor {
                 break;
             case Onem2m.ResourceType.CSE_BASE:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_RETRIEVE);
+                break;
+            case Onem2m.ResourceType.NODE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_NODE_RETRIEVE);
+                break;
+            case Onem2m.ResourceType.GROUP:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_GROUP_RETRIEVE);
+                break;
+            case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_RETRIEVE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
@@ -134,6 +155,18 @@ public class ResourceContentProcessor {
                 ResourceCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_UPDATE);
                 break;
+            case Onem2m.ResourceType.NODE:
+                ResourceNode.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_NODE_UPDATE);
+                break;
+            case Onem2m.ResourceType.GROUP:
+                ResourceGroup.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_GROUP_UPDATE);
+                break;
+            case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
+                ResourceAccessControlPolicy.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_UPDATE);
+                break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
@@ -165,6 +198,15 @@ public class ResourceContentProcessor {
                 break;
             case Onem2m.ResourceType.CSE_BASE:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_DELETE);
+                break;
+            case Onem2m.ResourceType.NODE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_NODE_DELETE);
+                break;
+            case Onem2m.ResourceType.GROUP:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_GROUP_DELETE);
+                break;
+            case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_DELETE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,

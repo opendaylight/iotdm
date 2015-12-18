@@ -61,6 +61,7 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String FILTER_CRITERIA_LIMIT = "lim";
     public static final String FILTER_CRITERIA_OFFSET = "off";
     public static final String DISCOVERY_RESULT_TYPE = "drt";
+    public static final String ROLE = "rol";
 
     // helper attributes
     public static final String PROTOCOL = "protocol"; // See Protocol below
@@ -105,6 +106,7 @@ public class RequestPrimitive extends BasePrimitive {
         add(PROTOCOL);
         add(CONTENT_FORMAT);
         add(NATIVEAPP_NAME);
+        add(ROLE);
     }};
 
     // hard code set of long to short name
@@ -143,6 +145,7 @@ public class RequestPrimitive extends BasePrimitive {
         put("protocol", PROTOCOL);
         put("contentFormat", CONTENT_FORMAT);
         put("nativeAppName", NATIVEAPP_NAME);
+        put("role", ROLE);
     }};
 
     public RequestPrimitive() {

@@ -66,8 +66,26 @@ public class Onem2mStats {
     public static final int MQTT_REQUESTS_DELETE = 42;
     public static final int MQTT_REQUESTS_NOTIFY = 43;
 
+    public static final int RESOURCE_NODE_CREATE = 44;
+    public static final int RESOURCE_NODE_RETRIEVE = 45;
+    public static final int RESOURCE_NODE_UPDATE = 46;
+    public static final int RESOURCE_NODE_DELETE = 47;
+
+    public static final int RESOURCE_GROUP_CREATE = 48;
+    public static final int RESOURCE_GROUP_RETRIEVE = 49;
+    public static final int RESOURCE_GROUP_UPDATE = 50;
+    public static final int RESOURCE_GROUP_DELETE = 51;
+
+    public static final int RESOURCE_ACCESS_CONTROL_POLICY_CREATE = 52;
+    public static final int RESOURCE_ACCESS_CONTROL_POLICY_RETRIEVE = 53;
+    public static final int RESOURCE_ACCESS_CONTROL_POLICY_UPDATE = 54;
+    public static final int RESOURCE_ACCESS_CONTROL_POLICY_DELETE = 55;
+
+
+
     // this should be the latest entry one plus 1
-    private static final int MAX_STATS = 44;
+    private static final int MAX_STATS = 56;
+
     private static Onem2mStats s;
 
     private Integer[] statsArray;
@@ -90,12 +108,12 @@ public class Onem2mStats {
     public static final int ONEM2M_STATS_HTTP_OPS = 0;
 
     public synchronized void endpointInc(String ep) {
-            Integer v = endpointMap.get(ep);
-            if (v == null) {
-                endpointMap.put(ep, 1);
-            } else {
-                endpointMap.put(ep, v + 1);
-            }
+        Integer v = endpointMap.get(ep);
+        if (v == null) {
+            endpointMap.put(ep, 1);
+        } else {
+            endpointMap.put(ep, v + 1);
+        }
     }
     public synchronized void inc(int statType) {
 

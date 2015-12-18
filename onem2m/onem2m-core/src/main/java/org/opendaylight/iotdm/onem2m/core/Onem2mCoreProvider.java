@@ -19,7 +19,6 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
@@ -146,12 +145,19 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
         onem2mRequest.provisionCse(onem2mResponse);
 
+        if (onem2mResponse.getPrimitive("rsc").contains("Provisioned")) {
+            RequestPrimitiveProcessor onem2mRequest1 = new RequestPrimitiveProcessor();
+            onem2mRequest1.createUpdateDeleteMonitorSet(crudMonitor);
+            onem2mRequest1.setPrimitivesList(csePrimitiveList);
+            onem2mRequest1.createDefaultACP(onem2mResponse);
+        }
+
         csePrimitiveList = onem2mResponse.getPrimitivesList();
+
         Onem2mCseProvisioningOutput output = new Onem2mCseProvisioningOutputBuilder()
                 .setOnem2mPrimitive(csePrimitiveList).build();
-
+        // TODO: modify the default acp response
         LOG.info("RPC: end handle onem2mCseProvisioning ...");
-
         return RpcResultBuilder.success(output).buildFuture();
     }
 

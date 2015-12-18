@@ -41,6 +41,7 @@ public class Onem2m {
         public static final String UPDATE = "3";
         public static final String DELETE = "4";
         public static final String NOTIFY = "5";
+        public static final String DISCOVER = "6";
     }
 
     // TODO: onem2m mime types: TS0004 section 6.7
@@ -68,6 +69,9 @@ public class Onem2m {
         public static final String CSE_BASE = "5"; //"csb";
         public static final String CONTENT_INSTANCE = "4"; //"cin";
         public static final String SUBSCRIPTION = "23"; //"sub";
+        public static final String NODE = "14"; //"nod"
+        public static final String GROUP = "9";
+        public static final String ACCESS_CONTROL_POLICY = "1";
     }
     public class ResourceTypeString {
         public static final String AE = "ae";
@@ -75,7 +79,11 @@ public class Onem2m {
         public static final String CSE_BASE = "cb";
         public static final String CONTENT_INSTANCE = "cin";
         public static final String SUBSCRIPTION = "sub";
+        public static final String NODE = "nod";
+        public static final String GROUP = "grp";
+        public static final String ACCESS_CONTROL_POLICY = "acp";
     }
+
 
     // hard code set of long to short name
     public static final Map<String,String> resourceTypeToString = new HashMap<String,String>() {{
@@ -85,6 +93,9 @@ public class Onem2m {
         put(ResourceType.CSE_BASE, ResourceTypeString.CSE_BASE);
         put(ResourceType.CONTENT_INSTANCE, ResourceTypeString.CONTENT_INSTANCE);
         put(ResourceType.SUBSCRIPTION, ResourceTypeString.SUBSCRIPTION);
+        put(ResourceType.NODE, ResourceTypeString.NODE);
+        put(ResourceType.GROUP, ResourceTypeString.GROUP);
+        put(ResourceType.ACCESS_CONTROL_POLICY, ResourceTypeString.ACCESS_CONTROL_POLICY);
     }};
 
     public class ResponseType { // TS0001 section 8.2.1
@@ -171,7 +182,8 @@ public class Onem2m {
         public static final String X_M2M_OT = "X-M2M-OT";
         public static final String X_M2M_RSC = "X-M2M-RSC";
     }
-    
+
+
     public class MqttMessageType {
         public static final String RESPONSE = "resp";
         public static final String REQUEST = "req";

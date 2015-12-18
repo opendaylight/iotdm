@@ -143,7 +143,7 @@ public class DbResourceTree {
         return onem2mResource;
     }
 
-    /** 
+    /**
      * Update the pointers to the oldest and latest children
      * @param dbTxn transaction id
      * @param resourceId the resource id
@@ -152,10 +152,10 @@ public class DbResourceTree {
      * @return the resource
      */
     public OldestLatest updateResourceOldestLatestInfo(DbTransaction dbTxn,
-                                                         String resourceId,
-                                                         String resourceType,
-                                                         String oldest,
-                                                         String latest) {
+                                                       String resourceId,
+                                                       String resourceType,
+                                                       String oldest,
+                                                       String latest) {
 
         OldestLatest oldestlatest = new OldestLatestBuilder()
                 .setKey(new OldestLatestKey(resourceType))
@@ -304,8 +304,8 @@ public class DbResourceTree {
      * @param nextId pointer to next sibling
      */
     public void createParentChildLink(DbTransaction dbTxn, String parentResourceId,
-                                               String childName, String childResourceId,
-                                               String prevId, String nextId) {
+                                      String childName, String childResourceId,
+                                      String prevId, String nextId) {
         Child child = new ChildBuilder()
                 .setKey(new ChildKey(childName))
                 .setName(childName)
@@ -401,6 +401,20 @@ public class DbResourceTree {
         return retrieveResourceById(child.getResourceId());
     }
 
+
+
+    public String retrieveChildResourceIDByName(String resourceId, String name) {
+
+        InstanceIdentifier<Child> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
+                .child(Child.class, new ChildKey(name));
+
+        Child child = DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
+        if (child == null)
+            return null;
+
+        return child.getResourceId();
+    }
     /**
      * Delete the resource using its id
      * @param dbTxn transaction id

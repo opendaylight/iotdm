@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.slf4j.Logger;
@@ -74,8 +75,8 @@ public class ResourceSubscription {
         tempStr = resourceContent.getInJsonContent().optString(NOTIFICATION_CONTENT_TYPE, null);
         if (tempStr != null) {
             if (!tempStr.contentEquals(Onem2m.NotificationContentType.MODIFIED_ATTRIBUTES) &&
-                !tempStr.contentEquals(Onem2m.NotificationContentType.WHOLE_RESOURCE) &&
-                !tempStr.contentEquals(Onem2m.NotificationContentType.REFERENCE_ONLY)) {
+                    !tempStr.contentEquals(Onem2m.NotificationContentType.WHOLE_RESOURCE) &&
+                    !tempStr.contentEquals(Onem2m.NotificationContentType.REFERENCE_ONLY)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "NOTIFICATION_CONTENT_TYPE not valid: " + tempStr);
                 return;
@@ -208,6 +209,9 @@ public class ResourceSubscription {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
+        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
