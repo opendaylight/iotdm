@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.IPAddressVidator;
@@ -209,12 +210,12 @@ public class ResourceAccessControlPolicy {
 //                                                                            InetAddressValidator validator = new InetAddressValidator();
 //                                                                            if (!validator.isValidInet6Address(ipv6Address)) {
 //                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ")" + ipv6Address+ "id not a valid Ipv4 address.");
+//                                                                                        "PRIVILEGES("  + IP_V6_ADDRESSES+ ")" + ipv6Address+ "id not a valid Ipv6 address.");
 //                                                                                return;
 //                                                                            }
                                                                             if (!IPAddressVidator.isIpv6Address(ipv6Address)) {
                                                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ") : " + ipv6Address+ " is not a valid Ipv4 address.");
+                                                                                        "PRIVILEGES("  + IP_V6_ADDRESSES+ ") : " + ipv6Address+ " is not a valid Ipv6 address.");
                                                                                 return;
                                                                             }
                                                                         }
@@ -467,6 +468,7 @@ public class ResourceAccessControlPolicy {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
+        CheckAccessControlProcessor.handleSelfCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);

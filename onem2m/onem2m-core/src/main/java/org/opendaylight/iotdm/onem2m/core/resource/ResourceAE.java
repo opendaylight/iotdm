@@ -9,6 +9,8 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.*;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
@@ -43,7 +45,7 @@ public class ResourceAE {
     public static final String ONTOLOGY_REF = "or";
     public static final String NODE_LINK = "nl"; // do not support node resource yet
     public static final String REQUEST_REACHABILITY = "rr";
-    public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
+    public static final String CONTENT_SERIALIZATION = "csz";
 
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
@@ -77,17 +79,6 @@ public class ResourceAE {
         if (rr == null && onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "REQUEST_REACHABILITY missing parameter");
             return;
-        }
-
-        String acpids = resourceContent.getInJsonContent().optString(ACCESS_CONTROL_POLICY_IDS, null);
-        if (acpids == null && onem2mRequest.isCreate) {
-            // store the default ACPID info into this place.
-            String CSEid = onem2mRequest.getOnem2mResource().getResourceId();
-            // to should be an CSE
-            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
-            // if defaultACP is a list or jsonarray, use "put" method
-            resourceContent.getInJsonContent().append(ACCESS_CONTROL_POLICY_IDS, defaultACPID);
-
         }
 
 
@@ -170,12 +161,54 @@ public class ResourceAE {
                         }
                     }
                     break;
+                case NODE_LINK:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                            return;
+                        } else {
+                            // if it is a String, check whether it is a valid node
+                            String nodeid = (String)o;
+                            Onem2mResource nodeResource = Onem2mDb.getInstance().getResource(nodeid);
+                            if (nodeResource == null || !nodeResource.getResourceType().contentEquals(Onem2m.ResourceType.NODE)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") nodelink is not a valid node's resourceID");
+                                return;
+                            }
+                        }
+                    }
+                    break;
                 case REQUEST_REACHABILITY:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof Boolean)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
                             return;
+                        }
+                    }
+                    break;
+                case CONTENT_SERIALIZATION:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.get(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            } else {
+                                // check all the string belong to json/xml
+                                if (!((String) array.get(i)).equalsIgnoreCase("XML") && !((String) array.get(i)).equalsIgnoreCase("JSON")) {
+                                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                            "CONTENT(" + RequestPrimitive.CONTENT + ") only accept word JSON or XML for attribute " + key);
+                                    return;
+                                }
+                            }
                         }
                     }
                     break;
@@ -221,7 +254,7 @@ public class ResourceAE {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 

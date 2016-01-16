@@ -105,11 +105,12 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         //LOG.info("RPC: begin handle op ...");
 
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
+        // todo: if it is a group/fanoutpoint, new a GroupRequestPrimitiveProcessor then called a lot of single processor?
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
         onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-
+        // todo: new Group ResponsePrimitive?
         onem2mRequest.handleOperation(onem2mResponse);
 
         onem2mPrimitiveList = onem2mResponse.getPrimitivesList();

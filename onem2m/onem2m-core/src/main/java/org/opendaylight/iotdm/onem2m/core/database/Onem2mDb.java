@@ -585,6 +585,70 @@ public class Onem2mDb implements TransactionChainListener {
         return dbResourceTree.retrieveResourceById(resourceId);
     }
 
+    /**
+     * Get the resource using URI
+     * @param targetURI the resource URI to get
+     * @return the resource info for this URI, it no resource found, return null
+     */
+    public Onem2mResource getResourceUsingURI(String targetURI) {
+        targetURI = trimURI(targetURI); // get rid of leading and following "/"
+        String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
+
+        // start by looking at the cse root: the first level is the cse name
+        Onem2mCse cse = dbResourceTree.retrieveCseByName(hierarchy[0]);
+        if (cse == null)
+            return null; // resource not found
+
+        /**
+         * Cases to consider:
+         * 1) the targetURI is just the cse --> hierarchy.length == 1
+         * 2) the target URI has just one more level --> hierarchy.length == 2
+         * 2a) hierarchy[1] is a non-hierarchical id
+         * 2b) hierarchy[1] is the name of a real resource
+         * 3) the hierarchy needs to be traversed looking at each level by name until there are no more levels
+         *    or we find the resource ny name
+         */
+        if (hierarchy.length == 1) { // case 1
+            return dbResourceTree.retrieveResourceById(cse.getResourceId());
+        }
+
+        Onem2mResource onem2mResource = null;
+        Onem2mResource saveOnem2mResource = null;
+
+        if (hierarchy.length == 2) { // case 2
+
+            onem2mResource  = dbResourceTree.retrieveResourceById(hierarchy[1]); // case 2a
+            if (onem2mResource == null)
+                onem2mResource = dbResourceTree.retrieveChildResourceByName(cse.getResourceId(), hierarchy[1]); // case 2b
+        } else { // case 3
+            /**
+             * This routine starts at hierarchy[1] and buzzes down the hierarchy looking for the resource name
+             */
+            String resourceId = cse.getResourceId();
+            for (int hierarchyIndex = 1; hierarchyIndex < hierarchy.length; hierarchyIndex++) {
+                onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, hierarchy[hierarchyIndex]);
+                if (onem2mResource == null) {
+                    // check "/latest" in the URI
+                    onem2mResource = checkForLatestOldestContentInstance(saveOnem2mResource, hierarchy[hierarchyIndex]);
+                    if (onem2mResource == null) {
+                        onem2mResource = checkForFanOutPoint(saveOnem2mResource, hierarchy[hierarchyIndex]);
+                    }
+                    if (onem2mResource == null) {
+                        break;
+                    }
+                }
+                resourceId = onem2mResource.getResourceId();
+                saveOnem2mResource = onem2mResource;
+            }
+        }
+
+        if (onem2mResource == null)
+            return null; // resource not found
+
+        return onem2mResource;
+
+
+    }
 
     public String getChildResourceID(String cseid, String childName) {
         return dbResourceTree.retrieveChildResourceIDByName(cseid, childName);
