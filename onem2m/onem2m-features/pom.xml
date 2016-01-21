@@ -25,7 +25,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <restconf.version>1.4.0-SNAPSHOT</restconf.version>
         <mdsal.version>1.4.0-SNAPSHOT</mdsal.version>
         <mdsal.model.version>0.9.0-SNAPSHOT</mdsal.model.version>
-        <yangtools.version>0.9.0-SNAPSHOT</yangtools.version>
+        <yangtools.version>1.0.0-SNAPSHOT</yangtools.version>
         <dlux.version>0.4.0-SNAPSHOT</dlux.version>
         <pax.web.version>3.1.4</pax.web.version>
         <!--<californium.version>1.0.0-M3</californium.version>-->

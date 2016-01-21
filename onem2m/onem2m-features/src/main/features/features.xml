@@ -21,7 +21,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
     <!-- the onem2m yang model and rpc's  -->
     <feature name='odl-onem2m-api' version='${project.version}' description='OpenDaylight :: onem2m :: api '>
-        <feature version='${yangtools.version}'>odl-mdsal-models</feature>
+        <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-api/{{VERSION}}</bundle>
     </feature>
 
