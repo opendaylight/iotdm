@@ -1,0 +1,8 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+2: John Burns <johnburn@cisco.com>
+Verified+1: John Burns <johnburn@cisco.com>
+Submitted-by: John Burns <johnburn@cisco.com>
+Submitted-at: Fri, 22 Jan 2016 05:54:34 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/32865
+Project: iotdm
+Branch: refs/heads/stable/beryllium
