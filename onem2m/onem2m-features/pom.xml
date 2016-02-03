@@ -177,5 +177,29 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <classifier>config</classifier>
             <type>xml</type>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-tsdr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-tsdr</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opendaylight.tsdr</groupId>
+            <artifactId>tsdr-collector-spi</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.tsdr</groupId>
+            <artifactId>tsdr-persistence-spi</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 </project>
