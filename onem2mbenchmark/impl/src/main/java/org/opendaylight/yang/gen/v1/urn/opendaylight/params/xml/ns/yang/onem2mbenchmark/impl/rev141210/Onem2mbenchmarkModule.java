@@ -8,6 +8,7 @@
 package org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.impl.rev141210;
 
 import org.opendaylight.iotdm.impl.Onem2mbenchmarkProvider;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.tsdr.rev160203.Onem2mbenchmarkTsdrService;
 
 public class Onem2mbenchmarkModule extends org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.impl.rev141210.AbstractOnem2mbenchmarkModule {
     public Onem2mbenchmarkModule(org.opendaylight.controller.config.api.ModuleIdentifier identifier, org.opendaylight.controller.config.api.DependencyResolver dependencyResolver) {
@@ -26,6 +27,7 @@ public class Onem2mbenchmarkModule extends org.opendaylight.yang.gen.v1.urn.open
     @Override
     public java.lang.AutoCloseable createInstance() {
         Onem2mbenchmarkProvider provider = new Onem2mbenchmarkProvider();
+        provider.setTSDRService(getRpcRegistryDependency().getRpcService(Onem2mbenchmarkTsdrService.class));
         getBrokerDependency().registerProvider(provider);
         return provider;
     }
