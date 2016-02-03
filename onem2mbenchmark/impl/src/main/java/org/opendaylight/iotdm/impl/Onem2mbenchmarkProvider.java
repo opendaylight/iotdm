@@ -15,14 +15,17 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.iotdm.tsdr.IoT2TSDRConverterManager;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.tsdr.rev160203.AddTSDRLogRecordInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.tsdr.rev160203.Onem2mTsdrService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.Onem2mbenchmarkService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.StartTestInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.StartTestOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.StartTestOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.TestStatus;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.TestStatusBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.TestStatus.ExecStatus;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.TestStatusBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -36,14 +39,20 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
     protected Onem2mService onem2mService;
     private final AtomicReference<ExecStatus> execStatus = new AtomicReference<TestStatus.ExecStatus>( ExecStatus.Idle );
     private static final InstanceIdentifier<TestStatus> TEST_STATUS_IID = InstanceIdentifier.builder(TestStatus.class).build();
+    private Onem2mTsdrService tsdrService = null;
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
+        IoT2TSDRConverterManager.getInstance().addConverter(TestStatus.class,new TestStatusTSDRConverter());
         session.addRpcImplementation(Onem2mbenchmarkService.class, this);
         onem2mService = session.getRpcService(Onem2mService.class);
         this.dataBroker = session.getSALService(DataBroker.class);
         setTestOperData(this.execStatus.get());
         LOG.info("Onem2mbenchmarkProvider Session Initiated");
+    }
+
+    public void setTSDRService(Onem2mTsdrService s){
+        this.tsdrService = s;
     }
 
     @Override
@@ -193,6 +202,13 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
             tx.submit().checkedGet();
         } catch (TransactionCommitFailedException e) {
             throw new IllegalStateException(e);
+        }
+
+        if(tsdrService !=null) {
+            AddTSDRLogRecordInput input = IoT2TSDRConverterManager.getInstance().convert(TEST_STATUS_IID,status);
+            if(input!=null) {
+                tsdrService.addTSDRLogRecord(input);
+            }
         }
 
         LOG.info("DataStore test oper status populated: {}", status);

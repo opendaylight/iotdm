@@ -10,12 +10,17 @@ package org.opendaylight.iotdm.onem2m.core.database;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.iotdm.tsdr.IoT2TSDRConverterManager;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.tsdr.rev160203.AddTSDRLogRecordInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.tsdr.rev160203.Onem2mTsdrService;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +37,17 @@ import org.slf4j.LoggerFactory;
 public class DbTransaction {
 
     private static final Logger LOG = LoggerFactory.getLogger(DbTransaction.class);
-    private DataBroker dataBroker;
+    private final DataBroker dataBroker;
+    private final RpcProviderRegistry registry;
     private WriteTransaction writeTx;
 
     /**
      * Create a txn, it requires the chain as it uses the transaction chaining feature of the data store
      * @param dataBroker transaction chain
      */
-    public DbTransaction(DataBroker dataBroker) {
+    public DbTransaction(DataBroker dataBroker,RpcProviderRegistry registry) {
         this.dataBroker = dataBroker;
+        this.registry = registry;
         this.writeTx = dataBroker.newWriteOnlyTransaction();
     }
 
@@ -104,6 +111,13 @@ public class DbTransaction {
     public <U extends org.opendaylight.yangtools.yang.binding.DataObject> void create // writePut
             (InstanceIdentifier<U> addIID, U data, LogicalDatastoreType logicalDatastoreType) {
         writeTx.put(logicalDatastoreType, addIID, data, true);
+        Onem2mTsdrService tsdrService = registry.getRpcService(Onem2mTsdrService.class);
+        if(tsdrService!=null) {
+            AddTSDRLogRecordInput input = IoT2TSDRConverterManager.getInstance().convert(addIID, data);
+            if (input != null) {
+                tsdrService.addTSDRLogRecord(input);
+            }
+        }
     }
 
     /**

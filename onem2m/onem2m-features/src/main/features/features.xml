@@ -29,10 +29,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature name='odl-onem2m-core' version='${project.version}' description='OpenDaylight :: onem2m :: core '>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
+        <bundle>mvn:org.opendaylight.tsdr/tsdr-persistence-spi/1.2.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.opendaylight.tsdr/tsdr-collector-spi/1.2.0-SNAPSHOT</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-tsdr/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.json/json/{{VERSION}}</bundle>
         <bundle>wrap:mvn:joda-time/joda-time/{{VERSION}}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-core.xml"> mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}/xml/config
+        </configfile>
+        <configfile finalname="${configfile.directory}/onem2m-tsdr.xml"> mvn:org.opendaylight.iotdm/onem2m-tsdr/{{VERSION}}/xml/config
         </configfile>
     </feature>
 

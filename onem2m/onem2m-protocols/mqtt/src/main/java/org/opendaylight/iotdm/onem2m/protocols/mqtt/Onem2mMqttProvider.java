@@ -7,6 +7,9 @@
  */
 
 package org.opendaylight.iotdm.onem2m.protocols.mqtt;
+
+import com.google.common.util.concurrent.Monitor;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
@@ -15,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -30,14 +32,13 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -52,8 +53,6 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.Monitor;
 
 public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAwareProvider, AutoCloseable {
 
@@ -88,7 +87,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         crudMonitor = new Monitor();
         stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();
-        db.initializeDatastore(dataBroker);
+        db.initializeDatastore(dataBroker,session);
         onem2mService = session.getRpcService(Onem2mService.class);
         onem2mMqttClient = new Onem2mMqttAsyncClient();
         LOG.info("Onem2mMqttProvider Session Initiated ...");
