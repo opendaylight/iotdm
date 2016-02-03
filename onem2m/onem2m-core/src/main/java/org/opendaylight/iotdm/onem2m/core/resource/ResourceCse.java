@@ -55,6 +55,9 @@ public class ResourceCse {
         a.put(Integer.valueOf(Onem2m.ResourceType.CONTAINER));
         a.put(Integer.valueOf(Onem2m.ResourceType.CONTENT_INSTANCE));
         a.put(Integer.valueOf(Onem2m.ResourceType.SUBSCRIPTION));
+        a.put(Integer.valueOf(Onem2m.ResourceType.GROUP));
+        a.put(Integer.valueOf(Onem2m.ResourceType.NODE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.ACCESS_CONTROL_POLICY));
         resourceContent.getInJsonContent().put(SUPPORTED_RESOURCE_TYPES, a);
         /**
          * The resource has been filled in with any attributes that need to be written to the database
@@ -109,6 +112,8 @@ public class ResourceCse {
                     }
                     break;
                 case ResourceContent.LABELS:
+//                case ResourceContent.RESOURCE_NAME:
+//                    // todo: can CSE be modified?
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {

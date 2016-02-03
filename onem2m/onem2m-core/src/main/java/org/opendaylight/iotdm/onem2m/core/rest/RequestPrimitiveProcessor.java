@@ -353,20 +353,20 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // if NAME is provided, only for CREATE
-        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-        if (resourceName != null) {
-            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
-                return;
-            }
-            if (!validateResourceName(resourceName)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
-                        "Resource name invalid: " + resourceName);
-                return;
-            }
-        }
+//        // if NAME is provided, only for CREATE
+//        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
+//        if (resourceName != null) {
+//            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
+//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+//                        "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
+//                return;
+//            }
+//            if (!validateResourceName(resourceName)) {
+//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
+//                        "Resource name invalid: " + resourceName);
+//                return;
+//            }
+//        }
 
         if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
             setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
@@ -532,20 +532,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // if NAME is provided, only for CREATE
-        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-        if (resourceName != null) {
-            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
-                return;
-            }
-            if (!validateResourceName(resourceName)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
-                        "Resource name invalid: " + resourceName);
-                return;
-            }
-        }
 
         if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
             setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
@@ -988,7 +974,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
 
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
-            this.setPrimitive(RequestPrimitive.NAME, cseId);
+            //this.setPrimitive(RequestPrimitive.NAME, cseId);
             this.setResourceName(cseId);
 
             if (Onem2mDb.getInstance().findCseByName(cseId)) {
@@ -1116,7 +1102,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             String cseId = this.getPrimitive("CSE_ID");
 
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
-            this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
+            //this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
             this.setResourceName("_defaultACP");
             this.setPrimitive("to", "/" + cseId);
             this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
@@ -1133,7 +1119,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     "      \"pv\":\n" +
                     "        {\"acr\":[{\n" +
                     "              \n" +
-                    "          \"acor\" : [\"Test_AE_ID\",\"//iotsandbox.cisco.com:10000\",\"//localhost:10000\"],\n" +
+                    "          \"acor\" : [\"Test_AE_ID\",\"dslink\", \"//iotsandbox.cisco.com:10000\",\"//localhost:10000\"],\n" +
                     "          \"acop\":63\n" +
                     "              \n" +
                     "        },\n" +

@@ -140,6 +140,7 @@ public class ResourceGroup {
                 // default attributes in ResourceContent
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {

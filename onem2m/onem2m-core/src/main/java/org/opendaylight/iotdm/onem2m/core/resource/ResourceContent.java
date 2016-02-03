@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -173,8 +174,60 @@ public class ResourceContent {
 
             String resourceType = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
             this.inJsonContent.put(ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
+
+
+            // lookup the resource ... this will be the parent where the new resource will be created
+
+            if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+                String to = onem2mRequest.getPrimitive(RequestPrimitive.TO);
+                if (!Onem2mDb.getInstance().findResourceUsingURI(to, onem2mRequest, onem2mResponse)) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
+                            "Resource target URI not found: " + to);
+                    return;
+                }
+
+                // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
+
+                // special case for AE resources ... where resource name is derived from FROM parameter
+                String resourceName = this.getInJsonContent().optString(ResourceContent.RESOURCE_NAME, null);
+
+                // if the a name is provided, ensure it is valid and unique at this hierarchical level
+                if (resourceName != null) {
+                    // using the parent, see if this new resource name already exists under this parent resource
+                    if (Onem2mDb.getInstance().findResourceUsingIdAndName(onem2mRequest.getOnem2mResource().getResourceId(), resourceName)) {
+                        // TS0004: 7.2.3.2
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
+                                "Resource already exists: " + onem2mRequest.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
+                        return;
+                    }
+                    onem2mRequest.setResourceName(resourceName);
+                }
+            } else {
+//                String resourceName = this.getInJsonContent().optString(ResourceContent.RESOURCE_NAME, null);
+//                if (resourceName == null) {
+//                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE name not specified");
+//                    return;
+//                }
+//                if (Onem2mDb.getInstance().findCseByName(resourceName)) {
+//                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT, "CSE name already exists: " + resourceName);
+//                    return;
+//                }
+            // todo: update this part once resourceName is supported for CSE
+            }
+
+
         }
 
+        if (onem2mRequest.isUpdate) {
+            // nm cannot be updated
+            String resourceName = this.getInJsonContent().optString(ResourceContent.RESOURCE_NAME, null);
+            if (resourceName != null) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "Resource Name cannot be updated: " + onem2mRequest.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
+                return;
+            }
+
+        }
         // resourceId, resourceName, parentId is filled in by the Onem2mDb.createResource method
 
         String currDateTime = Onem2mDateTime.getCurrDateTime();
@@ -246,7 +299,16 @@ public class ResourceContent {
 
                 }
                 break;
+            case RESOURCE_NAME:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for: " + key);
+                        return false;
+                    }
 
+                }
+                break;
             case CREATION_TIME:
             case LAST_MODIFIED_TIME:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, key + ": read-only parameter");

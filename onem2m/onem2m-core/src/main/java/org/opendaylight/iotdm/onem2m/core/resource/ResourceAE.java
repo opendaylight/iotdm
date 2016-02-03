@@ -217,6 +217,7 @@ public class ResourceAE {
                 case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
 
                 case ResourceContent.EXPIRATION_TIME:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {

@@ -14,6 +14,7 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceAccessControlPolicy;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceGroup;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -130,12 +131,35 @@ public class CheckAccessControlProcessor {
                     JSONArray acorArray = acri.getJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_ORIGINATORS);
                     BigInteger allowedOperation = BigInteger.valueOf(acri.getInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
                     // first: check whether this operation is allowed
+                    //todo: origin must be cseid or aeid or groupid? what about ip?
                     if (acorArray.toString().contains(from)) {
                         // second : check whether the "From" IP is allowed
                         orininator_is_allowed = true;
                         if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
                             operation_is_allowed = true;
                             break;
+                        }
+                    } else {
+                        // check the originator ID one by one to see if it contains <Group>
+                        for (int j = 0; j < acorArray.length(); j++) {
+                            Onem2mResource testGroup = Onem2mDb.getInstance().getResource(acorArray.getString(j));
+                            if (testGroup != null && testGroup.getResourceType().contentEquals(Onem2m.ResourceType.GROUP)) {
+
+                                JSONObject gourpjsonObj = new JSONObject(testGroup.getResourceContentJsonString());
+                                JSONArray memberIDlist = gourpjsonObj.getJSONArray(ResourceGroup.MEMBERS_IDS);
+                                if (memberIDlist.toString().contains(from)) {
+                                    // second : check whether the "From" IP is allowed
+                                    orininator_is_allowed = true;
+                                    if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
+                                        operation_is_allowed = true;
+                                        break;
+                                    }
+                                }
+//                                else {
+                                        // current use must use AEID into the memberID
+//                                    // case: group memberID contains AE-resourceID, originator is AEID
+//                                }
+                            }
                         }
                     }
                 }
