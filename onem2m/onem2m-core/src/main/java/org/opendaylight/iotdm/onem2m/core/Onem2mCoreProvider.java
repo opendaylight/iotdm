@@ -12,11 +12,12 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Monitor;
 import java.util.List;
 import java.util.concurrent.Future;
+
+import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
-import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -35,11 +36,16 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private DataBroker dataBroker;
     private Onem2mStats stats;
     private Onem2mDb db;
-    private static NotificationProviderService notifierService;
+    private static NotificationPublishService notifierService;
+
+
+
+
     private Monitor crudMonitor;
 
-    public static NotificationProviderService getNotifier() {
+    public static NotificationPublishService getNotifier() {
         return Onem2mCoreProvider.notifierService;
+
     }
 
     /**
@@ -50,7 +56,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public void onSessionInitiated(ProviderContext session) {
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
-        this.notifierService = session.getSALService(NotificationProviderService.class);
+        this.notifierService = session.getSALService(NotificationPublishService.class);
         crudMonitor = new Monitor();
 
         stats = Onem2mStats.getInstance();

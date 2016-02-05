@@ -709,7 +709,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // now format a response based on result content desired
         ResultContentProcessor.handleCreate(this, onem2mResponse);
 
-        // not process notifications
+        // now process notifications
         NotificationProcessor.handleCreate(this);
 
         // TODO: see TS0004 6.8
@@ -1119,7 +1119,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     "      \"pv\":\n" +
                     "        {\"acr\":[{\n" +
                     "              \n" +
-                    "          \"acor\" : [\"Test_AE_ID\",\"dslink\", \"//iotsandbox.cisco.com:10000\",\"//localhost:10000\"],\n" +
+                    "          \"acor\" : [\"*\",\"Test_AE_ID\",\"dslink\", \"//iotsandbox.cisco.com:10000\",\"//localhost:10000\"],\n" +
                     "          \"acop\":63\n" +
                     "              \n" +
                     "        },\n" +
