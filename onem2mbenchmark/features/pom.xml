@@ -9,24 +9,24 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>features-parent</artifactId>
-    <version>1.6.0-Beryllium</version>
+    <version>1.6.1-SNAPSHOT</version>
     <relativePath/>
   </parent>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2mbenchmark-features</artifactId>
-  <version>0.1.0-Beryllium</version>
+  <version>0.1.1-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <modelVersion>4.0.0</modelVersion>
   <prerequisites>
     <maven>3.1.1</maven>
   </prerequisites>
   <properties>
-    <restconf.version>1.3.0-Beryllium</restconf.version>
-    <mdsal.version>1.3.0-Beryllium</mdsal.version>
-      <yangtools.version>0.8.0-Beryllium</yangtools.version>
-      <dlux.version>0.3.0-Beryllium</dlux.version>
+    <restconf.version>1.3.1-SNAPSHOT</restconf.version>
+    <mdsal.version>1.3.1-SNAPSHOT</mdsal.version>
+      <yangtools.version>0.8.1-SNAPSHOT</yangtools.version>
+      <dlux.version>0.3.1-SNAPSHOT</dlux.version>
       <californium.version>1.0.0-M1</californium.version>
-      <onem2m.version>0.1.0-Beryllium</onem2m.version>
+      <onem2m.version>0.1.1-SNAPSHOT</onem2m.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>
