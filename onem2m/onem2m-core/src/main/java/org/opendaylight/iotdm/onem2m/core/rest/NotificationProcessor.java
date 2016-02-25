@@ -166,7 +166,11 @@ public class NotificationProcessor {
                     .build();
 
             // now that we have a NotificationPrimitive, we need to send it to the Notifier
-            Onem2mCoreProvider.getNotifier().publish(rc);
+            try {
+                Onem2mCoreProvider.getNotifier().putNotification(rc);
+            } catch (Exception e){
+                LOG.error("cannot send notification");
+            }
         }
     }
 
@@ -207,7 +211,11 @@ public class NotificationProcessor {
                     .build();
 
         // now that we have a NotificationPrimitive, we need to send it to the Notifier
-        Onem2mCoreProvider.getNotifier().publish(sd);
+        try {
+            Onem2mCoreProvider.getNotifier().putNotification(sd);
+        } catch (Exception e){
+            LOG.error("cannot send notification");
+        }
     }
 
     /**

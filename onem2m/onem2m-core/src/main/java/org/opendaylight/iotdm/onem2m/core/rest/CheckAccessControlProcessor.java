@@ -132,7 +132,7 @@ public class CheckAccessControlProcessor {
                     BigInteger allowedOperation = BigInteger.valueOf(acri.getInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
                     // first: check whether this operation is allowed
                     //todo: origin must be cseid or aeid or groupid? what about ip?
-                    if (acorArray.toString().contains(from)) {
+                    if (acorArray.toString().contains(from) || acorArray.toString().contains("*")) {
                         // second : check whether the "From" IP is allowed
                         orininator_is_allowed = true;
                         if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
