@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,13 +9,14 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ public class ResourceContentInstance  {
         } else {
             // record the size of the content in the CONTENT_SIZE attribute
             newByteSize = tempStr.length();
-            resourceContent.getInJsonContent().put(CONTENT_SIZE, newByteSize);
+            JsonUtils.put(resourceContent.getInJsonContent(), CONTENT_SIZE, newByteSize);
         }
 
         JSONObject containerResourceContent = onem2mRequest.getJsonResourceContent();
@@ -66,7 +67,7 @@ public class ResourceContentInstance  {
         // the state tag of the cin is the incremented value of its parent container resource
         Integer containerStateTag = containerResourceContent.optInt(ResourceContent.STATE_TAG);
         containerStateTag++;
-        resourceContent.getInJsonContent().put(ResourceContent.STATE_TAG, containerStateTag);
+        JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.STATE_TAG, containerStateTag);
 
         // verify this content instance does not exceed the container's max byte size
         Integer mbs = containerResourceContent.optInt(ResourceContainer.MAX_BYTE_SIZE, -1);
@@ -128,7 +129,7 @@ public class ResourceContentInstance  {
 
             resourceContent.jsonCreateKeys.add(key);
 
-            Object o = resourceContent.getInJsonContent().get(key);
+            Object o = resourceContent.getInJsonContent().opt(key);
 
             switch (key) {
 
@@ -155,7 +156,8 @@ public class ResourceContentInstance  {
                         return;
                     } else {
                         resourceContent.getInJsonContent().remove(key);
-                        resourceContent.getInJsonContent().put(key, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+                        JsonUtils.put(resourceContent.getInJsonContent(), key,
+                                onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
                 case ResourceContent.LABELS:

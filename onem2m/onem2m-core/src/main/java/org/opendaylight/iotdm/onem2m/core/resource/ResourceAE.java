@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -8,14 +8,13 @@
 
 package org.opendaylight.iotdm.onem2m.core.resource;
 
-import java.util.*;
-import org.json.JSONObject;
+import java.util.Iterator;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +85,7 @@ public class ResourceAE {
             // to should be an CSE
             String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
             // if defaultACP is a list or jsonarray, use "put" method
-            resourceContent.getInJsonContent().append(ACCESS_CONTROL_POLICY_IDS, defaultACPID);
+            JsonUtils.append(resourceContent.getInJsonContent(), ACCESS_CONTROL_POLICY_IDS, defaultACPID);
 
         }
 
@@ -155,7 +154,7 @@ public class ResourceAE {
 
             resourceContent.jsonCreateKeys.add(key);
 
-            Object o = resourceContent.getInJsonContent().get(key);
+            Object o = resourceContent.getInJsonContent().opt(key);
 
             switch (key) {
 

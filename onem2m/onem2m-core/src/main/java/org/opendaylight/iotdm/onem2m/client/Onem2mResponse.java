@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -13,12 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +66,9 @@ public class Onem2mResponse {
     private JSONObject processJsonResourceType(JSONObject j) {
 
         Iterator<?> keys = j.keys();
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
-            Object o = j.get(key);
+        if (keys.hasNext()) {
+            String key = (String) keys.next();
+            Object o = j.opt(key);
             if (!(o instanceof JSONObject)) {
                 return j;
             }
@@ -116,7 +111,7 @@ public class Onem2mResponse {
 
     protected boolean processCommonJsonContent(String key) {
 
-        Object o = jsonContent.get(key);
+        Object o = jsonContent.opt(key);
 
         switch (key) {
 
@@ -125,49 +120,49 @@ public class Onem2mResponse {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.parentId = o.toString();
+                this.parentId = (String) o;
                 break;
             case ResourceContent.RESOURCE_ID:
                 if (!(o instanceof String)) {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.resourceId = o.toString();
+                this.resourceId = (String) o;
                 break;
             case ResourceContent.RESOURCE_NAME:
                 if (!(o instanceof String)) {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.resourceName = o.toString();
+                this.resourceName = (String) o;
                 break;
             case ResourceContent.CREATION_TIME:
                 if (!(o instanceof String)) {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.creationTime = o.toString();
+                this.creationTime = (String) o;
                 break;
             case ResourceContent.EXPIRATION_TIME:
                 if (!(o instanceof String)) {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.expirationTime = o.toString();
+                this.expirationTime = (String) o;
                 break;
             case ResourceContent.LAST_MODIFIED_TIME:
                 if (!(o instanceof String)) {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.lastModifiedTime = o.toString();
+                this.lastModifiedTime = (String) o;
                 break;
             case ResourceContent.RESOURCE_TYPE:
                 if (!(o instanceof Integer)) {
                     LOG.error("Integer expected for json key: " + key);
                     return false;
                 }
-                this.resourceType = ((Integer) o).intValue();
+                this.resourceType = (Integer) o;
                 break;
 
             case ResourceContent.STATE_TAG:
@@ -175,7 +170,7 @@ public class Onem2mResponse {
                     LOG.error("Integer expected for json key: " + key);
                     return false;
                 }
-                this.stateTag = ((Integer) o).intValue();
+                this.stateTag = (Integer) o;
                 break;
 
             case ResourceContent.LABELS:
@@ -183,13 +178,13 @@ public class Onem2mResponse {
                     LOG.error("Array expected for json key: " + key);
                     return false;
                 }
-                JSONArray a = new JSONArray();
+                JSONArray a = (JSONArray) o;
                 for (int i = 0; i < a.length(); i++) {
-                    if (!(a.get(i) instanceof String)) {
+                    if (!(a.opt(i) instanceof String)) {
                         LOG.error("String expected for label: " + key);
                         return false;
                     }
-                    this.labels[i] = a.get(i).toString();
+                    this.labels[i] = (String) a.opt(i);
                 }
                 break;
 
@@ -198,7 +193,7 @@ public class Onem2mResponse {
                     LOG.error("String expected for json key: " + key);
                     return false;
                 }
-                this.errorString = o.toString();
+                this.errorString = (String) o;
                 success = false;
                 break;
 

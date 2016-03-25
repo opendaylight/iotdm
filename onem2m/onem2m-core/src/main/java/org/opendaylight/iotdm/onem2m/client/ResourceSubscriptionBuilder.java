@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,17 +33,15 @@ public class ResourceSubscriptionBuilder extends ResourceContentBuilder {
         return this;
     }
     public ResourceSubscriptionBuilder setNotificationContentType(String value) {
-        jsonContent.put(ResourceSubscription.NOTIFICATION_CONTENT_TYPE, value);
+        JsonUtils.put(jsonContent, ResourceSubscription.NOTIFICATION_CONTENT_TYPE, value);
         return this;
     }
     public ResourceSubscriptionBuilder setNotificationEventCat(String value) {
-        jsonContent.put(ResourceSubscription.NOTIFICATION_EVENT_CAT, value);
+        JsonUtils.put(jsonContent, ResourceSubscription.NOTIFICATION_EVENT_CAT, value);
         return this;
     }
     public String build() {
-        jsonContent.put(ResourceSubscription.NOTIFICATION_URI, nUriArray);
-        JSONObject j = new JSONObject();
-        j.put("m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION, jsonContent);
-        return (j.toString());
+        JsonUtils.put(jsonContent, ResourceSubscription.NOTIFICATION_URI, nUriArray);
+        return JsonUtils.put(new JSONObject(), "m2m:" + Onem2m.ResourceTypeString.SUBSCRIPTION, jsonContent).toString();
     }
 }

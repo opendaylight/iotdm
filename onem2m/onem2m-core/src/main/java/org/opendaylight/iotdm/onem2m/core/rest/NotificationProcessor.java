@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import java.util.List;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
@@ -18,7 +19,7 @@ import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.NotificationPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.ResourceChanged;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.ResourceChangedBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SubscriptionDeleted;
@@ -86,14 +87,8 @@ public class NotificationProcessor {
     }
 
     private static JSONObject produceJsonContentResourceReference(Onem2mResource onem2mResource) {
-
-        JSONObject j = new JSONObject();
-
-        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
-
-        j.put(ResourceContent.RESOURCE_NAME, h);
-
-        return j;
+        return JsonUtils.put(new JSONObject(), ResourceContent.RESOURCE_NAME,
+                Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId()));
     }
 
     private static JSONObject produceJsonContentWholeResource(RequestPrimitive onem2mRequest,
@@ -104,14 +99,17 @@ public class NotificationProcessor {
         String resourceType = onem2mResource.getResourceType();
 
         String name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
-        onem2mRequest.getJsonResourceContent().put(ResourceContent.RESOURCE_NAME, name);
+        JsonUtils.put(onem2mRequest.getJsonResourceContent(), ResourceContent.RESOURCE_NAME, name);
 
         String m2mPrefixString = Onem2m.USE_M2M_PREFIX ? "m2m:" : "";
 
-        JSONObject wholeresource = new JSONObject(onem2mResource.getResourceContentJsonString());
-        j.put(m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), wholeresource);
-
-        return j;
+        try {
+            JSONObject wholeresource = new JSONObject(onem2mResource.getResourceContentJsonString());
+            return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), wholeresource);
+        } catch (JSONException e) {
+            LOG.error("Invalid JSON {}", onem2mResource.getResourceContentJsonString(), e);
+            throw new IllegalArgumentException("Invalid JSON", e);
+        }
     }
 
     /**
@@ -145,18 +143,18 @@ public class NotificationProcessor {
             onem2mNotification.setJsonSubscriptionResourceContent(subscriptionResource.getResourceContentJsonString());
 
             JSONArray uriArray = onem2mNotification.getJsonSubscriptionResourceContent()
-                    .getJSONArray(ResourceSubscription.NOTIFICATION_URI);
+                    .optJSONArray(ResourceSubscription.NOTIFICATION_URI);
             for (int i = 0; i < uriArray.length(); i++) {
-                onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uriArray.getString(i));
+                onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uriArray.optString(i));
             }
 
             representation = produceJsonContent(onem2mRequest, onem2mNotification);
 
-            operationMonitor.put(ORIGINATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
-            operationMonitor.put(OPERATION, Integer.valueOf(opCode));
-            notificationEvent.put(OPERATION_MONITOR, operationMonitor);
-            notificationEvent.put(REPRESENTATION, representation);
-            notification.put(NOTIFICATION_EVENT, notificationEvent);
+            JsonUtils.put(operationMonitor, ORIGINATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+            JsonUtils.put(operationMonitor, OPERATION, Integer.valueOf(opCode));
+            JsonUtils.put(notificationEvent, OPERATION_MONITOR, operationMonitor);
+            JsonUtils.put(notificationEvent, REPRESENTATION, representation);
+            JsonUtils.put(notification, NOTIFICATION_EVENT, notificationEvent);
 
             onem2mNotification.setPrimitive(NotificationPrimitive.CONTENT, notification.toString());
 
@@ -198,8 +196,8 @@ public class NotificationProcessor {
 
         String name = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
 
-        notification.put(SUBSCRIPTION_DELETION, true);
-        notification.put(SUBSCRIPTION_REFERENCE, name);
+        JsonUtils.put(notification, SUBSCRIPTION_DELETION, true);
+        JsonUtils.put(notification, SUBSCRIPTION_REFERENCE, name);
         onem2mNotification.setPrimitive(NotificationPrimitive.CONTENT, notification.toString());
 
         SubscriptionDeleted sd = new SubscriptionDeletedBuilder()

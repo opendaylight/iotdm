@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -12,13 +12,13 @@ import com.google.common.util.concurrent.Monitor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.slf4j.Logger;
@@ -810,10 +810,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
             this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
             JSONObject jCse = new JSONObject();
-            jCse.put(ResourceCse.CSE_ID, cseId);
-            jCse.put(ResourceCse.CSE_TYPE, cseType);
+            JsonUtils.put(jCse, ResourceCse.CSE_ID, cseId);
+            JsonUtils.put(jCse, ResourceCse.CSE_TYPE, cseType);
             JSONObject j = new JSONObject();
-            j.put(Onem2m.ResourceTypeString.CSE_BASE, jCse);
+            JsonUtils.put(j, Onem2m.ResourceTypeString.CSE_BASE, jCse);
             this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
             // process the resource specific attributes
