@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -8,7 +8,12 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
@@ -221,7 +226,12 @@ public class RequestPrimitive extends BasePrimitive {
 
     private JSONObject jsonResourceContent;
     public void setJsonResourceContent(String jsonResourceContentString) {
-        this.jsonResourceContent = new JSONObject(jsonResourceContentString);
+        try {
+            this.jsonResourceContent = new JSONObject(jsonResourceContentString);
+        } catch (JSONException e) {
+            LOG.error("Invalid JSON {}", jsonResourceContentString, e);
+            throw new IllegalArgumentException("Invalid JSON", e);
+        }
     }
     public JSONObject getJsonResourceContent() {
         return this.jsonResourceContent;

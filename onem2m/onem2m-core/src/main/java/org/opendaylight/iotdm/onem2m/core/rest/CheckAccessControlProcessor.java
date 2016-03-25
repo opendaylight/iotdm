@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,6 +9,7 @@
 package org.opendaylight.iotdm.onem2m.core.rest;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
@@ -25,9 +26,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by canwu on 12/8/15.
- */
 public class CheckAccessControlProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(CheckAccessControlProcessor.class);
 
@@ -42,10 +40,9 @@ public class CheckAccessControlProcessor {
         if (onem2mRequest.isCreate) {
             String acpi = onem2mRequest.getResourceContent().getInJsonContent().optString("acpi", null);
             if (acpi != null) {
-                Object acpiList = onem2mRequest.getResourceContent().getInJsonContent().get("acpi");
-                JSONArray acpiArray = (JSONArray) acpiList;
+                JSONArray acpiArray = onem2mRequest.getResourceContent().getInJsonContent().optJSONArray("acpi");
                 for (int i = 0; i < acpiArray.length(); i++) {
-                    AccessControlPolicyIDList.add((String) acpiArray.get(i));
+                    AccessControlPolicyIDList.add(acpiArray.optString(i));
                 }
                 if (AccessControlPolicyIDList.size() == 0) {
                     // if there is no ACPID, do nothing
@@ -58,32 +55,36 @@ public class CheckAccessControlProcessor {
             } else {
                 // if target is not CSE, check whether the parent(onem2mresource) conatains acpid
                 Onem2mResource parentresource = Onem2mDb.getInstance().getResource(onem2mRequest.getOnem2mResource().getParentId());
-                JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
-                while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
-                    if (parentresource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-                        String defaultACPID = Onem2mDb.getInstance().getChildResourceID(parentresource.getResourceId(),"_defaultACP");
-                        String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
-                        AccessControlPolicyIDList.add(hierarchyURI);
-                        break;
-                    } else {
-                        parentresource = Onem2mDb.getInstance().getResource(parentresource.getParentId());
-                        jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
+                try {
+                    JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
+                    while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
+                        if (parentresource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+                            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(parentresource.getResourceId(),"_defaultACP");
+                            String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
+                            AccessControlPolicyIDList.add(hierarchyURI);
+                            break;
+                        } else {
+                            parentresource = Onem2mDb.getInstance().getResource(parentresource.getParentId());
+                            jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
+                        }
                     }
-                }
-                if (AccessControlPolicyIDList.isEmpty()) {
-                    // find parent ACPID
-                    JSONArray acpiArray = jsonContent.getJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
-                    for (int i = 0; i < acpiArray.length(); i++) {
-                        AccessControlPolicyIDList.add((String) acpiArray.get(i));
+                    if (AccessControlPolicyIDList.isEmpty()) {
+                        // find parent ACPID
+                        JSONArray acpiArray = jsonContent.optJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
+                        for (int i = 0; i < acpiArray.length(); i++) {
+                            AccessControlPolicyIDList.add(acpiArray.getString(i));
+                        }
                     }
+                } catch (JSONException e) {
+                    LOG.error("Invalid JSON {}", parentresource.getResourceContentJsonString(), e);
+                    throw new IllegalArgumentException("Invalid JSON", e);
                 }
             }
         } else {
             if (onem2mRequest.isUpdate && onem2mRequest.getResourceContent().getInJsonContent().optString("acpi", null) != null) {
-                Object acpiList = onem2mRequest.getResourceContent().getInJsonContent().get("acpi");
-                JSONArray acpiArray = (JSONArray) acpiList;
+                JSONArray acpiArray = onem2mRequest.getResourceContent().getInJsonContent().optJSONArray("acpi");
                 for (int i = 0; i < acpiArray.length(); i++) {
-                    AccessControlPolicyIDList.add((String) acpiArray.get(i));
+                    AccessControlPolicyIDList.add(acpiArray.optString(i));
                 }
                 if (AccessControlPolicyIDList.size() == 0) {
                     // if there is no ACPID, do nothing
@@ -93,24 +94,29 @@ public class CheckAccessControlProcessor {
             } else {
                 // get self resource, onem2mresource inside request,
                 Onem2mResource parentresource = onem2mRequest.getOnem2mResource();
-                JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
-                while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
-                    if (parentresource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-                        String defaultACPID = Onem2mDb.getInstance().getChildResourceID(parentresource.getResourceId(), "_defaultACP");
-                        String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
-                        AccessControlPolicyIDList.add(hierarchyURI);
-                        break;
-                    } else {
-                        parentresource = Onem2mDb.getInstance().getResource(parentresource.getParentId());
-                        jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
+                try {
+                    JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
+                    while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
+                        if (parentresource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+                            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(parentresource.getResourceId(), "_defaultACP");
+                            String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
+                            AccessControlPolicyIDList.add(hierarchyURI);
+                            break;
+                        } else {
+                            parentresource = Onem2mDb.getInstance().getResource(parentresource.getParentId());
+                            jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
+                        }
                     }
-                }
 
-                if (AccessControlPolicyIDList.isEmpty()) {
-                    JSONArray acpiArray = jsonContent.getJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
-                    for (int i = 0; i < acpiArray.length(); i++) {
-                        AccessControlPolicyIDList.add((String) acpiArray.get(i));
+                    if (AccessControlPolicyIDList.isEmpty()) {
+                        JSONArray acpiArray = jsonContent.optJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
+                        for (int i = 0; i < acpiArray.length(); i++) {
+                            AccessControlPolicyIDList.add(acpiArray.optString(i));
+                        }
                     }
+                } catch (JSONException e) {
+                    LOG.error("Invalid JSON {}", parentresource.getResourceContentJsonString(), e);
+                    throw new IllegalArgumentException("Invalid JSON", e);
                 }
             }
         }
@@ -120,48 +126,58 @@ public class CheckAccessControlProcessor {
         Boolean orininator_is_allowed = false;
         String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
         for (String accessControlPolicyID : AccessControlPolicyIDList) {
-            Onem2mResource AccessControlPolicyResource = Onem2mDb.getInstance().getResourceUsingURI(accessControlPolicyID);
-            if (AccessControlPolicyResource != null) {
-                JSONObject jsonContent = new JSONObject(AccessControlPolicyResource.getResourceContentJsonString());
-                JSONObject pvJson = jsonContent.getJSONObject(ResourceAccessControlPolicy.PRIVILIEGES);
-                JSONArray acrArray = pvJson.getJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_RULES);
-                for (int i = 0; i < acrArray.length(); i++) {
-                    JSONObject acri = acrArray.getJSONObject(i);
-                    // acor and acop are mandatory
-                    JSONArray acorArray = acri.getJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_ORIGINATORS);
-                    BigInteger allowedOperation = BigInteger.valueOf(acri.getInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
-                    // first: check whether this operation is allowed
-                    //todo: origin must be cseid or aeid or groupid? what about ip?
-                    if (acorArray.toString().contains(from) || acorArray.toString().contains("*")) {
-                        // second : check whether the "From" IP is allowed
-                        orininator_is_allowed = true;
-                        if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
-                            operation_is_allowed = true;
-                            break;
-                        }
-                    } else {
-                        // check the originator ID one by one to see if it contains <Group>
-                        for (int j = 0; j < acorArray.length(); j++) {
-                            Onem2mResource testGroup = Onem2mDb.getInstance().getResource(acorArray.getString(j));
-                            if (testGroup != null && testGroup.getResourceType().contentEquals(Onem2m.ResourceType.GROUP)) {
+            Onem2mResource accessControlPolicyResource = Onem2mDb.getInstance().getResourceUsingURI(accessControlPolicyID);
+            if (accessControlPolicyResource != null) {
+                try {
+                    JSONObject jsonContent = new JSONObject(accessControlPolicyResource.getResourceContentJsonString());
+                    JSONObject pvJson = jsonContent.optJSONObject(ResourceAccessControlPolicy.PRIVILIEGES);
+                    JSONArray acrArray = pvJson.optJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_RULES);
+                    for (int i = 0; i < acrArray.length(); i++) {
+                        JSONObject acri = acrArray.optJSONObject(i);
+                        // acor and acop are mandatory
+                        JSONArray acorArray = acri.optJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_ORIGINATORS);
+                        BigInteger allowedOperation = BigInteger.valueOf(acri.optInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
+                        // first: check whether this operation is allowed
+                        //todo: origin must be cseid or aeid or groupid? what about ip?
+                        if (acorArray.toString().contains(from) || acorArray.toString().contains("*")) {
+                            // second : check whether the "From" IP is allowed
+                            orininator_is_allowed = true;
+                            if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
+                                operation_is_allowed = true;
+                                break;
+                            }
+                        } else {
+                            // check the originator ID one by one to see if it contains <Group>
+                            for (int j = 0; j < acorArray.length(); j++) {
+                                Onem2mResource testGroup = Onem2mDb.getInstance().getResource(acorArray.getString(j));
+                                if (testGroup != null && testGroup.getResourceType().contentEquals(Onem2m.ResourceType.GROUP)) {
 
-                                JSONObject gourpjsonObj = new JSONObject(testGroup.getResourceContentJsonString());
-                                JSONArray memberIDlist = gourpjsonObj.getJSONArray(ResourceGroup.MEMBERS_IDS);
-                                if (memberIDlist.toString().contains(from)) {
-                                    // second : check whether the "From" IP is allowed
-                                    orininator_is_allowed = true;
-                                    if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
-                                        operation_is_allowed = true;
-                                        break;
+                                    try {
+                                        JSONObject gourpjsonObj = new JSONObject(testGroup.getResourceContentJsonString());
+                                        JSONArray memberIDlist = gourpjsonObj.optJSONArray(ResourceGroup.MEMBERS_IDS);
+                                        if (memberIDlist.toString().contains(from)) {
+                                            // second : check whether the "From" IP is allowed
+                                            orininator_is_allowed = true;
+                                            if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
+                                                operation_is_allowed = true;
+                                                break;
+                                            }
+                                        }
+        //                                else {
+        // current use must use AEID into the memberID
+        //                                    // case: group memberID contains AE-resourceID, originator is AEID
+        //                                }
+                                    } catch (JSONException e) {
+                                        LOG.error("Invalid JSON {}", testGroup.getResourceContentJsonString(), e);
+                                        throw new IllegalArgumentException("Invalid JSON", e);
                                     }
                                 }
-//                                else {
-                                        // current use must use AEID into the memberID
-//                                    // case: group memberID contains AE-resourceID, originator is AEID
-//                                }
                             }
                         }
                     }
+                } catch (JSONException e) {
+                    LOG.error("Invalid JSON {}", accessControlPolicyResource.getResourceContentJsonString(), e);
+                    throw new IllegalArgumentException("Invalid JSON", e);
                 }
             } else {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -193,16 +209,21 @@ public class CheckAccessControlProcessor {
         if (onem2mRequest.isCreate) {
             jsonContent = onem2mRequest.getResourceContent().getInJsonContent();
         } else {
-            Onem2mResource AccessControlPolicyResource = onem2mRequest.getOnem2mResource();
-            jsonContent = new JSONObject(AccessControlPolicyResource.getResourceContentJsonString());
+            Onem2mResource accessControlPolicyResource = onem2mRequest.getOnem2mResource();
+            try {
+                jsonContent = new JSONObject(accessControlPolicyResource.getResourceContentJsonString());
+            } catch (JSONException e) {
+                LOG.error("Invalid JSON {}", accessControlPolicyResource.getResourceContentJsonString(), e);
+                throw new IllegalArgumentException("Invalid JSON", e);
+            }
         }
-        JSONObject pvJson = jsonContent.getJSONObject(ResourceAccessControlPolicy.SELF_PRIIVLIEGES);
-        JSONArray acrArray = pvJson.getJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_RULES);
+        JSONObject pvJson = jsonContent.optJSONObject(ResourceAccessControlPolicy.SELF_PRIIVLIEGES);
+        JSONArray acrArray = pvJson.optJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_RULES);
         for (int i = 0; i < acrArray.length(); i++) {
-            JSONObject acri = acrArray.getJSONObject(i);
+            JSONObject acri = acrArray.optJSONObject(i);
             // acor and acop are mandatory
-            JSONArray acorArray = acri.getJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_ORIGINATORS);
-            BigInteger allowedOperation = BigInteger.valueOf(acri.getInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
+            JSONArray acorArray = acri.optJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_ORIGINATORS);
+            BigInteger allowedOperation = BigInteger.valueOf(acri.optInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
             // first: check whether this operation is allowed
             if (acorArray.toString().contains(from)) {
                 // second : check whether the "From" IP is allowed

@@ -162,7 +162,7 @@ public class Onem2mTsdrSender {
                 Iterator<?> keys = jContent.keys();
                 while (keys.hasNext()) {
                     String key = (String) keys.next();
-                    Object o = jContent.get(key);
+                    Object o = jContent.opt(key);
                     RecordAttributesBuilder attr = new RecordAttributesBuilder()
                             .setName(key)
                             .setValue(o.toString());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -20,8 +20,8 @@ import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +136,7 @@ public class ResourceContent {
         while (keys.hasNext()) {
             String key = (String) keys.next();
 
-            Object o = jsonContent.get(key);
+            Object o = jsonContent.opt(key);
 
             if (!(o instanceof JSONObject)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -173,7 +173,7 @@ public class ResourceContent {
         if (onem2mRequest.isCreate) {
 
             String resourceType = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
-            this.inJsonContent.put(ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
+            JsonUtils.put(this.inJsonContent, ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
 
 
             // lookup the resource ... this will be the parent where the new resource will be created
@@ -233,11 +233,11 @@ public class ResourceContent {
         String currDateTime = Onem2mDateTime.getCurrDateTime();
 
         if (onem2mRequest.isCreate) {
-            this.inJsonContent.put(ResourceContent.CREATION_TIME, currDateTime);
+            JsonUtils.put(this.inJsonContent, ResourceContent.CREATION_TIME, currDateTime);
         }
 
         // always update lmt at create or update
-        this.inJsonContent.put(ResourceContent.LAST_MODIFIED_TIME, currDateTime);
+        JsonUtils.put(this.inJsonContent, ResourceContent.LAST_MODIFIED_TIME, currDateTime);
 
         // validate expiration time
         String et = this.getInJsonContent().optString(ResourceContent.EXPIRATION_TIME, null);
@@ -265,7 +265,7 @@ public class ResourceContent {
                                                              ResourceContent resourceContent,
                                                              ResponsePrimitive onem2mResponse) {
 
-        Object o = resourceContent.getInJsonContent().get(key);
+        Object o = resourceContent.getInJsonContent().opt(key);
 
         switch (key) {
 
@@ -280,7 +280,7 @@ public class ResourceContent {
                     }
                     JSONArray array = (JSONArray) o;
                     for (int i = 0; i < array.length(); i++) {
-                        if (!(array.get(i) instanceof String)) {
+                        if (!(array.opt(i) instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
                             return false;

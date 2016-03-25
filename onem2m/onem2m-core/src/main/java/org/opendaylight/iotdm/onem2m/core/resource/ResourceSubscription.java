@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -10,9 +10,8 @@ package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Iterator;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
@@ -119,7 +118,7 @@ public class ResourceSubscription {
 
             resourceContent.jsonCreateKeys.add(key);
 
-            Object o = resourceContent.getInJsonContent().get(key);
+            Object o = resourceContent.getInJsonContent().opt(key);
 
             switch (key) {
 
@@ -141,7 +140,7 @@ public class ResourceSubscription {
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
                             return;
                         }
-                        String subUri = o.toString();
+                        String subUri = (String) o;
                         if (!validateUri(subUri)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                                     "SUBSCRIBER_URI not valid URI: " + subUri);
@@ -159,12 +158,12 @@ public class ResourceSubscription {
                         }
                         JSONArray array = (JSONArray) o;
                         for (int i = 0; i < array.length(); i++) {
-                            if (!(array.get(i) instanceof String)) {
+                            if (!(array.opt(i) instanceof String)) {
                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                         "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
                                 return;
                             }
-                            String uri = array.get(i).toString();
+                            String uri = (String) array.opt(i);
                             if (!validateUri(uri)) {
                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                                         "NOTIFICATION_URI(s) not valid URI: " + uri);

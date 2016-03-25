@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -8,7 +8,6 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
-import java.util.Iterator;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,9 +17,8 @@ import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.FilterCriteria;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,7 +180,7 @@ public class ResultContentProcessor {
 
         String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
 
-        j.put(ResourceContent.MEMBER_URI, h);
+        JsonUtils.put(j, ResourceContent.MEMBER_URI, h);
     }
 
     /**
@@ -205,7 +203,7 @@ public class ResultContentProcessor {
 
             String parentId = onem2mResponse.getJsonResourceContent().optString(ResourceContent.PARENT_ID, null);
             if (parentId != null) {
-                onem2mResponse.getJsonResourceContent().put(ResourceContent.PARENT_ID,
+                JsonUtils.put(onem2mResponse.getJsonResourceContent(), ResourceContent.PARENT_ID,
                         Onem2mDb.getInstance().getNonHierarchicalNameForResource(parentId));
             }
 
@@ -220,9 +218,8 @@ public class ResultContentProcessor {
                 }
             }
 
-            j.put(m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), onem2mResponse.getJsonResourceContent());
-
-            return j;
+            return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType),
+                    onem2mResponse.getJsonResourceContent());
         }
 
         return null;
@@ -250,15 +247,14 @@ public class ResultContentProcessor {
 
             String parentId = onem2mResponse.getJsonResourceContent().optString(ResourceContent.PARENT_ID, null);
             if (parentId != null) {
-                onem2mResponse.getJsonResourceContent().put(ResourceContent.PARENT_ID,
+                JsonUtils.put(onem2mResponse.getJsonResourceContent(), ResourceContent.PARENT_ID,
                         Onem2mDb.getInstance().getNonHierarchicalNameForResource(parentId));
             }
             // copy the existing attrs to the new json object
             for (String key : JSONObject.getNames(onem2mResponse.getJsonResourceContent())) {
-                inJsonObject.put(key, onem2mResponse.getJsonResourceContent().get(key));
+                JsonUtils.put(inJsonObject, key, onem2mResponse.getJsonResourceContent().opt(key));
             }
-            j.put(m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), inJsonObject);
-            return j;
+            return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), inJsonObject);
         }
 
         return null;
@@ -325,9 +321,9 @@ public class ResultContentProcessor {
         } else {
             h = Onem2mDb.getInstance().getNonHierarchicalNameForResource(resourceId);
         }
-        j.put(ResourceContent.MEMBER_URI, h);
-        j.put(ResourceContent.MEMBER_NAME,onem2mResource.getName());
-        j.put(ResourceContent.MEMBER_TYPE, Integer.valueOf(resourceType));
+        JsonUtils.put(j, ResourceContent.MEMBER_URI, h);
+        JsonUtils.put(j, ResourceContent.MEMBER_NAME,onem2mResource.getName());
+        JsonUtils.put(j, ResourceContent.MEMBER_TYPE, Integer.valueOf(resourceType));
 
         return true;
     }
@@ -371,7 +367,7 @@ public class ResultContentProcessor {
             }
 
         }
-        j.put(ResourceContent.CHILD_RESOURCE_REF, ja);
+        JsonUtils.put(j, ResourceContent.CHILD_RESOURCE_REF, ja);
     }
 
     /**
@@ -466,7 +462,7 @@ public class ResultContentProcessor {
             }
 
         }
-        j.put(ResourceContent.CHILD_RESOURCE, ja);
+        JsonUtils.put(j, ResourceContent.CHILD_RESOURCE, ja);
     }
 
     /**

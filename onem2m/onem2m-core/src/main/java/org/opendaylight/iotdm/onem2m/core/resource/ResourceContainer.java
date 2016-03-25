@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,6 +9,7 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
@@ -17,6 +18,7 @@ import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +59,7 @@ public class ResourceContainer {
 
             resourceContent.jsonCreateKeys.add(key);
 
-            Object o = resourceContent.getInJsonContent().get(key);
+            Object o = resourceContent.getInJsonContent().opt(key);
 
             switch (key) {
 
@@ -74,7 +76,7 @@ public class ResourceContainer {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
                             return;
-                        } else if (((Integer) o).intValue() < 0) {
+                        } else if ((Integer) o < 0) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") integer must be non-negative: " + key);
                             return;
@@ -88,7 +90,7 @@ public class ResourceContainer {
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
-                        resourceContent.getInJsonContent().put(CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+                        JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
 
@@ -138,7 +140,6 @@ public class ResourceContainer {
     public static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String tempStr;
-        Integer tempInt;
 
         // verify this resource can be created under the target resource
         if (onem2mRequest.isCreate) {
@@ -183,14 +184,13 @@ public class ResourceContainer {
 
         if (onem2mRequest.isCreate) {
             // initialize state tag to 0
-            tempInt = 0;
-            resourceContent.getInJsonContent().put(ResourceContent.STATE_TAG, tempInt);
-            resourceContent.getInJsonContent().put(CURR_NR_INSTANCES, tempInt);
-            resourceContent.getInJsonContent().put(CURR_BYTE_SIZE, tempInt);
+            JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.STATE_TAG, 0);
+            JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_INSTANCES, 0);
+            JsonUtils.put(resourceContent.getInJsonContent(), CURR_BYTE_SIZE, 0);
         } else {
             // update the existing state tag as the resource is being updated
-            tempInt = onem2mRequest.getJsonResourceContent().getInt (ResourceContent.STATE_TAG);
-            resourceContent.getInJsonContent().put(ResourceContent.STATE_TAG, ++tempInt);
+            int stateTag = onem2mRequest.getJsonResourceContent().optInt(ResourceContent.STATE_TAG);
+            JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.STATE_TAG, ++stateTag);
         }
 
         if (onem2mRequest.isCreate) {
@@ -343,9 +343,9 @@ public class ResourceContainer {
                                                                   JSONObject containerResourceContent,
                                                                   Integer newByteSize) {
 
-        Integer cni = containerResourceContent.getInt(ResourceContainer.CURR_NR_INSTANCES);
-        Integer cbs = containerResourceContent.getInt(ResourceContainer.CURR_BYTE_SIZE);
-        Integer st = containerResourceContent.getInt(ResourceContent.STATE_TAG);
+        Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
+        Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
+        Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
         cni++;
         cbs += newByteSize;
         st++;
@@ -364,9 +364,9 @@ public class ResourceContainer {
                                                                   JSONObject containerResourceContent,
                                                                   Integer delByteSize) {
 
-        Integer cni = containerResourceContent.getInt(ResourceContainer.CURR_NR_INSTANCES);
-        Integer cbs = containerResourceContent.getInt(ResourceContainer.CURR_BYTE_SIZE);
-        Integer st = containerResourceContent.getInt(ResourceContent.STATE_TAG);
+        Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
+        Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
+        Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
 
         cni--;
         cbs -= delByteSize;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,16 +9,8 @@
 package org.opendaylight.iotdm.onem2m.client;
 
 import java.util.Iterator;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +87,7 @@ public class Onem2mContainerResponse extends Onem2mResponse {
         while (keys.hasNext()) {
             String key = (String) keys.next();
 
-            Object o = jsonContent.get(key);
+            Object o = jsonContent.opt(key);
 
             switch (key) {
 
@@ -104,42 +96,42 @@ public class Onem2mContainerResponse extends Onem2mResponse {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.creator = o.toString();
+                    this.creator = (String) o;
                     break;
                 case ResourceContainer.MAX_NR_INSTANCES:
                     if (!(o instanceof Integer)) {
                         LOG.error("Integer expected for json key: " + key);
                         return false;
                     }
-                    this.maxNrInstances = (Integer)(o);
+                    this.maxNrInstances = (Integer) o;
                     break;
                 case ResourceContainer.ONTOLOGY_REF:
                     if (!(o instanceof String)) {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.ontologyRef = o.toString();
+                    this.ontologyRef = (String) o;
                     break;
                 case ResourceContainer.MAX_BYTE_SIZE:
                     if (!(o instanceof Integer)) {
                         LOG.error("Integer expected for json key: " + key);
                         return false;
                     }
-                    this.maxByteSize = (Integer)(o);
+                    this.maxByteSize = (Integer) o;
                     break;
                 case ResourceContainer.CURR_BYTE_SIZE:
                     if (!(o instanceof Integer)) {
                         LOG.error("Integer expected for json key: " + key);
                         return false;
                     }
-                    this.currByteSize = (Integer)(o);
+                    this.currByteSize = (Integer) o;
                     break;
                 case ResourceContainer.CURR_NR_INSTANCES:
                     if (!(o instanceof Integer)) {
                         LOG.error("Integer expected for json key: " + key);
                         return false;
                     }
-                    this.currNrInstances = (Integer)(o);
+                    this.currNrInstances = (Integer) o;
                     break;
                 default:
                     if (!super.processCommonJsonContent(key))
