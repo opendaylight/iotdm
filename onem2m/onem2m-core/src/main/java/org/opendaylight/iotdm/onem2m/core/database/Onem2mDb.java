@@ -482,6 +482,24 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     /**
+     * Get the resourceId of the hierarchical name
+     * @param targetURI
+     * @return
+     */
+    public String findResourceIdUsingURI(String targetURI) {
+
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitive(RequestPrimitive.TO, targetURI);
+        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+        if (!Onem2mDb.getInstance().findResourceUsingURI(targetURI, onem2mRequest, onem2mResponse)) {
+            return null;
+        }
+
+        return onem2mRequest.getResourceId();
+
+    }
+
+    /**
      * Using the target URI/attribute, strip off the attribute, and see if a resource is found.  Then look to see
      * if the attribute exists under this resource type.
      * @param onem2mRequest request
@@ -491,6 +509,60 @@ public class Onem2mDb implements TransactionChainListener {
     public Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
                                                     RequestPrimitive onem2mRequest,
                                                     ResponsePrimitive onem2mResponse) {
+        return false;
+    }
+
+    public boolean isLatestCI(Onem2mResource onem2mResource) {
+
+        if (!onem2mResource.getResourceType().contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+            return false;
+        }
+
+        OldestLatest parentOldestLatest =
+                dbResourceTree.retrieveOldestLatestByResourceType(onem2mResource.getParentId(),
+                        Onem2m.ResourceType.CONTENT_INSTANCE);
+        if (parentOldestLatest != null) {
+            String latestId = parentOldestLatest.getLatestId();
+            if (latestId.contentEquals(onem2mResource.getResourceId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine whether the child id is in the targetId's hierarchy.
+     * @param targetResourceId
+     * @param childResourceId
+     * @return
+     */
+    public boolean isResourceIdUnderTargetId(String targetResourceId, String childResourceId) {
+
+        if (targetResourceId == null || targetResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return false;
+        }
+        if (childResourceId == null || childResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return false;
+        }
+        if (targetResourceId.contentEquals(childResourceId)) {
+            return true;
+        }
+
+        Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(childResourceId);
+        while (onem2mResource != null) {
+
+            if (onem2mResource.getParentId().contentEquals(NULL_RESOURCE_ID)) {
+                return false;
+            }
+
+            String resourceId = onem2mResource.getParentId();
+            if (targetResourceId.contentEquals(resourceId)) {
+                return true;
+            }
+            onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
+        }
+
         return false;
     }
 
@@ -526,12 +598,27 @@ public class Onem2mDb implements TransactionChainListener {
      * @return name of the resource in hierarchical format
      */
     public String getHierarchicalNameForResource(String resourceId) {
+        Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
+        return getHierarchicalNameForResource(onem2mResource);
+    }
+
+    /**
+     * Using the resourceId, traverse up the hierarchy till reach the root building the path.
+     * @param onem2mResource the resource
+     * @return name of the resource in hierarchical format
+     */
+    public String getHierarchicalNameForResource(Onem2mResource onem2mResource) {
         String hierarchy = "";
 
-        Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
         while (onem2mResource != null) {
-            hierarchy = "/" + onem2mResource.getName() + hierarchy;
-            resourceId = onem2mResource.getParentId();
+            String resourceName;
+            if (isLatestCI(onem2mResource)) {
+                resourceName = "latest";
+            } else {
+                resourceName = onem2mResource.getName();
+            }
+            hierarchy = "/" + resourceName + hierarchy;
+            String resourceId = onem2mResource.getParentId();
             if (resourceId.contentEquals(NULL_RESOURCE_ID)) {
                 break;
             }
