@@ -46,10 +46,14 @@ public class Onem2mContainerRequestBuilder extends Onem2mRequestPrimitiveClientB
         b.setOntologyRef(value);
         return this;
     }
+    public Onem2mContainerRequestBuilder setPrimitiveContent(String value) {
+        b.setPrimitiveContent(value);
+        return this;
+    }
     public Onem2mRequestPrimitiveClient build() {
         if (!isDelete) {
             String resourceString = b.build();
-            setPrimitiveContent(resourceString);
+            super.setPrimitiveContent(resourceString);
         }
         if (isCreate) {
             setResourceType(Onem2m.ResourceType.CONTAINER);

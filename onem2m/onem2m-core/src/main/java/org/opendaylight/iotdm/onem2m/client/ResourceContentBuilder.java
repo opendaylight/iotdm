@@ -8,8 +8,10 @@
 
 package org.opendaylight.iotdm.onem2m.client;
 
-import org.json.JSONArray;
+import java.util.Iterator;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +23,6 @@ public class ResourceContentBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceContentBuilder.class);
     protected JSONObject jsonContent;
-    protected boolean useAnySyntax;
 
     public ResourceContentBuilder() {
         jsonContent = new JSONObject();
@@ -61,6 +62,25 @@ public class ResourceContentBuilder {
     }
     public ResourceContentBuilder setStateTag(String value) {
         jsonContent.put(ResourceContent.STATE_TAG, value);
+        return this;
+    }
+    public ResourceContentBuilder setPrimitiveContent(String value) {
+        JSONObject jsonPC = null;
+        try {
+            jsonPC = new JSONObject(value);
+        } catch (JSONException e) {
+            LOG.error("ResourceContentBuilder: {}", e.toString());
+            jsonPC = null;
+        }
+        // take the key/value from the json pc and add it to the existing json content
+        if (jsonPC != null) {
+            Iterator<?> keys = jsonPC.keys();
+            while (keys.hasNext()) {
+                String key = (String) keys.next();
+                Object o = jsonPC.get(key);
+                jsonContent.put(key, o);
+            }
+        }
         return this;
     }
 }
