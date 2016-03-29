@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -11,6 +11,7 @@ package org.opendaylight.iotdm.onem2m.client;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,24 +26,22 @@ public class ResourceContainerBuilder extends ResourceContentBuilder {
     }
 
     public ResourceContainerBuilder setCreator(String value) {
-        jsonContent.put(ResourceContainer.CREATOR, value);
+        JsonUtils.put(jsonContent, ResourceContainer.CREATOR, value);
         return this;
     }
     public ResourceContainerBuilder setMaxNrInstances(Integer value) {
-        jsonContent.put(ResourceContainer.MAX_NR_INSTANCES, value);
+        JsonUtils.put(jsonContent, ResourceContainer.MAX_NR_INSTANCES, value);
         return this;
     }
     public ResourceContainerBuilder setMaxByteSize(Integer value) {
-        jsonContent.put(ResourceContainer.MAX_BYTE_SIZE, value);
+        JsonUtils.put(jsonContent, ResourceContainer.MAX_BYTE_SIZE, value);
         return this;
     }
     public ResourceContainerBuilder setOntologyRef(String value) {
-        jsonContent.put(ResourceContainer.ONTOLOGY_REF, value);
+        JsonUtils.put(jsonContent, ResourceContainer.ONTOLOGY_REF, value);
         return this;
     }
     public String build() {
-        JSONObject j = new JSONObject();
-        j.put("m2m:" + Onem2m.ResourceTypeString.CONTAINER, jsonContent);
-        return (j.toString());
+        return JsonUtils.put(new JSONObject(), "m2m:" + Onem2m.ResourceTypeString.CONTAINER, jsonContent).toString();
     }
 }

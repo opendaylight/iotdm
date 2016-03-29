@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -12,13 +12,13 @@ import com.google.common.util.concurrent.Monitor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.slf4j.Logger;
@@ -709,7 +709,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // now format a response based on result content desired
         ResultContentProcessor.handleCreate(this, onem2mResponse);
 
-        // now process notifications
+        // now process common notifications type F
         NotificationProcessor.handleCreate(this);
 
         // TODO: see TS0004 6.8
@@ -763,7 +763,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
             // check to see if an resource/attribute was specified
             if (!Onem2mDb.getInstance().findResourceUsingURIAndAttribute(to, this, onem2mResponse)) {
-
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                         "Resource target URI not found: " + to);
                 return;
@@ -775,7 +774,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
-        // process the resource specific attributes
+        // process the resource specific attributes, for stats only
         ResourceContentProcessor.handleRetrieve(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
@@ -845,6 +844,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
+        // just used fot stats
         ResourceContentProcessor.handleDelete(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
@@ -984,10 +984,10 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
             this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
             JSONObject jCse = new JSONObject();
-            jCse.put(ResourceCse.CSE_ID, cseId);
-            jCse.put(ResourceCse.CSE_TYPE, cseType);
+            JsonUtils.put(jCse, ResourceCse.CSE_ID, cseId);
+            JsonUtils.put(jCse, ResourceCse.CSE_TYPE, cseType);
             JSONObject j = new JSONObject();
-            j.put(Onem2m.ResourceTypeString.CSE_BASE, jCse);
+            JsonUtils.put(j, Onem2m.ResourceTypeString.CSE_BASE, jCse);
             this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
             // process the resource specific attributes
@@ -1113,57 +1113,47 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                         "Resource target URI not found: " + "/" + cseId);
                 return;
             }
+//            JSONObject parentJson = new JSONObject(this.getOnem2mResource().getResourceContentJsonString());
+//            String exptime = parentJson.optString(ResourceContent.EXPIRATION_TIME);
             this.setPrimitive(RequestPrimitive.CONTENT, "{\n" +
                     "\n" +
                     "    \"m2m:acp\":{\n" +
+//                    "      \"et\": \"" + exptime +"\",\n" +
                     "      \"pv\":\n" +
                     "        {\"acr\":[{\n" +
                     "              \n" +
-                    "          \"acor\" : [\"*\",\"Test_AE_ID\",\"dslink\", \"//iotsandbox.cisco.com:10000\",\"//localhost:10000\"],\n" +
+                    "          \"acor\" : [\"*\"],\n" +
                     "          \"acop\":63\n" +
                     "              \n" +
                     "        },\n" +
-                    "         {\n" +
-                    "          \"acor\" : [\"111\",\"222\"],\n" +
-                    "          \n" +
-                    "          \"acop\":35\n" +
-                    "         }\n" +
-                    "        \n" +
                     "        ]},\n" +
-                    "        \n" +
                     "      \"pvs\":\n" +
                     "        {\"acr\":[{\n" +
                     "              \n" +
-                    "          \"acor\" : [\"//iotsandbox.cisco.com:10000\",\"//localhost:10000\"],\n" +
+                    "          \"acor\" : [\"admin\"],\n" +
                     "          \"acop\":63\n" +
                     "              \n" +
                     "        },\n" +
-                    "         {\n" +
-                    "          \"acor\" : [\"111\",\"222\"],\n" +
-                    "          \"acop\":9\n" +
-                    "         }\n" +
-                    "        \n" +
                     "        ]}\n" +
                     "       \n" +
                     "    }\n" +
                     "  \n" +
                     "}");
 
-            // process the resource specific attributes
-            //ResourceContentProcessor.handleCreate(this, onem2mResponse);
+
+
             ResourceAccessControlPolicy.handleDefaultCreate(this, onem2mResponse);
-
             // add the ACP response
-            ResultContentProcessor.handleCreate(this, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-                return;
-            }
 
-            // TODO: the below code does not run, can modify to get the default ACP's URI
+            //ResultContentProcessor.handleCreate(this, onem2mResponse);
+//            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+//                return;
+//            }
+
             // if the create was successful, ie no error has already happened, set CREATED for status code here
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
-                        "Provisioned default ACP: " + cseId + " name: " + "deaultACP");
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT) == null) {
+                onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT,
+                        "Provisioned default ACP for " + cseId + ", name: " + "_deaultACP");
             }
 
         } finally {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -11,6 +11,7 @@ package org.opendaylight.iotdm.onem2m.core;
 import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 
 public class Onem2mStats {
 
@@ -123,51 +124,51 @@ public class Onem2mStats {
     public JSONObject getStats() {
         JSONObject js = new JSONObject();
 
-        js.put("http_requests", statsArray[HTTP_REQUESTS]);
-        js.put("http_requests_ok", statsArray[HTTP_REQUESTS_OK]);
-        js.put("http_requests_error", statsArray[HTTP_REQUESTS_ERROR]);
-        js.put("http_requests_create", statsArray[HTTP_REQUESTS_CREATE]);
-        js.put("http_requests_retrieve", statsArray[HTTP_REQUESTS_RETRIEVE]);
-        js.put("http_requests_update", statsArray[HTTP_REQUESTS_UPDATE]);
-        js.put("http_requests_delete", statsArray[HTTP_REQUESTS_DELETE]);
-        js.put("http_requests_notify", statsArray[HTTP_REQUESTS_NOTIFY]);
+        JsonUtils.put(js, "http_requests", statsArray[HTTP_REQUESTS]);
+        JsonUtils.put(js, "http_requests_ok", statsArray[HTTP_REQUESTS_OK]);
+        JsonUtils.put(js, "http_requests_error", statsArray[HTTP_REQUESTS_ERROR]);
+        JsonUtils.put(js, "http_requests_create", statsArray[HTTP_REQUESTS_CREATE]);
+        JsonUtils.put(js, "http_requests_retrieve", statsArray[HTTP_REQUESTS_RETRIEVE]);
+        JsonUtils.put(js, "http_requests_update", statsArray[HTTP_REQUESTS_UPDATE]);
+        JsonUtils.put(js, "http_requests_delete", statsArray[HTTP_REQUESTS_DELETE]);
+        JsonUtils.put(js, "http_requests_notify", statsArray[HTTP_REQUESTS_NOTIFY]);
 
-        js.put("coap_requests", statsArray[COAP_REQUESTS]);
-        js.put("coap_requests_ok", statsArray[COAP_REQUESTS_OK]);
-        js.put("coap_requests_error", statsArray[COAP_REQUESTS_ERROR]);
-        js.put("coap_requests_create", statsArray[COAP_REQUESTS_CREATE]);
-        js.put("coap_requests_retrieve", statsArray[COAP_REQUESTS_RETRIEVE]);
-        js.put("coap_requests_update", statsArray[COAP_REQUESTS_UPDATE]);
-        js.put("coap_requests_delete", statsArray[COAP_REQUESTS_DELETE]);
-        js.put("coap_requests_notify", statsArray[COAP_REQUESTS_NOTIFY]);
+        JsonUtils.put(js, "coap_requests", statsArray[COAP_REQUESTS]);
+        JsonUtils.put(js, "coap_requests_ok", statsArray[COAP_REQUESTS_OK]);
+        JsonUtils.put(js, "coap_requests_error", statsArray[COAP_REQUESTS_ERROR]);
+        JsonUtils.put(js, "coap_requests_create", statsArray[COAP_REQUESTS_CREATE]);
+        JsonUtils.put(js, "coap_requests_retrieve", statsArray[COAP_REQUESTS_RETRIEVE]);
+        JsonUtils.put(js, "coap_requests_update", statsArray[COAP_REQUESTS_UPDATE]);
+        JsonUtils.put(js, "coap_requests_delete", statsArray[COAP_REQUESTS_DELETE]);
+        JsonUtils.put(js, "coap_requests_notify", statsArray[COAP_REQUESTS_NOTIFY]);
 
-        js.put("resource_ae_create", statsArray[RESOURCE_AE_CREATE]);
-        js.put("resource_ae_retrieve", statsArray[RESOURCE_AE_RETRIEVE]);
-        js.put("resource_ae_update", statsArray[RESOURCE_AE_UPDATE]);
-        js.put("resource_ae_delete", statsArray[RESOURCE_AE_DELETE]);
+        JsonUtils.put(js, "resource_ae_create", statsArray[RESOURCE_AE_CREATE]);
+        JsonUtils.put(js, "resource_ae_retrieve", statsArray[RESOURCE_AE_RETRIEVE]);
+        JsonUtils.put(js, "resource_ae_update", statsArray[RESOURCE_AE_UPDATE]);
+        JsonUtils.put(js, "resource_ae_delete", statsArray[RESOURCE_AE_DELETE]);
 
-        js.put("resource_container_create", statsArray[RESOURCE_CONTAINER_CREATE]);
-        js.put("resource_container_retrieve", statsArray[RESOURCE_CONTAINER_RETRIEVE]);
-        js.put("resource_container_update", statsArray[RESOURCE_CONTAINER_UPDATE]);
-        js.put("resource_container_delete", statsArray[RESOURCE_CONTAINER_DELETE]);
+        JsonUtils.put(js, "resource_container_create", statsArray[RESOURCE_CONTAINER_CREATE]);
+        JsonUtils.put(js, "resource_container_retrieve", statsArray[RESOURCE_CONTAINER_RETRIEVE]);
+        JsonUtils.put(js, "resource_container_update", statsArray[RESOURCE_CONTAINER_UPDATE]);
+        JsonUtils.put(js, "resource_container_delete", statsArray[RESOURCE_CONTAINER_DELETE]);
 
-        js.put("resource_content_instance_create", statsArray[RESOURCE_CONTENT_INSTANCE_CREATE]);
-        js.put("resource_content_instance_retrieve", statsArray[RESOURCE_CONTENT_INSTANCE_RETRIEVE]);
-        js.put("resource_content_instance_update", statsArray[RESOURCE_CONTENT_INSTANCE_UPDATE]);
-        js.put("resource_content_instance_delete", statsArray[RESOURCE_CONTENT_INSTANCE_DELETE]);
+        JsonUtils.put(js, "resource_content_instance_create", statsArray[RESOURCE_CONTENT_INSTANCE_CREATE]);
+        JsonUtils.put(js, "resource_content_instance_retrieve", statsArray[RESOURCE_CONTENT_INSTANCE_RETRIEVE]);
+        JsonUtils.put(js, "resource_content_instance_update", statsArray[RESOURCE_CONTENT_INSTANCE_UPDATE]);
+        JsonUtils.put(js, "resource_content_instance_delete", statsArray[RESOURCE_CONTENT_INSTANCE_DELETE]);
 
-        js.put("resource_subscription_create", statsArray[RESOURCE_SUBSCRIPTION_CREATE]);
-        js.put("resource_subscription_retrieve", statsArray[RESOURCE_SUBSCRIPTION_RETRIEVE]);
-        js.put("resource_subscription_update", statsArray[RESOURCE_SUBSCRIPTION_UPDATE]);
-        js.put("resource_subscription_delete", statsArray[RESOURCE_SUBSCRIPTION_DELETE]);
+        JsonUtils.put(js, "resource_subscription_create", statsArray[RESOURCE_SUBSCRIPTION_CREATE]);
+        JsonUtils.put(js, "resource_subscription_retrieve", statsArray[RESOURCE_SUBSCRIPTION_RETRIEVE]);
+        JsonUtils.put(js, "resource_subscription_update", statsArray[RESOURCE_SUBSCRIPTION_UPDATE]);
+        JsonUtils.put(js, "resource_subscription_delete", statsArray[RESOURCE_SUBSCRIPTION_DELETE]);
 
-        js.put("resource_cse_base_create", statsArray[RESOURCE_CSE_BASE_CREATE]);
-        js.put("resource_cse_base_retrieve", statsArray[RESOURCE_CSE_BASE_RETRIEVE]);
-        js.put("resource_cse_base_update", statsArray[RESOURCE_CSE_BASE_UPDATE]);
-        js.put("resource_cse_base_delete", statsArray[RESOURCE_CSE_BASE_DELETE]);
+        JsonUtils.put(js, "resource_cse_base_create", statsArray[RESOURCE_CSE_BASE_CREATE]);
+        JsonUtils.put(js, "resource_cse_base_retrieve", statsArray[RESOURCE_CSE_BASE_RETRIEVE]);
+        JsonUtils.put(js, "resource_cse_base_update", statsArray[RESOURCE_CSE_BASE_UPDATE]);
+        JsonUtils.put(js, "resource_cse_base_delete", statsArray[RESOURCE_CSE_BASE_DELETE]);
 
 
-        js.put("unique_endpoints", endpointMap.size());
+        JsonUtils.put(js, "unique_endpoints", endpointMap.size());
         Histogram h = new Histogram();
         int max = 0;
         String maxEp = "";
@@ -180,11 +181,11 @@ public class Onem2mStats {
             }
             h.add(value);
         }
-        js.put("top_talker", maxEp + ":" + max);
+        JsonUtils.put(js, "top_talker", maxEp + ":" + max);
         for (int i = 0; i < Histogram.NUM_BUCKETS; i++) {
-            js.put("talkers_10_exp_" + i, h.get(i));
+            JsonUtils.put(js, "talkers_10_exp_" + i, h.get(i));
         }
-        js.put("talkers_avg", h.avg());
+        JsonUtils.put(js, "talkers_avg", h.avg());
         return js;
     }
 

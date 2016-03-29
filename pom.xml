@@ -10,13 +10,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>odlparent</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.6.2-SNAPSHOT</version>
     <relativePath/>
   </parent> 
 
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>iotdm-aggregator</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.1.2-SNAPSHOT</version>
   <name>iotdm</name> <!-- Used by Sonar to set project name -->
   <packaging>pom</packaging>
   <modelVersion>4.0.0</modelVersion>
@@ -26,8 +26,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
 
   <modules>
     <module>onem2m</module>
-      <module>onem2mbenchmark</module>
-      <module>onem2mexample</module>
+    <module>onem2mplugins</module>
+    <module>onem2mbenchmark</module>
+    <module>onem2mexample</module>
   </modules>
 
     <!-- DO NOT deploy the repo root pom as it's only needed to initiate a build -->

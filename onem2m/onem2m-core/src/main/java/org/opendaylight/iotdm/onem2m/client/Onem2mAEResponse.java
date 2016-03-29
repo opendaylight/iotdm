@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -9,15 +9,9 @@
 package org.opendaylight.iotdm.onem2m.client;
 
 import java.util.Iterator;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +32,6 @@ public class Onem2mAEResponse extends Onem2mResponse {
         if (success) {
             success = processJsonContent();
         }
-//        if (success && !Onem2m.ResourceType.AE.contentEquals(getResourceType().toString())) {
-//            success = false;
-//            setError("Cannot construct an AE response with resource type: " + getResourceType());
-//        }
     }
 
     public Onem2mAEResponse(Onem2mResponsePrimitiveClient onem2mResponse) {
@@ -71,14 +61,6 @@ public class Onem2mAEResponse extends Onem2mResponse {
     }
     private boolean processJsonContent() {
 
-        //JSONObject j = jsonContent.getJSONObject("m2m:" + Onem2m.ResourceTypeString.AE);
-        //if (j == null) {
-        //    j = jsonContent.getJSONObject(Onem2m.ResourceTypeString.AE);
-        //}
-        //if (j == null) {
-        //    LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.AE,Onem2m.ResourceTypeString.AE);
-        //    return false;
-        //}
         if (!Onem2m.ResourceTypeString.AE.contentEquals(resourceTypeString)) {
             LOG.error("Expecting {} or {}", "m2m:" + Onem2m.ResourceTypeString.AE,Onem2m.ResourceTypeString.AE);
             return false;
@@ -88,7 +70,7 @@ public class Onem2mAEResponse extends Onem2mResponse {
         while (keys.hasNext()) {
             String key = (String) keys.next();
 
-            Object o = jsonContent.get(key);
+            Object o = jsonContent.opt(key);
 
             switch (key) {
 
@@ -97,35 +79,35 @@ public class Onem2mAEResponse extends Onem2mResponse {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.appName = o.toString();
+                    this.appName = (String) o;
                     break;
                 case ResourceAE.REQUEST_REACHABILITY:
                     if (!(o instanceof Boolean)) {
                         LOG.error("Boolean expected for json key: " + key);
                         return false;
                     }
-                    this.requestReachability = Boolean.valueOf(o.toString());
+                    this.requestReachability = (Boolean) o;
                     break;
                 case ResourceAE.AE_ID:
                     if (!(o instanceof String)) {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.appId = o.toString();
+                    this.aeId = (String) o;
                     break;
                 case ResourceAE.ONTOLOGY_REF:
                     if (!(o instanceof String)) {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.ontologyRef = o.toString();
+                    this.ontologyRef = (String) o;
                     break;
                 case ResourceAE.APP_ID:
                     if (!(o instanceof String)) {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.appId = o.toString();
+                    this.appId = (String) o;
                     break;
                 default:
                     if (!super.processCommonJsonContent(key))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -16,6 +16,7 @@ import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,7 @@ public class ResourceGroup {
 
             resourceContent.jsonCreateKeys.add(key);
 
-            Object o = resourceContent.getInJsonContent().get(key);
+            Object o = resourceContent.getInJsonContent().opt(key);
 
             switch (key) {
                 // read only
@@ -85,7 +86,7 @@ public class ResourceGroup {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
                             return;
-                        } else if (((Integer) o).intValue() < 0) {
+                        } else if ((Integer) o < 0) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") integer must be non-negative: " + key);
                             return;
@@ -101,7 +102,8 @@ public class ResourceGroup {
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
-                        resourceContent.getInJsonContent().put(CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+                        resourceContent.getInJsonContent().remove(key);
+                        JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
 
@@ -128,7 +130,7 @@ public class ResourceGroup {
                         }
                         JSONArray array = (JSONArray) o;
                         for (int i = 0; i < array.length(); i++) {
-                            if (!(array.get(i) instanceof String)) {
+                            if (!(array.opt(i) instanceof String)) {
                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                         "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
                                 return;
@@ -219,12 +221,12 @@ public class ResourceGroup {
         // set the Cur number when created
         if (onem2mRequest.isCreate) {
             // initialize cur number of members to 0
-            tempInt = resourceContent.getInJsonContent().getJSONArray(MEMBERS_IDS).length();
-            resourceContent.getInJsonContent().put(CURR_NR_MEMBERS, tempInt);
+            tempInt = resourceContent.getInJsonContent().optJSONArray(MEMBERS_IDS).length();
+            JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_MEMBERS, tempInt);
         }else {
             // update the existing current number of members as the resource is being updated
-            tempInt = resourceContent.getInJsonContent().getJSONArray(MEMBERS_IDS).length();
-            resourceContent.getInJsonContent().put(CURR_NR_MEMBERS, tempInt);
+            tempInt = resourceContent.getInJsonContent().optJSONArray(MEMBERS_IDS).length();
+            JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_MEMBERS, tempInt);
             // todo: they are the same...
         }
 
@@ -379,9 +381,9 @@ public class ResourceGroup {
                                                                   JSONObject containerResourceContent,
                                                                   Integer newByteSize) {
 
-        Integer cni = containerResourceContent.getInt(ResourceContainer.CURR_NR_INSTANCES);
-        Integer cbs = containerResourceContent.getInt(ResourceContainer.CURR_BYTE_SIZE);
-        Integer st = containerResourceContent.getInt(ResourceContent.STATE_TAG);
+        Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
+        Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
+        Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
 
         cni++;
         cbs += newByteSize;
@@ -401,9 +403,9 @@ public class ResourceGroup {
                                                                   JSONObject containerResourceContent,
                                                                   Integer delByteSize) {
 
-        Integer cni = containerResourceContent.getInt(ResourceContainer.CURR_NR_INSTANCES);
-        Integer cbs = containerResourceContent.getInt(ResourceContainer.CURR_BYTE_SIZE);
-        Integer st = containerResourceContent.getInt(ResourceContent.STATE_TAG);
+        Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
+        Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
+        Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
 
         cni--;
         cbs -= delByteSize;

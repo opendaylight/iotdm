@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -8,7 +8,6 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
-import java.util.Iterator;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,9 +17,8 @@ import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.FilterCriteria;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +134,8 @@ public class ResultContentProcessor {
                     produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
                     temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                    if (temp != null) jo = temp;                    onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
+                    if (temp != null) jo = temp;
+                    onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
                 break;
 
@@ -182,7 +181,7 @@ public class ResultContentProcessor {
 
         String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId());
 
-        j.put(ResourceContent.MEMBER_URI, h);
+        JsonUtils.put(j, ResourceContent.MEMBER_URI, h);
     }
 
     /**
@@ -205,7 +204,7 @@ public class ResultContentProcessor {
 
             String parentId = onem2mResponse.getJsonResourceContent().optString(ResourceContent.PARENT_ID, null);
             if (parentId != null) {
-                onem2mResponse.getJsonResourceContent().put(ResourceContent.PARENT_ID,
+                JsonUtils.put(onem2mResponse.getJsonResourceContent(), ResourceContent.PARENT_ID,
                         Onem2mDb.getInstance().getNonHierarchicalNameForResource(parentId));
             }
 
@@ -219,10 +218,13 @@ public class ResultContentProcessor {
                     onem2mResponse.getJsonResourceContent().remove(keyToRemove);
                 }
             }
+            if (onem2mRequest.isUpdate) {
+                return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType),
+                        onem2mRequest.getResourceContent().getInJsonContent());
+            }
 
-            j.put(m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), onem2mResponse.getJsonResourceContent());
-
-            return j;
+            return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType),
+                    onem2mResponse.getJsonResourceContent());
         }
 
         return null;
@@ -250,15 +252,14 @@ public class ResultContentProcessor {
 
             String parentId = onem2mResponse.getJsonResourceContent().optString(ResourceContent.PARENT_ID, null);
             if (parentId != null) {
-                onem2mResponse.getJsonResourceContent().put(ResourceContent.PARENT_ID,
+                JsonUtils.put(onem2mResponse.getJsonResourceContent(), ResourceContent.PARENT_ID,
                         Onem2mDb.getInstance().getNonHierarchicalNameForResource(parentId));
             }
             // copy the existing attrs to the new json object
             for (String key : JSONObject.getNames(onem2mResponse.getJsonResourceContent())) {
-                inJsonObject.put(key, onem2mResponse.getJsonResourceContent().get(key));
+                JsonUtils.put(inJsonObject, key, onem2mResponse.getJsonResourceContent().opt(key));
             }
-            j.put(m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), inJsonObject);
-            return j;
+            return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType), inJsonObject);
         }
 
         return null;
@@ -325,9 +326,9 @@ public class ResultContentProcessor {
         } else {
             h = Onem2mDb.getInstance().getNonHierarchicalNameForResource(resourceId);
         }
-        j.put(ResourceContent.MEMBER_URI, h);
-        j.put(ResourceContent.MEMBER_NAME,onem2mResource.getName());
-        j.put(ResourceContent.MEMBER_TYPE, Integer.valueOf(resourceType));
+        JsonUtils.put(j, ResourceContent.MEMBER_URI, h);
+        JsonUtils.put(j, ResourceContent.MEMBER_NAME,onem2mResource.getName());
+        JsonUtils.put(j, ResourceContent.MEMBER_TYPE, Integer.valueOf(resourceType));
 
         return true;
     }
@@ -356,6 +357,10 @@ public class ResultContentProcessor {
 
         List<Child> childList = onem2mResource.getChild();
 
+        childList = checkChildList(onem2mRequest, onem2mResource, onem2mResponse, childList);
+        if (childList.isEmpty())
+            return;
+
         for (Child child : childList) {
 
             if (limStr == null || count < lim) {
@@ -371,7 +376,7 @@ public class ResultContentProcessor {
             }
 
         }
-        j.put(ResourceContent.CHILD_RESOURCE_REF, ja);
+        JsonUtils.put(j, ResourceContent.CHILD_RESOURCE_REF, ja);
     }
 
     /**
@@ -431,6 +436,7 @@ public class ResultContentProcessor {
      * Format a list of the child references.  A child reference is either the non-h or hierarchical version of the
      * reference to the resourceId.  This conceivable could be a lot of references so TODO I think I need a system
      * variable with a MAX_LIMIT.
+     * Generate the "ch" attribute for the response payload, if ch = null, add Subscription Check.
      * @param onem2mResource
      * @param onem2mResponse
      */
@@ -449,6 +455,13 @@ public class ResultContentProcessor {
         String h = null;
         JSONArray ja = new JSONArray();
         List<Child> childList = onem2mResource.getChild();
+
+        //  todo: Check Subscription, if there is no subscription, return error?
+        // todo: if there is subscription type E, then send Notification, then wait 3 seconds, then check again?
+        childList = checkChildList(onem2mRequest, onem2mResource, onem2mResponse, childList);
+        if (childList.isEmpty())
+            return;
+
         for (Child child : childList) {
 
             if (limStr == null || count < lim) {
@@ -456,7 +469,6 @@ public class ResultContentProcessor {
 
                 Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
                 onem2mResponse.setJsonResourceContent(childResource.getResourceContentJsonString());
-
                 JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, childResource, onem2mResponse);
                 if (jContent != null) {
                     ja.put(jContent);
@@ -466,12 +478,53 @@ public class ResultContentProcessor {
             }
 
         }
-        j.put(ResourceContent.CHILD_RESOURCE, ja);
+        JsonUtils.put(j, ResourceContent.CHILD_RESOURCE, ja);
+    }
+
+    private static List<Child> checkChildList(RequestPrimitive onem2mRequest, Onem2mResource onem2mResource, ResponsePrimitive onem2mResponse, List<Child> childList) {
+        if (!childList.isEmpty()) {
+            // if there are several children, need to check whether they are expired.
+            for (Child child : childList) {
+                String resourceId = child.getResourceId();
+                Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
+                if (!Onem2mDb.getInstance().isAlive(childResource)) {
+                    childList.remove(child);
+                }
+            }
+        }
+        if (childList.isEmpty()) {
+            List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mResource.getResourceId(), Onem2m.EventType.RETRIEVE_NECHILD);
+            if (!subscriptionResourceIdList.isEmpty()) {
+                NotificationProcessor.handleEventTypeE(onem2mRequest, subscriptionResourceIdList);
+                //todo: do we have another thread to create resources?
+                // todo: what is the correct method to wait?
+                try {
+                    Thread.currentThread().wait(2000);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                onem2mResource = Onem2mDb.getInstance().getResource(onem2mResource.getResourceId());
+                childList = onem2mResource.getChild();
+                if (childList.isEmpty()) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: empty child");
+                }
+            }
+            else{
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: empty child");
+            }
+        }
+        return childList;
+
     }
 
     /**
      * Start at the root resource and find a hierarchical set of resources then generate the attributes for each of those
      * resources in an "any" array of json objects where each json object is the set of resource specific attrs
+     * default drt, Hierarchical addressing method.
      * @param onem2mResource
      * @param onem2mResponse
      */

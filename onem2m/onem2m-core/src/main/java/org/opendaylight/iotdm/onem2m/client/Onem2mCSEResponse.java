@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -10,7 +10,6 @@ package org.opendaylight.iotdm.onem2m.client;
 
 import java.util.Iterator;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
 import org.slf4j.Logger;
@@ -78,7 +77,7 @@ public class Onem2mCSEResponse extends Onem2mResponse {
         while (keys.hasNext()) {
             String key = (String) keys.next();
 
-            Object o = jsonContent.get(key);
+            Object o = jsonContent.opt(key);
 
             switch (key) {
 
@@ -87,14 +86,14 @@ public class Onem2mCSEResponse extends Onem2mResponse {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.cseId = o.toString();
+                    this.cseId = (String) o;
                     break;
                 case ResourceCse.CSE_TYPE:
                     if (!(o instanceof String)) {
                         LOG.error("String expected for json key: " + key);
                         return false;
                     }
-                    this.cseType = o.toString();
+                    this.cseType = (String) o;
                     break;
                 case ResourceCse.NOTIFICATION_CONGESTION_POLICY:
                     if (!(o instanceof Integer)) {
@@ -108,13 +107,13 @@ public class Onem2mCSEResponse extends Onem2mResponse {
                         LOG.error("Array expected for json key: " + key);
                         return false;
                     }
-                    JSONArray a = new JSONArray();
+                    JSONArray a = (JSONArray) o;
                     for (int i = 0; i < a.length(); i++) {
-                        if (!(a.get(i) instanceof Integer)) {
+                        if (!(a.opt(i) instanceof Integer)) {
                             LOG.error("Integer expected for supported resource type: " + key);
                             return false;
                         }
-                        this.supportedResourceTypes[i] = (Integer) a.get(i);
+                        this.supportedResourceTypes[i] = (Integer) a.opt(i);
                     }
                     break;
                 default:

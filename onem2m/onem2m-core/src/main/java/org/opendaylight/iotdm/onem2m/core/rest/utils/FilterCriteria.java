@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -11,7 +11,6 @@ package org.opendaylight.iotdm.onem2m.core.rest.utils;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
@@ -153,7 +152,7 @@ public class FilterCriteria {
                     break;
                 }
                 for (int i = 0; i < dbLabels.length(); i++) {
-                    String dbLabel = dbLabels.get(i).toString();
+                    String dbLabel = dbLabels.opt(i).toString();
                     if (dbLabel.contentEquals(filterLabel)) {
                         foundLabel = true;
                         break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -20,6 +20,7 @@ import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
@@ -46,7 +47,8 @@ public class ResourceContent {
     public static final String CHILD_RESOURCE = "ch";
     public static final String CHILD_RESOURCE_REF = "ch";
     public static final String MEMBER_URI = "val";
-    public static final String MEMBER_NAME = "nm";
+    // todo: we may edit "val" "rn" in the future
+    public static final String MEMBER_NAME = "rn";
     public static final String MEMBER_TYPE = "typ";
     public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
 
@@ -136,7 +138,7 @@ public class ResourceContent {
         while (keys.hasNext()) {
             String key = (String) keys.next();
 
-            Object o = jsonContent.get(key);
+            Object o = jsonContent.opt(key);
 
             if (!(o instanceof JSONObject)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -170,10 +172,11 @@ public class ResourceContent {
      * @param onem2mResponse response
      */
     public void processCommonCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        boolean isCSECreation = false;
         if (onem2mRequest.isCreate) {
 
             String resourceType = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
-            this.inJsonContent.put(ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
+            JsonUtils.put(this.inJsonContent, ResourceContent.RESOURCE_TYPE, Integer.valueOf(resourceType));
 
 
             // lookup the resource ... this will be the parent where the new resource will be created
@@ -203,6 +206,8 @@ public class ResourceContent {
                     onem2mRequest.setResourceName(resourceName);
                 }
             } else {
+                // set default expirationTime for CSE
+                isCSECreation = true;
 //                String resourceName = this.getInJsonContent().optString(ResourceContent.RESOURCE_NAME, null);
 //                if (resourceName == null) {
 //                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE name not specified");
@@ -233,23 +238,108 @@ public class ResourceContent {
         String currDateTime = Onem2mDateTime.getCurrDateTime();
 
         if (onem2mRequest.isCreate) {
-            this.inJsonContent.put(ResourceContent.CREATION_TIME, currDateTime);
+            JsonUtils.put(this.inJsonContent, ResourceContent.CREATION_TIME, currDateTime);
         }
 
         // always update lmt at create or update
-        this.inJsonContent.put(ResourceContent.LAST_MODIFIED_TIME, currDateTime);
+        JsonUtils.put(this.inJsonContent, ResourceContent.LAST_MODIFIED_TIME, currDateTime);
 
         // validate expiration time
         String et = this.getInJsonContent().optString(ResourceContent.EXPIRATION_TIME, null);
-        if (et != null) {
-            /* for now avoid checking format of et, when we find out actual time format
-            if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "EXPIRATION_TIME: cannot be less than current time");
-                return;
+//        if (et != null) {
+//
+//            if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
+//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+//                        "EXPIRATION_TIME: cannot be less than current time");
+//                return;
+//            }
+//
+//            //check parent's expirationtTime, what if CSEbase's default expirationTime, how long?
+//            if (!isCSECreation) {
+//                String parentExpirationTime = getParentExpTime(onem2mRequest);
+//                if (Onem2mDateTime.dateCompare(et, parentExpirationTime) > 0) {
+//                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+//                            "EXPIRATION_TIME: cannot be later than parent Expiration Time");
+//                    return;
+//                }
+//            }
+//
+//
+//        } else {
+//
+//
+//            // set default / parent's expirationTime.
+//            // todo: speical case: default ACP
+//            String parentExpirationTime = getParentExpTime(onem2mRequest);
+//
+//            if (parentExpirationTime != null) {
+//                this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, parentExpirationTime);
+//            } else {
+//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+//                        "EXPIRATION_TIME: CSEbase or parent resource missing exporationTime");
+//                return;
+//            }
+//        }
+        if (!isCSECreation) {
+            if (et != null) {
+                // need to compare nowTime and parentExpTime
+                if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                            "EXPIRATION_TIME: cannot be less than current time");
+                    return;
+                }
+                if (!isValidExpTime(et, onem2mRequest)) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                            "EXPIRATION_TIME: cannot be later than parent Expiration Time");
+                    return;
+                }
+            } else if (onem2mRequest.isCreate){
+                // default ACP is the special case, onem2mRequest does not contain onem2mResource
+                if (onem2mRequest.getResourceName() != null && onem2mRequest.getResourceName().contentEquals("_defaultACP")) {
+                    this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, Onem2mDateTime.FOREVER);
+                    return;
+                }
+                // et is not given, if parent is CSE, put FOREVER, otherwise copy parent's et
+                // creation's parent resource is stored in onem2mrequest.onem2mreosurce, update's self resource is stored there
+
+
+                Onem2mResource parentResource = getParentResource(onem2mRequest);
+
+                if (parentResource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+                    this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, Onem2mDateTime.FOREVER);
+                } else {
+                    this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, getParentExpTime(onem2mRequest));
+                }
             }
-            */
         }
+
+    }
+
+    private Onem2mResource getParentResource(RequestPrimitive onem2mRequest) {
+        Onem2mResource parentResource;
+        if (onem2mRequest.isCreate) {
+            parentResource = onem2mRequest.getOnem2mResource();
+        } else {
+            String parentID = onem2mRequest.getOnem2mResource().getParentId();
+            parentResource = Onem2mDb.getInstance().getResource(parentID);
+        }
+        return parentResource;
+    }
+
+    private Boolean isValidExpTime(String et, RequestPrimitive onem2mRequest) {
+        String parentExpirationTime = getParentExpTime(onem2mRequest);
+        if (parentExpirationTime == null || parentExpirationTime.contentEquals(Onem2mDateTime.FOREVER)) {
+            //CSE does not have ET
+            return true;
+        }
+        return (Onem2mDateTime.dateCompare(et, parentExpirationTime) <= 0);
+
+    }
+
+    private String getParentExpTime(RequestPrimitive onem2mRequest) {
+        Onem2mResource parentResource = getParentResource(onem2mRequest);
+        JSONObject parentJson = new JSONObject(parentResource.getResourceContentJsonString());
+        return parentJson.optString(ResourceContent.EXPIRATION_TIME);
     }
 
     /**
@@ -265,7 +355,7 @@ public class ResourceContent {
                                                              ResourceContent resourceContent,
                                                              ResponsePrimitive onem2mResponse) {
 
-        Object o = resourceContent.getInJsonContent().get(key);
+        Object o = resourceContent.getInJsonContent().opt(key);
 
         switch (key) {
 
@@ -280,7 +370,7 @@ public class ResourceContent {
                     }
                     JSONArray array = (JSONArray) o;
                     for (int i = 0; i < array.length(); i++) {
-                        if (!(array.get(i) instanceof String)) {
+                        if (!(array.opt(i) instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
                             return false;
@@ -291,9 +381,9 @@ public class ResourceContent {
 
             case EXPIRATION_TIME:
                 if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String) /*|| !Onem2mDateTime.isValidDateTime(o.toString())*/) {
+                    if (!(o instanceof String) || !Onem2mDateTime.isValidDateTime(o.toString())) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                "CONTENT(" + RequestPrimitive.CONTENT + ") DATE (YYYYMMDDTHHMMSSZ) string expected for expiration time: " + key);
+                                "CONTENT(" + RequestPrimitive.CONTENT + ") DATE (YYYYMMDDTHHMMSS) string expected for expiration time: " + key);
                         return false;
                     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -24,8 +24,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-//import org.apache.commons.validator.routines.InetAddressValidator;
 
 public class ResourceAccessControlPolicy {
 
@@ -62,7 +60,7 @@ public class ResourceAccessControlPolicy {
         while( keys.hasNext() ) {
             String key = (String)keys.next();
             resourceContent.jsonCreateKeys.add(key);
-            Object s = resourceContent.getInJsonContent().get(key);
+            Object s = resourceContent.getInJsonContent().opt(key);
 
             switch (key) {
             case PRIVILIEGES:
@@ -78,7 +76,7 @@ public class ResourceAccessControlPolicy {
                     Iterator<?> PVkeys = acrObject.keys();
                     while (PVkeys.hasNext()){
                         String PVkey = (String)PVkeys.next();
-                        Object o = acrObject.get(PVkey);
+                        Object o = acrObject.opt(PVkey);
                         switch (PVkey){
                         case ACCESS_CONTROL_RULES:
                             if (!(o instanceof JSONArray)) {
@@ -91,11 +89,11 @@ public class ResourceAccessControlPolicy {
 
                             JSONArray arrayRule = (JSONArray) o;
                             for (int i = 0; i < arrayRule.length(); i++){
-                                JSONObject acRule = (JSONObject)arrayRule.get(i);
+                                JSONObject acRule = arrayRule.optJSONObject(i);
                                 Iterator<?> ruleKeys = acRule.keys();
                                 while(ruleKeys.hasNext()){
                                     String ruleKey = (String)ruleKeys.next();
-                                    Object p = acRule.get(ruleKey);
+                                    Object p = acRule.opt(ruleKey);
                                     switch (ruleKey){
                                     // what if shown more than once?
                                     case ACCESS_CONTROL_ORIGINATORS:
@@ -107,12 +105,12 @@ public class ResourceAccessControlPolicy {
                                         JSONArray arrayP = (JSONArray) p;
                                         List<String> originatorsList = new ArrayList<>();
                                         for (int k = 0; k < arrayP.length(); k++) {
-                                            if (!(arrayP.get(k) instanceof String)) {
+                                            if (!(arrayP.opt(k) instanceof String)) {
                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                         "PRIVILEGES(" + ACCESS_CONTROL_ORIGINATORS + ") string expected for json array: " + ruleKey);
                                                 return;
                                             }
-                                            originatorsList.add((String)arrayP.get(k));
+                                            originatorsList.add(arrayP.optString(k));
                                         }
                                         break;
                                     case ACCESS_CONTROL_CONTEXTS:
@@ -126,11 +124,11 @@ public class ResourceAccessControlPolicy {
                                             JSONArray arrayContext = (JSONArray) p;
 
                                             for (int k = 0; k < arrayContext.length(); k++){
-                                                JSONObject acContext = (JSONObject)arrayContext.get(k);
+                                                JSONObject acContext = arrayContext.optJSONObject(k);
                                                 Iterator<?> contextKeys = acContext.keys();
                                                 while(contextKeys.hasNext()){
                                                     String contextKey = (String)contextKeys.next();
-                                                    Object q = acContext.get(contextKey);
+                                                    Object q = acContext.opt(contextKey);
                                                     switch (contextKey){
                                                     // what if shown more than once?
                                                     case ACCESS_CONTROL_WINDOW:
@@ -142,12 +140,12 @@ public class ResourceAccessControlPolicy {
                                                         JSONArray arrayWindow = (JSONArray) q;
                                                         List<String> windowList = new ArrayList<>();
                                                         for (int x = 0; x < arrayWindow.length(); x++) {
-                                                            if (!(arrayWindow.get(x) instanceof String)) {
+                                                            if (!(arrayWindow.opt(x) instanceof String)) {
                                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                         "PRIVILEGES(" + ACCESS_CONTROL_WINDOW + ") string expected for json array: " + contextKey);
                                                                 return;
                                                             }
-                                                            windowList.add((String)arrayWindow.get(x));
+                                                            windowList.add(arrayWindow.optString(x));
                                                         }
                                                         break;
                                                     case ACCESS_CONTROL_IP_ADDRESSES:
@@ -158,7 +156,7 @@ public class ResourceAccessControlPolicy {
                                                             Iterator<?> IpAddressKeys = acIPAddresses.keys();
                                                             while (IpAddressKeys.hasNext()) {
                                                                 String IpAddressKey = (String) IpAddressKeys.next();
-                                                                Object r = acIPAddresses.get(IpAddressKey);
+                                                                Object r = acIPAddresses.opt(IpAddressKey);
                                                                 switch (IpAddressKey) {
                                                                 case IP_V4_ADDRESSES:
                                                                     // assume ip-v4 must contain an array, cannot be null
@@ -170,12 +168,12 @@ public class ResourceAccessControlPolicy {
                                                                     List<String> ipv4List = new ArrayList<>();
                                                                     JSONArray ipv4Array = (JSONArray) r;
                                                                     for (int j = 0; j < ipv4Array.length();j ++){
-                                                                        if (!(ipv4Array.get(j) instanceof String)) {
+                                                                        if (!(ipv4Array.opt(j) instanceof String)) {
                                                                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                     "PRIVILEGES(" + IP_V4_ADDRESSES + ") string expected for json array: " + IpAddressKey);
                                                                             return;
                                                                         } else {
-                                                                            String ipv4Address = (String) (ipv4Array.get(j));
+                                                                            String ipv4Address = ipv4Array.optString(j);
 //                                                                            if (!InetAddressValidator.getInstance().isValidInet4Address(ipv4Address)) {
 //                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
 //                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ")" + ipv4Address+ "id not a valid Ipv4 address.");
@@ -188,7 +186,7 @@ public class ResourceAccessControlPolicy {
                                                                                 return;
                                                                             }
                                                                         }
-                                                                        ipv4List.add((String) ipv4Array.get(j));
+                                                                        ipv4List.add(ipv4Array.optString(j));
                                                                     }
                                                                     break;
                                                                 case IP_V6_ADDRESSES:
@@ -201,12 +199,12 @@ public class ResourceAccessControlPolicy {
                                                                     List<String> ipv6List = new ArrayList<>();
                                                                     JSONArray ipv6Array = (JSONArray) r;
                                                                     for (int j = 0; j < ipv6Array.length();j ++){
-                                                                        if (!(ipv6Array.get(j) instanceof String)) {
+                                                                        if (!(ipv6Array.opt(j) instanceof String)) {
                                                                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                     "PRIVILEGES(" + IP_V6_ADDRESSES + ") string expected for json array: " + IpAddressKey);
                                                                             return;
                                                                         } else {
-                                                                            String ipv6Address = (String) (ipv6Array.get(j));
+                                                                            String ipv6Address = ipv6Array.optString(j);
 //                                                                            InetAddressValidator validator = new InetAddressValidator();
 //                                                                            if (!validator.isValidInet6Address(ipv6Address)) {
 //                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -219,7 +217,7 @@ public class ResourceAccessControlPolicy {
                                                                                 return;
                                                                             }
                                                                         }
-                                                                        ipv6List.add((String)ipv6Array.get(j));
+                                                                        ipv6List.add(ipv6Array.optString(j));
                                                                     }
                                                                     break;
                                                                 default:
@@ -238,7 +236,7 @@ public class ResourceAccessControlPolicy {
                                                             Iterator<?> LocationRegionKeys = acLocationRegion.keys();
                                                             while (LocationRegionKeys.hasNext()) {
                                                                 String locationRegionKey = (String) LocationRegionKeys.next();
-                                                                Object r = acLocationRegion.get(locationRegionKey);
+                                                                Object r = acLocationRegion.opt(locationRegionKey);
                                                                 switch (locationRegionKey) {
                                                                 case CIRC_REGION:
                                                                     // assume ip-v4 must contain an array, cannot be null
@@ -250,13 +248,13 @@ public class ResourceAccessControlPolicy {
                                                                     List<String> circRegionList = new ArrayList<>();
                                                                     JSONArray circResionArray = (JSONArray) r;
                                                                     for (int j = 0; j < circResionArray.length();j ++){
-                                                                        if (!(circResionArray.get(j) instanceof String)) {
+                                                                        if (!(circResionArray.opt(j) instanceof String)) {
                                                                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                     "PRIVILEGES(" + CIRC_REGION + ") string expected for json array: " + locationRegionKey);
                                                                             return;
                                                                         }
 
-                                                                        circRegionList.add((String) circResionArray.get(j));
+                                                                        circRegionList.add(circResionArray.optString(j));
                                                                     }
                                                                     break;
                                                                 case COUNTRY_CODE:
@@ -269,12 +267,12 @@ public class ResourceAccessControlPolicy {
                                                                     List<String> countryCodeList = new ArrayList<>();
                                                                     JSONArray countryCodeArray = (JSONArray) r;
                                                                     for (int j = 0; j < countryCodeArray.length();j ++){
-                                                                        if (!(countryCodeArray.get(j) instanceof String)) {
+                                                                        if (!(countryCodeArray.opt(j) instanceof String)) {
                                                                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                     "PRIVILEGES(" + COUNTRY_CODE + ") string expected for json array: " + locationRegionKey);
                                                                             return;
                                                                         }
-                                                                        countryCodeList.add((String)countryCodeArray.get(j));
+                                                                        countryCodeList.add(countryCodeArray.optString(j));
                                                                     }
                                                                     break;
                                                                 default:
@@ -388,7 +386,7 @@ public class ResourceAccessControlPolicy {
             }
         } else {
             // todo: how to check access Control Operations and originators?
-            JSONObject pvjsonObject = resourceContent.getInJsonContent().getJSONObject(PRIVILIEGES);
+            JSONObject pvjsonObject = resourceContent.getInJsonContent().optJSONObject(PRIVILIEGES);
             if (!isContainPVMandatoryAttr(onem2mResponse, pvjsonObject)) return;
         }
 
@@ -400,7 +398,7 @@ public class ResourceAccessControlPolicy {
             }
         } else {
             // todo: how to check access Control Operations and originators?
-            JSONObject pvjsonObject = resourceContent.getInJsonContent().getJSONObject(SELF_PRIIVLIEGES);
+            JSONObject pvjsonObject = resourceContent.getInJsonContent().optJSONObject(SELF_PRIIVLIEGES);
             if (!isContainPVMandatoryAttr(onem2mResponse, pvjsonObject)) return;
         }
 
@@ -434,9 +432,9 @@ public class ResourceAccessControlPolicy {
      * @return
      */
     private static boolean isContainPVMandatoryAttr(ResponsePrimitive onem2mResponse, JSONObject pvjsonObject) {
-        JSONArray acessControlRulesJsonArray = pvjsonObject.getJSONArray(ACCESS_CONTROL_RULES);
+        JSONArray acessControlRulesJsonArray = pvjsonObject.optJSONArray(ACCESS_CONTROL_RULES);
         for (int i = 0; i < acessControlRulesJsonArray.length(); i++) {
-            JSONObject accessControlRule = acessControlRulesJsonArray.getJSONObject(i);
+            JSONObject accessControlRule = acessControlRulesJsonArray.optJSONObject(i);
             String originators = accessControlRule.optString(ACCESS_CONTROL_ORIGINATORS, null);
             if (originators == null) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "ACCESS CONTROL ORIGINATOR of No." + (i+1) +" missing parameter");

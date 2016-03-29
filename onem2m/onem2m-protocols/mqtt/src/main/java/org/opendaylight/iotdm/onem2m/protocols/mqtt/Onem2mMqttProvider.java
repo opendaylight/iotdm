@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ * Copyright (c) 2015, 2016 Cisco Systems, Inc. and others.  All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -37,11 +37,11 @@ import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.mqtt.rev150105.Onem2mMqttClientService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.mqtt.rev150105.Onem2mMqttConfigInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.mqtt.rev150105.Onem2mMqttConfigOutput;
@@ -467,7 +467,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             Iterator<?> keys = jsonContent.keys();
             while (keys.hasNext()) {
                 String key = (String) keys.next();
-                Object o = jsonContent.get(key);
+                Object o = jsonContent.opt(key);
                 if (o != null) {
                     clientBuilder.setPrimitiveNameValue(key, o.toString());
                     if (key.contentEquals(RequestPrimitive.OPERATION)) {
@@ -484,11 +484,11 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
 
             JSONObject responseJsonObject = new JSONObject();
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-            responseJsonObject.put(ResponsePrimitive.CONTENT, content);
+            JsonUtils.put(responseJsonObject, ResponsePrimitive.CONTENT, content);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            responseJsonObject.put(ResponsePrimitive.RESPONSE_STATUS_CODE, rscString);
+            JsonUtils.put(responseJsonObject, ResponsePrimitive.RESPONSE_STATUS_CODE, rscString);
             String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
-            responseJsonObject.put(ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
+            JsonUtils.put(responseJsonObject, ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
             sendResponse(topic, responseJsonObject.toString());
 
             if (rscString.charAt(0) =='2') {
