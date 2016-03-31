@@ -107,7 +107,7 @@ public class Onem2m {
     public class NotificationContentType {
         public static final String MODIFIED_ATTRIBUTES = "1";
         public static final String WHOLE_RESOURCE = "2";
-        public static final String REFERENCE_ONLY = "3";
+        public static final String RESOURCE_ID = "3";
     }
 
     // TODO: where did this list come from, not specified in XSD but specified in TS0001 8.1.2
@@ -134,6 +134,12 @@ public class Onem2m {
         public static final String DISCOVERY = "1";
         public static final String CONDITIONAL_RETRIEVAL = "2";
 
+    }
+
+    public class EventType {
+        public static final String UPDATE_RESOURCE = "1";
+        public static final String RETRIEVE_NECHILD = "5";
+        public static final String ANY_DESCENDENT_CHANGE = "6";
     }
 
     // TS0004 sections: 6.3.3.2.9, 6.6, for each new error code, add a mapping error code to CoAP and HTTP
