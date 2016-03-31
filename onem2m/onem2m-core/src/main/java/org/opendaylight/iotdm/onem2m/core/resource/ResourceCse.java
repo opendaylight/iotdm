@@ -36,6 +36,7 @@ public class ResourceCse {
     public static final String CSE_ID = "csi";
     public static final String SUPPORTED_RESOURCE_TYPES = "srt";
     public static final String NOTIFICATION_CONGESTION_POLICY = "ncp";
+    public static final String POINT_OF_ACCESS = "poa";
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -119,7 +120,23 @@ public class ResourceCse {
                         return;
                     }
                     break;
-
+                case POINT_OF_ACCESS:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.opt(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            }
+                        }
+                    }
+                    break;
                 default:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);

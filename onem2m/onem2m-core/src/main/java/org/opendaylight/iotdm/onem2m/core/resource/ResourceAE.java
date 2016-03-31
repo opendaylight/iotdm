@@ -211,6 +211,23 @@ public class ResourceAE {
                         }
                     }
                     break;
+                case POINT_OF_ACCESS:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.opt(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            }
+                        }
+                    }
+                    break;
                 case ResourceContent.LABELS:
 
                 case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
