@@ -93,6 +93,7 @@ public class DbResourceTree {
      * @param dbTxn transaction id
      * @param onem2mRequest request
      * @param parentResourceId id of the parent resource
+     * @param resourceType resourceType of the resource
      * @return this new resource
      */
     public Onem2mResource createResource(DbTransaction dbTxn, RequestPrimitive onem2mRequest,
