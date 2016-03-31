@@ -17,6 +17,7 @@ import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
+import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +89,16 @@ public class ResourceContentInstance  {
                 return;
             }
 
+        }
+
+        // set the ExpirationTime to the minimum value, curruntTime + parent container's maxInstanceAge
+        Integer mia = containerResourceContent.optInt(ResourceContainer.MAX_INSTANCE_AGE, -1);
+        if (mia != -1) {
+            String minExpTime = Onem2mDateTime.addAgeToCurTime(mia);
+            String cinExpTime = onem2mRequest.getResourceContent().getInJsonContent().optString(ResourceContent.EXPIRATION_TIME);
+            if ( cinExpTime!= null && Onem2mDateTime.dateCompare(minExpTime, cinExpTime) < 0) {
+                JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.EXPIRATION_TIME, minExpTime);
+            }
         }
 
         ResourceContainer.setCurrValuesForThisCreatedContentInstance(onem2mRequest, containerResourceContent,
