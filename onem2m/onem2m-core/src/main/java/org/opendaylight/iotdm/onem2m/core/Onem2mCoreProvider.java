@@ -221,8 +221,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     /**
      * This is a generic debug function ... it allows input and output parameters
-     * @param input
-     * @return
+     * @param input Onem2mDebugInput
+     * @return returnRPC
      */
     @Override
     public Future<RpcResult<Onem2mDebugOutput>> onem2mDebug(Onem2mDebugInput input) {

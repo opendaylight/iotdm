@@ -35,6 +35,7 @@ public class ResourceContainer {
     public static final String CREATOR = "cr";
     public static final String MAX_NR_INSTANCES = "mni";
     public static final String MAX_BYTE_SIZE = "mbs";
+    public static final String MAX_INSTANCE_AGE = "mia";
     public static final String CURR_NR_INSTANCES = "cni";
     public static final String CURR_BYTE_SIZE = "cbs";
     public static final String ONTOLOGY_REF = "or";
@@ -71,6 +72,7 @@ public class ResourceContainer {
 
                 case MAX_NR_INSTANCES:
                 case MAX_BYTE_SIZE:
+                case MAX_INSTANCE_AGE:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof Integer)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -90,7 +92,9 @@ public class ResourceContainer {
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
+                        resourceContent.getInJsonContent().remove(key);
                         JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+
                     }
                     break;
 

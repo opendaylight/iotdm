@@ -102,6 +102,7 @@ public class ResourceGroup {
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
+                        resourceContent.getInJsonContent().remove(key);
                         JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
