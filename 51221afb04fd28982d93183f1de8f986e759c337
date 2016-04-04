@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3a4c51b2_9d72ede3",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_dc7642d8",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4c51b2_1c81ca8f",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2016-03-31T07:57:26Z",
       "side": 1,
       "message": "Same as above, with the same kind of fix.",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_dd73d5e5",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 1090,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_1c81ca8f",
       "revId": "51221afb04fd28982d93183f1de8f986e759c337",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "3a4c51b2_5d4fc592",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 1133,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_fc7dfeb2",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4c51b2_5c4a3284",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2016-03-31T07:57:26Z",
       "side": 1,
       "message": "Same as above.",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_fd5df149",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_5c4a3284",
       "revId": "51221afb04fd28982d93183f1de8f986e759c337",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "3a4c51b2_a80e8932",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceSubscription.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_3c4f6694",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4c51b2_9c44ba75",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceSubscription.java",
         "patchSetId": 1
@@ -98,6 +188,24 @@
       "writtenOn": "2016-03-31T07:57:26Z",
       "side": 1,
       "message": "Use JsonUtils here:\n\n    JsonUtils.put(resourceContent.getInJsonContent(), key, onem2mRequest.getPrimitive(RequestPrimitive.FROM));",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_08133d5d",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceSubscription.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_9c44ba75",
       "revId": "51221afb04fd28982d93183f1de8f986e759c337",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "3a4c51b2_c820359e",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_7c49ee8a",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4c51b2_dc5da24a",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
         "patchSetId": 1
@@ -132,6 +258,24 @@
       "writtenOn": "2016-03-31T07:57:26Z",
       "side": 1,
       "message": "Please use opt() here:\n\n    Object j \u003d eventnotificationcriteria.opt(ENCkey);",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_083a1dcd",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_dc5da24a",
       "revId": "51221afb04fd28982d93183f1de8f986e759c337",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "3a4c51b2_e836d1e6",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_fc54de22",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4c51b2_5c31920a",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
         "patchSetId": 1
@@ -166,6 +328,24 @@
       "writtenOn": "2016-03-31T07:57:26Z",
       "side": 1,
       "message": "This should be\n\n    JsonUtils.put(notification, SUBSCRIPTION_DELETION, true);\n    JsonUtils.put(notification, SUBSCRIPTION_REFERENCE, name);",
+      "revId": "51221afb04fd28982d93183f1de8f986e759c337",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_884d8d75",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-04T18:05:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4c51b2_5c31920a",
       "revId": "51221afb04fd28982d93183f1de8f986e759c337",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
