@@ -37,12 +37,20 @@ public class JsonUtils {
         return jsonObject;
     }
 
+    /**
+     * Appends the given value to the array stored at the given key. If the JSON object doesn't contain the given key, an array is created.
+     * @param jsonObject The JSON object (must not be {@code null}).
+     * @param key The key (must not be {@code null}).
+     * @param value The value.
+     * @return The JSON object.
+     */
     public static JSONObject append(JSONObject jsonObject, String key, Object value) {
         Preconditions.checkNotNull(key);
         try {
             jsonObject.append(key, value);
         } catch (JSONException e) {
-            // TODO Determine when this can happen
+            // This indicates that jsonObject already contains a non-array keyed with key
+            throw new IllegalArgumentException("JSONObject[" + key + "] is not a JSONArray", e);
         }
         return jsonObject;
     }
