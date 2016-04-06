@@ -108,7 +108,7 @@ public class Onem2mSimpleAdapterHttpServer {
             LOG.info("payload: {}", payload);
 
             if (method.compareToIgnoreCase("POST") == 0 || method.compareToIgnoreCase("PUT") == 0) {
-                processHttpMessage(uri, payload);
+                processHttpMessage(baseRequest, uri, payload);
             }
 
             sendHttpResponse(httpResponse);
@@ -118,18 +118,28 @@ public class Onem2mSimpleAdapterHttpServer {
         }
     }
 
-    private boolean processHttpMessage(String uri, String payload) {
+    private boolean processHttpMessage(Request baseRequest, String uri, String payload) {
 
         uri = trim(uri);
 
         // verify uri is configured as an entry in the simple adapter and it is in the onem2m datastore
         SimpleAdapterDesc simpleAdapterDesc = onem2mSimpleAdapterManager.findDescriptorUsingUri(uri);
         if (simpleAdapterDesc == null) {
-            setErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "onem2m target uri not configured:" + uri);
+            setErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "onem2m target uri not configured: " + uri);
             return false;
         }
 
-        String error = onem2mSimpleAdapterManager.processUriAndPayload(simpleAdapterDesc, uri, payload);
+        String onem2mContainerHeaderValue = null;
+        String onem2mContainerHeaderName = simpleAdapterDesc.getOnem2mContainerHttpHeaderName();
+        if (onem2mContainerHeaderName != null) {
+            onem2mContainerHeaderValue = baseRequest.getHeader(onem2mContainerHeaderName);
+            if (onem2mContainerHeaderValue == null) {
+                setErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "missing expected header: " + onem2mContainerHeaderName);
+                return false;
+            }
+        }
+
+        String error = onem2mSimpleAdapterManager.processUriAndPayload(simpleAdapterDesc, uri, payload, onem2mContainerHeaderValue);
         if (error != null) {
             setErrorResponse(HttpServletResponse.SC_BAD_REQUEST, error);
             return false;

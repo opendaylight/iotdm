@@ -22,6 +22,7 @@ import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.Onem2mSimpleAdapterConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.SimpleAdapterParmsDesc;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.onem2m.simple.adapter.config.SimpleAdapterDesc;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -182,11 +183,10 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
      * @param payload
      * @return
      */
-    public String processUriAndPayload(SimpleAdapterDesc simpleAdapterDesc, String uri, String payload) {
-
-
-        String path[] = simpleAdapterDesc.getOnem2mContainerJsonKeyName().split("/");
-        Integer jsonNestedCount;
+    public String processUriAndPayload(SimpleAdapterDesc simpleAdapterDesc,
+                                       String uri,
+                                       String payload,
+                                       String onem2mContainerName) {
 
         JSONObject jsonPayloadObject;
         try {
@@ -195,27 +195,34 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
             return "Error json format:" + e.toString();
         }
 
-        JSONObject tempJ = jsonPayloadObject;
-        for (jsonNestedCount = 1; jsonNestedCount < path.length && tempJ != null; jsonNestedCount++) {
-            tempJ = tempJ.optJSONObject(path[jsonNestedCount-1]);
-        }
-        if (tempJ == null) {
-            return simpleAdapterDesc.getOnem2mContainerJsonKeyName() + " missing";
-        }
+        if (onem2mContainerName == null) {
 
-        String jsonKeyValue = tempJ.optString(path[jsonNestedCount-1], null);
-        if (jsonKeyValue == null) {
-            return simpleAdapterDesc.getOnem2mContainerJsonKeyName() + " missing";
+            String path[] = simpleAdapterDesc.getOnem2mContainerJsonKeyName().split("/");
+            Integer jsonNestedCount;
+
+            JSONObject tempJ = jsonPayloadObject;
+            for (jsonNestedCount = 1; jsonNestedCount < path.length && tempJ != null; jsonNestedCount++) {
+                tempJ = tempJ.optJSONObject(path[jsonNestedCount - 1]);
+            }
+            if (tempJ == null) {
+                return simpleAdapterDesc.getOnem2mContainerJsonKeyName() + " missing";
+            }
+
+            String jsonKeyValue = tempJ.optString(path[jsonNestedCount - 1], null);
+            if (jsonKeyValue == null) {
+                return simpleAdapterDesc.getOnem2mContainerJsonKeyName() + " missing";
+            }
+            onem2mContainerName = jsonKeyValue;
         }
 
         String target = "/" + uri;
-        if (!getContainer(target, jsonKeyValue)) {
-            LOG.info("processUriAndPayload: adding {}/{}", target, jsonKeyValue);
-            if (!createContainer(target, jsonKeyValue, simpleAdapterDesc)) {
-                return "Error adding " + target + "/" + jsonKeyValue;
+        if (!getContainer(target, onem2mContainerName)) {
+            LOG.info("processUriAndPayload: adding {}/{}", target, onem2mContainerName);
+            if (!createContainer(target, onem2mContainerName, simpleAdapterDesc)) {
+                return "Error adding " + target + "/" + onem2mContainerName;
             }
         }
-        target += "/" + jsonKeyValue;
+        target += "/" + onem2mContainerName;
         if (!createContentInstance(target, jsonPayloadObject.toString(), simpleAdapterDesc)) {
             return "Error adding content to " + target;
         }

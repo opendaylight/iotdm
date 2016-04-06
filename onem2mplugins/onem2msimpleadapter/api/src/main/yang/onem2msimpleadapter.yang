@@ -22,6 +22,14 @@
             type string;
             description "onem2m hierarchical resource name";
         }
+        /*
+        ** The onem2m container that is to be created is derived first from the http header (if present), then
+        ** otherwise, it must be in the json representation.  Of course, if the protocol is not HTTP then, we rely
+        ** on the json-key-name.
+        */
+        leaf onem2m-container-http-header-name {
+            type string;
+        }
         leaf onem2m-container-json-key-name {
             type string;
         }
