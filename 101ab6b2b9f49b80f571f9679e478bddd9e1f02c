@@ -22,6 +22,30 @@
       "revId": "101ab6b2b9f49b80f571f9679e478bddd9e1f02c",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_75f8c67c",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-04-08T21:06:47Z",
+      "side": 1,
+      "message": "I think This was what I added for Lionel\u0027s DSlink gui .\nI asked Lionel, he may not need such feature.\nSo I comment that, if Lionel\u0027s function is still working, I will delete that.",
+      "parentUuid": "3a4c51b2_b5db6e1a",
+      "range": {
+        "startLine": 662,
+        "startChar": 0,
+        "endLine": 667,
+        "endChar": 15
+      },
+      "revId": "101ab6b2b9f49b80f571f9679e478bddd9e1f02c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
     }
   ]
 }
