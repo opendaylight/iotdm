@@ -165,10 +165,6 @@ public class ResourceContentInstance  {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
-                    } else {
-                        resourceContent.getInJsonContent().remove(key);
-                        JsonUtils.put(resourceContent.getInJsonContent(), key,
-                                onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
                 case ResourceContent.LABELS:
@@ -185,6 +181,9 @@ public class ResourceContentInstance  {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
                     return;
+            }
+            if (resourceContent.jsonCreateKeys.contains(CREATOR)) {
+                JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
             }
         }
     }
