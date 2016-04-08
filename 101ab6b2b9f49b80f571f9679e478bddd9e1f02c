@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a4c51b2_b5db6e1a",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 2897
+      },
+      "writtenOn": "2016-04-08T21:03:57Z",
+      "side": 1,
+      "message": "Why did you comment this out, did it break something u needed?  I used this for something I was doing?",
+      "range": {
+        "startLine": 662,
+        "startChar": 0,
+        "endLine": 667,
+        "endChar": 15
+      },
+      "revId": "101ab6b2b9f49b80f571f9679e478bddd9e1f02c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
