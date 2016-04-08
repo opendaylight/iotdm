@@ -132,84 +132,6 @@ public class NotificationProcessor {
      * @param opCode CRUD operation
      */
 
-
-//    public static void handleOperation(RequestPrimitive onem2mRequest, String opCode) {
-//
-//        List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findSubscriptionResources(onem2mRequest);
-//        if (subscriptionResourceIdList.size() == 0) {
-//            return;
-//        }
-//
-//        for (String subscriptionResourceId : subscriptionResourceIdList) {
-//
-//            JSONObject notification = new JSONObject();
-//            JSONObject notificationEvent = new JSONObject();
-//            JSONObject representation;
-//            JSONObject operationMonitor = new JSONObject();
-//
-//            NotificationPrimitive onem2mNotification = new NotificationPrimitive();
-//
-//            Onem2mResource subscriptionResource = Onem2mDb.getInstance().getResource(subscriptionResourceId);
-//            onem2mNotification.setSubscriptionResource(subscriptionResource);
-//            onem2mNotification.setJsonSubscriptionResourceContent(subscriptionResource.getResourceContentJsonString());
-//
-//
-//            //1. If Event Category parameter is set to 'latest' in the notification request primitive,
-//            // the transit CSE as well as Originator shall cache the most recent Notify request.
-//            // That is, if a new Notify request is received by the CSE with a subscription reference that
-//            // has already been buffered for a pending Notify request, the newer Notify request will replace the buffered older Notify request.
-//
-//
-//
-//            /* Step 1.0	Check the eventNotificationCriteria attribute of the <subscription> resource associated with the modified resource:
-//            •	 If the eventNotificationCriteria attribute is set, then the Originator shall check whether the corresponding
-//            event matches with the event criteria. If notificationEventType is not set within the eventNotificationCriteria attribute,
-//            the Originator shall use the default setting of Update_of_Resource to compare against the event. If the event matches,
-//            go to the step 2.0. Otherwise, the Originator shall discard the corresponding event.
-//            •	 If the eventNotificationCriteria attribute is not configured, the Originator shall use the default setting of
-//                Update_of_Resource for notificationEventType and then continue with the step 2.0.
-//
-//            */
-//
-//
-//            JSONObject eventnotificationcriteria = onem2mNotification.getJsonSubscriptionResourceContent().getJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
-//
-//
-//
-//
-//
-//            JSONArray uriArray = onem2mNotification.getJsonSubscriptionResourceContent()
-//                    .getJSONArray(ResourceSubscription.NOTIFICATION_URI);
-//            for (int i = 0; i < uriArray.length(); i++) {
-//                onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uriArray.getString(i));
-//            }
-//
-//            representation = produceJsonContent(onem2mRequest, onem2mNotification);
-//
-//            operationMonitor.put(ORIGINATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
-//            operationMonitor.put(OPERATION, Integer.valueOf(opCode));
-//            notificationEvent.put(OPERATION_MONITOR, operationMonitor);
-//            notificationEvent.put(REPRESENTATION, representation);
-//            notification.put(NOTIFICATION_EVENT, notificationEvent);
-//
-//            // todo : notificationEventType + subscriptionREFERENCE, SEE ts 4
-//
-//            onem2mNotification.setPrimitive(NotificationPrimitive.CONTENT, notification.toString());
-//
-//            // copy the URI's to the notification,
-//            ResourceChanged rc = new ResourceChangedBuilder()
-//                    .setOnem2mPrimitive(onem2mNotification.getPrimitivesList())
-//                    .build();
-//
-//            // now that we have a NotificationPrimitive, we need to send it to the Notifier
-//            try {
-//                Onem2mCoreProvider.getNotifier().putNotification(rc);
-//            } catch (Exception e){
-//                LOG.error("cannot send notification");
-//            }
-//        }
-//    }
-
     /**
      * A. Default one
      * Update to attributes of the subscribed-to resource
@@ -517,9 +439,6 @@ public class NotificationProcessor {
         if (newNumber != -1) {
             if (newNumber == 0) {
                 //todo: should we send Notification here? if so, what's the notification format
-//                RequestPrimitive onem2mRequest = new RequestPrimitive();
-//                ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-//                Onem2mDb.getInstance().deleteResourceUsingURI(onem2mRequest, onem2mResponse);
                 deletetheSubscription(subscriptionResourceId);
                 sendSubscriptionDeletedNotification(subsJsonObject,subscriptionResourceId);
                 return false;
@@ -629,17 +548,4 @@ public class NotificationProcessor {
         handleEventTypeA(onem2mRequest);
     }
 
-    //    private static JSONObject checkExpirationCounter(JSONObject subsJsonObject, String subscriptionResourceId) {
-//        // todo: when is bigInteger and when is integer?
-//        int newNumber = subsJsonObject.optInt(ResourceSubscription.EXPIRATION_COUNTER) - 1;
-//        // if exc does not exist, newNumber should be -1,
-//        if (newNumber != -1) {
-//            if (newNumber == 0) {
-//                //todo: should we send Notification here? if so, what's the notification format
-//                deletetheSubscriptionAndSendNotification(subscriptionResourceId);
-//            }
-//            subsJsonObject.put(ResourceSubscription.EXPIRATION_COUNTER, newNumber);
-//        }
-//        return subsJsonObject;
-//    }
 }

@@ -197,7 +197,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             resourceId = null;
         } else {
             String resourceUri = input.getResourceUri().trim();
-            //onem2mRequest.setPrimitive(RequestPrimitive.TO, resourceUri);
             if (!Onem2mDb.getInstance().findResourceUsingURI(resourceUri, onem2mRequest, onem2mResponse)) {
                 LOG.error("Cannot find resourceUri: {}", resourceUri);
                 return Futures.immediateFuture(RpcResultBuilder.<Void>failed().build());

@@ -22,7 +22,7 @@ import org.joda.time.format.ISODateTimeFormat;
 public class Onem2mDateTime {
 
     public static final String DEFAULT_EXPIRATION_TIME = "yyyyMMdd'T'HHmmss";
-    public static final String FOREVER = "FOREVER";
+    public static final String FOREVER = "29991231T111111";
 
     private Onem2mDateTime() {
     }

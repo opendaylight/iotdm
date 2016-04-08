@@ -353,21 +353,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-//        // if NAME is provided, only for CREATE
-//        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-//        if (resourceName != null) {
-//            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
-//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-//                        "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
-//                return;
-//            }
-//            if (!validateResourceName(resourceName)) {
-//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
-//                        "Resource name invalid: " + resourceName);
-//                return;
-//            }
-//        }
-
         if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
             setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
@@ -1008,94 +993,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
                         "Provisioned cseBase: " + cseId + " type: " + cseType);
             }
-
-            // TODO: add default ACP here?
-//            RequestPrimitive defaultACPrequest = new RequestPrimitive();
-//            defaultACPrequest.setPrimitive("protocol","Http");
-//            defaultACPrequest.setPrimitive("contentFormat","json");
-//            defaultACPrequest.setPrimitive("to","/"+ cseId);
-//            defaultACPrequest.setPrimitive("fr","//localhost:10000");
-//            defaultACPrequest.setPrimitive("rqi","12345");
-//            defaultACPrequest.setPrimitive("ot","NOW");
-//            defaultACPrequest.setPrimitive("ty","1");
-//            defaultACPrequest.setPrimitive("rcn","1");
-//            defaultACPrequest.setPrimitive("op","1");
-//            defaultACPrequest.setPrimitive("pc","{\n" +
-//                    "\n" +
-//                    "    \"m2m:acp\":{\n" +
-//                    "      \"pv\":\n" +
-//                    "        {\"acr\":[{\n" +
-//                    "              \n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \"acop\":35\n" +
-//                    "              \n" +
-//                    "        },\n" +
-//                    "         {\n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \n" +
-//                    "          \"acop\":35\n" +
-//                    "         }\n" +
-//                    "        \n" +
-//                    "        ]},\n" +
-//                    "        \n" +
-//                    "      \"pvs\":\n" +
-//                    "        {\"acr\":[{\n" +
-//                    "              \n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \"acop\":7\n" +
-//                    "              \n" +
-//                    "        },\n" +
-//                    "         {\n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \"acop\":9\n" +
-//                    "         }\n" +
-//                    "        \n" +
-//                    "        ]}\n" +
-//                    "       \n" +
-//                    "    }\n" +
-//                    "  \n" +
-//                    "}");
-//            ResourceContentProcessor.handleCreate(defaultACPrequest, onem2mResponse);
-
-
-//            this.setPrimitive("to","/"+ cseId);
-//            this.setPrimitive("ty","1");
-//            this.setPrimitive("pc","{\n" +
-//                    "\n" +
-//                    "    \"m2m:acp\":{\n" +
-//                    "      \"pv\":\n" +
-//                    "        {\"acr\":[{\n" +
-//                    "              \n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \"acop\":35\n" +
-//                    "              \n" +
-//                    "        },\n" +
-//                    "         {\n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \n" +
-//                    "          \"acop\":35\n" +
-//                    "         }\n" +
-//                    "        \n" +
-//                    "        ]},\n" +
-//                    "        \n" +
-//                    "      \"pvs\":\n" +
-//                    "        {\"acr\":[{\n" +
-//                    "              \n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \"acop\":7\n" +
-//                    "              \n" +
-//                    "        },\n" +
-//                    "         {\n" +
-//                    "          \"acor\" : [\"111\",\"222\"],\n" +
-//                    "          \"acop\":9\n" +
-//                    "         }\n" +
-//                    "        \n" +
-//                    "        ]}\n" +
-//                    "       \n" +
-//                    "    }\n" +
-//                    "  \n" +
-//                    "}");
-//            ResourceContentProcessor.handleCreate(this, onem2mResponse);
         } finally {
             this.crudMonitor.leave();
         }
@@ -1119,8 +1016,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                         "Resource target URI not found: " + "/" + cseId);
                 return;
             }
-//            JSONObject parentJson = new JSONObject(this.getOnem2mResource().getResourceContentJsonString());
-//            String exptime = parentJson.optString(ResourceContent.EXPIRATION_TIME);
             this.setPrimitive(RequestPrimitive.CONTENT, "{\n" +
                     "\n" +
                     "    \"m2m:acp\":{\n" +
@@ -1149,12 +1044,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
 
             ResourceAccessControlPolicy.handleDefaultCreate(this, onem2mResponse);
-            // add the ACP response
-
-            //ResultContentProcessor.handleCreate(this, onem2mResponse);
-//            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-//                return;
-//            }
 
             // if the create was successful, ie no error has already happened, set CREATED for status code here
             if (onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT) == null) {
