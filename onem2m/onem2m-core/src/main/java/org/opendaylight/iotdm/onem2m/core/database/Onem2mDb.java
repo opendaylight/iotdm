@@ -659,12 +659,12 @@ public class Onem2mDb implements TransactionChainListener {
 
         while (onem2mResource != null) {
             String resourceName;
-            if (isLatestCI(onem2mResource)) {
-                // todo: latest problem
-                resourceName = "latest";
-            } else {
+//            if (isLatestCI(onem2mResource)) {
+//                // todo: latest problem
+//                resourceName = "latest";
+//            } else {
                 resourceName = onem2mResource.getName();
-            }
+//            }
             hierarchy = "/" + resourceName + hierarchy;
             String resourceId = onem2mResource.getParentId();
             if (resourceId.contentEquals(NULL_RESOURCE_ID)) {
