@@ -270,6 +270,9 @@ if not, look at the reasons the build is failing and fix the issues.
 Now your are ready to write the rest of your plugin.  Again, looking at other plugin's helps.  Don't forget to
 add dependencies to pom.xml files in your impl folder as well as the .../features/pom.xml and features.xml files.
 
+If you want your new plugin to be included in the onem2mall project, then add it to the pom.xml, and features.xml
+file for the iotdm/onem2mall project.  You will see examples of teh other plugin's so follow the same steps.
+
 
 
 
