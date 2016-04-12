@@ -353,20 +353,20 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // if NAME is provided, only for CREATE
-        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-        if (resourceName != null) {
-            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
-                return;
-            }
-            if (!validateResourceName(resourceName)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
-                        "Resource name invalid: " + resourceName);
-                return;
-            }
-        }
+//        // if NAME is provided, only for CREATE
+//        String resourceName = this.getPrimitive((RequestPrimitive.NAME));
+//        if (resourceName != null) {
+//            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
+//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+//                        "NAME(" + RequestPrimitive.NAME + ") not permitted for operation: " + operation);
+//                return;
+//            }
+//            if (!validateResourceName(resourceName)) {
+//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
+//                        "Resource name invalid: " + resourceName);
+//                return;
+//            }
+//        }
 
         if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
             setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
@@ -440,6 +440,170 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         // TODO: at this point we could support returning the optional TO/FROM/OT/RET/EC but we will wait
     }
 
+
+    public void handleGroupOperation(ResponsePrimitive onem2mResponse) {
+
+        // if the request had a REQUEST_IDENTIFIER, return it in the response so client can correlate
+        // this must be the first statement as the rqi must be in the error response
+        String rqi = getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER);
+        if (rqi != null) {
+            onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
+        } else {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "REQUEST_IDENTIFIER(" + RequestPrimitive.REQUEST_IDENTIFIER + ") not specified");
+        }
+
+        // todo: add group request id
+
+        // make sure the attributes exist
+        if (!validatePrimitiveAttributes(onem2mResponse)) {
+            return;
+        }
+
+        onem2mResponse.setUseM2MPrefix(Onem2m.USE_M2M_PREFIX);
+
+        // Use table TS0004: 7.1.1.1-1 to validate mandatory parameters
+
+        // is there a protocol?  This is an internal option that CoAP, MQTT, HTTP, (RESTconf), and any internal
+        // app MUST set.  Why ... I do not know yet :-)
+        String protocol = this.getPrimitive(RequestPrimitive.PROTOCOL);
+        if (protocol == null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "PROTOCOL(" + RequestPrimitive.PROTOCOL + ") not specified");
+            return;
+        }
+
+        // is there an operation?
+        String operation = this.getPrimitive(RequestPrimitive.OPERATION);
+        if (operation == null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "OPERATION(" + RequestPrimitive.OPERATION + ") not specified");
+            return;
+        }
+
+        // TODO: RFC 3986 ... reserved characters in a URI
+        String to = getPrimitive(RequestPrimitive.TO);
+        if (to == null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "TO(" + RequestPrimitive.TO + ") not specified");
+            return;
+        } else if (!validateUri(to)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "TO(" + RequestPrimitive.TO + ") not value URI: " + to);
+            return;
+        }
+
+
+        // ensure resource type is present only in CREATE requests
+        String resourceType = getPrimitive(RequestPrimitive.RESOURCE_TYPE);
+        if (resourceType == null) {
+            if (operation.contentEquals(Onem2m.Operation.CREATE)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not specified for CREATE");
+                return;
+            }
+        } else { // a response type was specified, then only CREATE can have one
+            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not permitted for operation: " + operation);
+                return;
+            }
+            // resource type value will be verified later
+        }
+
+        String from = getPrimitive(RequestPrimitive.FROM);
+        if (from == null && !resourceType.contentEquals(Onem2m.ResourceType.AE)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "FROM(" + RequestPrimitive.FROM + ") not specified");
+            return;
+        } else if (!validateUri(from)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
+            return;
+        }
+
+
+        // this is an optional parameter but we will reject unsupported values
+        // only support blocking requests at this time, if not provided we default to blocking anyway
+        String rt = getPrimitive(RequestPrimitive.RESPONSE_TYPE);
+        if (rt != null && !rt.contentEquals(Onem2m.ResponseType.BLOCKING_REQUEST)) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED,
+                    "Invalid response type: " + rt);
+            return;
+        }
+
+
+        if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
+            setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                return;
+            }
+        }
+
+        // discovery_result_type only valid for RETRIEVE
+        String drt = getPrimitive(RequestPrimitive.DISCOVERY_RESULT_TYPE);
+        if (drt != null) {
+            if (!operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "DISCOVERY_RESULT_TYPE(" + RequestPrimitive.DISCOVERY_RESULT_TYPE +
+                                ") not permitted for operation: " + operation);
+                return;
+            } else if (!(drt.contentEquals(Onem2m.DiscoveryResultType.NON_HIERARCHICAL) ||
+                    drt.contentEquals(Onem2m.DiscoveryResultType.HIERARCHICAL))) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "DISCOVERY_RESULT_TYPE(" + RequestPrimitive.DISCOVERY_RESULT_TYPE +
+                                ") invalid option: " + drt);
+                return;
+            }
+        }
+
+        switch (operation) {
+            case Onem2m.Operation.CREATE:
+                this.crudMonitor.enter();
+                try {
+                    if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
+                            protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
+                        handleOperationCreate(onem2mResponse);
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "Cannot create a CSE Base, it must be provisioned separately!");
+                    }
+                } finally {
+                    this.crudMonitor.leave();
+                }
+                break;
+            case Onem2m.Operation.RETRIEVE:
+                handleOperationRetrieve(onem2mResponse);
+                break;
+            case Onem2m.Operation.UPDATE:
+                this.crudMonitor.enter();
+                try {
+                    handleOperationUpdate(onem2mResponse);
+                } finally {
+                    this.crudMonitor.leave();
+                }
+                break;
+            case Onem2m.Operation.DELETE:
+                this.crudMonitor.enter();
+                try {
+                    handleOperationDelete(onem2mResponse);
+                } finally {
+                    this.crudMonitor.leave();
+                }
+                break;
+            case Onem2m.Operation.NOTIFY:
+                handleOperationNotify(onem2mResponse);
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
+                        "OPERATION(" + RequestPrimitive.OPERATION + ") NOTIFY not implemented");
+                break;
+            default:
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "OPERATION(" + RequestPrimitive.OPERATION + ") not valid: " + operation);
+        }
+
+
+        // TODO: at this point we could support returning the optional TO/FROM/OT/RET/EC but we will wait
+    }
     /**
      * Handle the request primitive create ...
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
@@ -540,11 +704,12 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 //        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
 //            return;
 //        }
+//        if I put the check here, although it will return error, the resource is created in the database
 
         // now format a response based on result content desired
         ResultContentProcessor.handleCreate(this, onem2mResponse);
 
-        // not process notifications
+        // now process common notifications type F
         NotificationProcessor.handleCreate(this);
 
         // TODO: see TS0004 6.8
@@ -598,7 +763,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
             // check to see if an resource/attribute was specified
             if (!Onem2mDb.getInstance().findResourceUsingURIAndAttribute(to, this, onem2mResponse)) {
-
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                         "Resource target URI not found: " + to);
                 return;
@@ -606,7 +770,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
-        // process the resource specific attributes
+        CheckAccessControlProcessor.handleRetrieve(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
+        // process the resource specific attributes, for stats only
         ResourceContentProcessor.handleRetrieve(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
@@ -614,7 +782,9 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
         // return the data according to result content and filter criteria
         ResultContentProcessor.handleRetrieve(this, onem2mResponse);
-
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back OK
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
@@ -671,6 +841,12 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
+        CheckAccessControlProcessor.handleDelete(this, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            return;
+        }
+
+        // just used fot stats
         ResourceContentProcessor.handleDelete(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
@@ -798,9 +974,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
                 return;
             }
+            // todo: POA of CSEBase does not work
+            List<String> poa = this.getPrimitiveMany("POINT_OF_ACCESS");
 
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
-            this.setPrimitive(RequestPrimitive.NAME, cseId);
+            //this.setPrimitive(RequestPrimitive.NAME, cseId);
             this.setResourceName(cseId);
 
             if (Onem2mDb.getInstance().findCseByName(cseId)) {
@@ -812,6 +990,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             JSONObject jCse = new JSONObject();
             JsonUtils.put(jCse, ResourceCse.CSE_ID, cseId);
             JsonUtils.put(jCse, ResourceCse.CSE_TYPE, cseType);
+            if (poa != null)
+                JsonUtils.put(jCse, ResourceCse.POINT_OF_ACCESS, poa);
             JSONObject j = new JSONObject();
             JsonUtils.put(j, Onem2m.ResourceTypeString.CSE_BASE, jCse);
             this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
@@ -928,7 +1108,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             String cseId = this.getPrimitive("CSE_ID");
 
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
-            this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
+            //this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
             this.setResourceName("_defaultACP");
             this.setPrimitive("to", "/" + cseId);
             this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
@@ -939,57 +1119,47 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                         "Resource target URI not found: " + "/" + cseId);
                 return;
             }
+//            JSONObject parentJson = new JSONObject(this.getOnem2mResource().getResourceContentJsonString());
+//            String exptime = parentJson.optString(ResourceContent.EXPIRATION_TIME);
             this.setPrimitive(RequestPrimitive.CONTENT, "{\n" +
                     "\n" +
                     "    \"m2m:acp\":{\n" +
+//                    "      \"et\": \"" + exptime +"\",\n" +
                     "      \"pv\":\n" +
                     "        {\"acr\":[{\n" +
                     "              \n" +
-                    "          \"acor\" : [\"Test_AE_ID\",\"//iotsandbox.cisco.com:10000\"],\n" +
+                    "          \"acor\" : [\"*\"],\n" +
                     "          \"acop\":63\n" +
                     "              \n" +
                     "        },\n" +
-                    "         {\n" +
-                    "          \"acor\" : [\"111\",\"222\"],\n" +
-                    "          \n" +
-                    "          \"acop\":35\n" +
-                    "         }\n" +
-                    "        \n" +
                     "        ]},\n" +
-                    "        \n" +
                     "      \"pvs\":\n" +
                     "        {\"acr\":[{\n" +
                     "              \n" +
-                    "          \"acor\" : [\"111\",\"222\"],\n" +
-                    "          \"acop\":7\n" +
+                    "          \"acor\" : [\"admin\"],\n" +
+                    "          \"acop\":63\n" +
                     "              \n" +
                     "        },\n" +
-                    "         {\n" +
-                    "          \"acor\" : [\"111\",\"222\"],\n" +
-                    "          \"acop\":9\n" +
-                    "         }\n" +
-                    "        \n" +
                     "        ]}\n" +
                     "       \n" +
                     "    }\n" +
                     "  \n" +
                     "}");
 
-            // process the resource specific attributes
-            //ResourceContentProcessor.handleCreate(this, onem2mResponse);
+
+
             ResourceAccessControlPolicy.handleDefaultCreate(this, onem2mResponse);
-
             // add the ACP response
-            ResultContentProcessor.handleCreate(this, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-                return;
-            }
 
-            // TODO: the below code does not run, can modify to get the default ACP's URI
+            //ResultContentProcessor.handleCreate(this, onem2mResponse);
+//            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+//                return;
+//            }
+
             // if the create was successful, ie no error has already happened, set CREATED for status code here
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
-                        "Provisioned default ACP: " + cseId + " name: " + "deaultACP");
+            if (onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT) == null) {
+                onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT,
+                        "Provisioned default ACP for " + cseId + ", name: " + "_deaultACP");
             }
 
         } finally {

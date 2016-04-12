@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
+import java.util.Iterator;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -134,7 +135,8 @@ public class ResultContentProcessor {
                     produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
                     temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                    if (temp != null) jo = temp;                    onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
+                    if (temp != null) jo = temp;
+                    onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, jo.toString());
                 }
                 break;
 
@@ -216,6 +218,10 @@ public class ResultContentProcessor {
                 for (String keyToRemove : onem2mResponse.getResourceContent().getInJsonCreateKeys()) {
                     onem2mResponse.getJsonResourceContent().remove(keyToRemove);
                 }
+            }
+            if (onem2mRequest.isUpdate) {
+                return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType),
+                        onem2mRequest.getResourceContent().getInJsonContent());
             }
 
             return JsonUtils.put(j, m2mPrefixString + Onem2m.resourceTypeToString.get(resourceType),
@@ -352,6 +358,10 @@ public class ResultContentProcessor {
 
         List<Child> childList = onem2mResource.getChild();
 
+        childList = checkChildList(onem2mRequest, onem2mResource, onem2mResponse, childList);
+        if (childList.isEmpty())
+            return;
+
         for (Child child : childList) {
 
             if (limStr == null || count < lim) {
@@ -427,6 +437,7 @@ public class ResultContentProcessor {
      * Format a list of the child references.  A child reference is either the non-h or hierarchical version of the
      * reference to the resourceId.  This conceivable could be a lot of references so TODO I think I need a system
      * variable with a MAX_LIMIT.
+     * Generate the "ch" attribute for the response payload, if ch = null, add Subscription Check.
      * @param onem2mResource
      * @param onem2mResponse
      */
@@ -445,6 +456,13 @@ public class ResultContentProcessor {
         String h = null;
         JSONArray ja = new JSONArray();
         List<Child> childList = onem2mResource.getChild();
+
+        //  todo: Check Subscription, if there is no subscription, return error?
+        // todo: if there is subscription type E, then send Notification, then wait 3 seconds, then check again?
+        childList = checkChildList(onem2mRequest, onem2mResource, onem2mResponse, childList);
+        if (childList.isEmpty())
+            return;
+
         for (Child child : childList) {
 
             if (limStr == null || count < lim) {
@@ -452,7 +470,6 @@ public class ResultContentProcessor {
 
                 Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
                 onem2mResponse.setJsonResourceContent(childResource.getResourceContentJsonString());
-
                 JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, childResource, onem2mResponse);
                 if (jContent != null) {
                     ja.put(jContent);
@@ -465,9 +482,53 @@ public class ResultContentProcessor {
         JsonUtils.put(j, ResourceContent.CHILD_RESOURCE, ja);
     }
 
+    private static List<Child> checkChildList(RequestPrimitive onem2mRequest, Onem2mResource onem2mResource, ResponsePrimitive onem2mResponse, List<Child> childList) {
+        if (!childList.isEmpty()) {
+            // if there are several children, need to check whether they are expired
+
+            Iterator<Child> iterator = childList.iterator();
+            while (iterator.hasNext()) {
+                Child child = iterator.next();
+                String resourceId = child.getResourceId();
+                Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
+                if (!Onem2mDb.getInstance().isAlive(childResource)) {
+                    iterator.remove();
+                }
+            }
+        }
+        if (childList.isEmpty()) {
+            List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mResource.getResourceId(), Onem2m.EventType.RETRIEVE_NECHILD);
+            if (!subscriptionResourceIdList.isEmpty()) {
+                NotificationProcessor.handleEventTypeE(onem2mRequest, subscriptionResourceIdList);
+                //todo: do we have another thread to create resources?
+                // todo: what is the correct method to wait?
+                try {
+                    Thread.currentThread().wait(2000);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                onem2mResource = Onem2mDb.getInstance().getResource(onem2mResource.getResourceId());
+                childList = onem2mResource.getChild();
+                if (childList.isEmpty()) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: empty child");
+                }
+            }
+            else{
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: empty child");
+            }
+        }
+        return childList;
+
+    }
+
     /**
      * Start at the root resource and find a hierarchical set of resources then generate the attributes for each of those
      * resources in an "any" array of json objects where each json object is the set of resource specific attrs
+     * default drt, Hierarchical addressing method.
      * @param onem2mResource
      * @param onem2mResponse
      */
