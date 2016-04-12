@@ -1,0 +1,82 @@
+/*
+ * Copyright(c) 2016 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ *
+ */
+
+ module onem2msimpleadapter {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2msimpleadapter";
+    prefix "onem2msimpleadapter";
+
+    revision "2016-02-10" {
+        description "Initial revision of onem2msimpleadapter model";
+    }
+
+    grouping simple-adapter-parms-desc {
+
+        leaf onem2m-target-id {
+            type string;
+            description "onem2m hierarchical resource name";
+        }
+        /*
+        ** The onem2m container that is to be created is derived first from the http header (if present), then
+        ** otherwise, it must be in the json representation.  Of course, if the protocol is not HTTP then, we rely
+        ** on the json-key-name.
+        */
+        leaf onem2m-container-http-header-name {
+            type string;
+        }
+        leaf onem2m-container-json-key-name {
+            type string;
+        }
+        leaf onem2m-container-json-string {
+            type string;
+            description "json rep for the container parms, eg: {m2m:cnt:{mni:1, mbs:32}}";
+        }
+        leaf onem2m-content-instance-json-string {
+            type string;
+        }
+        leaf wire-protocol {
+            mandatory true;
+            type enumeration {
+                enum "HTTP" {
+                    value 1;
+                }
+                enum "MQTT" {
+                    value 2;
+                }
+                enum "COAP" {
+                    value 3;
+                }
+            }
+        }
+        leaf http-server-port {
+            type uint32;
+        }
+        leaf secure-http {
+            type boolean;
+        }
+        leaf mqtt-broker {
+            type string;
+        }
+        leaf coap-server-port {
+            type uint32;
+        }
+    }
+
+    container onem2m-simple-adapter-config {
+
+        list simple-adapter-desc {
+
+            key simple-adapter-name;
+            leaf simple-adapter-name {
+                type string;
+            }
+            uses simple-adapter-parms-desc;
+        }
+    }
+}

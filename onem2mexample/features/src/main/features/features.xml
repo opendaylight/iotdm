@@ -16,7 +16,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.iotdm/onem2m-features/${onem2m.version}/xml/features</repository>
 
     <feature name='odl-onem2mexample-api' version='${project.version}' description='OpenDaylight :: onem2mexample :: api'>
-    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+    <feature version='${yangtools.version}'>odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.iotdm/onem2mexample-api/${project.version}</bundle>
   </feature>
   <feature name='odl-onem2mexample' version='${project.version}' description='OpenDaylight :: onem2mexample'>

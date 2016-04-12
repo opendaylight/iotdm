@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.NotificationPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.ResourceChanged;
