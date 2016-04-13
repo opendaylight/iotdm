@@ -133,7 +133,7 @@ public class ResourceContentProcessor {
         String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
 
         onem2mRequest.isCreate = false;
-
+        onem2mRequest.isUpdate = true;
         switch (resourceType) {
             case Onem2m.ResourceType.AE:
                 ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
