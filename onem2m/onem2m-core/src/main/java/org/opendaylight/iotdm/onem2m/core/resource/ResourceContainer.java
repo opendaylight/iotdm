@@ -35,6 +35,7 @@ public class ResourceContainer {
     public static final String CREATOR = "cr";
     public static final String MAX_NR_INSTANCES = "mni";
     public static final String MAX_BYTE_SIZE = "mbs";
+    public static final String MAX_INSTANCE_AGE = "mia";
     public static final String CURR_NR_INSTANCES = "cni";
     public static final String CURR_BYTE_SIZE = "cbs";
     public static final String ONTOLOGY_REF = "or";
@@ -71,6 +72,7 @@ public class ResourceContainer {
 
                 case MAX_NR_INSTANCES:
                 case MAX_BYTE_SIZE:
+                case MAX_INSTANCE_AGE:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof Integer)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -89,8 +91,6 @@ public class ResourceContainer {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
-                    } else {
-                        JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
 
@@ -108,6 +108,9 @@ public class ResourceContainer {
                 case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
 
                 case ResourceContent.EXPIRATION_TIME:
+
+                case ResourceContent.RESOURCE_NAME:
+
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -118,6 +121,9 @@ public class ResourceContainer {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
                     return;
+            }
+            if (resourceContent.jsonCreateKeys.contains(CREATOR)) {
+                JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
             }
         }
     }
@@ -159,31 +165,25 @@ public class ResourceContainer {
 
         }
 
-        String acpids = resourceContent.getInJsonContent().optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null);
-        if (acpids == null && onem2mRequest.isCreate) {
-            // store the default ACPID info into this place.
-            // if parent resource contains acpi, use parent's acpi otherwise use default.
-            JSONObject jsonContent = null;
-            try {
-                jsonContent = new JSONObject(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
-            } catch (JSONException e) {
-                LOG.error("Invalid JSON {}", onem2mRequest.getOnem2mResource().getResourceContentJsonString(), e);
-                throw new IllegalArgumentException("Invalid JSON", e);
-            }
-            if (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) !=null) {
-                JSONArray acpiArray = jsonContent.optJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
-                JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.ACCESS_CONTROL_POLICY_IDS, acpiArray);
-
-            } else {
-                // parent resource does not contain acpid
-                String targetURI = onem2mRequest.getPrimitive(RequestPrimitive.TO);
-                String CSEid = Onem2mDb.getInstance().getCSEid(targetURI);
-                String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid, "_defaultACP");
-
-                JsonUtils.append(resourceContent.getInJsonContent(), ResourceContent.ACCESS_CONTROL_POLICY_IDS, defaultACPID);
-            }
-
-        }
+//        String acpids = resourceContent.getInJsonContent().optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null);
+//        if (acpids == null && onem2mRequest.isCreate) {
+//            // store the default ACPID info into this place.
+//            // if parent resource contains acpi, use parent's acpi otherwise use default.
+//            JSONObject jsonContent = new JSONObject(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
+//            if (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) !=null) {
+//                JSONArray acpiArray = jsonContent.getJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
+//                resourceContent.getInJsonContent().put(resourceContent.ACCESS_CONTROL_POLICY_IDS, acpiArray);
+//
+//            } else {
+//                // parent resource does not contain acpid
+//                String targetURI = onem2mRequest.getPrimitive(RequestPrimitive.TO);
+//                String CSEid = Onem2mDb.getInstance().getCSEid(targetURI);
+//                String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid, "_defaultACP");
+//
+//                resourceContent.getInJsonContent().append(resourceContent.ACCESS_CONTROL_POLICY_IDS, defaultACPID);
+//            }
+//
+//        }
 
         if (onem2mRequest.isCreate) {
             // initialize state tag to 0
@@ -234,7 +234,7 @@ public class ResourceContainer {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
