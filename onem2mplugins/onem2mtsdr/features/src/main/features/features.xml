@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright © 2015 Cisco Systems, Inc and others. All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-onem2mtsdr-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+  <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.tsdr/features-tsdr/{{VERSION}}/xml/features</repository>
+
+  <feature name='odl-onem2mtsdr-api' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: api'>
+    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+    <bundle>mvn:org.opendaylight.iotdm/onem2mtsdr-api/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-onem2mtsdr' version='${project.version}' description='OpenDaylight :: onem2mtsdr'>
+    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version='${project.version}'>odl-onem2mtsdr-api</feature>
+    <feature version='${onem2m.version}'>odl-onem2m-core</feature>
+    <feature version='${tsdr.version}'>odl-tsdr-core</feature>
+    <bundle>mvn:org.opendaylight.iotdm/onem2mtsdr-impl/{{VERSION}}</bundle>
+    <configfile finalname="${configfile.directory}/onem2mtsdr.xml">mvn:org.opendaylight.iotdm/onem2mtsdr-impl/{{VERSION}}/xml/config</configfile>
+  </feature>
+  <feature name='odl-onem2mtsdr-hsqldb' version='${project.version}' description='OpenDaylight :: onem2mtsdr-hsqldb :: hsqldb'>
+    <feature version="${project.version}">odl-onem2mtsdr</feature>
+    <feature version='${tsdr.version}'>odl-tsdr-hsqldb</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+  <feature name='odl-onem2mtsdr-cassandra' version='${project.version}' description='OpenDaylight :: onem2mtsdr-cassandra :: cassandra'>
+    <feature version="${project.version}">odl-onem2mtsdr</feature>
+    <feature version='${tsdr.version}'>odl-tsdr-cassandra</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+  <feature name='odl-onem2mtsdr-hbase' version='${project.version}' description='OpenDaylight :: onem2mtsdr-hbase :: hbase'>
+    <feature version="${project.version}">odl-onem2mtsdr</feature>
+    <feature version='${tsdr.version}'>odl-tsdr-hbase</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+  <feature name='odl-onem2mtsdr-rest' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: REST'>
+    <feature version="${project.version}">odl-onem2mtsdr</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+  <feature name='odl-onem2mtsdr-ui' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: UI'>
+    <feature version="${project.version}">odl-onem2mtsdr-rest</feature>
+
+    <!-- ONLY one of the tsdr data stores can be used at a time ... choose one for testing the plugin -->
+    <!-- When you write an app, include the appropriate onem2mtsdr-<datastore> feature in your app's feature.xml -->
+    <feature version="${project.version}">odl-onem2mtsdr-hsqldb</feature>
+    <!--<feature version="${project.version}">odl-onem2mtsdr-cassandra</feature>-->
+    <!--<feature version="${project.version}">odl-onem2mtsdr-hbase</feature>-->
+
+    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+    <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
+    <feature version="${dlux.version}">odl-dlux-yangui</feature>
+  </feature>
+
+</features>
