@@ -9,7 +9,12 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
+import java.util.*;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.database.DbResourceTree;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -43,7 +48,6 @@ public class ResourceAE {
     public static final String NODE_LINK = "nl"; // do not support node resource yet
     public static final String REQUEST_REACHABILITY = "rr";
     public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
-
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -85,10 +89,12 @@ public class ResourceAE {
             // to should be an CSE
             String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
             // if defaultACP is a list or jsonarray, use "put" method
+//            List <String> acpidlist = new LinkedList<>();
+//            acpidlist.add(defaultACPID);
+//            JSONArray acpid = new JSONArray(acpidlist);
             JsonUtils.append(resourceContent.getInJsonContent(), ACCESS_CONTROL_POLICY_IDS, defaultACPID);
 
         }
-
 
         /**
          * Check the From, if

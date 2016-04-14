@@ -82,10 +82,13 @@ public class Onem2mStats {
     public static final int RESOURCE_ACCESS_CONTROL_POLICY_UPDATE = 54;
     public static final int RESOURCE_ACCESS_CONTROL_POLICY_DELETE = 55;
 
-
+    public static final int RESOURCE_REMOTE_CSE_CREATE = 56;
+    public static final int RESOURCE_REMOTE_CSE_RETRIEVE = 57;
+    public static final int RESOURCE_REMOTE_CSE_UPDATE = 58;
+    public static final int RESOURCE_REMOTE_CSE_DELETE = 59;
 
     // this should be the latest entry one plus 1
-    private static final int MAX_STATS = 56;
+    private static final int MAX_STATS = 60;
 
     private static Onem2mStats s;
 
@@ -167,8 +170,13 @@ public class Onem2mStats {
         JsonUtils.put(js, "resource_cse_base_update", statsArray[RESOURCE_CSE_BASE_UPDATE]);
         JsonUtils.put(js, "resource_cse_base_delete", statsArray[RESOURCE_CSE_BASE_DELETE]);
 
+        /*js.put("resource_cse_remote_create", statsArray[RESOURCE_REMOTE_CSE_CREATE]);
+        js.put("resource_cse_remote_retrieve", statsArray[RESOURCE_REMOTE_CSE_RETRIEVE]);
+        js.put("resource_cse_remote_update", statsArray[RESOURCE_REMOTE_CSE_UPDATE]);
+        js.put("resource_cse_remote_delete", statsArray[RESOURCE_REMOTE_CSE_DELETE]);*/
 
-        JsonUtils.put(js, "unique_endpoints", endpointMap.size());
+        js.put("unique_endpoints", endpointMap.size());
+
         Histogram h = new Histogram();
         int max = 0;
         String maxEp = "";

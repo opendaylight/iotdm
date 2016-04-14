@@ -66,12 +66,13 @@ public class Onem2m {
     public class ResourceType {
         public static final String AE = "2"; //"ae";
         public static final String CONTAINER = "3"; //"cnt";
-        public static final String CSE_BASE = "5"; //"csb";
+        public static final String CSE_BASE = "5"; //"cb";
         public static final String CONTENT_INSTANCE = "4"; //"cin";
         public static final String SUBSCRIPTION = "23"; //"sub";
-        public static final String NODE = "14"; //"nod"
-        public static final String GROUP = "9";
-        public static final String ACCESS_CONTROL_POLICY = "1";
+        public static final String NODE = "14"; //"nod";
+        public static final String GROUP = "9"; //"grp";
+        public static final String ACCESS_CONTROL_POLICY = "1"; //"acp";
+        public static final String REMOTE_CSE = "16"; //"csr";
     }
     public class ResourceTypeString {
         public static final String AE = "ae";
@@ -82,6 +83,7 @@ public class Onem2m {
         public static final String NODE = "nod";
         public static final String GROUP = "grp";
         public static final String ACCESS_CONTROL_POLICY = "acp";
+        public static final String REMOTE_CSE = "csr";
     }
 
 
@@ -96,6 +98,7 @@ public class Onem2m {
         put(ResourceType.NODE, ResourceTypeString.NODE);
         put(ResourceType.GROUP, ResourceTypeString.GROUP);
         put(ResourceType.ACCESS_CONTROL_POLICY, ResourceTypeString.ACCESS_CONTROL_POLICY);
+        put(ResourceType.REMOTE_CSE, ResourceTypeString.REMOTE_CSE);
     }};
 
     public class ResponseType { // TS0001 section 8.2.1
@@ -215,10 +218,10 @@ public class Onem2m {
             RpcResult<Onem2mRequestPrimitiveOutput> rpcResult = onem2mService.onem2mRequestPrimitive(input).get();
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setPrimitivesList(rpcResult.getResult().getOnem2mPrimitive());
-        } catch (Exception e) {
+            } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
-            LOG.error("serviceOnenm2mRequest: RPC exception");
+            LOG.error("serviceOnenm2mRequest: RPC exception" +e.getMessage() +e.getCause());
         }
 
         return onem2mResponse;
