@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -19,15 +20,13 @@ import org.opendaylight.controller.md.sal.common.api.data.AsyncTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceGroup;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
+import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
+
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
@@ -144,6 +143,7 @@ public class Onem2mDb implements TransactionChainListener {
 
         // cache the resource
         onem2mRequest.setOnem2mResource(onem2mResource);
+        onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
 
         // now commit these to the data store
         return dbTxn.commitTransaction();
@@ -333,6 +333,27 @@ public class Onem2mDb implements TransactionChainListener {
         return success;
     }
 
+
+    /**
+     * this method is used to update subscription during the process of sending notification
+     * @param resourceID resourceID of the subscription resource
+     * @param updatedJsonString  the new json String
+     * @return
+     */
+    public boolean updateSubscriptionResource(String resourceID, String updatedJsonString ) {
+
+        DbTransaction dbTxn = new DbTransaction(dataBroker);
+
+        dbResourceTree.updateJsonResourceContentString(dbTxn,
+                resourceID,
+                updatedJsonString);
+
+        boolean success = dbTxn.commitTransaction();
+
+
+        return success;
+    }
+
     /**
      * Locate resource in db using the target resource id at this level and a name
      * @param resourceId id at this level
@@ -412,6 +433,7 @@ public class Onem2mDb implements TransactionChainListener {
 
     /**
      * Using the target URI, find the resource
+     * @param targetURI the URI of the target resource
      * @param onem2mRequest request
      * @param onem2mResponse response
      * @return found status
@@ -474,18 +496,59 @@ public class Onem2mDb implements TransactionChainListener {
             }
         }
 
-        if (onem2mResource == null)
+        if (onem2mResource == null) {
             return false; // resource not found
-
+        } else {
+            // onem2mresource is not empty, check whether this resource is expired.
+            if (!isAlive(onem2mResource)) {
+                return false;
+            }
+        }
         onem2mRequest.setResourceId(onem2mResource.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
         onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
         return true;
     }
 
+
+
+    public Boolean isAlive (Onem2mResource onem2mResource) {
+        try {
+            JSONObject jsonObject = new JSONObject(onem2mResource.getResourceContentJsonString());
+            String exptime = jsonObject.optString(ResourceContent.EXPIRATION_TIME);
+            boolean aliveFlag = "".equals(exptime) || Onem2mDateTime.isAlive(exptime);
+            if (!aliveFlag) {
+                deleteResourceUsingResource(onem2mResource);
+            }
+            return (aliveFlag);
+
+        } catch (JSONException e) {
+            LOG.error("Invalid JSON {}", onem2mResource.getResourceContentJsonString(), e);
+            throw new IllegalArgumentException("Invalid JSON", e);
+        }
+    }
+    /**
+     * Get the resourceId of the hierarchical name
+     * @param targetURI
+     * @return
+     */
+    public String findResourceIdUsingURI(String targetURI) {
+
+        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        onem2mRequest.setPrimitive(RequestPrimitive.TO, targetURI);
+        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+        if (!Onem2mDb.getInstance().findResourceUsingURI(targetURI, onem2mRequest, onem2mResponse)) {
+            return null;
+        }
+
+        return onem2mRequest.getResourceId();
+
+    }
+
     /**
      * Using the target URI/attribute, strip off the attribute, and see if a resource is found.  Then look to see
      * if the attribute exists under this resource type.
+     * @param uriAndAttribute uri and attributes
      * @param onem2mRequest request
      * @param onem2mResponse response
      * @return found status
@@ -493,6 +556,60 @@ public class Onem2mDb implements TransactionChainListener {
     public Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
                                                     RequestPrimitive onem2mRequest,
                                                     ResponsePrimitive onem2mResponse) {
+        return false;
+    }
+
+    public boolean isLatestCI(Onem2mResource onem2mResource) {
+
+        if (!onem2mResource.getResourceType().contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+            return false;
+        }
+
+        OldestLatest parentOldestLatest =
+                dbResourceTree.retrieveOldestLatestByResourceType(onem2mResource.getParentId(),
+                        Onem2m.ResourceType.CONTENT_INSTANCE);
+        if (parentOldestLatest != null) {
+            String latestId = parentOldestLatest.getLatestId();
+            if (latestId.contentEquals(onem2mResource.getResourceId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine whether the child id is in the targetId's hierarchy.
+     * @param targetResourceId
+     * @param childResourceId
+     * @return
+     */
+    public boolean isResourceIdUnderTargetId(String targetResourceId, String childResourceId) {
+
+        if (targetResourceId == null || targetResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return false;
+        }
+        if (childResourceId == null || childResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return false;
+        }
+        if (targetResourceId.contentEquals(childResourceId)) {
+            return true;
+        }
+
+        Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(childResourceId);
+        while (onem2mResource != null) {
+
+            if (onem2mResource.getParentId().contentEquals(NULL_RESOURCE_ID)) {
+                return false;
+            }
+
+            String resourceId = onem2mResource.getParentId();
+            if (targetResourceId.contentEquals(resourceId)) {
+                return true;
+            }
+            onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
+        }
+
         return false;
     }
 
@@ -528,12 +645,28 @@ public class Onem2mDb implements TransactionChainListener {
      * @return name of the resource in hierarchical format
      */
     public String getHierarchicalNameForResource(String resourceId) {
+        Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
+        return getHierarchicalNameForResource(onem2mResource);
+    }
+
+    /**
+     * Using the resourceId, traverse up the hierarchy till reach the root building the path.
+     * @param onem2mResource the resource
+     * @return name of the resource in hierarchical format
+     */
+    public String getHierarchicalNameForResource(Onem2mResource onem2mResource) {
         String hierarchy = "";
 
-        Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
         while (onem2mResource != null) {
-            hierarchy = "/" + onem2mResource.getName() + hierarchy;
-            resourceId = onem2mResource.getParentId();
+            String resourceName;
+//            if (isLatestCI(onem2mResource)) {
+//                // todo: latest problem
+//                resourceName = "latest";
+//            } else {
+                resourceName = onem2mResource.getName();
+//            }
+            hierarchy = "/" + resourceName + hierarchy;
+            String resourceId = onem2mResource.getParentId();
             if (resourceId.contentEquals(NULL_RESOURCE_ID)) {
                 break;
             }
@@ -588,6 +721,70 @@ public class Onem2mDb implements TransactionChainListener {
         return dbResourceTree.retrieveResourceById(resourceId);
     }
 
+    /**
+     * Get the resource using URI
+     * @param targetURI the resource URI to get
+     * @return the resource info for this URI, it no resource found, return null
+     */
+    public Onem2mResource getResourceUsingURI(String targetURI) {
+        targetURI = trimURI(targetURI); // get rid of leading and following "/"
+        String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
+
+        // start by looking at the cse root: the first level is the cse name
+        Onem2mCse cse = dbResourceTree.retrieveCseByName(hierarchy[0]);
+        if (cse == null)
+            return null; // resource not found
+
+        /**
+         * Cases to consider:
+         * 1) the targetURI is just the cse --> hierarchy.length == 1
+         * 2) the target URI has just one more level --> hierarchy.length == 2
+         * 2a) hierarchy[1] is a non-hierarchical id
+         * 2b) hierarchy[1] is the name of a real resource
+         * 3) the hierarchy needs to be traversed looking at each level by name until there are no more levels
+         *    or we find the resource ny name
+         */
+        if (hierarchy.length == 1) { // case 1
+            return dbResourceTree.retrieveResourceById(cse.getResourceId());
+        }
+
+        Onem2mResource onem2mResource = null;
+        Onem2mResource saveOnem2mResource = null;
+
+        if (hierarchy.length == 2) { // case 2
+
+            onem2mResource  = dbResourceTree.retrieveResourceById(hierarchy[1]); // case 2a
+            if (onem2mResource == null)
+                onem2mResource = dbResourceTree.retrieveChildResourceByName(cse.getResourceId(), hierarchy[1]); // case 2b
+        } else { // case 3
+            /**
+             * This routine starts at hierarchy[1] and buzzes down the hierarchy looking for the resource name
+             */
+            String resourceId = cse.getResourceId();
+            for (int hierarchyIndex = 1; hierarchyIndex < hierarchy.length; hierarchyIndex++) {
+                onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, hierarchy[hierarchyIndex]);
+                if (onem2mResource == null) {
+                    // check "/latest" in the URI
+                    onem2mResource = checkForLatestOldestContentInstance(saveOnem2mResource, hierarchy[hierarchyIndex]);
+                    if (onem2mResource == null) {
+                        onem2mResource = checkForFanOutPoint(saveOnem2mResource, hierarchy[hierarchyIndex]);
+                    }
+                    if (onem2mResource == null) {
+                        break;
+                    }
+                }
+                resourceId = onem2mResource.getResourceId();
+                saveOnem2mResource = onem2mResource;
+            }
+        }
+
+        if (onem2mResource == null)
+            return null; // resource not found
+
+        return onem2mResource;
+
+
+    }
 
     public String getChildResourceID(String cseid, String childName) {
         return dbResourceTree.retrieveChildResourceIDByName(cseid, childName);
@@ -732,8 +929,152 @@ public class Onem2mDb implements TransactionChainListener {
         return dbTxn.commitTransaction();
     }
 
+
+    public Boolean deleteResourceUsingResource(Onem2mResource onem2mResource) {
+
+        DbTransaction dbTxn = null;
+
+        // save the parent
+        String parentResourceId = onem2mResource.getParentId();
+        Onem2mResource parentOnem2mResource = this.getResource(parentResourceId);
+
+        // cache this resource to be deleted
+        String thisResourceId = onem2mResource.getResourceId();
+        String thisResourceName = onem2mResource.getName();
+
+        // build a 'to be Deleted list' by walking the hierarchy
+        List<String> resourceIdList = getHierarchicalResourceList(thisResourceId, Onem2m.MAX_RESOURCES + 1);
+        String resourceType = onem2mResource.getResourceType();
+        OldestLatest parentOldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResourceId, resourceType);
+
+        if (parentOldestLatest != null) {
+            if (parentOldestLatest.getLatestId().contentEquals(parentOldestLatest.getOldestId())) {
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(dataBroker);
+                }
+
+                // only child, set oldest/latest back to NULL
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentResourceId, resourceType,
+                        Onem2mDb.NULL_RESOURCE_ID,
+                        Onem2mDb.NULL_RESOURCE_ID);
+
+            } else if (parentOldestLatest.getLatestId().contentEquals(thisResourceId)) {
+
+                // deleting the latest, go back to prev and set is next to null, re point latest to prev
+                Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
+                String prevId = curr.getPrevId();
+                Onem2mResource prevOnem2mResource = this.getResource(prevId);
+
+                Child child = dbResourceTree.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(dataBroker);
+                }
+
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentResourceId, resourceType,
+                        parentOldestLatest.getOldestId(),
+                        prevId);
+                dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+
+            } else if (parentOldestLatest.getOldestId().contentEquals(thisResourceId)) {
+
+                // deleting the oldest, go to next and set its prev to null, re point oldest to next
+                Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
+                String nextId = curr.getNextId();
+                Onem2mResource nextOnem2mResource = this.getResource(nextId);
+
+                Child child = dbResourceTree.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(dataBroker);
+                }
+
+                dbResourceTree.updateResourceOldestLatestInfo(dbTxn, parentResourceId, resourceType,
+                        nextId,
+                        parentOldestLatest.getLatestId());
+                dbResourceTree.updateChildSiblingPrevInfo(dbTxn, parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+
+            } else {
+
+                Child curr = dbResourceTree.retrieveChildByName(parentResourceId, thisResourceName);
+
+                String nextId = curr.getNextId();
+                Onem2mResource nextOnem2mResource = this.getResource(nextId);
+                Child prevChild = dbResourceTree.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
+
+
+                String prevId = curr.getPrevId();
+                Onem2mResource prevOnem2mResource = this.getResource(prevId);
+                Child nextChild = dbResourceTree.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
+
+
+                if (dbTxn == null) {
+                    dbTxn = new DbTransaction(dataBroker);
+                }
+
+                dbResourceTree.updateChildSiblingPrevInfo(dbTxn, parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
+                dbResourceTree.updateChildSiblingNextInfo(dbTxn, parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
+            }
+        }
+
+        if (dbTxn == null) {
+            dbTxn = new DbTransaction(dataBroker);
+        }
+
+        // adjust the curr values in the parent container resource
+        if (resourceType.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+
+            try {
+                JSONObject containerResourceContent = new JSONObject(parentOnem2mResource.getResourceContentJsonString());
+                Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
+                Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
+                Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
+
+                cni--;
+                st++;
+                try {
+                    JSONObject contentInstanceJsonContent = new JSONObject(onem2mResource.getResourceContentJsonString());
+                    cbs -= contentInstanceJsonContent.optInt(ResourceContentInstance.CONTENT_SIZE);
+                } catch (JSONException e) {
+                    LOG.error("Invalid JSON {}", parentOnem2mResource.getResourceContentJsonString(), e);
+                    throw new IllegalArgumentException("Invalid JSON", e);
+                }
+                JsonUtils.put(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, cbs);
+                JsonUtils.put(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES, cni);
+                JsonUtils.put(containerResourceContent, ResourceContent.STATE_TAG, st);
+                dbResourceTree.updateJsonResourceContentString(dbTxn,
+                        parentResourceId,
+                        containerResourceContent.toString());
+
+            } catch (JSONException e) {
+                LOG.error("Invalid JSON {}", parentOnem2mResource.getResourceContentJsonString(), e);
+                throw new IllegalArgumentException("Invalid JSON", e);
+            }
+        }
+
+        // now in a transaction, smoke all the resources under this ResourceId
+        for (String resourceId : resourceIdList) {
+            dbResourceTree.deleteResourceById(dbTxn, resourceId);
+        }
+
+        // now go clean up the parent of this resource as its child link needs to be removed
+        if (!parentResourceId.contentEquals(NULL_RESOURCE_ID))
+            dbResourceTree.removeParentChildLink(dbTxn, parentResourceId, thisResourceName);
+
+        // commit the deleteFest!
+        return dbTxn.commitTransaction();
+    }
+    // todo:
+
+    public Boolean deleteSubscription (String subscriptionID) {
+        Onem2mResource subscriptionResource = getResource(subscriptionID);
+        return deleteResourceUsingResource(subscriptionResource);
+    }
+
     /**
      * Dump content instances for the container Uri from Head to Tail.  Then again, from Tail to Head
+     * @param containerUri containerURI
      */
     public void dumpContentInstancesForContainer(String containerUri) {
 
@@ -780,39 +1121,232 @@ public class Onem2mDb implements TransactionChainListener {
         }
     }
 
-    public List<String> findSubscriptionResources(RequestPrimitive onem2mRequest) {
+//    public List<String> findSubscriptionResources(RequestPrimitive onem2mRequest) {
+//        List<String> subscriptionResourceList = new ArrayList<String>();
+//        OldestLatest oldestLatest;
+//
+//        String thisResourceId = onem2mRequest.getOnem2mResource().getResourceId();
+//        oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(thisResourceId,
+//                Onem2m.ResourceType.SUBSCRIPTION);
+//        if (oldestLatest != null) {
+//            String subscriptionResourceId = oldestLatest.getLatestId();
+//            while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+//                subscriptionResourceList.add(subscriptionResourceId);
+//                // keep getting prev until NULL
+//                Onem2mResource onem2mResource = getResource(subscriptionResourceId);
+//                Child child = dbResourceTree.retrieveChildByName(thisResourceId, onem2mResource.getName());
+//                subscriptionResourceId = child.getPrevId();
+//            }
+//        }
+//        if (subscriptionResourceList.size() == 0) {
+//            // this is the <creation> check
+//            String parentResourceId = onem2mRequest.getOnem2mResource().getParentId();
+//            oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResourceId,
+//                    Onem2m.ResourceType.SUBSCRIPTION);
+//            if (oldestLatest != null && !oldestLatest.getLatestId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+//                String subscriptionResourceId = oldestLatest.getLatestId();
+//                while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+//                    subscriptionResourceList.add(subscriptionResourceId);
+//                    // keep getting prev until NULL
+//                    Onem2mResource onem2mResource = getResource(subscriptionResourceId);
+////                    // check whether it is super subscription, if it is super subscription, store the resource under this newly created resource.
+////                    if (onem2mResource.getResourceContentJsonString().contains("Super-")) {
+////                        if (dbTxn == null) {
+////                            dbTxn = new DbTransaction(dataBroker);
+////                        }
+////                        dbResourceTree.updateResourceOldestLatestInfo(dbTxn, thisResourceId, Onem2m.ResourceType.SUBSCRIPTION, subscriptionResourceId, subscriptionResourceId);
+////                        dbTxn.commitTransaction();
+////                    }
+//                    Child child = dbResourceTree.retrieveChildByName(parentResourceId, onem2mResource.getName());
+//                    subscriptionResourceId = child.getPrevId();
+//                }
+//            } else {
+//                // if parent resource does not contain a subscription, we will check parent's parents recursively until it is CSE
+//                Onem2mResource parentResource = getResource(parentResourceId);
+//                while(!parentResource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+//                    oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResource.getParentId(),
+//                            Onem2m.ResourceType.SUBSCRIPTION);
+//                    if (oldestLatest != null && !oldestLatest.getLatestId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+//                        // oldLatest is always not null so must check whether the number is 0
+//                        String subscriptionResourceId = oldestLatest.getLatestId();
+//                        while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+//                            Onem2mResource onem2mSubResource = getResource(subscriptionResourceId);
+//                            if (onem2mSubResource.getName().startsWith("Super")) {
+//                                subscriptionResourceList.add(subscriptionResourceId);
+//                            }
+//                            // keep getting prev until NULL
+//                            Child child = dbResourceTree.retrieveChildByName(parentResource.getParentId(), onem2mSubResource.getName());
+//                            subscriptionResourceId = child.getPrevId();
+//                        }
+//                        break;
+//                    } else {
+//                        // continue tracing up layer
+//                        parentResource = getResource(parentResource.getParentId());
+//                    }
+//                }
+//            }
+//        }
+//        // if parent still does not contain subscription, then call recursive functiom
+//        return subscriptionResourceList;
+//    }
 
-        List<String> subscriptionResourceList = new ArrayList<String>();
+
+    /**
+     * This is for notification evenet Type F, if eventType inside eventNotificationCriteria is F,
+     * then send the notification. This method is used to find all the subscriptionID with type F.
+     * this method will recursively find all the subscription, even under CSE
+     * @param resourceID resourceID
+     * @return
+     */
+    public List<String> findAllAncestorsSubscriptionID(String resourceID) {
+        List<String> subscriptionResourceList = new ArrayList<>();
         OldestLatest oldestLatest;
-
-        String thisResourceId = onem2mRequest.getOnem2mResource().getResourceId();
-        oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(thisResourceId,
-                Onem2m.ResourceType.SUBSCRIPTION);
-        if (oldestLatest != null) {
-            String subscriptionResourceId = oldestLatest.getLatestId();
-            while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
-                subscriptionResourceList.add(subscriptionResourceId);
-                // keep getting prev until NULL
-                Onem2mResource onem2mResource = getResource(subscriptionResourceId);
-                Child child = dbResourceTree.retrieveChildByName(thisResourceId, onem2mResource.getName());
-                subscriptionResourceId = child.getPrevId();
-            }
-        }
-        if (subscriptionResourceList.size() == 0) {
-            String parentResourceId = onem2mRequest.getOnem2mResource().getParentId();
-            oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(parentResourceId,
+        // we will check parent's parents recursively until it is CSE, CSE's parenetID is 0
+        Onem2mResource resource = getResource(resourceID);
+        while(!resource.getParentId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(resource.getParentId(),
                     Onem2m.ResourceType.SUBSCRIPTION);
-            if (oldestLatest != null) {
+            if (oldestLatest != null && !oldestLatest.getLatestId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+                subscriptionResourceList = getSubscriptionTypeF(subscriptionResourceList, oldestLatest, resource);
+            }
+            // continue tracing up layer
+            resource = getResource(resource.getParentId());
+            // todo: what happens if getResource(0)  null or throw error?
+
+        }
+
+        return subscriptionResourceList;
+    }
+
+    /**
+     * child method of findAllAncestorsSubscriptionID
+     * @param oldestLatest oldlatest
+     * @param resource resource
+     * @return
+     */
+    private List<String> getSubscriptionTypeF(List<String> subscriptionResourceList, OldestLatest oldestLatest, Onem2mResource resource) {
+        // oldLatest is always not null so must check whether the number is 0
+        String subscriptionResourceId = oldestLatest.getLatestId();
+        while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            Onem2mResource onem2mSubResource = getResource(subscriptionResourceId);
+            try {
+                JSONObject subscriptionJsonObject = new JSONObject(onem2mSubResource.getResourceContentJsonString());
+                // if ENC is a list
+//            JSONArray encList = subscriptionJsonObject.optJSONArray(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
+//            if (encList != null) {
+//            for (int i = 0; i < encList.length(); i++) {
+//                if (encList.getJSONObject(i).getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(Onem2m.EventType.ANY_DESCENDENT_CHANGE)) {
+//                    subscriptionResourceList.add(subscriptionResourceId);
+//                }
+//            }
+//        }
+                JSONObject enc = subscriptionJsonObject.optJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
+                if (enc != null && enc.getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(Onem2m.EventType.ANY_DESCENDENT_CHANGE)) {
+                    subscriptionResourceList.add(subscriptionResourceId);
+                }
+            } catch (JSONException e) {
+                LOG.error("Invalid JSON {}", onem2mSubResource.getResourceContentJsonString(), e);
+                throw new IllegalArgumentException("Invalid JSON", e);
+            }
+            // keep getting prev until NULL
+            Child child = dbResourceTree.retrieveChildByName(resource.getParentId(), onem2mSubResource.getName());
+            subscriptionResourceId = child.getPrevId();
+        }
+        return subscriptionResourceList;
+    }
+
+    /**
+     * find the direct parents' subscriptions IDs, if not found, return empty list.
+     * according to the eventType, find the subscriptionID
+     * eventType could be A,B,C,D,E
+     * @param resourceID resourceID
+     * @param eventType eventType
+     * @return
+     */
+    public List<String> finddirectParentSubscriptionID(String resourceID, String eventType) {
+        List<String> subscriptionResourceList = new ArrayList<>();
+        OldestLatest oldestLatest;
+        // we will check parent's parents recursively until it is CSE, CSE's parenetID is 0
+        Onem2mResource resource = getResource(resourceID);
+        if (!resource.getParentId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(resource.getParentId(),
+                    Onem2m.ResourceType.SUBSCRIPTION);
+            if (oldestLatest != null && !oldestLatest.getLatestId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+                // oldLatest is always not null so must check whether the number is 0
                 String subscriptionResourceId = oldestLatest.getLatestId();
                 while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
-                    subscriptionResourceList.add(subscriptionResourceId);
+                    Onem2mResource onem2mSubResource = getResource(subscriptionResourceId);
+                    try {
+                        JSONObject subscriptionJsonObject = new JSONObject(onem2mSubResource.getResourceContentJsonString());
+                        // todo: if TS 0001 is right
+//                    JSONArray encList = subscriptionJsonObject.getJSONArray(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
+//                    for (int i = 0; i < encList.length(); i++) {
+//                        if (encList.getJSONObject(i).getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(eventType)) {
+//                            subscriptionResourceList.add(subscriptionResourceId);
+//                        }
+//                    }
+                        JSONObject enc = subscriptionJsonObject.optJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
+                        if (enc != null) {
+                            JSONArray netlist = enc.optJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE);
+                            if (netlist != null && netlist.toString().contains(eventType)) {
+                                subscriptionResourceList.add(subscriptionResourceId);
+                            }
+                        }
+                    } catch (JSONException e) {
+                        LOG.error("Invalid JSON {}", onem2mSubResource.getResourceContentJsonString(), e);
+                        throw new IllegalArgumentException("Invalid JSON", e);
+                    }
                     // keep getting prev until NULL
-                    Onem2mResource onem2mResource = getResource(subscriptionResourceId);
-                    Child child = dbResourceTree.retrieveChildByName(parentResourceId, onem2mResource.getName());
+                    Child child = dbResourceTree.retrieveChildByName(resource.getParentId(), onem2mSubResource.getName());
                     subscriptionResourceId = child.getPrevId();
                 }
             }
         }
+
+        return subscriptionResourceList;
+    }
+
+
+    public List<String> findSelfSubscriptionID(String resourceID, String eventType) {
+        List<String> subscriptionResourceList = new ArrayList<>();
+        OldestLatest oldestLatest;
+        oldestLatest = dbResourceTree.retrieveOldestLatestByResourceType(resourceID,
+                Onem2m.ResourceType.SUBSCRIPTION);
+        if (oldestLatest != null && !oldestLatest.getLatestId().contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            // oldLatest is always not null so must check whether the number is 0
+            String subscriptionResourceId = oldestLatest.getLatestId();
+            while (!subscriptionResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+                Onem2mResource onem2mSubResource = getResource(subscriptionResourceId);
+                try {
+                    JSONObject subscriptionJsonObject = new JSONObject(onem2mSubResource.getResourceContentJsonString());
+                    // todo: if TS 0001 is right
+//                    JSONArray encList = subscriptionJsonObject.getJSONArray(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
+//                    for (int i = 0; i < encList.length(); i++) {
+//                        if (encList.getJSONObject(i).getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(eventType)) {
+//                            subscriptionResourceList.add(subscriptionResourceId);
+//                        }
+//                    }
+                    JSONObject enc = subscriptionJsonObject.optJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
+                    if (enc != null) {
+                        JSONArray net = enc.optJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE);
+                        if (net != null && net.toString().contains(eventType)) {
+                            subscriptionResourceList.add(subscriptionResourceId);
+                        }
+                    } else if (eventType.contentEquals(Onem2m.EventType.UPDATE_RESOURCE)) {
+                        //default is update.
+                        subscriptionResourceList.add(subscriptionResourceId);
+                    }
+                } catch (JSONException e) {
+                    LOG.error("Invalid JSON {}", onem2mSubResource.getResourceContentJsonString(), e);
+                    throw new IllegalArgumentException("Invalid JSON", e);
+                }
+                // keep getting prev until NULL
+                Child child = dbResourceTree.retrieveChildByName(resourceID, onem2mSubResource.getName());
+                subscriptionResourceId = child.getPrevId();
+            }
+        }
+
+
         return subscriptionResourceList;
     }
 
