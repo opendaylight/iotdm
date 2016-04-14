@@ -36,6 +36,7 @@ public class ResourceCse {
     public static final String CSE_ID = "csi";
     public static final String SUPPORTED_RESOURCE_TYPES = "srt";
     public static final String NOTIFICATION_CONGESTION_POLICY = "ncp";
+    public static final String POINT_OF_ACCESS = "poa";
 
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
@@ -54,6 +55,9 @@ public class ResourceCse {
         a.put(Integer.valueOf(Onem2m.ResourceType.CONTAINER));
         a.put(Integer.valueOf(Onem2m.ResourceType.CONTENT_INSTANCE));
         a.put(Integer.valueOf(Onem2m.ResourceType.SUBSCRIPTION));
+        a.put(Integer.valueOf(Onem2m.ResourceType.GROUP));
+        a.put(Integer.valueOf(Onem2m.ResourceType.NODE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.ACCESS_CONTROL_POLICY));
         JsonUtils.put(resourceContent.getInJsonContent(), SUPPORTED_RESOURCE_TYPES, a);
         /**
          * The resource has been filled in with any attributes that need to be written to the database
@@ -108,13 +112,31 @@ public class ResourceCse {
                     }
                     break;
                 case ResourceContent.LABELS:
+//                case ResourceContent.RESOURCE_NAME:
+//                    // todo: can CSE be modified?
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
                         return;
                     }
                     break;
-
+                case POINT_OF_ACCESS:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONArray)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
+                            return;
+                        }
+                        JSONArray array = (JSONArray) o;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (!(array.opt(i) instanceof String)) {
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                        "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json array: " + key);
+                                return;
+                            }
+                        }
+                    }
+                    break;
                 default:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
@@ -149,35 +171,4 @@ public class ResourceCse {
 
     }
 
-//    /**
-//     * Generate JSON for this resource
-//     * @param onem2mResource this resource
-//     * @param j JSON obj
-//     */
-//    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
-//
-//        for (Attr attr : onem2mResource.getAttr()) {
-//            switch (attr.getName()) {
-//                case CSE_ID:
-//                case CSE_TYPE:
-//                    j.put(attr.getName(), attr.getValue());
-//                    break;
-//                case NOTIFICATION_CONGESTION_POLICY:
-//                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
-//                    break;
-//                default:
-//                    ResourceContent.produceJsonForCommonAttributes(attr, j);
-//                    break;
-//            }
-//        }
-//
-//
-//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-//            switch (attrSet.getName()) {
-//                default:
-//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-//                    break;
-//            }
-//        }
-//    }
 }

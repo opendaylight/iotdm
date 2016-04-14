@@ -73,6 +73,7 @@ public class ResourceNode {
                     break;
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -140,12 +141,6 @@ public class ResourceNode {
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
-//            // may have to remove content instances as mbs and mni may have been reduced
-//            ResourceContainer.checkAndFixCurrMaxRules(onem2mRequest.getPrimitive(RequestPrimitive.TO));
-//            Onem2mResource containerResource = Onem2mDb.getInstance().getResource(onem2mRequest.getResourceId());
-//            onem2mRequest.setOnem2mResource(containerResource);
-//            onem2mRequest.setDbAttrs(new DbAttr(onem2mRequest.getOnem2mResource().getAttr()));
-//            onem2mRequest.setDbAttrSets(new DbAttrSet(onem2mRequest.getOnem2mResource().getAttrSet()));
         }
     }
 
@@ -170,7 +165,7 @@ public class ResourceNode {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
@@ -179,59 +174,4 @@ public class ResourceNode {
         ResourceNode.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
 
     }
-
-
-
-
-    /** The below methods are not in use ############################################################*/
-//
-//    /**
-//     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-//     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-//     * Maybe the next iteration of code, I'll create json files for each resource.
-//     *
-//     * This routine enforces the mandatory and option parameters
-//     * @param onem2mRequest request
-//     * @param onem2mResponse response
-//     */
-//    private static void processJsonRetrieveContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-//
-//        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-//
-//        Iterator<?> keys = resourceContent.getJsonContent().keys();
-//        while( keys.hasNext() ) {
-//            String key = (String)keys.next();
-//
-//            Object o = resourceContent.getJsonContent().get(key);
-//
-//            switch (key) {
-//
-//                default:
-//                    if (!ResourceContent.processJsonCommonRetrieveContent(key, resourceContent, onem2mResponse)) {
-//                        return;
-//                    }
-//                    break;
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Parse the CONTENT resource representation.
-//     * @param onem2mRequest request
-//     * @param onem2mResponse response
-//     */
-//    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-//
-//        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-//
-//        resourceContent.parse(Onem2m.ResourceTypeString.CONTAINER, onem2mRequest, onem2mResponse);
-//        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-//            return;
-//
-//        if (resourceContent.isJson()) {
-//            processJsonRetrieveContent(onem2mRequest, onem2mResponse);
-//            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-//                return;
-//        }
-//    }
 }
