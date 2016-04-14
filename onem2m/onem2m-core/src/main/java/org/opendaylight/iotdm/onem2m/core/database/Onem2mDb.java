@@ -588,7 +588,6 @@ public class Onem2mDb implements TransactionChainListener {
         return dbResourceTree.retrieveResourceById(resourceId);
     }
 
-
     public String getChildResourceID(String cseid, String childName) {
         return dbResourceTree.retrieveChildResourceIDByName(cseid, childName);
     }
