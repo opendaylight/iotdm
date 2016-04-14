@@ -46,7 +46,7 @@ public class ResourceContent {
     public static final String MEMBER_NAME = "nm";
     public static final String MEMBER_TYPE = "typ";
     public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
-
+    //announceTo, announcedAttribute, cseType, pointOfAccess, CSEBase, CSE-ID, M2M-Ext-ID, Trigger-Recipient-ID, requestReachability, nodeLink
 
     private JSONObject inJsonContent;
     private String xmlContent;
@@ -215,6 +215,7 @@ public class ResourceContent {
         switch (key) {
 
             case LABELS:
+
             case ACCESS_CONTROL_POLICY_IDS:
 
                 if (!resourceContent.getInJsonContent().isNull(key)) {
