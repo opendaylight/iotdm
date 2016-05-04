@@ -8,11 +8,14 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
@@ -114,6 +117,46 @@ public class RequestPrimitive extends BasePrimitive {
         add(ROLE);
     }};
 
+    // hard code set of primitive attributes which are mapped as query-string field in HTTP
+    public static final Set<String> primitiveQueryStringParameters = new HashSet<String>() {{
+//        add(OPERATION);
+//        add(TO);
+//        add(FROM);
+//        add(REQUEST_IDENTIFIER);
+        add(RESOURCE_TYPE);
+//        add(NAME);
+//        add(CONTENT);
+//        add(ORIGINATING_TIMESTAMP);
+//        add(REQUEST_EXPIRATION_TIMESTAMP);
+//        add(RESULT_EXPIRATION_TIMESTAMP);
+//        add(OPERATION_EXECUTION_TIME);
+        add(RESPONSE_TYPE);
+        add(RESULT_PERSISTENCE);
+        add(RESULT_CONTENT);
+//        add(EVENT_CATEGORY);
+        add(DELIVERY_AGGREGATION);
+//        add(GROUP_REQUEST_IDENTIFIER);
+//        add(FILTER_CRITERIA);
+        add(FILTER_CRITERIA_CREATED_BEFORE);
+        add(FILTER_CRITERIA_CREATED_AFTER);
+        add(FILTER_CRITERIA_MODIFIED_SINCE);
+        add(FILTER_CRITERIA_UNMODIFIED_SINCE);
+        add(FILTER_CRITERIA_STATE_TAG_SMALLER);
+        add(FILTER_CRITERIA_STATE_TAG_BIGGER);
+        add(FILTER_CRITERIA_LABELS);
+        add(FILTER_CRITERIA_RESOURCE_TYPE);
+        add(FILTER_CRITERIA_SIZE_ABOVE);
+        add(FILTER_CRITERIA_SIZE_BELOW);
+        add(FILTER_CRITERIA_FILTER_USAGE);
+        add(FILTER_CRITERIA_LIMIT);
+        add(FILTER_CRITERIA_OFFSET);
+        add(DISCOVERY_RESULT_TYPE);
+//        add(PROTOCOL);
+//        add(CONTENT_FORMAT);
+//        add(NATIVEAPP_NAME);
+//        add(ROLE);
+    }};
+
     // hard code set of long to short name
     public static final Map<String,String> longToShortAttributes = new HashMap<String,String>() {{
         // short; long
@@ -199,7 +242,13 @@ public class RequestPrimitive extends BasePrimitive {
         return this.resourceName;
     }
 
-    // parent for C, actual resource for RUD, this is what is in the data store
+    /*
+     * For C:
+     *      - parent resource before the new resource is created,
+     *      - the actual (new) resource after it's created (stored in Onem2mDB)
+     * For RUD:
+     *      - actual resource, this is what is in the data store
+     */
     protected Onem2mResource onem2mResource;
     public void setOnem2mResource(Onem2mResource onem2mResource) {
         this.onem2mResource = onem2mResource;
@@ -279,5 +328,50 @@ public class RequestPrimitive extends BasePrimitive {
     }
     public boolean getFUDiscovery() {
         return this.fuDiscovery;
+    }
+
+    public String getContentAttributeString(final String attrName) {
+        if ((null == this.jsonResourceContent) || (! this.jsonResourceContent.has(attrName))) {
+            return null;
+        }
+
+        try {
+            return this.jsonResourceContent.getString(attrName);
+        } catch (JSONException e) {
+            LOG.trace("Failed to get attribute {}", attrName);
+            return null;
+        }
+    }
+
+    public Boolean getContentAttributeBoolean(final String attrName) {
+        if ((null == this.jsonResourceContent) || (! this.jsonResourceContent.has(attrName))) {
+            return null;
+        }
+
+        try {
+            return new Boolean(this.jsonResourceContent.getBoolean(attrName));
+        } catch (JSONException e) {
+            LOG.trace("Failed to get attribute {}", attrName);
+            return null;
+        }
+    }
+
+    public String[] getContentAttributeArray(final String attrName) {
+        if ((null == this.jsonResourceContent) || (! this.jsonResourceContent.has(attrName))) {
+            return null;
+        }
+
+        JSONArray jsonAttrArray = this.jsonResourceContent.getJSONArray(attrName);
+        ArrayList<String> attrArray = new ArrayList<>();
+        for (int i =0; i < jsonAttrArray.length(); i++) {
+            try {
+                attrArray.add(jsonAttrArray.getString(i));
+            } catch (JSONException e) {
+                LOG.trace("Failed to get entry (index {}) from JSON attribute array: {}", i, jsonAttrArray.toString());
+                return null;
+            }
+        }
+
+        return attrArray.toArray(new String[0]);
     }
 }

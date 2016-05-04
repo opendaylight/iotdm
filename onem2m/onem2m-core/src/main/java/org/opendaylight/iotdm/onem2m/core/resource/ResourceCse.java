@@ -14,6 +14,8 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
+import org.opendaylight.iotdm.onem2m.core.router.Onem2mRoutingTable;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +74,10 @@ public class ResourceCse {
             }
         }
 
+        /*
+         * Update routing table with the changes
+         */
+        Onem2mRouterService.getInstance().updateRoutingTable(onem2mRequest);
     }
 
     /**
