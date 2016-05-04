@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
@@ -45,6 +46,8 @@ public class ResponsePrimitive extends BasePrimitive {
 
     public void setRSC(String rsc, String content) { //throws Onem2mRSCException {
         this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc);
+        //this.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+        this.setPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE, Onem2m.ContentType.APP_VND_RES_JSON);
         this.setPrimitive(ResponsePrimitive.CONTENT, JsonUtils.put(new JSONObject(), "error", content).toString());
         //throw new Onem2mRSCException();
     }

@@ -18,6 +18,7 @@ import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
@@ -313,7 +314,6 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     "TO(" + RequestPrimitive.TO + ") not value URI: " + to);
             return;
         }
-
 
         // ensure resource type is present only in CREATE requests
         String resourceType = getPrimitive(RequestPrimitive.RESOURCE_TYPE);
@@ -682,6 +682,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         NotificationProcessor.handleDelete(this);
+        Onem2mRouterService.getInstance().updateRoutingTable(this);
 
         // now delete the resource from the database
         // TODO: idempotent so who cares if cannot find the resource ... is this true?
@@ -793,14 +794,19 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             }
             String cseType = this.getPrimitive("CSE_TYPE");
             if (cseType == null) {
-                cseType = "IN-CSE";
-            } else if (!cseType.contentEquals("IN-CSE")) { //TODO: what is the difference between CSE types
+                cseType = Onem2m.CseType.INCSE;
+            } else if (!cseType.contentEquals(Onem2m.CseType.INCSE)) { //TODO: what is the difference between CSE types
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
                 return;
             }
 
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
             this.setPrimitive(RequestPrimitive.NAME, cseId);
+            /* NOTE: The cseID is used as resourceName for the CSE_BASE. These attributes are used as part of
+             * SP-relative and absolute structured URIs.
+             * Processing of URIs expects that these attributes are equal so the change needs to be reflected also
+             * in the processing of URIs.
+             */
             this.setResourceName(cseId);
 
             if (Onem2mDb.getInstance().findCseByName(cseId)) {
@@ -926,17 +932,18 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         this.crudMonitor.enter();
         try {
             String cseId = this.getPrimitive("CSE_ID");
+            String cseURI = cseId; // without any slash means CSE-relative
 
             this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
             this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
             this.setResourceName("_defaultACP");
-            this.setPrimitive("to", "/" + cseId);
+            this.setPrimitive("to", cseURI);
             this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
             this.isCreate = true;
             // store the parent resource into onem2mresource.
-            if (!Onem2mDb.getInstance().findResourceUsingURI("/" + cseId, this, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().findResourceUsingURI(cseURI, this, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                        "Resource target URI not found: " + "/" + cseId);
+                        "Resource target URI not found: " + cseURI);
                 return;
             }
             this.setPrimitive(RequestPrimitive.CONTENT, "{\n" +

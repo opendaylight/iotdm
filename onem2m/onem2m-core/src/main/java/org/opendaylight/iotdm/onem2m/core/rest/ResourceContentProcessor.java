@@ -10,11 +10,9 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +69,10 @@ public class ResourceContentProcessor {
                 ResourceAccessControlPolicy.handleCreateUpdate(onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_CREATE);
                 break;
+            case Onem2m.ResourceType.REMOTE_CSE:
+                ResourceRemoteCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_CREATE);
+                break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
@@ -111,6 +113,9 @@ public class ResourceContentProcessor {
                 break;
             case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_RETRIEVE);
+                break;
+            case Onem2m.ResourceType.REMOTE_CSE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_RETRIEVE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
@@ -167,6 +172,10 @@ public class ResourceContentProcessor {
                 ResourceAccessControlPolicy.handleCreateUpdate(onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_UPDATE);
                 break;
+            case Onem2m.ResourceType.REMOTE_CSE:
+                ResourceRemoteCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_UPDATE);
+                break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
@@ -207,6 +216,9 @@ public class ResourceContentProcessor {
                 break;
             case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_DELETE);
+                break;
+            case Onem2m.ResourceType.REMOTE_CSE:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_DELETE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
