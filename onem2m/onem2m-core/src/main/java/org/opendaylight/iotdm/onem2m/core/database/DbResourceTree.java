@@ -8,23 +8,15 @@
 
 package org.opendaylight.iotdm.onem2m.core.database;
 
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.json.JSONObject;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseListBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTreeBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
@@ -76,7 +68,7 @@ public class DbResourceTree {
     }
 
     /**
-     * Gwet the cse from the db store using its key ie. the cseName
+     * Get the cse from the db store using its key ie. the cseName
      * @param name cse name
      * @return the cse object
      */
@@ -86,6 +78,16 @@ public class DbResourceTree {
                 .child(Onem2mCse.class, new Onem2mCseKey(name));
 
         return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
+    }
+
+    /**
+     * Get the cse from the db store using its cseId
+     * @param cseId The cseId attribute
+     * @return the cse object
+     */
+    public Onem2mCse retrieveCseByCseId(String cseId) {
+        // Let's consider that resourceName and CSE_ID are equal
+        return retrieveCseByName(cseId);
     }
 
     /**
@@ -400,8 +402,6 @@ public class DbResourceTree {
 
         return retrieveResourceById(child.getResourceId());
     }
-
-
 
     public String retrieveChildResourceIDByName(String resourceId, String name) {
 

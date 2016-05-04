@@ -11,6 +11,7 @@ package org.opendaylight.iotdm.onem2m.core;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Monitor;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
@@ -19,7 +20,9 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
@@ -37,6 +40,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private Onem2mDb db;
     private static NotificationProviderService notifierService;
     private Monitor crudMonitor;
+    private static Onem2mRouterService routerService;
 
     public static NotificationProviderService getNotifier() {
         return Onem2mCoreProvider.notifierService;
@@ -52,6 +56,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         this.dataBroker = session.getSALService(DataBroker.class);
         this.notifierService = session.getSALService(NotificationProviderService.class);
         crudMonitor = new Monitor();
+        this.routerService = Onem2mRouterService.getInstance();
 
         stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();
@@ -80,7 +85,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
             onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
-            onem2mRequest.setPrimitive("CSE_TYPE", "IN-CSE");
+            onem2mRequest.setPrimitive("CSE_TYPE", Onem2m.CseType.INCSE);
             ResponsePrimitive onem2mResponse = new ResponsePrimitive();
             onem2mRequest.provisionCse(onem2mResponse);
         }
@@ -106,11 +111,39 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
+        ResponsePrimitive onem2mResponse = null;
         onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
-        onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
-        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
 
-        onem2mRequest.handleOperation(onem2mResponse);
+        Onem2mDb.CseBaseResourceLocator resourceLocator = null;
+        try {
+            resourceLocator = this.db.createResourceLocator(onem2mRequest.getPrimitive(RequestPrimitive.TO));
+        } catch (IllegalArgumentException ex) {
+            LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitive(RequestPrimitive.TO));
+            // rethrow the exception
+            throw ex;
+        }
+
+        // Check if the target URI points to local resource
+        if (! resourceLocator.isLocalResource()) {
+            LOG.trace("Non-local resource requested by URI {}", resourceLocator.getTargetURI());
+
+            try {
+                onem2mResponse = routerService.forwardRequest(onem2mRequest, resourceLocator).get();
+            } catch (InterruptedException | ExecutionException ex) {
+                LOG.error("Forwarding procedure failed: {}", ex);
+                onem2mResponse = new ResponsePrimitive();
+                onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
+                        onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Forwarding procedure failed");
+            }
+
+        } else {
+            LOG.trace("Local resource requested by URI {}", resourceLocator.getTargetURI());
+            onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
+            onem2mResponse = new ResponsePrimitive();
+
+            onem2mRequest.handleOperation(onem2mResponse);
+        }
 
         onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
         Onem2mRequestPrimitiveOutput output = new Onem2mRequestPrimitiveOutputBuilder()
@@ -156,7 +189,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
         Onem2mCseProvisioningOutput output = new Onem2mCseProvisioningOutputBuilder()
                 .setOnem2mPrimitive(csePrimitiveList).build();
+
         // TODO: modify the default acp response
+        // TODO: why response return only CSE information, what about ACP?
         LOG.info("RPC: end handle onem2mCseProvisioning ...");
         return RpcResultBuilder.success(output).buildFuture();
     }
@@ -168,6 +203,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
         Onem2mDb.getInstance().cleanupDataStore();
+        Onem2mRouterService.cleanRoutingTable();
         initializePerfCse();
         Onem2mDb.getInstance().dumpResourceIdLog(null);
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());

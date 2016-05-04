@@ -9,6 +9,7 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
+
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
@@ -44,7 +45,6 @@ public class ResourceAE {
     public static final String REQUEST_REACHABILITY = "rr";
     public static final String ACCESS_CONTROL_POLICY_IDS = "acpi";
 
-
     private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         // ensure resource can be created under the target resource
@@ -79,16 +79,17 @@ public class ResourceAE {
         }
 
         String acpids = resourceContent.getInJsonContent().optString(ACCESS_CONTROL_POLICY_IDS, null);
-        if (acpids == null && onem2mRequest.isCreate) {
+        if (acpids != null && onem2mRequest.isCreate) {
             // store the default ACPID info into this place.
             String CSEid = onem2mRequest.getOnem2mResource().getResourceId();
             // to should be an CSE
             String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
             // if defaultACP is a list or jsonarray, use "put" method
+//            List <String> acpidlist = new LinkedList<>();
+//            acpidlist.add(defaultACPID);
+//            JSONArray acpid = new JSONArray(acpidlist);
             JsonUtils.append(resourceContent.getInJsonContent(), ACCESS_CONTROL_POLICY_IDS, defaultACPID);
-
         }
-
 
         /**
          * Check the From, if
