@@ -19,14 +19,11 @@ import org.opendaylight.controller.md.sal.common.api.data.AsyncTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceGroup;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
+import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -148,7 +145,6 @@ public class Onem2mDb implements TransactionChainListener {
         // now commit these to the data store
         return dbTxn.commitTransaction();
     }
-
 
     private void updateParentLastModifiedTime(DbTransaction dbTxn, RequestPrimitive onem2mRequest,
                                               String parentResourceId,  JSONObject parentJsonContent) {
@@ -387,7 +383,6 @@ public class Onem2mDb implements TransactionChainListener {
         return null;
     }
 
-
     private Onem2mResource checkForFanOutPoint(Onem2mResource groupOnem2mResource,
                                                String resourceName) {
 
@@ -402,12 +397,263 @@ public class Onem2mDb implements TransactionChainListener {
         return null;
     }
 
-    public String getCSEid (String targetURI) {
-        targetURI = trimURI(targetURI); // get rid of leading and following "/"
-        String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
+    /**
+     * Class provides methods checking URI if is valid, if identifies local or
+     * remote resource.
+     * Implements methods for retrieving resource data from DB according to
+     * the targetURI.
+     */
+    public final class CseBaseResourceLocator {
+        private Onem2mCse cseBase = null;
+        private boolean isStructured = false;
+        private String targetURI = null;
+        private boolean isLocalResource = true;
+        private String[] hierarchyPath = null;
+        private int hierarchyPathIndex = 0;
+        private String remoteCseCseId = null;
+        private String cseBaseName = null;
+        private String cseBaseCseId = null;
 
-        Onem2mCse cse = dbResourceTree.retrieveCseByName(hierarchy[0]);
+        /**
+         * Processes and validates URI.
+         * @param targetURI The URI identifying resource (local or remote).
+         * @throws IllegalArgumentException
+         */
+        CseBaseResourceLocator(String targetURI) throws IllegalArgumentException {
+
+            if (null == targetURI || targetURI.isEmpty()) {
+                throw new IllegalArgumentException("No targetURI passed");
+            }
+
+            this.targetURI = targetURI;
+            String[] hierarchy = targetURI.split("/");
+            String cseID = null;
+            int hierarchyIndex = 0;
+
+            if (targetURI.startsWith("//")) { // absolute (//FQDN/<CSE_ID>/...)
+                if (hierarchy.length < 4) {
+                    throw new IllegalArgumentException("Invalid absolute URI: " + targetURI);
+                }
+
+                // TODO check the FQDN ???
+
+                cseID = hierarchy[3];
+                hierarchyIndex = 4;
+            } else if (targetURI.startsWith("/")) { // SP-Relative (/<CSE_ID>/...)
+                if (hierarchy.length < 3) {
+                    throw new IllegalArgumentException("Invalid SP-Relative URI: " + targetURI);
+                }
+                cseID = hierarchy[1];
+                hierarchyIndex = 2;
+            } else { // CSE-Relative
+                if (hierarchy.length == 0) {
+                    throw new IllegalArgumentException("Invalid CSE-Relative URI: " + targetURI);
+                }
+            }
+
+            // If the URI contains CSE_ID then check if it's local
+            if (null != cseID) {
+                // SP-Relative, absolute
+                // We have CSE_ID, retrieve particular CSEBase
+                if (! Onem2mRouterService.getInstance().hasCseBaseCseId(cseID)) {
+                    LOG.trace("Non-local resource URI: {}", targetURI);
+                    this.isLocalResource = false;
+                    this.remoteCseCseId = cseID;
+                    return;
+                } else {
+                    this.cseBaseCseId = cseID;
+                }
+            }
+
+            /*
+             * Now need to distinguish if the URI is structured or unstructured
+             * Current hierarchyIndex can point to:
+             *  a) CSE name (structured)
+             *  b) resourceID (unstructured)
+             */
+            if (Onem2mRouterService.getInstance().hasCseBaseName(hierarchy[hierarchyIndex])) {
+                // a)
+                if ((null != cseID) &&
+                        (!Onem2mRouterService.getInstance().hasCseBaseNameCseId(hierarchy[hierarchyIndex], cseID))) {
+                    throw new IllegalArgumentException("URI with CSE_NAME and CSE_ID mix-up: " + targetURI);
+                }
+                this.isStructured = true;
+                this.cseBaseName = hierarchy[hierarchyIndex];
+                hierarchyIndex++;
+            } else {
+                // b)
+                this.isStructured = false;
+            }
+
+            this.hierarchyPathIndex = hierarchyIndex;
+            this.hierarchyPath = hierarchy;
+        }
+
+        private Onem2mCse retrieveCseBase() {
+            if (null != this.cseBase) {
+                // cseBase already set
+                return this.cseBase;
+            }
+
+            if (null != this.cseBaseName) {
+                this.cseBase = dbResourceTree.retrieveCseByName(this.cseBaseName);
+                if (null != this.cseBase) {
+                    return this.cseBase;
+                }
+            }
+
+            if (null != this.cseBaseCseId) {
+                this.cseBase = dbResourceTree.retrieveCseByCseId(this.cseBaseCseId);
+            }
+
+            return this.cseBase;
+        }
+
+        public boolean isStructured() {
+            return this.isStructured;
+        }
+
+        public boolean isLocalResource() {
+            return this.isLocalResource;
+        }
+
+        public String getTargetURI() {
+            return this.targetURI;
+        }
+
+        public String getRemoteCseCseId() { return this.remoteCseCseId; }
+
+        /**
+         * Returns resource identified by the URI if the resource is local and
+         * if exists, null is returned otherwise.
+         * @return Onem2mResource
+         */
+        protected Onem2mResource getResource() {
+            if (! isLocalResource()) {
+                return null;
+            }
+
+            Onem2mCse cseBase = null;
+            Onem2mResource resource = null;
+            if (this.hierarchyPathIndex >= this.hierarchyPath.length) {
+                // the resource identified by URI is the CSE
+
+                cseBase = this.retrieveCseBase();
+                if (null == cseBase) {
+                    LOG.trace("Can't get resource without cseBase");
+                    return null;
+                }
+
+                resource = dbResourceTree.retrieveResourceById(cseBase.getResourceId());
+                if (null == resource) {
+                    LOG.error("Onem2m CSEBase without resource record in DB, URI: {}", getTargetURI());
+                }
+                return resource;
+            }
+
+            if (! isStructured()) {
+                resource = dbResourceTree.retrieveResourceById(this.hierarchyPath[this.hierarchyPathIndex]);
+                if (null == resource) {
+                    LOG.trace("Resource with ID {} not found, URI: {}",
+                              this.hierarchyPath[this.hierarchyPathIndex],
+                              getTargetURI());
+                }
+                return resource;
+            } else {
+
+                cseBase = this.retrieveCseBase();
+                if (null == cseBase) {
+                    LOG.trace("Can't get resource without cseBase");
+                    return null;
+                }
+
+                String resourceId = cseBase.getResourceId();
+                Onem2mResource savedResource = null;
+                for (int hierarchyIndex = this.hierarchyPathIndex;
+                     hierarchyIndex < this.hierarchyPath.length;
+                     hierarchyIndex++) {
+                    resource = dbResourceTree.retrieveChildResourceByName(resourceId,
+                                                                          this.hierarchyPath[hierarchyIndex]);
+                    if (resource == null) {
+                        // check "/latest" in the URI
+                        resource = checkForLatestOldestContentInstance(savedResource,
+                                                                       this.hierarchyPath[hierarchyIndex]);
+                        if (resource == null) {
+                            resource = checkForFanOutPoint(savedResource,
+                                                           this.hierarchyPath[hierarchyIndex]);
+                        }
+                        if (resource == null) {
+                            break;
+                        }
+                    }
+                    resourceId = resource.getResourceId();
+                    savedResource = resource;
+                }
+                return resource;
+            }
+
+           //  return null;
+        }
+
+        /**
+         * Returns cseBase of the resource.
+         * (This might be useful because we support more than one cseBase)
+         * Returns the baseCSE resource if successful, null otherwise.
+         * @return Onem2mCse
+         */
+        protected Onem2mCse getCseBase() {
+            if (! isLocalResource()) {
+                return null;
+            }
+
+            this.retrieveCseBase();
+
+            if (null == this.cseBase) {
+                // Walk all parents of the resource in hierarchy and get the cseBase of the resource
+                Onem2mResource resource = getResource();
+                while ((null != resource) && !resource.getResourceType().equals(Onem2m.ResourceType.CSE_BASE)) {
+                    resource = dbResourceTree.retrieveResourceById(resource.getParentId());
+                }
+
+                if (null == resource) {
+                    LOG.error("Failed to find cseBase of the resource identified by URI: {}", this.targetURI);
+                    return null;
+                }
+                return dbResourceTree.retrieveCseByName(resource.getName());
+            }
+
+            return this.cseBase;
+        }
+    }
+
+    public String getCSEid (String targetURI) {
+        CseBaseResourceLocator locator = null;
+        try {
+            locator = new CseBaseResourceLocator(targetURI);
+        } catch (IllegalArgumentException ex) {
+            LOG.error("Invalid URI ({}), {}", targetURI, ex);
+            return "";
+        }
+
+        Onem2mCse cse = locator.getCseBase();
+        if (null == cse) {
+            return "";
+        }
+
         return cse.getResourceId();
+    }
+
+    public CseBaseResourceLocator createResourceLocator(String targetURI) {
+        return new CseBaseResourceLocator(targetURI);
+    }
+
+    /**
+     * Checks whether the URI points to local resource or not.
+     * @param targetURI URI
+     * @return true for local, false for remote resource
+     */
+    public Boolean isLocalResourceURI(String targetURI) {
+        return new CseBaseResourceLocator(targetURI).isLocalResource();
     }
 
     /**
@@ -420,60 +666,15 @@ public class Onem2mDb implements TransactionChainListener {
                                         RequestPrimitive onem2mRequest,
                                         ResponsePrimitive onem2mResponse) {
 
-        targetURI = trimURI(targetURI); // get rid of leading and following "/"
-        String hierarchy[] = targetURI.split("/"); // split the URI into its hierarchy of path component strings
-
-        // start by looking at the cse root: the first level is the cse name
-        Onem2mCse cse = dbResourceTree.retrieveCseByName(hierarchy[0]);
-        if (cse == null)
-            return false; // resource not found
-
-        /**
-         * Cases to consider:
-         * 1) the targetURI is just the cse --> hierarchy.length == 1
-         * 2) the target URI has just one more level --> hierarchy.length == 2
-         * 2a) hierarchy[1] is a non-hierarchical id
-         * 2b) hierarchy[1] is the name of a real resource
-         * 3) the hierarchy needs to be traversed looking at each level by name until there are no more levels
-         *    or we find the resource ny name
-         */
-        if (hierarchy.length == 1) { // case 1
-            onem2mRequest.setOnem2mResource(dbResourceTree.retrieveResourceById(cse.getResourceId()));
-            onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
-            onem2mRequest.setResourceId(cse.getResourceId());
-            return true;
+        CseBaseResourceLocator locator = null;
+        try {
+            locator = new CseBaseResourceLocator(targetURI);
+        } catch (IllegalArgumentException ex) {
+            LOG.error("Invalid URI ({}), {}", targetURI, ex.toString());
+            return false;
         }
 
-        Onem2mResource onem2mResource = null;
-        Onem2mResource saveOnem2mResource = null;
-
-        if (hierarchy.length == 2) { // case 2
-
-            onem2mResource  = dbResourceTree.retrieveResourceById(hierarchy[1]); // case 2a
-            if (onem2mResource == null)
-                onem2mResource = dbResourceTree.retrieveChildResourceByName(cse.getResourceId(), hierarchy[1]); // case 2b
-        } else { // case 3
-            /**
-             * This routine starts at hierarchy[1] and buzzes down the hierarchy looking for the resource name
-             */
-            String resourceId = cse.getResourceId();
-            for (int hierarchyIndex = 1; hierarchyIndex < hierarchy.length; hierarchyIndex++) {
-                onem2mResource = dbResourceTree.retrieveChildResourceByName(resourceId, hierarchy[hierarchyIndex]);
-                if (onem2mResource == null) {
-                    // check "/latest" in the URI
-                    onem2mResource = checkForLatestOldestContentInstance(saveOnem2mResource, hierarchy[hierarchyIndex]);
-                    if (onem2mResource == null) {
-                        onem2mResource = checkForFanOutPoint(saveOnem2mResource, hierarchy[hierarchyIndex]);
-                    }
-                    if (onem2mResource == null) {
-                        break;
-                    }
-                }
-                resourceId = onem2mResource.getResourceId();
-                saveOnem2mResource = onem2mResource;
-            }
-        }
-
+        Onem2mResource onem2mResource = locator.getResource();
         if (onem2mResource == null)
             return false; // resource not found
 
@@ -587,7 +788,6 @@ public class Onem2mDb implements TransactionChainListener {
     public Onem2mResource getResource(String resourceId) {
         return dbResourceTree.retrieveResourceById(resourceId);
     }
-
 
     public String getChildResourceID(String cseid, String childName) {
         return dbResourceTree.retrieveChildResourceIDByName(cseid, childName);
