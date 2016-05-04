@@ -10,7 +10,6 @@ package org.opendaylight.iotdm.onem2m.core;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
@@ -53,6 +52,9 @@ public class Onem2m {
     public class ContentType {
         public static final String APP_VND_RES_JSON = "application/vnd.onem2m-res+json";
         public static final String APP_VND_NTFY_JSON = "application/vnd.onem2m-ntfy+json";
+
+        public static final String APP_VND_RES_XML = "application/vnd.onem2m-res+xml";
+        public static final String APP_VND_NTFY_XML = "application/vnd.onem2m-ntfy+xml";
     }
 
     public class Protocol {
@@ -66,12 +68,13 @@ public class Onem2m {
     public class ResourceType {
         public static final String AE = "2"; //"ae";
         public static final String CONTAINER = "3"; //"cnt";
-        public static final String CSE_BASE = "5"; //"csb";
+        public static final String CSE_BASE = "5"; //"cb";
         public static final String CONTENT_INSTANCE = "4"; //"cin";
         public static final String SUBSCRIPTION = "23"; //"sub";
-        public static final String NODE = "14"; //"nod"
-        public static final String GROUP = "9";
-        public static final String ACCESS_CONTROL_POLICY = "1";
+        public static final String NODE = "14"; //"nod";
+        public static final String GROUP = "9"; //"grp";
+        public static final String ACCESS_CONTROL_POLICY = "1"; //"acp";
+        public static final String REMOTE_CSE = "16"; //"csr";
     }
     public class ResourceTypeString {
         public static final String AE = "ae";
@@ -82,8 +85,13 @@ public class Onem2m {
         public static final String NODE = "nod";
         public static final String GROUP = "grp";
         public static final String ACCESS_CONTROL_POLICY = "acp";
+        public static final String REMOTE_CSE = "csr";
     }
 
+    public class CseType {
+        public static final String INCSE = "IN-CSE";
+        public static final String MNCSE = "MN-CSE";
+    }
 
     // hard code set of long to short name
     public static final Map<String,String> resourceTypeToString = new HashMap<String,String>() {{
@@ -96,6 +104,7 @@ public class Onem2m {
         put(ResourceType.NODE, ResourceTypeString.NODE);
         put(ResourceType.GROUP, ResourceTypeString.GROUP);
         put(ResourceType.ACCESS_CONTROL_POLICY, ResourceTypeString.ACCESS_CONTROL_POLICY);
+        put(ResourceType.REMOTE_CSE, ResourceTypeString.REMOTE_CSE);
     }};
 
     public class ResponseType { // TS0001 section 8.2.1
@@ -151,6 +160,7 @@ public class Onem2m {
 
         public static final String INTERNAL_SERVER_ERROR = "5000";
         public static final String NOT_IMPLEMENTED = "5001";
+        public static final String TARGET_NOT_REACHABLE = "5103";
         public static final String ALREADY_EXISTS = "5106";
         public static final String TARGET_NOT_SUBSCRIBABLE = "5203";
         public static final String NON_BLOCKING_REQUEST_NOT_SUPPORTED = "5206";
@@ -218,7 +228,7 @@ public class Onem2m {
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
-            LOG.error("serviceOnenm2mRequest: RPC exception");
+            LOG.error("serviceOnenm2mRequest: RPC exception: msg: {}, cause: {}", e.getMessage(), e.getCause());
         }
 
         return onem2mResponse;
