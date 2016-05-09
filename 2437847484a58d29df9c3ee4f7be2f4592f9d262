@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa57193c_7f89aec9",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2mStats.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-05-09T19:02:05Z",
+      "side": 1,
+      "message": "we need to use the new format, use JsonUtils, see the example above.",
+      "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa57193c_dfc1dae5",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-05-09T19:02:05Z",
+      "side": 1,
+      "message": "ODL checkstyle may not allow \"*\", once we turned on the checkstyle feature, this will be error.  But our code also has this problem, so we turn off the checkstyle...",
+      "range": {
+        "startLine": 22,
+        "startChar": 7,
+        "endLine": 22,
+        "endChar": 53
+      },
+      "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa57193c_9a8db07e",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceAE.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-05-09T19:02:05Z",
+      "side": 1,
+      "message": "the latest code has removed this part of code, mark here.",
+      "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
