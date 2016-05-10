@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fa57193c_55c1297f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2mStats.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-05-10T08:11:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa57193c_7f89aec9",
+      "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa57193c_dfc1dae5",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
         "patchSetId": 2
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "fa57193c_d5d53944",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-05-10T08:11:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa57193c_dfc1dae5",
+      "range": {
+        "startLine": 22,
+        "startChar": 7,
+        "endLine": 22,
+        "endChar": 53
+      },
+      "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa57193c_9a8db07e",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceAE.java",
         "patchSetId": 2
@@ -53,6 +95,24 @@
       "writtenOn": "2016-05-09T19:02:05Z",
       "side": 1,
       "message": "the latest code has removed this part of code, mark here.",
+      "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa57193c_75c42d92",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceAE.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-05-10T08:11:48Z",
+      "side": 1,
+      "message": "So what are you suggesting please ? Should I delete the whole block ?",
+      "parentUuid": "fa57193c_9a8db07e",
       "revId": "2437847484a58d29df9c3ee4f7be2f4592f9d262",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
