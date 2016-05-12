@@ -14,13 +14,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>odlparent-lite</artifactId>
-    <version>1.6.2-Beryllium-SR2</version>
+    <version>1.6.3-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2msimpleadapter-artifacts</artifactId>
-  <version>1.0.0-Beryllium-SR2</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <dependencyManagement>

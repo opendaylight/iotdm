@@ -12,14 +12,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>config-parent</artifactId>
-    <version>0.4.2-Beryllium-SR2</version>
+    <version>0.4.3-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2msimpleadapter-impl</artifactId>
-  <version>1.0.0-Beryllium-SR2</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
@@ -49,7 +49,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>onem2m-core</artifactId>
-      <version>0.1.2-Beryllium-SR2</version>
+      <version>0.1.3-SNAPSHOT</version>
     </dependency>
     <!-- Testing Dependencies -->
     <dependency>
