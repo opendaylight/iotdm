@@ -208,15 +208,6 @@ public class ResourceContent {
             } else {
                 // set default expirationTime for CSE
                 isCSECreation = true;
-//                String resourceName = this.getInJsonContent().optString(ResourceContent.RESOURCE_NAME, null);
-//                if (resourceName == null) {
-//                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE name not specified");
-//                    return;
-//                }
-//                if (Onem2mDb.getInstance().findCseByName(resourceName)) {
-//                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT, "CSE name already exists: " + resourceName);
-//                    return;
-//                }
             // todo: update this part once resourceName is supported for CSE
             }
 
@@ -246,40 +237,6 @@ public class ResourceContent {
 
         // validate expiration time
         String et = this.getInJsonContent().optString(ResourceContent.EXPIRATION_TIME, null);
-//        if (et != null) {
-//
-//            if (Onem2mDateTime.dateCompare(et, currDateTime) < 0) {
-//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-//                        "EXPIRATION_TIME: cannot be less than current time");
-//                return;
-//            }
-//
-//            //check parent's expirationtTime, what if CSEbase's default expirationTime, how long?
-//            if (!isCSECreation) {
-//                String parentExpirationTime = getParentExpTime(onem2mRequest);
-//                if (Onem2mDateTime.dateCompare(et, parentExpirationTime) > 0) {
-//                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-//                            "EXPIRATION_TIME: cannot be later than parent Expiration Time");
-//                    return;
-//                }
-//            }
-//
-//
-//        } else {
-//
-//
-//            // set default / parent's expirationTime.
-//            // todo: speical case: default ACP
-//            String parentExpirationTime = getParentExpTime(onem2mRequest);
-//
-//            if (parentExpirationTime != null) {
-//                this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, parentExpirationTime);
-//            } else {
-//                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
-//                        "EXPIRATION_TIME: CSEbase or parent resource missing exporationTime");
-//                return;
-//            }
-//        }
         if (!isCSECreation) {
             if (et != null) {
                 // need to compare nowTime and parentExpTime
@@ -301,7 +258,6 @@ public class ResourceContent {
                 }
                 // et is not given, if parent is CSE, put FOREVER, otherwise copy parent's et
                 // creation's parent resource is stored in onem2mrequest.onem2mreosurce, update's self resource is stored there
-
 
                 Onem2mResource parentResource = getParentResource(onem2mRequest);
 

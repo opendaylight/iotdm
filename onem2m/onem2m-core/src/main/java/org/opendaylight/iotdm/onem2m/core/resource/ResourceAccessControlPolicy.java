@@ -85,8 +85,6 @@ public class ResourceAccessControlPolicy {
                                 return;
                             }
                             // this line below can create acp as a single string
-                            //resourceContent.setDbAttr(key, o.toString());
-
                             JSONArray arrayRule = (JSONArray) o;
                             for (int i = 0; i < arrayRule.length(); i++){
                                 JSONObject acRule = arrayRule.optJSONObject(i);
@@ -174,12 +172,6 @@ public class ResourceAccessControlPolicy {
                                                                             return;
                                                                         } else {
                                                                             String ipv4Address = ipv4Array.optString(j);
-//                                                                            if (!InetAddressValidator.getInstance().isValidInet4Address(ipv4Address)) {
-//                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ")" + ipv4Address+ "id not a valid Ipv4 address.");
-//                                                                                return;
-//                                                                            }
-
                                                                             if (!IPAddressVidator.isIpv4Address(ipv4Address)) {
                                                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                         "PRIVILEGES("  + IP_V4_ADDRESSES+ ") : "  + ipv4Address+ " is not a valid Ipv4 address.");
@@ -205,12 +197,6 @@ public class ResourceAccessControlPolicy {
                                                                             return;
                                                                         } else {
                                                                             String ipv6Address = ipv6Array.optString(j);
-//                                                                            InetAddressValidator validator = new InetAddressValidator();
-//                                                                            if (!validator.isValidInet6Address(ipv6Address)) {
-//                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                                                        "PRIVILEGES("  + IP_V6_ADDRESSES+ ")" + ipv6Address+ "id not a valid Ipv6 address.");
-//                                                                                return;
-//                                                                            }
                                                                             if (!IPAddressVidator.isIpv6Address(ipv6Address)) {
                                                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                         "PRIVILEGES("  + IP_V6_ADDRESSES+ ") : " + ipv6Address+ " is not a valid Ipv6 address.");
@@ -292,21 +278,6 @@ public class ResourceAccessControlPolicy {
                                         }
                                         break;
                                     case ACCESS_CONTROL_OPERATIONS:
-//                                        if (!(p instanceof JSONArray)) {
-//                                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                    "PRIVILEGES(" + ACCESS_CONTROL_OPERATIONS + ")  array expected for json key: " + ruleKey);
-//                                        }
-//                                        List<Integer> operationList = new ArrayList<>();
-//                                        JSONArray operationArray = (JSONArray) p;
-//                                        for (int j = 0; j < operationArray.length();j ++){
-//                                            if (!(operationArray.get(j) instanceof Integer)) {
-//                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                        "PRIVILEGES(" + ACCESS_CONTROL_OPERATIONS + ") Integer expected for json array: " + ruleKey);
-//                                            }
-//                                            operationList.add((Integer)operationArray.get(j));
-//                                        }
-//                                        break;
-
                                         if (!resourceContent.getInJsonContent().isNull(key)) {
                                             if (!(p instanceof Integer)) {
                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,

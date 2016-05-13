@@ -58,16 +58,6 @@ public class DbTransaction {
             LOG.error("Transaction failed: {}", e.toString());
             ret = false;
         }
-        /*
-        CheckedFuture<Void, TransactionCommitFailedException> submitFuture = writeTx.submit();
-        try {
-            submitFuture.checkedGet();
-            ret = true;
-        } catch (TransactionCommitFailedException e) {
-            LOG.error("Transaction failed. Message: {}", e.getMessage());
-            ret = false;
-        }
-        */
         return ret;
     }
 

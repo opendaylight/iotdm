@@ -171,35 +171,4 @@ public class ResourceCse {
 
     }
 
-//    /**
-//     * Generate JSON for this resource
-//     * @param onem2mResource this resource
-//     * @param j JSON obj
-//     */
-//    public static void produceJsonForResource(Onem2mResource onem2mResource, JSONObject j) {
-//
-//        for (Attr attr : onem2mResource.getAttr()) {
-//            switch (attr.getName()) {
-//                case CSE_ID:
-//                case CSE_TYPE:
-//                    j.put(attr.getName(), attr.getValue());
-//                    break;
-//                case NOTIFICATION_CONGESTION_POLICY:
-//                    j.put(attr.getName(), Integer.valueOf(attr.getValue()));
-//                    break;
-//                default:
-//                    ResourceContent.produceJsonForCommonAttributes(attr, j);
-//                    break;
-//            }
-//        }
-//
-//
-//        for (AttrSet attrSet : onem2mResource.getAttrSet()) {
-//            switch (attrSet.getName()) {
-//                default:
-//                    ResourceContent.produceJsonForCommonAttributeSets(attrSet, j);
-//                    break;
-//            }
-//        }
-//    }
 }
