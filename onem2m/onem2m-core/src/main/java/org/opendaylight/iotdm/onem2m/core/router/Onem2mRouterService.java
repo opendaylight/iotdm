@@ -215,7 +215,14 @@ public class Onem2mRouterService {
                     }
 
                     // continue if target is not reachable through this next hop
-                    switch (response.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE)) {
+                    String statusCode = response.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+                    if (null == statusCode) {
+                        LOG.error("Response without status code, content: {}",
+                                  response.getPrimitive(ResponsePrimitive.CONTENT));
+                        continue;
+                    }
+
+                    switch (statusCode) {
                         case Onem2m.ResponseStatusCode.TARGET_NOT_REACHABLE:
                             LOG.trace("Target unreachable through next hop: {}", nextHopUrl);
                             continue;

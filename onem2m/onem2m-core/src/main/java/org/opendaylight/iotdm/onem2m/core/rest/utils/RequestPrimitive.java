@@ -117,46 +117,6 @@ public class RequestPrimitive extends BasePrimitive {
         add(ROLE);
     }};
 
-    // hard code set of primitive attributes which are mapped as query-string field in HTTP
-    public static final Set<String> primitiveQueryStringParameters = new HashSet<String>() {{
-//        add(OPERATION);
-//        add(TO);
-//        add(FROM);
-//        add(REQUEST_IDENTIFIER);
-        add(RESOURCE_TYPE);
-//        add(NAME);
-//        add(CONTENT);
-//        add(ORIGINATING_TIMESTAMP);
-//        add(REQUEST_EXPIRATION_TIMESTAMP);
-//        add(RESULT_EXPIRATION_TIMESTAMP);
-//        add(OPERATION_EXECUTION_TIME);
-        add(RESPONSE_TYPE);
-        add(RESULT_PERSISTENCE);
-        add(RESULT_CONTENT);
-//        add(EVENT_CATEGORY);
-        add(DELIVERY_AGGREGATION);
-//        add(GROUP_REQUEST_IDENTIFIER);
-//        add(FILTER_CRITERIA);
-        add(FILTER_CRITERIA_CREATED_BEFORE);
-        add(FILTER_CRITERIA_CREATED_AFTER);
-        add(FILTER_CRITERIA_MODIFIED_SINCE);
-        add(FILTER_CRITERIA_UNMODIFIED_SINCE);
-        add(FILTER_CRITERIA_STATE_TAG_SMALLER);
-        add(FILTER_CRITERIA_STATE_TAG_BIGGER);
-        add(FILTER_CRITERIA_LABELS);
-        add(FILTER_CRITERIA_RESOURCE_TYPE);
-        add(FILTER_CRITERIA_SIZE_ABOVE);
-        add(FILTER_CRITERIA_SIZE_BELOW);
-        add(FILTER_CRITERIA_FILTER_USAGE);
-        add(FILTER_CRITERIA_LIMIT);
-        add(FILTER_CRITERIA_OFFSET);
-        add(DISCOVERY_RESULT_TYPE);
-//        add(PROTOCOL);
-//        add(CONTENT_FORMAT);
-//        add(NATIVEAPP_NAME);
-//        add(ROLE);
-    }};
-
     // hard code set of long to short name
     public static final Map<String,String> longToShortAttributes = new HashMap<String,String>() {{
         // short; long

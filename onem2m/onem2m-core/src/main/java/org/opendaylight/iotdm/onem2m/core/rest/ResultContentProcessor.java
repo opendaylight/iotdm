@@ -64,14 +64,17 @@ public class ResultContentProcessor {
         // protocol specific info for all rcn values is done here
         String protocol = onem2mRequest.getPrimitive(RequestPrimitive.PROTOCOL);
         if (protocol != null && protocol.contentEquals(Onem2m.Protocol.HTTP)) {
-            if (onem2mRequest.getPrimitive(RequestPrimitive.OPERATION).contentEquals(Onem2m.Operation.CREATE)) {
-                onem2mResponse.setPrimitive(ResponsePrimitive.HTTP_CONTENT_LOCATION,
-                        Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId()));
-            }
             onem2mResponse.setPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE,
                     Onem2m.ContentType.APP_VND_RES_JSON + ";" + RequestPrimitive.RESOURCE_TYPE + "=" +
                             onem2mResource.getResourceType());
         }
+
+        if (onem2mRequest.getPrimitive(RequestPrimitive.OPERATION).contentEquals(Onem2m.Operation.CREATE)) {
+            onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT_LOCATION,
+                    Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource.getResourceId()));
+        }
+
+        onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
 
         JSONObject jo = new JSONObject(); // for non-fu discovery
         JSONArray ja = new JSONArray();   // for fu discovery
