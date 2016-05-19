@@ -9,7 +9,11 @@
 package org.opendaylight.iotdm.onem2m.core;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
@@ -17,8 +21,9 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO: TS0004 8.3, and 8.4, short names are required
+import javax.annotation.Nonnull;
 
+// TODO: TS0004 8.3, and 8.4, short names are required
 
 public class Onem2m {
 
@@ -55,6 +60,13 @@ public class Onem2m {
 
         public static final String APP_VND_RES_XML = "application/vnd.onem2m-res+xml";
         public static final String APP_VND_NTFY_XML = "application/vnd.onem2m-ntfy+xml";
+    }
+
+    public class CoapContentFormat {
+        public static final int APP_VND_RES_XML = 10000;
+        public static final int APP_VND_RES_JSON = 10001;
+        public static final int APP_VND_NTFY_XML = 10002;
+        public static final int APP_VND_NTFY_JSON = 10003;
     }
 
     public class Protocol {
@@ -181,6 +193,85 @@ public class Onem2m {
         public static final int ONEM2M_EC = 264;
         public static final int ONEM2M_RSC = 265;
         public static final int ONEM2M_GID = 266;
+        public static final int ONEM2M_TY = 267;
+    }
+
+    /*
+     * Definitions of CaAP Onem2m options
+     * Every option has specified:
+     *      - coapId: CoAP ID,
+     *      - onem2mId: Onem2m Id,
+     *      - valueIsString: a flag whether the value is string or integer,
+     *      - max: Maximal value byte length
+     */
+    public static final class Onem2mCoapOptionDef {
+        public final int coapId;
+        public final String onem2mId;
+        public final boolean valueIsString;
+        public final int max;
+
+        private Onem2mCoapOptionDef(int coapId, @Nonnull String onem2mId, boolean valueIsString, int max) {
+            this.coapId = coapId;
+            this.onem2mId = onem2mId;
+            this.valueIsString = valueIsString;
+            this.max = max;
+        }
+    }
+
+    /*
+     * This class stores definitions of the CoAP Onem2m options in two
+     * hash maps with Onem2m parameter name as key and CoAP option ID as key
+     * of the second hash map.
+     */
+    private static final class Onem2mCoapOptionDefinitions {
+        public Map<String, Onem2mCoapOptionDef> coapOptionsMapOnem2m = new HashMap<>();
+        public Map<Integer, Onem2mCoapOptionDef> coapOptionsMapCoap =  new HashMap<>();
+
+        private void addDef(int coapId, @Nonnull String onem2mId, boolean valueIsString, int max) {
+            Onem2mCoapOptionDef def = new Onem2mCoapOptionDef(coapId, onem2mId, valueIsString, max);
+            coapOptionsMapCoap.put(coapId, def);
+            coapOptionsMapOnem2m.put(onem2mId, def);
+        }
+
+        public Onem2mCoapOptionDefinitions() {
+            initDefinitions();
+        }
+
+        private void initDefinitions() {
+            addDef(CoapOption.ONEM2M_FR, RequestPrimitive.FROM, true, 255);
+            addDef(CoapOption.ONEM2M_RQI, RequestPrimitive.REQUEST_IDENTIFIER, true, 255);
+            addDef(CoapOption.ONEM2M_OT,  RequestPrimitive.ORIGINATING_TIMESTAMP, true, 15);
+            addDef(CoapOption.ONEM2M_RQET, RequestPrimitive.REQUEST_EXPIRATION_TIMESTAMP, true, 15);
+            addDef(CoapOption.ONEM2M_RSET, RequestPrimitive.RESULT_EXPIRATION_TIMESTAMP, true, 15);
+            addDef(CoapOption.ONEM2M_OET, RequestPrimitive.OPERATION_EXECUTION_TIME, true, 15);
+            // TODO don't have support for the RTURI
+            // addDef(CoapOption.ONEM2M_RTURI, RequestPrimitive., true, 255);
+            addDef(CoapOption.ONEM2M_EC, RequestPrimitive.EVENT_CATEGORY, false, 0xFF);
+            addDef(CoapOption.ONEM2M_RSC, ResponsePrimitive.RESPONSE_STATUS_CODE, false, 0xFFFF);
+            addDef(CoapOption.ONEM2M_GID, RequestPrimitive.GROUP_REQUEST_IDENTIFIER, true, 255);
+            addDef(CoapOption.ONEM2M_TY, RequestPrimitive.RESOURCE_TYPE, false, 0xFFFF);
+        }
+    }
+
+    private static final Onem2mCoapOptionDefinitions coapOptDefs = new Onem2mCoapOptionDefinitions();
+
+    /**
+     * Returns definition of CoAP option identified by Onem2m primitive
+     * parameter name.
+     * @param onem2mParameterName
+     * @return
+     */
+    public static Onem2mCoapOptionDef getCoapOptionOnem2m(@Nonnull String onem2mParameterName) {
+        return coapOptDefs.coapOptionsMapOnem2m.get(onem2mParameterName);
+    }
+
+    /**
+     * Returns definition of CoAP option identfied by CoAP option ID.
+     * @param coapOptionId
+     * @return
+     */
+    public static Onem2mCoapOptionDef getCoapOptionCoap(int coapOptionId) {
+        return coapOptDefs.coapOptionsMapCoap.get(coapOptionId);
     }
 
     public class HttpHeaders {
@@ -204,6 +295,45 @@ public class Onem2m {
         public static final boolean RETAINED = true;
     }
 
+    // set of primitive attributes which are mapped as query-string field in HTTP and CoAP
+    public static final Set<String> queryStringParameters = new HashSet<String>() {{
+//        add(RequestPrimitive.OPERATION);
+//        add(RequestPrimitive.TO);
+//        add(RequestPrimitive.FROM);
+//        add(RequestPrimitive.REQUEST_IDENTIFIER);
+        add(RequestPrimitive.RESOURCE_TYPE);
+//        add(RequestPrimitive.NAME);
+//        add(RequestPrimitive.CONTENT);
+//        add(RequestPrimitive.ORIGINATING_TIMESTAMP);
+//        add(RequestPrimitive.REQUEST_EXPIRATION_TIMESTAMP);
+//        add(RequestPrimitive.RESULT_EXPIRATION_TIMESTAMP);
+//        add(RequestPrimitive.OPERATION_EXECUTION_TIME);
+        add(RequestPrimitive.RESPONSE_TYPE);
+        add(RequestPrimitive.RESULT_PERSISTENCE);
+        add(RequestPrimitive.RESULT_CONTENT);
+//        add(RequestPrimitive.EVENT_CATEGORY);
+        add(RequestPrimitive.DELIVERY_AGGREGATION);
+//        add(RequestPrimitive.GROUP_REQUEST_IDENTIFIER);
+//        add(RequestPrimitive.FILTER_CRITERIA);
+        add(RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE);
+        add(RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER);
+        add(RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE);
+        add(RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE);
+        add(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER);
+        add(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER);
+        add(RequestPrimitive.FILTER_CRITERIA_LABELS);
+        add(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
+        add(RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE);
+        add(RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW);
+        add(RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE);
+        add(RequestPrimitive.FILTER_CRITERIA_LIMIT);
+        add(RequestPrimitive.FILTER_CRITERIA_OFFSET);
+        add(RequestPrimitive.DISCOVERY_RESULT_TYPE);
+//        add(RequestPrimitive.PROTOCOL);
+//        add(RequestPrimitive.CONTENT_FORMAT);
+//        add(RequestPrimitive.NATIVEAPP_NAME);
+//        add(RequestPrimitive.ROLE);
+    }};
 
     /**
      * Routine to allow REST clients to invoke the MDSAL RPC which will process the RequestPrimitive accessed via
@@ -260,6 +390,46 @@ public class Onem2m {
         }
 
         return onem2mResponse;
+    }
+
+    /**
+     * Translates URI string from the protocol format into Onem2m format.
+     * @param protocolUri
+     * @return
+     */
+    public static String translateUriToOnem2m(@Nonnull String protocolUri) {
+        protocolUri = Onem2mDb.trimURI(protocolUri);
+
+        if (-1 != protocolUri.indexOf("~/")) {
+            return protocolUri.replaceFirst("~/", "/");
+        }
+
+        if (-1 != protocolUri.indexOf("_/")) {
+            return protocolUri.replaceFirst("_/", "//");
+        }
+
+        if (protocolUri.startsWith("/")) {
+            return protocolUri.substring(1);
+        }
+
+        return protocolUri;
+    }
+
+    /**
+     * Translates URI from Onem2m format into protocol format.
+     * @param onem2mUri
+     * @return
+     */
+    public static String translateUriFromOnem2m(@Nonnull String onem2mUri) {
+        if (onem2mUri.startsWith("//")) {
+            return onem2mUri.replaceFirst("//", "/_/");
+        }
+
+        if (onem2mUri.startsWith("/")) {
+            return onem2mUri.replaceFirst("/", "/~/");
+        }
+
+        return "/" + onem2mUri;
     }
 }
 

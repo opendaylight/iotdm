@@ -337,7 +337,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "FROM(" + RequestPrimitive.FROM + ") not specified");
             return;
-        } else if (!validateUri(from)) {
+        } else if (from != null && !validateUri(from)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
             return;

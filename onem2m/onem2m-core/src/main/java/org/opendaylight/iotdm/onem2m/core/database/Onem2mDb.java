@@ -730,18 +730,20 @@ public class Onem2mDb implements TransactionChainListener {
     /**
      * Using the resourceId, traverse up the hierarchy till reach the root building the path.
      * @param resourceId the resource id
-     * @return name of the resource in hierarchical format
+     * @return name of the resource in hierarchical format (structured CSE-Relative)
      */
     public String getHierarchicalNameForResource(String resourceId) {
         String hierarchy = "";
 
         Onem2mResource onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
         while (onem2mResource != null) {
-            hierarchy = "/" + onem2mResource.getName() + hierarchy;
+            hierarchy = onem2mResource.getName() + hierarchy;
             resourceId = onem2mResource.getParentId();
             if (resourceId.contentEquals(NULL_RESOURCE_ID)) {
                 break;
             }
+            // add slash because we're still not at cseBase (   next parent)
+            hierarchy = "/" + hierarchy;
             onem2mResource = dbResourceTree.retrieveResourceById(resourceId);
         }
         return hierarchy;

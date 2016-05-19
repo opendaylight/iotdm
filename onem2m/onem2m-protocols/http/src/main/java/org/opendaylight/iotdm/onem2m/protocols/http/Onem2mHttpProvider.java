@@ -22,7 +22,6 @@ import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.http.HttpFields;
-import org.eclipse.jetty.io.ByteArrayBuffer;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -90,35 +89,6 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
         return null;
     }
 
-    private String translateUriToOnem2m(String httpUri) {
-
-        if (-1 != httpUri.indexOf("/~/")) {
-            return httpUri.replaceFirst("/~/", "/");
-        }
-
-        if (-1 != httpUri.indexOf("/_/")) {
-            return httpUri.replaceFirst("/_/", "//");
-        }
-
-        if (httpUri.startsWith("/")) {
-            return httpUri.substring(1);
-        }
-
-        return httpUri;
-    }
-
-    private String translateUriToHttp(String onem2mUri) {
-        if (onem2mUri.startsWith("//")) {
-            return onem2mUri.replaceFirst("//", "/_/");
-        }
-
-        if (onem2mUri.startsWith("/")) {
-            return onem2mUri.replaceFirst("/", "/~/");
-        }
-
-        return "/" + onem2mUri;
-    }
-
     public class MyHandler extends AbstractHandler {
 
         /**
@@ -159,7 +129,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
                 return;
             }
 
-            clientBuilder.setTo(translateUriToOnem2m(httpRequest.getRequestURI()));
+            clientBuilder.setTo(Onem2m.translateUriToOnem2m(httpRequest.getRequestURI()));
 
             // pull fields out of the headers
             headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
@@ -285,9 +255,9 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
             if (ct != null) {
                 httpResponse.setContentType(ct);
             }
-            String cl = onem2mResponse.getPrimitive(ResponsePrimitive.HTTP_CONTENT_LOCATION);
+            String cl = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT_LOCATION);
             if (cl != null) {
-                httpResponse.setHeader("Content-Location", cl);
+                httpResponse.setHeader("Content-Location", Onem2m.translateUriFromOnem2m(cl));
             }
         }
 
@@ -428,7 +398,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
         StringBuilder ret = new StringBuilder();
         String value = null;
 
-        for (String param : RequestPrimitive.primitiveQueryStringParameters) {
+        for (String param : Onem2m.queryStringParameters) {
             value = request.getPrimitive(param);
             if (null != value) {
                 if (0 == ret.length()) {
@@ -464,7 +434,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
                 return ret.toString();
         }
 
-        for (String param : RequestPrimitive.primitiveQueryStringParameters) {
+        for (String param : Onem2m.queryStringParameters) {
             value = request.getPrimitive(param);
             if (null != value) {
                 ret.append(";").append(param).append("=").append(value);
@@ -490,7 +460,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
 
             // set URL properly
             URL host = new URL(hostURL);
-            String url = translateUriToHttp(request.getPrimitive(RequestPrimitive.TO));
+            String url = Onem2m.translateUriFromOnem2m(request.getPrimitive(RequestPrimitive.TO));
             // add query string
             url += createRequestQueryString(request);
 
@@ -588,7 +558,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
             }
 
             if (null != value) {
-                response.setPrimitive(RequestPrimitive.CONTENT_FORMAT, value);
+                response.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, value);
             }
 
             if (contentType != null) {
@@ -597,7 +567,7 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
 
             value = fields.getStringField("Content-Location");
             if (value != null) {
-                response.setPrimitive(ResponsePrimitive.HTTP_CONTENT_LOCATION, value);
+                response.setPrimitive(ResponsePrimitive.CONTENT_LOCATION, Onem2m.translateUriToOnem2m(value));
             }
 
             // TODO add next headers if needed

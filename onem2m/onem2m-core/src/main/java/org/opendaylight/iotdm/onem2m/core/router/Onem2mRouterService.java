@@ -35,10 +35,6 @@ import java.util.concurrent.Future;
  */
 public class Onem2mRouterService {
     private static final String defaultPluginName = "http";
-    // baseCSE resource names which are used for testing/debugging purposes and
-    // should not be used for routing
-    private static final Set<String> baseCseBlackList = ImmutableSet.of("SYS_PERF_TEST_CSE");
-
     private static Onem2mRouterService routerService = new Onem2mRouterService();
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mRouterService.class);
     Map<String, Onem2mRouterPlugin> routerServicePluginMap = new HashMap<>();
@@ -215,7 +211,14 @@ public class Onem2mRouterService {
                     }
 
                     // continue if target is not reachable through this next hop
-                    switch (response.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE)) {
+                    String statusCode = response.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+                    if (null == statusCode) {
+                        LOG.error("Response without status code, content: {}",
+                                  response.getPrimitive(ResponsePrimitive.CONTENT));
+                        continue;
+                    }
+
+                    switch (statusCode) {
                         case Onem2m.ResponseStatusCode.TARGET_NOT_REACHABLE:
                             LOG.trace("Target unreachable through next hop: {}", nextHopUrl);
                             continue;
@@ -387,7 +390,7 @@ public class Onem2mRouterService {
             return;
         }
 
-        LOG.error("Request primitive with unexpected resource type passed, RT: {}",
+        LOG.trace("Request primitive with unexpected resource type passed, RT: {}",
                   request.getOnem2mResource().getResourceType());
     }
 
@@ -401,12 +404,6 @@ public class Onem2mRouterService {
         final String baseCseIDAttribute = "CSE_ID";
 
         String name = request.getResourceName();
-        if (baseCseBlackList.contains(name)) {
-            LOG.debug("BaseCSE name ({}) at blacklist, skipping", name);
-            return;
-        }
-
-        //String operation = request.getPrimitive(RequestPrimitive.OPERATION);
         String operation = null;
         CseRoutingDataBase result = null;
         if (request.isCreate) { operation = Onem2m.Operation.CREATE; }

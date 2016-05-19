@@ -37,8 +37,9 @@ public class ResponsePrimitive extends BasePrimitive {
     public static final String ORIGINATING_TIMESTAMP = "ot";
     public static final String RESULT_EXPIRATION_TIMESTAMP = "rset";
     public static final String EVENT_CATEGORY = "ec";
+    public static final String CONTENT_FORMAT = "content_format";
     public static final String HTTP_CONTENT_TYPE = "http_content_type";
-    public static final String HTTP_CONTENT_LOCATION = "http_content_location";
+    public static final String CONTENT_LOCATION = "onem2m_content_location";
 
     public ResponsePrimitive() {
         super();
@@ -46,7 +47,7 @@ public class ResponsePrimitive extends BasePrimitive {
 
     public void setRSC(String rsc, String content) { //throws Onem2mRSCException {
         this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc);
-        //this.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+        this.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
         this.setPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE, Onem2m.ContentType.APP_VND_RES_JSON);
         this.setPrimitive(ResponsePrimitive.CONTENT, JsonUtils.put(new JSONObject(), "error", content).toString());
         //throw new Onem2mRSCException();
