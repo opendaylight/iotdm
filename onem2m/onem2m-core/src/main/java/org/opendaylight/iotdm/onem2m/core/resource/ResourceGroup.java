@@ -102,6 +102,7 @@ public class ResourceGroup {
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     } else {
+                        resourceContent.getInJsonContent().remove(key);
                         JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
@@ -141,6 +142,7 @@ public class ResourceGroup {
                 // default attributes in ResourceContent
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -240,11 +242,6 @@ public class ResourceGroup {
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
-//            // may have to remove content instances as mbs and mni may have been reduced
-//            ResourceGroup.checkAndFixCurrMaxRules(onem2mRequest.getPrimitive(RequestPrimitive.TO));
-//            Onem2mResource containerResource = Onem2mDb.getInstance().getResource(onem2mRequest.getResourceId());
-//            onem2mRequest.setOnem2mResource(containerResource);
-//            onem2mRequest.setJsonResourceContent(containerResource.getResourceContentJsonString());
         }
     }
 
@@ -266,7 +263,7 @@ public class ResourceGroup {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);

@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.IPAddressVidator;
@@ -173,12 +174,6 @@ public class ResourceAccessControlPolicy {
                                                                             return;
                                                                         } else {
                                                                             String ipv4Address = ipv4Array.optString(j);
-//                                                                            if (!InetAddressValidator.getInstance().isValidInet4Address(ipv4Address)) {
-//                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ")" + ipv4Address+ "id not a valid Ipv4 address.");
-//                                                                                return;
-//                                                                            }
-
                                                                             if (!IPAddressVidator.isIpv4Address(ipv4Address)) {
                                                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                         "PRIVILEGES("  + IP_V4_ADDRESSES+ ") : "  + ipv4Address+ " is not a valid Ipv4 address.");
@@ -204,15 +199,9 @@ public class ResourceAccessControlPolicy {
                                                                             return;
                                                                         } else {
                                                                             String ipv6Address = ipv6Array.optString(j);
-//                                                                            InetAddressValidator validator = new InetAddressValidator();
-//                                                                            if (!validator.isValidInet6Address(ipv6Address)) {
-//                                                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ")" + ipv6Address+ "id not a valid Ipv4 address.");
-//                                                                                return;
-//                                                                            }
                                                                             if (!IPAddressVidator.isIpv6Address(ipv6Address)) {
                                                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                                                                        "PRIVILEGES("  + IP_V4_ADDRESSES+ ") : " + ipv6Address+ " is not a valid Ipv4 address.");
+                                                                                        "PRIVILEGES("  + IP_V6_ADDRESSES+ ") : " + ipv6Address+ " is not a valid Ipv6 address.");
                                                                                 return;
                                                                             }
                                                                         }
@@ -291,21 +280,6 @@ public class ResourceAccessControlPolicy {
                                         }
                                         break;
                                     case ACCESS_CONTROL_OPERATIONS:
-//                                        if (!(p instanceof JSONArray)) {
-//                                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                    "PRIVILEGES(" + ACCESS_CONTROL_OPERATIONS + ")  array expected for json key: " + ruleKey);
-//                                        }
-//                                        List<Integer> operationList = new ArrayList<>();
-//                                        JSONArray operationArray = (JSONArray) p;
-//                                        for (int j = 0; j < operationArray.length();j ++){
-//                                            if (!(operationArray.get(j) instanceof Integer)) {
-//                                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-//                                                        "PRIVILEGES(" + ACCESS_CONTROL_OPERATIONS + ") Integer expected for json array: " + ruleKey);
-//                                            }
-//                                            operationList.add((Integer)operationArray.get(j));
-//                                        }
-//                                        break;
-
                                         if (!resourceContent.getInJsonContent().isNull(key)) {
                                             if (!(p instanceof Integer)) {
                                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -336,6 +310,7 @@ public class ResourceAccessControlPolicy {
                 break;
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -465,6 +440,7 @@ public class ResourceAccessControlPolicy {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
+        CheckAccessControlProcessor.handleSelfCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
