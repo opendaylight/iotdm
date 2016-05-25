@@ -37,10 +37,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
           <version>1.0.0-M1</version>
       </dependency>
       <dependency>
-          <groupId>org.eclipse.jetty.aggregate</groupId>
-          <artifactId>jetty-all-server</artifactId>
-          <!--<version>8.1.14.v20131031</version>-->
-          <version>8.1.15.v20140411</version>
+          <groupId>org.ops4j.pax.web</groupId>
+          <artifactId>pax-web-jetty-bundle</artifactId>
+          <version>3.2.6</version>
       </dependency>
     <!-- Testing Dependencies -->
     <dependency>
