@@ -9,6 +9,9 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
+import java.util.logging.StreamHandler;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -151,11 +154,19 @@ public class ResourceContentInstance  {
 
                 case CONTENT_INFO:
                 case ONTOLOGY_REF:
-                case CONTENT:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                            return;
+                        }
+                    }
+                    break;
+                case CONTENT:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof JSONObject || o instanceof String)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") String/Json Object expected for json key: " + key);
                             return;
                         }
                     }

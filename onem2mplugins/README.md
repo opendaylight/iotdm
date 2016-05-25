@@ -13,7 +13,7 @@ off to TSDR.
 
 The goal of some of the plugin's is to avoid having to write code.  The YANG files for each plugin allow a set of
 functionality to drive the plugin to behave in a certain way, to interact with the oneM2M resource tree, etc.  It might
-be possible to write plugin's this way.  However, you might have to write a custom plugin for your app.  It is up to 
+be possible to write plugin's this way.  However, you might have to write a custom plugin for your app.  It is up to
 you if you think the community will find your plugin useful.  If so, add it to the iotdm/onem2mplugins folder
 using the instructions: HowToAddANewOneM2MPlugin below.
 
@@ -51,11 +51,11 @@ when data store changes have occured.  See Onem2mTsdrProvider in the onem2mtsdr 
 Onem2mDatastoreListener is an example of a helper function/class that can be used to aid in writing your plugin.
 
      private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
- 
+
          public Onem2mDataStoreChangeHandler(DataBroker dataBroker) {
              super(dataBroker);
          }
- 
+
          @Override
          public void onem2mResourceCreated(String hierarchicalResourceName, Onem2mResource onem2mResource) {
              LOG.info("Onem2mTsdrProvider: onem2mResourceCreated h={}, id:{}, type:{}",
@@ -64,7 +64,7 @@ Onem2mDatastoreListener is an example of a helper function/class that can be use
                      onem2mResource.getResourceType());
              // handle the create ...
          }
- 
+
          @Override
          public void onem2mResourceChanged(String hierarchicalResourceName, Onem2mResource onem2mResource) {
              LOG.info("Onem2mTsdrProvider: onem2mResourceChanged h={}, id:{}, type:{}",
@@ -73,7 +73,7 @@ Onem2mDatastoreListener is an example of a helper function/class that can be use
                      onem2mResource.getResourceType());
              // handle the change
          }
- 
+
          @Override
          public void onem2mResourceDeleted(String hierarchicalResourceName, Onem2mResource onem2mResource) {
              LOG.info("Onem2mTsdrProvider: onem2mResourceDeleted h={}, id:{}, type:{}",
@@ -83,33 +83,33 @@ Onem2mDatastoreListener is an example of a helper function/class that can be use
              // handle the delete
          }
      }
-     
+
 # How to Write a onem2m plugin
 
 First of all, plugin's and apps are generated using a maven archetype.  The archetype is used to generate a base
 ODL project with all the required directories.
 
-To get the latest iotdm software, 
+To get the latest iotdm software,
 
     cd /to/your/project/directory
-    
+
 If you do not already have iotdm:
 
     git clone https://git.opendaylight.org/gerrit/p/iotdm.git
     cd iotdm
-    
+
 If you already have iotdm,
 
     cd iotdm
     git pull
-    
+
 To work on a particular branch, perform one of the following commands ... note the master branch is Boron at the time
 of this writing.  There was no plugin infrastructure in the lithium release.
 
     git checkout master
     git checkout stable/beryllium
-    
-    
+
+
 ## Running the archetype
 
 Please read this section before running any of the commands as you might have to change the versions based on what
@@ -118,35 +118,35 @@ you are doing.
 Now cd into the onem2m-plugins folder, this is the root plugin folder and should contain this README.md :-)
 
     cd onem2mplugins
-    
+
 To generate a new onem2m plugin,
 
-For Boron, 
+For Boron,
 
     mvn archetype:generate -DarchetypeGroupId=org.opendaylight.controller \
     -DarchetypeArtifactId=opendaylight-startup-archetype \
     -DarchetypeVersion=1.2.0-SNAPSHOT \
     -DarchetypeRepository=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/ \
     -DarchetypeCatalog=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/archetype-catalog.xml
-    
-For Beryllium, 
+
+For Beryllium,
 
     mvn archetype:generate -DarchetypeGroupId=org.opendaylight.controller \
     -DarchetypeArtifactId=opendaylight-startup-archetype \
-    -DarchetypeVersion=1.1.2-SNAPSHOT \
+    -DarchetypeVersion=1.1.3-SNAPSHOT \
     -DarchetypeRepository=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/ \
     -DarchetypeCatalog=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/archetype-catalog.xml
-    
+
 Note the version numbers in the -DarchetypeVersion ... this is what determines which version of the archetype to
 generate for which release.  It it important the latest release snapshot is used so use the following link in your
 browser.
 
     http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/archetype-catalog.xml
-    
+
 And look for opendaylight-startup-archetype on the web page to see what the latest Boron or Beryllium release is
 available for the archetype.  Example: for Boron, above, 1.2.0 is the version of the archetype.  Look to see if there
 is a later release like 1.2.2.  If there is then change the mvn archetype command above to reflect the latest
-snapshot.
+snapshot. Note that the old versoin might still be there, use control+F to search and make sure use the latest version number.
 
 When you run the mvn archetype, it will prompt for information: respond as follows ... note that it is important
 to use no spaces between onem2m and your plugin.  The generated files will appear much better.  If you use
@@ -160,7 +160,7 @@ CamelCase ie Onem2mPluginName ...
     Define value for property 'package':  org.opendaylight.iotdm.onem2m<plugin-name> example: org.opendaylight.iotdm.onem2mtsdr
     Define value for property 'classPrefix':  Onem2m<PluginName> example: Onem2mTsdr
     Define value for property 'copyright': : Cisco Systems Inc
-    
+
 At this point, a directory structure should have been generated under a new directory called onem2m<plugin-name>,
 example: onem2mtsdr.
 
@@ -175,22 +175,22 @@ that exists, this manual set of instructions is your only choice.
 Add the following line, after the last repository statement.
 
         <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
-        
+
 Then add the following line,
 
         <feature version='${onem2m.version}'>odl-onem2m-core</feature>
-        
+
 just above this next line,
-        
+
         <bundle>mvn:org.opendaylight.iotdm/onem2m<plugin-name>-impl/{{VERSION}}</bundle>
-            
+
 Your file should look something like this:  note this is the sample file for the onem2mtsdr plugin
 
     <?xml version="1.0" encoding="UTF-8"?>
     <!-- vi: set et smarttab sw=4 tabstop=4: -->
     <!--
     Copyright © 2015 Cisco Systems, Inc and others. All rights reserved.
-    
+
     This program and the accompanying materials are made available under the
     terms of the Eclipse Public License v1.0 which accompanies this distribution,
     and is available at http://www.eclipse.org/legal/epl-v10.html
@@ -204,7 +204,7 @@ Your file should look something like this:  note this is the sample file for the
       <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
       <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
       <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
-    
+
       <feature name='odl-onem2mtsdr-api' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: api'>
         <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2mtsdr-api/{{VERSION}}</bundle>
@@ -226,7 +226,7 @@ Your file should look something like this:  note this is the sample file for the
         <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
         <feature version="${dlux.version}">odl-dlux-yangui</feature>
       </feature>
-    
+
     </features>
 
 Note: in the feature stanza above, the 'odl-onem2m-core' feature was added.  This gives your plugin onem2m-core
@@ -240,8 +240,8 @@ looking at other examples will help further your understanding of how features.x
 Add this line into the <properties> stanza where the other version statements are.  Note: the version number below
 should match the <version> from the iotdm/onem2m/onem2m-features/pom.xml
 
-      <onem2m.version>0.1.2-SNAPSHOT</onem2m.version>
-      
+      <onem2m.version>0.1.3-SNAPSHOT</onem2m.version>
+
 Then, add the following lines to the <dependencies> section,
 
     <dependency>
@@ -252,19 +252,19 @@ Then, add the following lines to the <dependencies> section,
           <type>xml</type>
           <scope>runtime</scope>
     </dependency>
-    
+
 ### Edit file iotdm/onem2m_plugins/onem2m_<plugin-name>/impl/pom.xml
 
-Add the following lines to the <dependencies> section, note the 0.1.1-SNAPSHOT should match the <version>
+Add the following lines to the <dependencies> section, note the 0.1.3-SNAPSHOT should match the <version>
 from the iotdm/onem2m/onem2m-features/pom.xml.
 
       <dependency>
           <groupId>org.opendaylight.iotdm</groupId>
           <artifactId>onem2m-core</artifactId>
-          <version>0.1.2-SNAPSHOT</version>
+          <version>0.1.3-SNAPSHOT</version>
       </dependency>
 
-At this point, you might want to build your plugin using 'mvn clean install -SkipTests'.  It should be successful,
+At this point, you might want to build your plugin using 'mvn clean install -DskipTests'.  It should be successful,
 if not, look at the reasons the build is failing and fix the issues.
 
 Now your are ready to write the rest of your plugin.  Again, looking at other plugin's helps.  Don't forget to
@@ -278,21 +278,21 @@ file for the iotdm/onem2mall project.  You will see examples of teh other plugin
 
 
 
-    
-
-    
 
 
 
-    
-    
-    
-    
-    
 
 
 
-    
+
+
+
+
+
+
+
+
+
 
 
 

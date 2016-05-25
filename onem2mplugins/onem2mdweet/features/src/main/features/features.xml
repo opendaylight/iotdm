@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- vi: set et smarttab sw=4 tabstop=4: -->
 <!--
-Copyright © 2015 Cisco Systems, Inc and others. All rights reserved.
+Copyright © 2015 Cisco System Inc and others. All rights reserved.
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
-<features name="odl-onem2msimpleadapter-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+<features name="odl-onem2mdweet-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
   <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
@@ -16,25 +16,28 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
+  <!--<repository>mvn:org.opendaylight.dweet/features-dweet/{{VERSION}}/xml/features</repository>-->
 
-  <feature name='odl-onem2msimpleadapter-api' version='${project.version}' description='OpenDaylight :: onem2msimpleadapter :: api'>
+
+  <feature name='odl-onem2mdweet-api' version='${project.version}' description='OpenDaylight :: onem2mdweet :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
-    <bundle>mvn:org.opendaylight.iotdm/onem2msimpleadapter-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.iotdm/onem2mdweet-api/{{VERSION}}</bundle>
   </feature>
-  <feature name='odl-onem2msimpleadapter' version='${project.version}' description='OpenDaylight :: onem2msimpleadapter'>
+  <feature name='odl-onem2mdweet' version='${project.version}' description='OpenDaylight :: onem2mdweet'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='${project.version}'>odl-onem2msimpleadapter-api</feature>
+    <feature version='${project.version}'>odl-onem2mdweet-api</feature>
     <feature version='${onem2m.version}'>odl-onem2m-core</feature>
     <feature version='${onem2m.version}'>odl-onem2m-http</feature>
-    <bundle>mvn:org.opendaylight.iotdm/onem2msimpleadapter-impl/{{VERSION}}</bundle>
-    <configfile finalname="${configfile.directory}/onem2msimpleadapter.xml">mvn:org.opendaylight.iotdm/onem2msimpleadapter-impl/{{VERSION}}/xml/config</configfile>
+    <!--<feature version='${dweet.version}'>odl-dweet-core</feature>-->
+    <bundle>mvn:org.opendaylight.iotdm/onem2mdweet-impl/{{VERSION}}</bundle>
+    <configfile finalname="${configfile.directory}/onem2mdweet.xml">mvn:org.opendaylight.iotdm/onem2mdweet-impl/{{VERSION}}/xml/config</configfile>
   </feature>
-  <feature name='odl-onem2msimpleadapter-rest' version='${project.version}' description='OpenDaylight :: onem2msimpleadapter :: REST'>
-    <feature version="${project.version}">odl-onem2msimpleadapter</feature>
+  <feature name='odl-onem2mdweet-rest' version='${project.version}' description='OpenDaylight :: onem2mdweet :: REST'>
+    <feature version="${project.version}">odl-onem2mdweet</feature>
     <feature version="${restconf.version}">odl-restconf</feature>
   </feature>
-  <feature name='odl-onem2msimpleadapter-ui' version='${project.version}' description='OpenDaylight :: onem2msimpleadapter :: UI'>
-    <feature version="${project.version}">odl-onem2msimpleadapter-rest</feature>
+  <feature name='odl-onem2mdweet-ui' version='${project.version}' description='OpenDaylight :: onem2mdweet :: UI'>
+    <feature version="${project.version}">odl-onem2mdweet-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
     <feature version="${dlux.version}">odl-dlux-yangui</feature>
