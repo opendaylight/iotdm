@@ -1,0 +1,21 @@
+module onem2mdweet {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mdweet";
+    prefix "onem2mdweet";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2mdweet model";
+    }
+
+
+    container onem2m-dweet-config {
+
+        list onem2m-target-desc {
+            key onem2m-target-id;
+            leaf onem2m-target-id {
+                type string;
+                description "onem2m hierarchical resource name";
+            }
+        }
+    }
+}
