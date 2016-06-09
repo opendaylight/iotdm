@@ -117,9 +117,15 @@ public class ResultContentProcessor {
             case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES:
                 if (onem2mRequest.getFUDiscovery()) {
                     discoveryJsonResultContentAttributesAndChildResources(onem2mRequest, onem2mResource, onem2mResponse, ja);
+                    if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                        return;
+                    }
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
                     produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                        return;
+                    }
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
                     temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     if (temp != null) jo = temp;
@@ -130,9 +136,15 @@ public class ResultContentProcessor {
             case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
                 if (onem2mRequest.getFUDiscovery()) {
                     discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, ja, true);
+                    if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                        return;
+                    }
                     onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT, ja.toString());
                 } else {
                     produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+                        return;
+                    }
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
                     temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
                     if (temp != null) jo = temp;
