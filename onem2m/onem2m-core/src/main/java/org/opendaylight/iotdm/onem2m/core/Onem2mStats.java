@@ -87,8 +87,18 @@ public class Onem2mStats {
     public static final int RESOURCE_REMOTE_CSE_UPDATE = 58;
     public static final int RESOURCE_REMOTE_CSE_DELETE = 59;
 
+    public static final int RESOURCE_MGMT_OBJECT_CREATE = 60;
+    public static final int RESOURCE_MGMT_OBJECT_RETRIEVE = 61;
+    public static final int RESOURCE_MGMT_OBJECT_UPDATE = 62;
+    public static final int RESOURCE_MGMT_OBJECT_DELETE = 63;
+
+    public static final int RESOURCE_FLEX_CONTAINER_CREATE = 64;
+    public static final int RESOURCE_FLEX_CONTAINER_RETRIEVE = 65;
+    public static final int RESOURCE_FLEX_CONTAINER_UPDATE = 66;
+    public static final int RESOURCE_FLEX_CONTAINER_DELETE = 67;
+
     // this should be the latest entry one plus 1
-    private static final int MAX_STATS = 60;
+    private static final int MAX_STATS = 68;
 
     private static Onem2mStats s;
 
