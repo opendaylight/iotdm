@@ -87,6 +87,8 @@ public class Onem2m {
         public static final String GROUP = "9"; //"grp";
         public static final String ACCESS_CONTROL_POLICY = "1"; //"acp";
         public static final String REMOTE_CSE = "16"; //"csr";
+        public static final String MGMT_OBJECT = "13";
+        public static final String FLEX_CONTAINER = "24";
     }
     public class ResourceTypeString {
         public static final String AE = "ae";
@@ -98,6 +100,8 @@ public class Onem2m {
         public static final String GROUP = "grp";
         public static final String ACCESS_CONTROL_POLICY = "acp";
         public static final String REMOTE_CSE = "csr";
+        public static final String MGMT_OBJECT = "mgo";
+        public static final String FLEX_CONTAINER = "flex";
     }
 
     public class CseType {
@@ -117,7 +121,36 @@ public class Onem2m {
         put(ResourceType.GROUP, ResourceTypeString.GROUP);
         put(ResourceType.ACCESS_CONTROL_POLICY, ResourceTypeString.ACCESS_CONTROL_POLICY);
         put(ResourceType.REMOTE_CSE, ResourceTypeString.REMOTE_CSE);
+        put(ResourceType.MGMT_OBJECT, ResourceTypeString.MGMT_OBJECT);
+        put(ResourceType.FLEX_CONTAINER, ResourceTypeString.FLEX_CONTAINER);
     }};
+
+    /*
+     * Specialized Resources
+     */
+
+    public class SpecializedResource {
+
+        public static final String FIRMWARE = "1001";
+        public static final String SOFTWARE = "1002";
+    }
+
+    public class Firmware {
+
+        public static final String VERSION = "vr";
+        public static final String FIRMWARE_NAME = "fwr";
+        public static final String URL = "url";
+        public static final String UPDATE = "ud";
+    }
+
+    /*
+     * Flex Container
+     */
+
+    public class Resource_Flex_Container {
+
+        public static final String DEVICE = "device";
+    }
 
     public class ResponseType { // TS0001 section 8.2.1
         public static final String NON_BLOCKING_REQUEST_SYNCH = "1";
