@@ -73,6 +73,14 @@ public class ResourceContentProcessor {
                 ResourceRemoteCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_CREATE);
                 break;
+            case Onem2m.ResourceType.MGMT_OBJECT:
+                ResourceMgmtObject.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_MGMT_OBJECT_CREATE);
+                break;
+            case Onem2m.ResourceType.FLEX_CONTAINER:
+                ResourceFContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_FLEX_CONTAINER_CREATE);
+                break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
@@ -116,6 +124,12 @@ public class ResourceContentProcessor {
                 break;
             case Onem2m.ResourceType.REMOTE_CSE:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_RETRIEVE);
+                break;
+            case Onem2m.ResourceType.MGMT_OBJECT:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_MGMT_OBJECT_RETRIEVE);
+                break;
+            case Onem2m.ResourceType.FLEX_CONTAINER:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_FLEX_CONTAINER_RETRIEVE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
@@ -176,6 +190,14 @@ public class ResourceContentProcessor {
                 ResourceRemoteCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_UPDATE);
                 break;
+            case Onem2m.ResourceType.MGMT_OBJECT:
+                ResourceMgmtObject.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_MGMT_OBJECT_UPDATE);
+                break;
+            case Onem2m.ResourceType.FLEX_CONTAINER:
+                ResourceFContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_FLEX_CONTAINER_UPDATE);
+                break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not implemented (" + resourceType + ")");
@@ -219,6 +241,12 @@ public class ResourceContentProcessor {
                 break;
             case Onem2m.ResourceType.REMOTE_CSE:
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_DELETE);
+                break;
+            case Onem2m.ResourceType.MGMT_OBJECT:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_MGMT_OBJECT_DELETE);
+                break;
+            case Onem2m.ResourceType.FLEX_CONTAINER:
+                Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_FLEX_CONTAINER_DELETE);
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
