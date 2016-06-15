@@ -13,11 +13,12 @@ import com.google.common.util.concurrent.Monitor;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
+import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
-import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -38,12 +39,17 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private DataBroker dataBroker;
     private Onem2mStats stats;
     private Onem2mDb db;
-    private static NotificationProviderService notifierService;
+    private static NotificationPublishService notifierService;
+
+
+
+
     private Monitor crudMonitor;
     private static Onem2mRouterService routerService;
 
-    public static NotificationProviderService getNotifier() {
+    public static NotificationPublishService getNotifier() {
         return Onem2mCoreProvider.notifierService;
+
     }
 
     /**
@@ -54,7 +60,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public void onSessionInitiated(ProviderContext session) {
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
-        this.notifierService = session.getSALService(NotificationProviderService.class);
+        this.notifierService = session.getSALService(NotificationPublishService.class);
         crudMonitor = new Monitor();
         this.routerService = Onem2mRouterService.getInstance();
 
@@ -110,6 +116,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         //LOG.info("RPC: begin handle op ...");
 
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
+        // todo: if it is a group/fanoutpoint, new a GroupRequestPrimitiveProcessor then called a lot of single processor?
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         ResponsePrimitive onem2mResponse = null;
         onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
@@ -250,8 +257,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     /**
      * This is a generic debug function ... it allows input and output parameters
-     * @param input
-     * @return
+     * @param input Onem2mDebugInput
+     * @return returnRPC
      */
     @Override
     public Future<RpcResult<Onem2mDebugOutput>> onem2mDebug(Onem2mDebugInput input) {

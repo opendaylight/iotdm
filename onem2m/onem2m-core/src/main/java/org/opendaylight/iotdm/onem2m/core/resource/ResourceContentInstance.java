@@ -17,6 +17,7 @@ import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
+import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,16 @@ public class ResourceContentInstance  {
 
         }
 
+        // set the ExpirationTime to the minimum value, curruntTime + parent container's maxInstanceAge
+        Integer mia = containerResourceContent.optInt(ResourceContainer.MAX_INSTANCE_AGE, -1);
+        if (mia != -1) {
+            String minExpTime = Onem2mDateTime.addAgeToCurTime(mia);
+            String cinExpTime = onem2mRequest.getResourceContent().getInJsonContent().optString(ResourceContent.EXPIRATION_TIME);
+            if ( cinExpTime!= null && Onem2mDateTime.dateCompare(minExpTime, cinExpTime) < 0) {
+                JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.EXPIRATION_TIME, minExpTime);
+            }
+        }
+
         ResourceContainer.setCurrValuesForThisCreatedContentInstance(onem2mRequest, containerResourceContent,
                 newByteSize);
 
@@ -154,14 +165,11 @@ public class ResourceContentInstance  {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
-                    } else {
-                        resourceContent.getInJsonContent().remove(key);
-                        JsonUtils.put(resourceContent.getInJsonContent(), key,
-                                onem2mRequest.getPrimitive(RequestPrimitive.FROM));
                     }
                     break;
                 case ResourceContent.LABELS:
                 case ResourceContent.EXPIRATION_TIME:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -173,6 +181,9 @@ public class ResourceContentInstance  {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
                     return;
+            }
+            if (resourceContent.jsonCreateKeys.contains(CREATOR)) {
+                JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
             }
         }
     }
@@ -195,7 +206,7 @@ public class ResourceContentInstance  {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
