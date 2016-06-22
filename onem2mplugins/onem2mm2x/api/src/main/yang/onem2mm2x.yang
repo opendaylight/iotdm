@@ -1,0 +1,32 @@
+module onem2mm2x {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mm2x";
+    prefix "onem2mm2x";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2mm2x model";
+    }
+
+
+    container onem2m-m2x-config {
+
+        list onem2m-target-desc {
+            key onem2m-target-id;
+            leaf onem2m-target-id {
+                type string;
+                description "onem2m hierarchical resource name";
+            }
+        }
+
+        leaf m2x-device-id {
+            type string;
+            description "Device ID of M2X Device";
+        }
+
+        leaf m2x-api-key {
+            type string;
+            description "API key of M2X Device, will be used in the request header";
+        }
+    }
+
+}

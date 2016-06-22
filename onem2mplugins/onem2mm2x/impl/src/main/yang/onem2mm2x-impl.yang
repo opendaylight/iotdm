@@ -1,0 +1,35 @@
+module onem2mm2x-impl {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mm2x:impl";
+    prefix "onem2mm2x-impl";
+
+    import config { prefix config; revision-date 2013-04-05; }
+    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+
+    description
+        "Service definition for onem2mm2x project";
+
+    revision "2014-12-10" {
+        description
+            "Initial revision";
+    }
+
+    identity onem2mm2x {
+        base config:module-type;
+        config:java-name-prefix Onem2mM2x;
+    }
+
+    augment "/config:modules/config:module/config:configuration" {
+        case onem2mm2x {
+            when "/config:modules/config:module/config:type = 'onem2mm2x'";
+            container broker {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity md-sal-binding:binding-broker-osgi-registry;
+                    }
+                }
+            }
+        }
+    }
+}
