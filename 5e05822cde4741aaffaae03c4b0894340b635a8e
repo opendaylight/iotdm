@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba51214e_600d9490",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-23T15:39:59Z",
+      "side": 1,
+      "message": "If these are MGMT specific resourceTypes, is it better to store them into MGMT resource class?",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba51214e_e02084f9",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-23T15:39:59Z",
+      "side": 1,
+      "message": "Firmware is just one kind of resource, what about other resources?",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba51214e_803c2831",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceMgmtObject.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-23T15:39:59Z",
+      "side": 1,
+      "message": "if it is array:\ncheck format should like :\n\n                if (!resourceContent.getInJsonContent().isNull(key)) {\n                    if (!(o instanceof JSONArray)) {\n                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,\n                                \"CONTENT(\" + RequestPrimitive.CONTENT + \") array expected for json key: \" + key);\n                        return false;\n                    }\n                    JSONArray array \u003d (JSONArray) o;\n                    for (int i \u003d 0; i \u003c array.length(); i++) {\n                        if (!(array.opt(i) instanceof String)) {\n                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,\n                                    \"CONTENT(\" + RequestPrimitive.CONTENT + \") string expected for json array: \" + key);\n                            return false;\n                        }\n                    }\n                }\n                break;",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 22
+      },
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba51214e_40d7b0c1",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceMgmtObject.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-23T15:39:59Z",
+      "side": 1,
+      "message": "Check mgmtLink, if it is not point to a mgmt , return error.",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba51214e_00665851",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceMgmtObject.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-23T15:39:59Z",
+      "side": 1,
+      "message": "if mgd is null, return error",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba51214e_001818d2",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceMgmtObject.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-23T15:39:59Z",
+      "side": 1,
+      "message": "according to TS 1    9.6.15.2 , object ID cannot be updated, so should add check here, if not create but find objectID, return error,",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
