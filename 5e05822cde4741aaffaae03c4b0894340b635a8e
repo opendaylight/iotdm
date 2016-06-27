@@ -107,6 +107,23 @@
       "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a561d44_e668d089",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceMgmtObject.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-06-27T21:20:06Z",
+      "side": 1,
+      "message": "For example, you can add here \nThere are several more mgd except FIRMWARE.",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
     }
   ]
 }
