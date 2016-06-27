@@ -350,7 +350,7 @@ public class ResourceAccessControlPolicy {
 
         //check mandatory privileges and selfPrivileges
         String pv = resourceContent.getInJsonContent().optString(PRIVILIEGES, null);
-        if (pv == null) {
+        if (pv == null ||"".contentEquals(pv)) {
             if (onem2mRequest.isCreate) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "PRIVILEGES missing parameter");
                 return;
@@ -362,7 +362,7 @@ public class ResourceAccessControlPolicy {
         }
 
         String pvs = resourceContent.getInJsonContent().optString(SELF_PRIIVLIEGES, null);
-        if (pvs == null) {
+        if (pvs == null || pvs.contentEquals("")) {
             if (onem2mRequest.isCreate) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "SELF PRIVILEGES missing parameter");
                 return;
