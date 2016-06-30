@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9a561d44_436369b1",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 4942
+      },
+      "writtenOn": "2016-06-30T06:54:14Z",
+      "side": 1,
+      "message": "According to my understanding we should store resource types here for better management. If the approach is not right then what should i need to do here?",
+      "parentUuid": "ba51214e_600d9490",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba51214e_e02084f9",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2016-06-23T15:39:59Z",
       "side": 1,
       "message": "Firmware is just one kind of resource, what about other resources?",
+      "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a561d44_a37c0574",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 4942
+      },
+      "writtenOn": "2016-06-30T06:54:14Z",
+      "side": 1,
+      "message": "First we are trying to implement firmware resource for end to end testing.",
+      "parentUuid": "ba51214e_e02084f9",
       "revId": "5e05822cde4741aaffaae03c4b0894340b635a8e",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
