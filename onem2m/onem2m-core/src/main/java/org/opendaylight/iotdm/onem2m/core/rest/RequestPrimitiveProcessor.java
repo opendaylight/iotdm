@@ -22,6 +22,7 @@ import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -750,6 +751,20 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             return;
         }
 
+        // check parent Container disableRetrieval attribute
+        String rt = this.getOnem2mResource().getResourceType();
+        if ( rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+            String parentID = this.getOnem2mResource().getParentId();
+            Onem2mResource parentResource = Onem2mDb.getInstance().getResource(parentID);
+            JSONObject parentJsonObject = new JSONObject(parentResource.getResourceContentJsonString());
+            if (parentJsonObject.optBoolean(ResourceContainer.DISABLE_RETRIEVAL)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                        "Parent Container's disableRetrieval is set to true, cannot delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
+                return;
+            }
+        }
+
+
         CheckAccessControlProcessor.handleRetrieve(this, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
@@ -819,6 +834,19 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
                     "Not permitted to delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
             return;
+        }
+
+
+        // check parent Container disableRetrieval attribute
+        if (rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+            String parentID = this.getOnem2mResource().getParentId();
+            Onem2mResource parentResource = Onem2mDb.getInstance().getResource(parentID);
+            JSONObject parentJsonObject = new JSONObject(parentResource.getResourceContentJsonString());
+            if (parentJsonObject.optBoolean(ResourceContainer.DISABLE_RETRIEVAL)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+                        "Parent Container's disableRetrieval is set to true, cannot delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
+                return;
+            }
         }
 
         CheckAccessControlProcessor.handleDelete(this, onem2mResponse);

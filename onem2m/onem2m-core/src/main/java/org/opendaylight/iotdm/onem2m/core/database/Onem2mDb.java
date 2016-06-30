@@ -1297,6 +1297,8 @@ public class Onem2mDb implements TransactionChainListener {
                 Onem2mResource tempResource = getResource(resourceId);
                 Child child = dbResourceTree.retrieveChildByName(containerResourceId, tempResource.getName());
                 LOG.error("dumpContentInstancesForContainer: prev:{}, next:{} ", child.getPrevId(), child.getNextId());
+                deleteResourceUsingResource(tempResource);
+                // todo: find another way to improve the delete speed
                 resourceId = child.getNextId();
             }
             LOG.error("dumpContentInstancesForContainer: dumping latest to oldest: containerResourceUri:{}, containerId: {}, oldest={}, latest={}",
@@ -1305,9 +1307,14 @@ public class Onem2mDb implements TransactionChainListener {
             resourceId = containerOldestLatest.getLatestId();
             while (!resourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
                 Onem2mResource tempResource = getResource(resourceId);
+                // tempResource might be null, if all the cins are deleted in the previous step
+                if (tempResource == null) return;
                 Child child = dbResourceTree.retrieveChildByName(containerResourceId, tempResource.getName());
                 LOG.error("dumpContentInstancesForContainer: prev:{}, next:{} ", child.getPrevId(), child.getNextId());
+                deleteResourceUsingResource(tempResource);
+                // todo: find another way to improve the delete speed
                 resourceId = child.getPrevId();
+
             }
         }
     }

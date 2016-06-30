@@ -11,6 +11,7 @@ package org.opendaylight.iotdm.onem2m.core.resource;
 import java.util.*;
 
 import org.json.JSONArray;
+import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +96,9 @@ public class ResourceRemoteCse {
                 case CSE_TYPE:
                 case CSE_BASE:
                 case CSE_ID:
+                case M2M_EXT_ID:
+                case TRIGGER_RECIPIENT_ID:
+                case NODE_LINK:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                           onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -103,9 +107,7 @@ public class ResourceRemoteCse {
                          }
                        }
                     break;
-                case M2M_EXT_ID:
-                case TRIGGER_RECIPIENT_ID:
-                case NODE_LINK:
+
                 case REQUEST_REACHABILITY:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof Boolean)) {
@@ -117,23 +119,8 @@ public class ResourceRemoteCse {
                     break;
                 case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
                 case ResourceContent.EXPIRATION_TIME:
-                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
-                            resourceContent,
-                            onem2mResponse)) {
-                        return;
-                    }
-                    break;
-
-                case ResourceContent.CREATION_TIME:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
-                        if (!(o instanceof String)) {
-                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                            return;
-                        }
-                    }
-                    break;
                 case ResourceContent.LABELS:
+                case ResourceContent.RESOURCE_NAME:
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -260,7 +247,9 @@ public class ResourceRemoteCse {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+            return;
         resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
