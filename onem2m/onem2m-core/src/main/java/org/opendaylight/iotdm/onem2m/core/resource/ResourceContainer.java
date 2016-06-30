@@ -41,6 +41,8 @@ public class ResourceContainer {
     public static final String ONTOLOGY_REF = "or";
     public static final String LATEST = "la";
     public static final String OLDEST = "ol";
+    public static final String DISABLE_RETRIEVAL = "dt";
+    // todo change dt to correct name
 
     /**
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
@@ -93,7 +95,15 @@ public class ResourceContainer {
                         return;
                     }
                     break;
-
+                case DISABLE_RETRIEVAL:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof Boolean)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
+                            return;
+                        }
+                    }
+                    break;
                 case ONTOLOGY_REF:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
@@ -104,13 +114,9 @@ public class ResourceContainer {
                     }
                     break;
                 case ResourceContent.LABELS:
-
                 case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
-
                 case ResourceContent.EXPIRATION_TIME:
-
                 case ResourceContent.RESOURCE_NAME:
-
                     if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
                             resourceContent,
                             onem2mResponse)) {
@@ -157,7 +163,15 @@ public class ResourceContainer {
         }
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
+        // if update disableRetrieval to true, delete all the existing <cin>s
+        if (onem2mRequest.isUpdate) {
+            Boolean dt = resourceContent.getInJsonContent().optBoolean(DISABLE_RETRIEVAL);
+            if (dt) {
+                Onem2mDb.getInstance().dumpContentInstancesForContainer(onem2mRequest.getPrimitive(RequestPrimitive.TO));
+                JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_INSTANCES, 0);
+                JsonUtils.put(resourceContent.getInJsonContent(), CURR_BYTE_SIZE, 0);
+            }
+        }
         tempStr = resourceContent.getInJsonContent().optString(CREATOR, null);
         if (tempStr != null && !onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CREATOR cannot be updated");
