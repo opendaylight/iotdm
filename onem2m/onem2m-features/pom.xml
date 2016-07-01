@@ -28,8 +28,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <yangtools.version>1.0.0-SNAPSHOT</yangtools.version>
         <dlux.version>0.4.0-SNAPSHOT</dlux.version>
         <pax.web.version>3.2.6</pax.web.version>
-        <!--<californium.version>1.0.0-M3</californium.version>-->
-        <californium.version>1.0.0-M1</californium.version>
         <mqttclient.version>1.0.2</mqttclient.version>
         <joda.version>2.7</joda.version>
         <configfile.directory>etc/opendaylight/karaf</configfile.directory>
@@ -110,7 +108,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <dependency>
             <groupId>org.eclipse.californium</groupId>
             <artifactId>californium-osgi</artifactId>
-            <version>${californium.version}</version>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
