@@ -159,7 +159,7 @@ public class Onem2mCoapProvider extends CoapServer
             // according to the spec, the uri query string can contain in short form, the
             // resourceType, responseType, result persistence,  Delivery Aggregation, Result Content,
             // M3 Boolean
-            resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(options.getURIQueryString());
+            resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(options.getUriQueryString());
             if (resourceTypePresent && (null != resourceTypeOption)) {
                 // Resource type is set in query string and in the option as well,
                 // verify if values are equal
@@ -222,7 +222,7 @@ public class Onem2mCoapProvider extends CoapServer
                     return;
             }
 
-            clientBuilder.setTo(Onem2m.translateUriToOnem2m(options.getURIPathString())); // To/TargetURI
+            clientBuilder.setTo(Onem2m.translateUriToOnem2m(options.getUriPathString())); // To/TargetURI
             // M3 clientBuilder.setTo(options.getUriPathString()); // To/TargetURI // M3
 
             Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
@@ -510,11 +510,11 @@ public class Onem2mCoapProvider extends CoapServer
         // set all CoAP URI parts
         request.setURI(uriNextHop);
         OptionSet options = new OptionSet();
-        options.setURIHost(uriNextHop.getHost());
-        options.setURIPort(uriNextHop.getPort());
-        options.setURIPath(path);
+        options.setUriHost(uriNextHop.getHost());
+        options.setUriPort(uriNextHop.getPort());
+        options.setUriPath(path);
         if (null != query) {
-            options.setURIQuery(query);
+            options.setUriQuery(query);
         }
 
         // set next options
