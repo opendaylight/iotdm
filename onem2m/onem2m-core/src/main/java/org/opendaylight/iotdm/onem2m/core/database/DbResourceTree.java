@@ -8,15 +8,14 @@
 
 package org.opendaylight.iotdm.onem2m.core.database;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseListBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTreeBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
@@ -27,6 +26,10 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This class contain static functions invoked by the Onem2mDb class.  They are turn invoke the data store API
@@ -203,36 +206,6 @@ public class DbResourceTree {
         return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
     }
 
-//    /**
-//     * Retrieve the attr by name from the data store
-//     * @param resourceId resource id of the attr
-//     * @param attrName name of attr
-//     * @return Attr
-//     */
-//    public Attr retrieveAttrByName(String resourceId, String attrName) {
-//
-//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(Attr.class, new AttrKey(attrName));
-//
-//        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
-//    /**
-//     * Delete the attr by name from the data store
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrName name
-//     */
-//    public void deleteAttr(DbTransaction dbTxn, String resourceId, String attrName) {
-//
-//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(Attr.class, new AttrKey(attrName));
-//
-//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
     /**
      *
      * @param dbTxn transaction id
@@ -252,35 +225,6 @@ public class DbResourceTree {
         dbTxn.update(iid, onem2mResource, LogicalDatastoreType.OPERATIONAL);
     }
 
-//    /**
-//     *
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrSet updated memberList
-//     */
-//    public void updateAttrSet(DbTransaction dbTxn, String resourceId, AttrSet attrSet) {
-//
-//        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(AttrSet.class, attrSet.getKey());
-//
-//        dbTxn.create(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
-//    /**
-//     * Delete the attr by name from the data store
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrSetName name
-//     */
-//    public void deleteAttrSet(DbTransaction dbTxn, String resourceId, String attrSetName) {
-//
-//        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(AttrSet.class, new AttrSetKey(attrSetName));
-//
-//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-//    }
 
     /**
      * Retrieve the child using its resource name
