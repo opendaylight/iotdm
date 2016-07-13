@@ -1,0 +1,8 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+2: Jan Medved <jmedved@cisco.com>
+Verified+1: Jan Medved <jmedved@cisco.com>
+Submitted-by: Jan Medved <jmedved@cisco.com>
+Submitted-at: Wed, 13 Jul 2016 03:40:31 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/41741
+Project: iotdm
+Branch: refs/heads/stable/beryllium
