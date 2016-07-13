@@ -151,11 +151,19 @@ public class ResourceContentInstance  {
 
                 case CONTENT_INFO:
                 case ONTOLOGY_REF:
-                case CONTENT:
                     if (!resourceContent.getInJsonContent().isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                            return;
+                        }
+                    }
+                    break;
+                case CONTENT:
+                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                        if (!(o instanceof String) && !(o instanceof JSONObject)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                                    "CONTENT(" + RequestPrimitive.CONTENT + ") string/jsonobject expected for json key: " + key);
                             return;
                         }
                     }
