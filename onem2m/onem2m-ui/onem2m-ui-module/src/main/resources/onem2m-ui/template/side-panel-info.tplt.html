@@ -1,0 +1,54 @@
+<div ng-controller="SidePanelInfoCtrl as ctrl" class="h100" layout="column">
+    <div class="side-panel-top md-whiteframe-1dp" layout="row">
+        <div flex="30" class="h100" layout="row">
+            <div class="nav-tag icon-container" ng-click="ctrl.parent()" ng-hide="ctrl.isRoot()">
+                <span class="material-icons">chevron_left</span>
+            </div>
+            <div flex></div>
+        </div>
+        <div flex="40" class="title" layout="column">
+            <span class="title">{{ctrl.yourName()|shortToLong}}</span>
+        </div>
+        <div flex="30"></div>
+    </div>
+    <div class="side-panel-content md-whiteframe-1dp">
+        <div ng-if="ctrl.isArray(ctrl.yourself())">
+            <div ng-repeat="(name,value) in ctrl.yourself() as you" class="onem2m-input-container">
+                <span class="material-icons icons-right" ng-hide="ctrl.isValue(value)" ng-click="ctrl.children(name)">chevron_right</span>
+                <md-input-container ng-show="ctrl.isValue(value)" class="md-block">
+                    <label>{{$index}}</label>
+                    <input ng-model="value" disabled onem2m-input-component-custom="{{ctrl.yourName()}}">
+                </md-input-container>
+                <md-input-container ng-hide="ctrl.isValue(value)" class="md-block">
+                    <label>{{$index}}</label>
+                    <input disabled>
+                </md-input-container>
+                <md-tooltip md-direction="left" ng-if="ctrl.description(ctrl.yourself())">
+                    {{ctrl.description(ctrl.yourself())}}
+                </md-tooltip>
+            </div>
+        </div>
+        <div ng-if="!ctrl.isArray(ctrl.yourself())">
+            <div ng-repeat="(name,value) in ctrl.yourself() as you" class="onem2m-input-container">
+                <span class="material-icons icons-right" ng-hide="ctrl.isValue(value)" ng-click="ctrl.children(name)">chevron_right</span>
+                <md-input-container ng-show="ctrl.isValue(value)" class="md-block">
+                    <label>{{name|shortToLong}}</label>
+                    <input ng-model="value" disabled onem2m-input-component-custom="{{name}}">
+                    <md-tooltip md-direction="left">
+                        {{ctrl.description(name)}}
+                    </md-tooltip>
+                </md-input-container>
+                <md-input-container ng-hide="ctrl.isValue(value)" class="md-block">
+                    <label>{{name|shortToLong}}</label>
+                    <input disabled>
+                </md-input-container>
+                <md-tooltip md-direction="left" ng-if="ctrl.description(name)">
+                    {{ctrl.description(name)}}
+                </md-tooltip>
+            </div>
+        </div>
+    </div>
+    <div class="side-panel-bottom md-whiteframe-1dp breadcrumb">
+        <a ng-repeat="value in ctrl.path" ng-click="ctrl.ancestor($index)">{{value|shortToLong}}</a>
+    </div>
+</div>
