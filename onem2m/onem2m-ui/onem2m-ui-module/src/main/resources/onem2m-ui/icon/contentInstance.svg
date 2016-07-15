@@ -1,0 +1,18 @@
+
+<svg width="72px" height="72px" viewBox="-1 -1 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.7.2 (28276) - http://www.bohemiancoding.com/sketch -->
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="ContentInstance" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Oval-1" stroke="#979797" fill="#4990E2" cx="35" cy="35" r="35"></circle>
+        <g id="reverse" transform="translate(5.764706, 6.588235)">
+            <circle id="Oval-1" stroke="#979797" fill="#FFFFFF" cx="28.8235294" cy="28.8235294" r="28.8235294"></circle>
+            <g id="Group" transform="translate(8.235294, 8.235294)" fill="#4990E2">
+                <path d="M0.0990877634,0 L0.0990877634,41.1764706 L28.2179931,41.1764706 L41.0773828,31.4537815 L41.0773828,0 L0.0990877634,0 L0.0990877634,0 Z M2.27901856,1.75630252 L38.7763448,1.75630252 L38.7763448,30.2268908 L27.7555835,30.2268908 C27.0619692,30.2268908 26.6105694,30.6638655 26.6105694,31.1008403 L26.6105694,39.4201681 L2.27901856,39.4201681 L2.27901856,1.75630252 L2.27901856,1.75630252 Z M28.9116074,38.2016807 L28.9116074,31.8907563 L37.1799308,31.8907563 L28.9116074,38.2016807 L28.9116074,38.2016807 Z" id="Shape"></path>
+                <rect id="Rectangle-path" x="8.35640138" y="7.70588235" width="24.2214533" height="1.75630252"></rect>
+                <rect id="Rectangle-path" x="8.35640138" y="15.1596639" width="24.2214533" height="1.75630252"></rect>
+                <rect id="Rectangle-path" x="8.35640138" y="22.605042" width="24.2214533" height="1.75630252"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

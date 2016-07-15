@@ -91,6 +91,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
         <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
         <feature version="${dlux.version}">odl-dlux-all</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-ui-bundle/{{VERSION}}</bundle>
     </feature>
 
     <!--  The <karaf.localFeature> stanza in onem2m-karaf/pom.xml will boot karaf with the feature bundle specified -->

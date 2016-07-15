@@ -105,6 +105,15 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
                            HttpServletRequest httpRequest,
                            HttpServletResponse httpResponse) throws IOException, ServletException {
 
+            //Enable CROS request access
+            httpResponse.addHeader("Access-Control-Allow-Origin", "*");
+            httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
+            httpResponse.addHeader("Access-Control-Allow-Headers","X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC,Content-Type, Accept");
+            if(httpRequest.getMethod().equalsIgnoreCase("options")){
+                baseRequest.setHandled(true);
+                return;
+            }
+
             Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
             String headerValue;
 
@@ -220,9 +229,6 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
 
             // now place the fields from the onem2m result response back in the http fields, and send
             sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
-
-            httpResponse.addHeader("Access-Control-Allow-Origin", "*");
-            httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
 
             baseRequest.setHandled(true);
         }

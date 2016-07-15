@@ -20,6 +20,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>onem2m-core</module>
     <module>onem2m-notifier</module>
     <module>onem2m-protocols</module>
+    <module>onem2m-ui</module>
     <module>onem2m-karaf</module>
     <module>onem2m-features</module>
     <module>onem2m-artifacts</module>

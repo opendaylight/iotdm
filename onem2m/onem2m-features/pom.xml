@@ -175,5 +175,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <classifier>config</classifier>
             <type>xml</type>
         </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm</groupId>
+            <artifactId>onem2m-ui-bundle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
