@@ -1,0 +1,38 @@
+<div ng-controller="SidePanelRetrieveCSECtrl as ctrl" class="h100" layout="column">
+    <div class="side-panel-top md-whiteframe-1dp" layout="row">
+        <h3 flex="90" class="title">{{ctrl.allDescendant ? "Retrieve CSE With All Descendant" :"Retrieve CSE" }}</h3>
+        <md-switch ng-model="ctrl.allDescendant"></md-switch>
+    </div>
+    <div class="side-panel-content md-whiteframe-1dp">
+        <form name="form">
+            <md-input-container class="md-block">
+                <label>Host</label>
+                <div class="input">
+                    <input ng-model="ctrl.host" name="host" required>
+                </div>
+                <div class="error" ng-messages>
+                    <div ng-message="required">This is Mandatory!</div>
+                </div>
+            </md-input-container>
+            <md-input-container class="md-block">
+                <label>Port</label>
+                <div class="input">
+                    <input ng-model="ctrl.port" name="port" required>
+                </div>
+                <div class="error" ng-messages>
+                    <div ng-message="required">This is Mandatory!</div>
+                </div>
+            </md-input-container>
+            <md-input-container class="md-block">
+                <label>CSE Name</label>
+                <div class="input">
+                    <input ng-model="ctrl.CSEName" name="CSEName" required>
+                </div>
+                <div class="error" ng-messages>
+                    <div ng-message="required">This is Mandatory!</div>
+                </div>
+            </md-input-container>
+            <md-button ng-disabled="form.$invalid" class="md-raised md-primary submit" ng-click="ctrl.submit(ctrl.host,ctrl.port,ctrl.CSEName)">Submit</md-button>
+        </form>
+    </div>
+</div>

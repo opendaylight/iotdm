@@ -1,0 +1,21 @@
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+    <reference id="httpService" availability="mandatory" activation="eager" interface="org.osgi.service.http.HttpService"/>
+    <reference id="loader" availability="mandatory" activation="eager" interface="org.opendaylight.dlux.loader.DluxModuleLoader"/>
+
+    <bean id="bundle" init-method="initialize" destroy-method="clean" class="org.opendaylight.dlux.loader.DluxModule">
+        <property name="httpService" ref="httpService"/>
+        <property name="loader" ref="loader"/>
+        <property name="moduleName" value="onem2m-ui"/>
+        <property name="url" value="/src/app/onem2m-ui"/>
+        <property name="directory" value="/onem2m-ui"/>
+        <property name="requireJs" value="app/onem2m-ui/js/main"/>
+        <property name="angularJs" value="app.onem2m-ui"/>
+        <property name="cssDependencies">
+            <list>
+                <value>src/app/onem2m-ui/vendor/next-bower/css/next.css</value>
+                <value>vendor/angular-material/angular-material.css</value>
+                <value>src/app/onem2m-ui/css/app.css</value>
+            </list>
+        </property>
+    </bean>
+</blueprint>

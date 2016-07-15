@@ -1,0 +1,69 @@
+<div ng-controller="SidePanelCRUDCtrl as ctrl" layout="column" class="h100">
+    <div class="side-panel-top md-whiteframe-1dp" layout="row">
+        <div flex="30" class="h100" layout="row">
+            <div class="nav-tag icon-container" ng-click="ctrl.parent()" ng-hide="ctrl.isRoot()">
+                <span class="material-icons">chevron_left</span>
+            </div>
+            <div flex></div>
+        </div>
+        <div flex="40" class="title" layout="column">
+            <span class="title">{{ctrl.yourName()|shortToLong}}</span>
+            <span class="subtitle">{{ctrl.mode}}</span>
+        </div>
+        <div flex="30" layout="row" layout-align="center center">
+            <onem2m-slider flex modes="ctrl.modes" mode="ctrl.mode" min="ctrl.min" max="ctrl.max" ng-if="ctrl.hasMultipleModes"></onem2m-slider>
+            <md-switch ng-model="ctrl.advancedMode" ng-if="ctrl.hasTwoModes"></md-switch>
+        </div>
+    </div>
+    <div class="side-panel-content md-whiteframe-1dp">
+        <div ng-if="ctrl.isArray(ctrl.yourself())">
+            <div ng-repeat="(name,value) in ctrl.yourself() as you track by $index" class="onem2m-input-container" ng-if="!$last">
+
+                <div class="icons-right-top" layout="row">
+                    <span class="material-icons clear" ng-if="ctrl.isValue(value)" ng-click="you[name]=null">clear</span>
+                    <span class="material-icons" ng-click="ctrl.removeOneItem(name)">remove</span>
+                </div>
+                <div class="icons-right" layout="row">
+                    <span class="material-icons" ng-if="!ctrl.isValue(value)" ng-click="ctrl.children(name)">chevron_right</span>
+                </div>
+
+                <onem2m-input ng-model="you[name]" ng-if="ctrl.isValue(value)" label-name="{{$index}}" name="{{ctrl.yourName()}}"></onem2m-input>
+                <md-input-container ng-if="!ctrl.isValue(value)" class="md-block">
+                    <label>{{name|shortToLong}}</label>
+                    <input disabled>
+                </md-input-container>
+                <md-tooltip  md-direction="left" ng-if="ctrl.description(name)">
+                  {{ctrl.description(yourName())}}
+                </md-tooltip>
+            </div>
+            <section layout="row">
+                <md-button flex ng-click="ctrl.addOneItem()" class="md-raised" md-no-ink="true" md-ripple-size="full">+</md-button>
+                <md-button flex ng-click="ctrl.submit(ctrl.request)" class="md-raised md-primary" md-no-ink="true" md-ripple-size="full">Submit</md-button>
+            </section>
+        </div>
+        <div ng-if="!ctrl.isArray(ctrl.yourself())">
+            <div ng-repeat="(name,value) in ctrl.yourself() as you" class="onem2m-input-container">
+                <div class="icons-right-top" layout="row">
+                    <span class="material-icons clear" ng-if="ctrl.isValue(value)" ng-click="you[name]=null">clear</span>
+                </div>
+                <div class="icons-right" layout="row">
+                    <span class="material-icons" ng-if="!ctrl.isValue(value)" ng-click="ctrl.children(name)">chevron_right</span>
+                </div>
+                <onem2m-input ng-model="you[name]" ng-if="ctrl.isValue(value)" label-name="{{name}}" name="{{name}}"></onem2m-input>
+                <md-input-container ng-if="!ctrl.isValue(value)" class="md-block">
+                    <label>{{name|shortToLong}}</label>
+                    <input disabled>
+                </md-input-container>
+                <md-tooltip  md-direction="left" ng-if="ctrl.description(name)">
+                  {{ctrl.description(name)}}
+                </md-tooltip>
+            </div>
+            <section layout="row">
+                <md-button flex ng-click="ctrl.submit(ctrl.request)" class="md-raised md-primary" md-no-ink="true" md-ripple-size="full">Submit</md-button>
+            </section>
+        </div>
+    </div>
+    <div class="side-panel-bottom md-whiteframe-1dp breadcrumb">
+        <a ng-repeat="value in ctrl.path" ng-click="ctrl.ancestor($index)">{{value|shortToLong}}</a>
+    </div>
+</div>
