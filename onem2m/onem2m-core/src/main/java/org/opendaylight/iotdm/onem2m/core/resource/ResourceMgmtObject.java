@@ -18,217 +18,395 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ResourceMgmtObject {
-    private static final Logger LOG = LoggerFactory.getLogger(ResourceMgmtObject.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(ResourceMgmtObject.class);
 
-    private ResourceMgmtObject() {
-    }
+	private ResourceMgmtObject() {
+	}
 
-    public static final String MGMT_DEFINITION = "mgd";
-    public static final String OBJECT_ID = "obis";
-    public static final String OBJECT_PATH = "obps";
-    public static final String MGMT_LINK = "cmlk";
-    public static final String DESCRIPTION = "dc";
+	public static final String MGMT_DEFINITION = "mgd";
+	public static final String OBJECT_ID = "obis";
+	public static final String OBJECT_PATH = "obps";
+	public static final String MGMT_LINK = "cmlk";
+	public static final String DESCRIPTION = "dc";
 
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+	private static void parseJsonCreateUpdateContent(
+			RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+		ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
-        while (keys.hasNext()) {
-            String key = (String) keys.next();
+		Iterator<?> keys = resourceContent.getInJsonContent().keys();
+		while (keys.hasNext()) {
+			String key = (String) keys.next();
 
-            resourceContent.jsonCreateKeys.add(key); // this line is new
+			resourceContent.jsonCreateKeys.add(key); // this line is new
 
-            Object o = resourceContent.getInJsonContent().get(key);
+			Object o = resourceContent.getInJsonContent().get(key);
 
-            switch (key) {
+			switch (key) {
 
-            case MGMT_DEFINITION:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case OBJECT_ID:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case OBJECT_PATH:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case MGMT_LINK:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case DESCRIPTION:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
+			case MGMT_DEFINITION:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case OBJECT_ID:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case OBJECT_PATH:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case MGMT_LINK:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case DESCRIPTION:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
 
-            case Onem2m.Firmware.FIRMWARE_NAME:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case Onem2m.Firmware.VERSION:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case Onem2m.Firmware.URL:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
-            case Onem2m.Firmware.UPDATE:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
-                    if (!(o instanceof String)) {
-                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
-                        return;
-                    }
-                }
-                break;
+			case Onem2m.Firmware.FIRMWARE_NAME:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Firmware.VERSION:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Firmware.URL:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Firmware.UPDATE:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Software.SOFTWARE_NAME:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Software.VERSION:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Software.URL:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Software.UPDATE:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Memory.MEMORY_AVAILABLE:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
+			case Onem2m.Memory.MEMORY_TOTAL:
+				if (!resourceContent.getInJsonContent().isNull(key)) {
+					if (!(o instanceof String)) {
+						onem2mResponse
+								.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+										"CONTENT("
+												+ RequestPrimitive.CONTENT
+												+ ") string expected for json key: "
+												+ key);
+						return;
+					}
+				}
+				break;
 
-            case ResourceContent.LABELS:
-            case ResourceContent.EXPIRATION_TIME:
-                if (!ResourceContent.parseJsonCommonCreateUpdateContent(key, resourceContent, onem2mResponse)) {
-                    return;
-                }
-                break;
+			case ResourceContent.LABELS:
+			case ResourceContent.EXPIRATION_TIME:
+				if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
+						resourceContent, onem2mResponse)) {
+					return;
+				}
+				break;
 
-            // todo: will need to add "announceTo" "announceAttribute" later,
-            // currently we do not support that
+			// todo: will need to add "announceTo" "announceAttribute" later,
+			// currently we do not support that
 
-            default:
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
-                        + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
-                return;
-            }
-        }
-    }
+			default:
+				onem2mResponse.setRSC(
+						Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+						"CONTENT(" + RequestPrimitive.CONTENT
+								+ ") attribute not recognized: " + key);
+				return;
+			}
+		}
+	}
 
-    public static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+	public static void processCreateUpdateAttributes(
+			RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        if (onem2mRequest.isCreate) {
-            String parentResourceType = onem2mRequest.getOnem2mResource().getResourceType();
-            if (parentResourceType == null || !parentResourceType.contentEquals(Onem2m.ResourceType.NODE)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create MGMT OBJECT under this resource type: " + parentResourceType);
-                return;
-            }
-        }
-        // verify this resource can be created under the target resource
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+		if (onem2mRequest.isCreate) {
+			String parentResourceType = onem2mRequest.getOnem2mResource()
+					.getResourceType();
+			if (parentResourceType == null
+					|| !parentResourceType
+							.contentEquals(Onem2m.ResourceType.NODE)) {
+				onem2mResponse.setRSC(
+						Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
+						"Cannot create MGMT OBJECT under this resource type: "
+								+ parentResourceType);
+				return;
+			}
+		}
+		// verify this resource can be created under the target resource
+		ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
-        /**
-         * Check the mandotory attribtue's value
-         */
-        String mgd = resourceContent.getInJsonContent().optString(MGMT_DEFINITION, null);
+		/**
+		 * Check the mandotory attribtue's value
+		 */
+		String mgd = resourceContent.getInJsonContent().optString(
+				MGMT_DEFINITION, null);
 
-        /**
-         * Check the mandatory attribute's value
-         */
+		/**
+		 * Check the mandatory attribute's value for firmware
+		 */
 
-        String fwr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.FIRMWARE_NAME, null);
+		String fwnnm = resourceContent.getInJsonContent().optString(
+				Onem2m.Firmware.FIRMWARE_NAME, null);
+		String fvr = resourceContent.getInJsonContent().optString(
+				Onem2m.Firmware.VERSION, null);
+		String fud = resourceContent.getInJsonContent().optString(
+				Onem2m.Firmware.UPDATE, null);
+		String furl = resourceContent.getInJsonContent().optString(
+				Onem2m.Firmware.URL, null);
+		/**
+		 * Check the mandatory attribute's value for software
+		 */
+		String swnnm = resourceContent.getInJsonContent().optString(
+				Onem2m.Software.SOFTWARE_NAME, null);
+		String svr = resourceContent.getInJsonContent().optString(
+				Onem2m.Software.VERSION, null);
+		String sud = resourceContent.getInJsonContent().optString(
+				Onem2m.Software.UPDATE, null);
+		String surl = resourceContent.getInJsonContent().optString(
+				Onem2m.Software.URL, null);
 
-        String vr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.VERSION, null);
-        String ud = resourceContent.getInJsonContent().optString(Onem2m.Firmware.UPDATE, null);
-        String url = resourceContent.getInJsonContent().optString(Onem2m.Firmware.URL, null);
+		/**
+		 * Check the mandatory attribute's value for memory
+		 */
+		String mma = resourceContent.getInJsonContent().optString(
+				Onem2m.Memory.MEMORY_AVAILABLE, null);
+		String mmt = resourceContent.getInJsonContent().optString(
+				Onem2m.Memory.MEMORY_TOTAL, null);
 
-        switch (mgd) {
-        case Onem2m.SpecializedResource.FIRMWARE:
+		switch (mgd) {
+		case Onem2m.SpecializedResource.FIRMWARE:
 
-            if (onem2mRequest.isCreate && (vr == null || ud == null || url == null || fwr == null)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "vr,ud,url or fwr is missing ");
-                return;
-            }
-            break;
-        default:
+			if (onem2mRequest.isCreate
+					&& (fvr == null || fud == null || furl == null || fwnnm == null)) {
+				onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+						"vr,ud,url or fwr is missing ");
+				return;
+			}
+			break;
+		case Onem2m.SpecializedResource.SOFTWARE:
 
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Invalid parameters");
-            return;
+			if (onem2mRequest.isCreate
+					&& (svr == null || sud == null || surl == null || swnnm == null)) {
+				onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+						"svr,sud,surl or swnnm is missing ");
+				return;
+			}
+			break;
+		case Onem2m.SpecializedResource.Memory:
 
-        }
+			if (onem2mRequest.isCreate && (mma == null || mmt == null)) {
+				onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+						"mma or mmt is missing ");
+				return;
+			}
+			break;
+		default:
 
-        /**
-         * The resource has been filled in with any attributes that need to be
-         * written to the database
-         */
+			onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+					"Invalid parameters");
+			return;
 
-        if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
-                // TODO: what do we do now ... seems really bad ... keep stats
-                return;
-            }
-        } else {
-            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
-                // TODO: what do we do now ... seems really bad ... keep stats
-                return;
-            }
+		}
 
-        }
-    }
+		/**
+		 * The resource has been filled in with any attributes that need to be
+		 * written to the database
+		 */
 
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+		if (onem2mRequest.isCreate) {
+			if (!Onem2mDb.getInstance().createResource(onem2mRequest,
+					onem2mResponse)) {
+				onem2mResponse.setRSC(
+						Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+						"Cannot create in data store!");
+				// TODO: what do we do now ... seems really bad ... keep stats
+				return;
+			}
+		} else {
+			if (!Onem2mDb.getInstance().updateResource(onem2mRequest,
+					onem2mResponse)) {
+				onem2mResponse.setRSC(
+						Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+						"Cannot update the data store!");
+				// TODO: what do we do now ... seems really bad ... keep stats
+				return;
+			}
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-        /**
-         * Need to add a new resource in the "Onem2m.ResourceTypeString";
-         */
-        resourceContent.parse(Onem2m.ResourceTypeString.MGMT_OBJECT, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-            return;
+		}
+	}
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-                return;
-        }
+	public static void handleCreateUpdate(RequestPrimitive onem2mRequest,
+			ResponsePrimitive onem2mResponse) {
 
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
-            return;
-        ResourceMgmtObject.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+		ResourceContent resourceContent = onem2mRequest.getResourceContent();
+		/**
+		 * Need to add a new resource in the "Onem2m.ResourceTypeString";
+		 */
+		resourceContent.parse(Onem2m.ResourceTypeString.MGMT_OBJECT,
+				onem2mRequest, onem2mResponse);
+		if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+			return;
 
-    }
+		if (resourceContent.isJson()) {
+			parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
+			if (onem2mResponse
+					.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+				return;
+		}
+
+		resourceContent.processCommonCreateUpdateAttributes(onem2mRequest,
+				onem2mResponse);
+		if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+			return;
+		ResourceMgmtObject.processCreateUpdateAttributes(onem2mRequest,
+				onem2mResponse);
+
+	}
 }
-

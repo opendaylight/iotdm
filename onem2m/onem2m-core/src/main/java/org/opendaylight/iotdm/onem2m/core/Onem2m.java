@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.DoubleToLongFunction;
 
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -20,6 +21,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.primitives.UnsignedLong;
 
 import javax.annotation.Nonnull;
 
@@ -133,14 +136,29 @@ public class Onem2m {
 
         public static final String FIRMWARE = "1001";
         public static final String SOFTWARE = "1002";
+        public static final String Memory = "1003";
     }
 
     public class Firmware {
 
-        public static final String VERSION = "vr";
-        public static final String FIRMWARE_NAME = "fwr";
-        public static final String URL = "url";
-        public static final String UPDATE = "ud";
+        public static final String VERSION = "fvr";
+        public static final String FIRMWARE_NAME = "fwnnm";
+        public static final String URL = "furl";
+        public static final String UPDATE = "fud";
+    }
+    public class Software {
+
+        public static final String VERSION = "svr";
+        public static final String SOFTWARE_NAME = "swnnm";
+        public static final String URL = "surl";
+        public static final String UPDATE = "sud";
+
+    }
+    public class Memory {
+
+        public static final String MEMORY_AVAILABLE = "mma";
+        public static final String MEMORY_TOTAL = "mmt";
+
     }
 
     /*
