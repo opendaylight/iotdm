@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a561d44_a791449b",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-07-20T14:54:07Z",
+      "side": 1,
+      "message": "Do you use it in this class?",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 47
+      },
+      "revId": "3f9e5ca1c875eb769a286fbdb7ea2b9a3d08b042",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a561d44_878c0081",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-07-20T14:54:07Z",
+      "side": 1,
+      "message": "Do you use it in this class?",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 49
+      },
+      "revId": "3f9e5ca1c875eb769a286fbdb7ea2b9a3d08b042",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a561d44_4792e89f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-07-20T14:54:07Z",
+      "side": 1,
+      "message": "Same issue as below.",
+      "range": {
+        "startLine": 144,
+        "startChar": 8,
+        "endLine": 147,
+        "endChar": 50
+      },
+      "revId": "3f9e5ca1c875eb769a286fbdb7ea2b9a3d08b042",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a561d44_c786f864",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-07-20T14:54:07Z",
+      "side": 1,
+      "message": "I checked the latest TS4(2.6 \u0026 1.8)\nthe short name for these attributes are different:\nthere is no S in front of the name.\n(It seems they edit that again)",
+      "range": {
+        "startLine": 149,
+        "startChar": 5,
+        "endLine": 154,
+        "endChar": 50
+      },
+      "revId": "3f9e5ca1c875eb769a286fbdb7ea2b9a3d08b042",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a561d44_87e36032",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceMgmtObject.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 2602
+      },
+      "writtenOn": "2016-07-20T14:54:07Z",
+      "side": 1,
+      "message": "we use 4 spaces for the indentation.....Please fix that~",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 1
+      },
+      "revId": "3f9e5ca1c875eb769a286fbdb7ea2b9a3d08b042",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
