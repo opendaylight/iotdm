@@ -125,7 +125,60 @@ public class ResourceMgmtObject {
                     }
                 }
                 break;
-
+            case Onem2m.Software.SOFTWARE_NAME:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
+                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                }
+                break;
+            case Onem2m.Software.VERSION:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
+                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                }
+                break;
+            case Onem2m.Software.URL:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
+                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                }
+                break;
+            case Onem2m.Software.UPDATE:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
+                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                }
+                break;
+            case Onem2m.Memory.MEMORY_AVAILABLE:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
+                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                }
+                break;
+            case Onem2m.Memory.MEMORY_TOTAL:
+                if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!(o instanceof String)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
+                                + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
+                        return;
+                    }
+                }
+                break;
             case ResourceContent.LABELS:
             case ResourceContent.EXPIRATION_TIME:
                 if (!ResourceContent.parseJsonCommonCreateUpdateContent(key, resourceContent, onem2mResponse)) {
@@ -163,20 +216,49 @@ public class ResourceMgmtObject {
         String mgd = resourceContent.getInJsonContent().optString(MGMT_DEFINITION, null);
 
         /**
-         * Check the mandatory attribute's value
+         * Check the mandatory attribute's value for firmware
          */
 
-        String fwr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.FIRMWARE_NAME, null);
+        String fwnnm = resourceContent.getInJsonContent().optString(Onem2m.Firmware.FIRMWARE_NAME, null);
+        String fvr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.VERSION, null);
+        String fud = resourceContent.getInJsonContent().optString(Onem2m.Firmware.UPDATE, null);
+        String furl = resourceContent.getInJsonContent().optString(Onem2m.Firmware.URL, null);
 
-        String vr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.VERSION, null);
-        String ud = resourceContent.getInJsonContent().optString(Onem2m.Firmware.UPDATE, null);
-        String url = resourceContent.getInJsonContent().optString(Onem2m.Firmware.URL, null);
+        /**
+         * Check the mandatory attribute's value for software
+         */
+
+        String swnnm = resourceContent.getInJsonContent().optString(Onem2m.Software.SOFTWARE_NAME, null);
+        String svr = resourceContent.getInJsonContent().optString(Onem2m.Software.VERSION, null);
+        String sud = resourceContent.getInJsonContent().optString(Onem2m.Software.UPDATE, null);
+        String surl = resourceContent.getInJsonContent().optString(Onem2m.Software.URL, null);
+
+        /**
+         * Check the mandatory attribute's value for software
+         */
+
+        String mma = resourceContent.getInJsonContent().optString(Onem2m.Memory.MEMORY_AVAILABLE, null);
+        String mmt = resourceContent.getInJsonContent().optString(Onem2m.Memory.MEMORY_TOTAL, null);
 
         switch (mgd) {
         case Onem2m.SpecializedResource.FIRMWARE:
 
-            if (onem2mRequest.isCreate && (vr == null || ud == null || url == null || fwr == null)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "vr,ud,url or fwr is missing ");
+            if (onem2mRequest.isCreate && (fvr == null || fud == null || furl == null || fwnnm == null)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "fvr,fud,furl or fwnnm is missing ");
+                return;
+            }
+            break;
+        case Onem2m.SpecializedResource.SOFTWARE:
+
+            if (onem2mRequest.isCreate && (svr == null || sud == null || surl == null || swnnm == null)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "svr,sud,surl or swnnm is missing ");
+                return;
+            }
+            break;
+        case Onem2m.SpecializedResource.SOFTWARE:
+
+            if (onem2mRequest.isCreate && (mma == null || mmt == null)) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "mma or mmt is missing ");
                 return;
             }
             break;
