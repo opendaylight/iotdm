@@ -59,7 +59,9 @@ public class ResourceCse {
         a.put(Integer.valueOf(Onem2m.ResourceType.SUBSCRIPTION));
         a.put(Integer.valueOf(Onem2m.ResourceType.GROUP));
         a.put(Integer.valueOf(Onem2m.ResourceType.NODE));
+        a.put(Integer.valueOf(Onem2m.ResourceType.REMOTE_CSE));
         a.put(Integer.valueOf(Onem2m.ResourceType.ACCESS_CONTROL_POLICY));
+        a.put(Integer.valueOf(Onem2m.ResourceType.MGMT_OBJECT));
         JsonUtils.put(resourceContent.getInJsonContent(), SUPPORTED_RESOURCE_TYPES, a);
         /**
          * The resource has been filled in with any attributes that need to be written to the database
