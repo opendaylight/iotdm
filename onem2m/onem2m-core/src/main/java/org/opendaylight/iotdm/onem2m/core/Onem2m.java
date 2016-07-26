@@ -126,21 +126,38 @@ public class Onem2m {
     }};
 
     /*
-     * Specialized Resources
+     * Specialized Resources for ManagementObject
      */
 
     public class SpecializedResource {
 
+        // parent type is node
+        public static final String ACTIVE_CMDH_POLICY = "1012";
+        public static final String AREA_NWK_DEVICE_INFO = "1005";
+        public static final String AREA_NWK_INFO = "1004";
+        public static final String BATTERY = "1006";
+        public static final String CMDH_POLICY = "1011";
+        public static final String DEVICE_CAPABILITY = "1008";
+        public static final String DEVICE_INFO = "1007";
+        public static final String EVENT_LOG = "1010";
         public static final String FIRMWARE = "1001";
+        public static final String MEMORY = "1003";
+        public static final String REBOOT = "1009";
         public static final String SOFTWARE = "1002";
-    }
 
-    public class Firmware {
 
-        public static final String VERSION = "vr";
-        public static final String FIRMWARE_NAME = "fwr";
-        public static final String URL = "url";
-        public static final String UPDATE = "ud";
+        // parent is cmdhpolicy
+        public static final String CMDH_BUFFER = "1019";
+        public static final String CMDH_DEFAULTS = "1013";
+        public static final String CMDH_ECDEF_PARAM_VALUES = "1015";
+        public static final String CMDH_DEFEC_VALUE = "1014";
+        public static final String CMDG_LIMITS = "1016";
+        public static final String CMDH_NETWORK_ACCESS_RULES = "1017";
+
+        // parent is cmdhNetworkAccessRules
+        public static final String CMDH_NW_ACCESS_RULE = "1018";
+
+
     }
 
     /*
