@@ -37,17 +37,16 @@ import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterPlugin;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierPlugin;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
+import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlugin,
+public class Onem2mHttpProvider implements AbstractIotDMPlugin, Onem2mNotifierPlugin, Onem2mRouterPlugin,
                                            BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpProvider.class);
     protected Onem2mService onem2mService;
-    private Server server;
-    private final int PORT = 8282;
     private HttpClient client;
     private final String PLUGIN_NAME = "http";
 
@@ -57,27 +56,17 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
         Onem2mNotifierService.getInstance().pluginRegistration(this);
         Onem2mRouterService.getInstance().pluginRegistration(this);
 
-        try {
-            server.start();
-            client.start();
-        } catch (Exception e) {
-            LOG.info("Exception: {}", e.toString());
-        }
         LOG.info("Onem2mHttpProvider Session Initiated");
     }
 
     @Override
     public void close() throws Exception {
-        server.stop();
-        client.stop();
         LOG.info("Onem2mHttpProvider Closed");
     }
 
     public Onem2mHttpProvider() {
-        server = new Server(PORT);
-        server.setHandler(new MyHandler());
-        client = new HttpClient();
-
+        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+        mgr.registerPluginAtPort("http",this,8282,Onem2mPluginManager.Mode.Exclusive);
     }
 
     private String resolveContentFormat(String contentType) {
@@ -88,150 +77,158 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
         }
         return null;
     }
+public void handle(IotDMPluginRequest request, IotDMPluginResponse response){
+        HttpServletRequest httpRequest = ((IotDMPluginHttpRequest)request).getHttpRequest();
+        HttpServletResponse httpResponse = ((IotDMPluginHttpResponse)response).getHttpResponse();
 
-    public class MyHandler extends AbstractHandler {
 
-        /**
-         * The handler for the HTTP requesst
-         * @param target target
-         * @param baseRequest  request
-         * @param httpRequest  request
-         * @param httpResponse  response
-         * @throws IOException
-         * @throws ServletException
-         */
-        @Override
-        public void handle(String target, Request baseRequest,
-                           HttpServletRequest httpRequest,
-                           HttpServletResponse httpResponse) throws IOException, ServletException {
-
-            //Enable CROS request access
-            httpResponse.addHeader("Access-Control-Allow-Origin", "*");
-            httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
-            httpResponse.addHeader("Access-Control-Allow-Headers","X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC,Content-Type, Accept");
-            if(httpRequest.getMethod().equalsIgnoreCase("options")){
-                baseRequest.setHandled(true);
-                return;
-            }
-
-            Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
-            String headerValue;
-
-            clientBuilder.setProtocol(Onem2m.Protocol.HTTP);
-
-            Onem2mStats.getInstance().endpointInc(baseRequest.getRemoteAddr());
-            Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS);
-
-            String contentType = httpRequest.getContentType();
-            if (contentType == null) contentType = "json";
-            contentType = contentType.toLowerCase();
-            String contentFormat = resolveContentFormat(contentType);
-
-            if (null != contentFormat) {
-                clientBuilder.setContentFormat(contentFormat);
-            } else {
-                httpResponse.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-                httpResponse.getWriter().println("Unsupported media type: " + contentType);
-                httpResponse.setContentType("text/json;charset=utf-8");
-                baseRequest.setHandled(true);
-                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
-                return;
-            }
-
-            clientBuilder.setTo(Onem2m.translateUriToOnem2m(httpRequest.getRequestURI()));
-
-            // pull fields out of the headers
-            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
-            if (headerValue != null) {
-                clientBuilder.setFrom(headerValue);
-            }
-            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RI);
-            if (headerValue != null) {
-                clientBuilder.setRequestIdentifier(headerValue);
-            }
-            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_NM);
-            if (headerValue != null) {
-                clientBuilder.setName(headerValue);
-            }
-            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_GID);
-            if (headerValue != null) {
-                clientBuilder.setGroupRequestIdentifier(headerValue);
-            }
-            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RTU);
-            if (headerValue != null) {
-                clientBuilder.setResponseType(headerValue);
-            }
-            headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_OT);
-            if (headerValue != null) {
-                clientBuilder.setOriginatingTimestamp(headerValue);
-            }
-
-            // the contentType string can have ty=val attached to it so we should handle this case
-            Boolean resourceTypePresent = false;
-            String contentTypeResourceString = parseContentTypeForResourceType(contentType);
-            if (contentTypeResourceString != null) {
-                resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(contentTypeResourceString);
-            }
-            String method = httpRequest.getMethod().toLowerCase();
-            // look in query string if didnt find it in contentType header
-            if (!resourceTypePresent) {
-                resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
-            } else {
-                clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
-            }
-            if (resourceTypePresent && !method.contentEquals("post")) {
-                httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpResponse.getWriter().println("Specifying resource type not permitted.");
-                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
-                return;
-            }
-
-            // take the entire payload text and put it in the CONTENT field; it is the representation of the resource
-            String cn = IOUtils.toString(baseRequest.getInputStream()).trim();
-            if (cn != null && !cn.contentEquals("")) {
-                clientBuilder.setPrimitiveContent(cn);
-            }
-
-            switch (method) {
-                case "get":
-                    clientBuilder.setOperationRetrieve();
-                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_RETRIEVE);
-                    break;
-                case "post":
-                    if (resourceTypePresent) {
-                        clientBuilder.setOperationCreate();
-                        Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_CREATE);
-                    } else {
-                        clientBuilder.setOperationNotify();
-                        Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_NOTIFY);
-                    }
-                    break;
-                case "put":
-                    clientBuilder.setOperationUpdate();
-                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_UPDATE);
-                    break;
-                case "delete":
-                    clientBuilder.setOperationDelete();
-                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_DELETE);
-                    break;
-                default:
-                    httpResponse.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
-                    httpResponse.getWriter().println("Unsupported method type: " + method);
-                    httpResponse.setContentType("text/json;charset=utf-8");
-                    baseRequest.setHandled(true);
-                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
-                    return;
-            }
-
-            // invoke the service request
-            Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
-
-            // now place the fields from the onem2m result response back in the http fields, and send
-            sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
-
-            baseRequest.setHandled(true);
+        httpResponse.addHeader("Access-Control-Allow-Origin", "*");
+        httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
+        httpResponse.addHeader("Access-Control-Allow-Headers","X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC,Content-Type, Accept");
+        if(httpRequest.getMethod().equalsIgnoreCase("options")){
+            return;
         }
+
+        Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
+        String headerValue;
+
+        clientBuilder.setProtocol(Onem2m.Protocol.HTTP);
+
+        Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS);
+
+        String contentType = httpRequest.getContentType();
+        if (contentType == null) contentType = "json";
+        contentType = contentType.toLowerCase();
+        if (contentType.contains("json")) {
+            clientBuilder.setContentFormat(Onem2m.ContentFormat.JSON);
+        } else if (contentType.contains("xml")) {
+            clientBuilder.setContentFormat(Onem2m.ContentFormat.XML);
+        } else {
+            httpResponse.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+            try {
+                httpResponse.getWriter().println("Unsupported media type: " + contentType);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            httpResponse.setContentType("text/json;charset=utf-8");
+
+            Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
+            return;
+        }
+
+        clientBuilder.setTo(httpRequest.getRequestURI());
+
+        // pull fields out of the headers
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
+        if (headerValue != null) {
+            clientBuilder.setFrom(headerValue);
+        }
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RI);
+        if (headerValue != null) {
+            clientBuilder.setRequestIdentifier(headerValue);
+        }
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_NM);
+        if (headerValue != null) {
+            clientBuilder.setName(headerValue);
+        }
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_GID);
+        if (headerValue != null) {
+            clientBuilder.setGroupRequestIdentifier(headerValue);
+        }
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RTU);
+        if (headerValue != null) {
+            clientBuilder.setResponseType(headerValue);
+        }
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_OT);
+        if (headerValue != null) {
+            clientBuilder.setOriginatingTimestamp(headerValue);
+        }
+
+        // the contentType string can have ty=val attached to it so we should handle this case
+        Boolean resourceTypePresent = false;
+        String contentTypeResourceString = parseContentTypeForResourceType(contentType);
+        if (contentTypeResourceString != null) {
+            resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(contentTypeResourceString);
+        }
+        String method = httpRequest.getMethod().toLowerCase();
+        // look in query string if didnt find it in contentType header
+        if (!resourceTypePresent) {
+            resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+        } else {
+            clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+        }
+        if (resourceTypePresent && !method.contentEquals("post")) {
+            httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            try {
+                httpResponse.getWriter().println("Specifying resource type not permitted.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
+            return;
+        }
+
+        // take the entire payload text and put it in the CONTENT field; it is the representation of the resource
+        String cn = request.getPayLoad();
+        if (cn != null && !cn.contentEquals("")) {
+            clientBuilder.setPrimitiveContent(cn);
+        }
+
+        switch (method) {
+            case "get":
+                clientBuilder.setOperationRetrieve();
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_RETRIEVE);
+                break;
+            case "post":
+                if (resourceTypePresent) {
+                    clientBuilder.setOperationCreate();
+                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_CREATE);
+                } else {
+                    clientBuilder.setOperationNotify();
+                    Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_NOTIFY);
+                }
+                break;
+            case "put":
+                clientBuilder.setOperationUpdate();
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_UPDATE);
+                break;
+            case "delete":
+                clientBuilder.setOperationDelete();
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_DELETE);
+                break;
+            default:
+                httpResponse.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
+                try {
+                    httpResponse.getWriter().println("Unsupported method type: " + method);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                httpResponse.setContentType("text/json;charset=utf-8");
+                //baseRequest.setHandled(true);
+                Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
+                return;
+        }
+
+        // invoke the service request
+        Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+
+        // now place the fields from the onem2m result response back in the http fields, and send
+        try {
+            sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+    }
+
+
+
+
+
+
 
         private void sendHttpResponseFromOnem2mResponse(HttpServletResponse httpResponse,
                                                         ResponsePrimitive onem2mResponse) throws IOException {
@@ -309,6 +306,20 @@ public class Onem2mHttpProvider implements Onem2mNotifierPlugin, Onem2mRouterPlu
             }
             return HttpServletResponse.SC_BAD_REQUEST;
         }
+
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void cleanup() {
+
+    }
+
+    @Override
+    public String pluginName() {
+        return "*";
     }
 
     // implement the Onem2mNotifierPlugin interface
