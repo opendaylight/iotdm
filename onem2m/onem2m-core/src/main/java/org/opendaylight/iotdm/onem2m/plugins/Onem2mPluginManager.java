@@ -210,9 +210,9 @@ class CoapServerProvider extends CoapServer {
         for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
             // only binds to IPv4 addresses and localhost
             if (addr instanceof Inet4Address || addr.isLoopbackAddress()) {
-                System.out.println("addr: "+addr.toString());
+                LOG.info("addr: "+addr.toString());
                 InetSocketAddress bindToAddress = new InetSocketAddress(addr, port);
-                System.out.println("bindToAddress: "+bindToAddress.toString());
+                LOG.info("bindToAddress: "+bindToAddress.toString());
                 addEndpoint(new CoAPEndpoint(bindToAddress));
             }
         }
