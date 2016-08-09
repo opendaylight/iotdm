@@ -27,9 +27,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <version>${project.version}</version>
         </dependency>
         <dependency>
-           <groupId>org.eclipse.californium</groupId>
-           <artifactId>californium-osgi</artifactId>
-           <version>1.0.0-M1</version>
+            <groupId>org.eclipse.californium</groupId>
+            <artifactId>californium-osgi</artifactId>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.aggregate</groupId>
