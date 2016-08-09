@@ -116,7 +116,7 @@ public void handle(IotDMPluginRequest request, IotDMPluginResponse response){
             return;
         }
 
-        clientBuilder.setTo(httpRequest.getRequestURI());
+        clientBuilder.setTo(Onem2m.translateUriToOnem2m(httpRequest.getRequestURI()));
 
         // pull fields out of the headers
         headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
