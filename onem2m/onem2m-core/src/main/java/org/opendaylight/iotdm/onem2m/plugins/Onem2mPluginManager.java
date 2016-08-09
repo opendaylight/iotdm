@@ -36,7 +36,7 @@ import org.eclipse.californium.core.coap.*;
 import org.eclipse.californium.core.network.Exchange;
 import org.eclipse.californium.core.server.resources.CoapExchange;
 import org.eclipse.californium.core.server.resources.Resource;
-import org.eclipse.californium.core.network.CoAPEndpoint;
+import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.EndpointManager;
 import org.eclipse.californium.core.network.config.NetworkConfig;
 
@@ -210,10 +210,10 @@ class CoapServerProvider extends CoapServer {
         for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
             // only binds to IPv4 addresses and localhost
             if (addr instanceof Inet4Address || addr.isLoopbackAddress()) {
-                System.out.println("addr: "+addr.toString());
+                LOG.info("addr: "+addr.toString());
                 InetSocketAddress bindToAddress = new InetSocketAddress(addr, port);
-                System.out.println("bindToAddress: "+bindToAddress.toString());
-                addEndpoint(new CoAPEndpoint(bindToAddress));
+                LOG.info("bindToAddress: "+bindToAddress.toString());
+                addEndpoint(new CoapEndpoint(bindToAddress));
             }
         }
     }
@@ -274,7 +274,7 @@ class CoapServerProvider extends CoapServer {
 
             Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
-            String tmpUrl = options.getURIPathString();
+            String tmpUrl = options.getUriPathString();
             LOG.info("Processed URL", tmpUrl);
             request.setUrl(tmpUrl);
             switch (code) {
