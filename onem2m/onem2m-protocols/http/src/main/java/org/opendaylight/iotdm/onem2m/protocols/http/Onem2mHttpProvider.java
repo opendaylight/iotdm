@@ -81,14 +81,6 @@ public void handle(IotDMPluginRequest request, IotDMPluginResponse response){
         HttpServletRequest httpRequest = ((IotDMPluginHttpRequest)request).getHttpRequest();
         HttpServletResponse httpResponse = ((IotDMPluginHttpResponse)response).getHttpResponse();
 
-
-        httpResponse.addHeader("Access-Control-Allow-Origin", "*");
-        httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
-        httpResponse.addHeader("Access-Control-Allow-Headers","X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC,Content-Type, Accept");
-        if(httpRequest.getMethod().equalsIgnoreCase("options")){
-            return;
-        }
-
         Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
         String headerValue;
 

@@ -371,9 +371,10 @@ class Onem2mHTTPProvider extends Onem2mBaseProvider {
 
         cors = context.addFilter(CrossOriginFilter.class, "*", EnumSet.of(DispatcherType.REQUEST));
         cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
-        cors.setInitParameter(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,HEAD");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin");
+        cors.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,DELETE,PUT,HEAD");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin,X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC");
+        cors.setInitParameter(CrossOriginFilter.EXPOSED_HEADERS_PARAM,"X-Requested-With,Content-Type,Accept,Origin,X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC");
         onem2mHttpBaseHandler = new Onem2mHttpBaseHandler(this);
         context.addServlet(new ServletHolder(onem2mHttpBaseHandler), "/*");
 
