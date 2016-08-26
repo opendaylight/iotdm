@@ -122,11 +122,13 @@ abstract class CseRoutingDataBuilder {
  */
 final class CseRoutingDataRemote extends CseRoutingData {
     protected final String parentCseBaseName;
+    public final String parentCseBaseCseId;
     public final boolean requestReachable;
     public final String[] pointOfAccess;
     public final String polingChannel;
 
     protected CseRoutingDataRemote(@Nonnull String parentCseBaseName,
+                                   @Nonnull String parentCseBaseCseId,
                                    @Nonnull String name, @Nonnull String resourceId,
                                    @Nonnull String cseId, @Nonnull String cseType,
                                    boolean requestReachable, String[] pointOfAccess, String polingChannel) {
@@ -135,6 +137,7 @@ final class CseRoutingDataRemote extends CseRoutingData {
         this.pointOfAccess = pointOfAccess;
         this.polingChannel = polingChannel;
         this.parentCseBaseName = parentCseBaseName;
+        this.parentCseBaseCseId = parentCseBaseCseId;
     }
 
     /**
@@ -176,6 +179,7 @@ final class CseRoutingDataRemoteBuilder extends CseRoutingDataBuilder {
     private boolean requestReachable = false; // request unreachable by default
     private String[] pointOfAccess = null;
     private String polingChannel = null;
+    private String cseBaseCseId = null;
 
     protected CseRoutingDataRemoteBuilder() {
         super();
@@ -187,6 +191,7 @@ final class CseRoutingDataRemoteBuilder extends CseRoutingDataBuilder {
         this.setPointOfAccess(oldRoutingData.pointOfAccess);
         this.setPolingChannel(oldRoutingData.polingChannel);
         this.setParentCseBaseName(oldRoutingData.parentCseBaseName);
+        this.setCseBaseCseId(oldRoutingData.parentCseBaseCseId);
     }
 
     @Override
@@ -233,13 +238,18 @@ final class CseRoutingDataRemoteBuilder extends CseRoutingDataBuilder {
         return this;
     }
 
+    public CseRoutingDataRemoteBuilder setCseBaseCseId(String cseBaseCseId) {
+        this.cseBaseCseId = cseBaseCseId;
+        return this;
+    }
+
     @Override
     protected boolean verify() {
         if (! super.verify()) {
             return false;
         }
 
-        return (null != this.parentCseBaseName);
+        return ((null != this.parentCseBaseName) && (null != this.cseBaseCseId));
     }
 
     @Override
@@ -248,7 +258,8 @@ final class CseRoutingDataRemoteBuilder extends CseRoutingDataBuilder {
             return null;
         }
 
-        return new CseRoutingDataRemote(this.parentCseBaseName, this.name, this.resourceId, this.cseId, this.cseType,
+        return new CseRoutingDataRemote(this.parentCseBaseName, this.cseBaseCseId,
+                                        this.name, this.resourceId, this.cseId, this.cseType,
                                         this.requestReachable, this.pointOfAccess, this.polingChannel);
     }
 }

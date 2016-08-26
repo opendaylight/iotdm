@@ -95,10 +95,21 @@ public class BasePrimitive {
         return this.primitiveManyMap.get(primitiveName);
     }
 
-    private boolean delPrimitive(String primitiveName) {
+    /**
+     * Deletes primitive identified by name.
+     * @param primitiveName The primitive name.
+     * @return True if the primitive has been deleted False otherwise.
+     */
+    public boolean delPrimitive(String primitiveName) {
         if (primitiveMap.containsKey(primitiveName)) {
             primitiveMap.remove(primitiveName);
-            onem2mPrimitivesList.remove(primitiveName);
+
+            Onem2mPrimitive primitive = onem2mPrimitivesList.stream()
+                                                .filter(p -> p.getName().equals(primitiveName))
+                                                .findFirst()
+                                                .get();
+
+            onem2mPrimitivesList.remove(primitive);
             return true;
         }
         return false;

@@ -83,8 +83,9 @@ public class Onem2mCoapProvider extends CoapServer
          */
         @Override
         public void handleRequest(final Exchange exchange) {
-            CoAP.Code code = exchange.getRequest().getCode();
             CoapExchange coapExchange = new CoapExchange(exchange, this);
+
+            CoAP.Code code = exchange.getRequest().getCode();
             OptionSet options = coapExchange.advanced().getRequest().getOptions();
 
             // onem2m needs type = CON, ACK, RST - see binding spec
@@ -226,8 +227,7 @@ public class Onem2mCoapProvider extends CoapServer
             // M3 clientBuilder.setTo(options.getUriPathString()); // To/TargetURI // M3
 
             Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
-
+            ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
             // now place the fields from the onem2m result response back in the coap fields, and send
             sendCoapResponseFromOnem2mResponse(coapExchange, onem2mResponse);
 
@@ -301,6 +301,8 @@ public class Onem2mCoapProvider extends CoapServer
 
                 case Onem2m.ResponseStatusCode.NOT_FOUND:
                     return CoAP.ResponseCode.NOT_FOUND;
+                case Onem2m.ResponseStatusCode.ACCESS_DENIED:
+                    return CoAP.ResponseCode.FORBIDDEN;
                 case Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED:
                     return CoAP.ResponseCode.METHOD_NOT_ALLOWED;
                 case Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE:
@@ -335,12 +337,12 @@ public class Onem2mCoapProvider extends CoapServer
     }
 
     @Override
-    public void sendNotification(String url, String payload) {
+    public void sendNotification(String url, String payload, String cseBaseId) {
         Request request = Request.newPost();
         request.setURI(url);
         request.setPayload(payload);
         request.send();
-        LOG.debug("CoAP: Send notification uri: {}, payload: {}:", url, payload);
+        LOG.debug("CoAP: Send notification cseBaseId: {}, uri: {}, payload: {}:", url, payload, cseBaseId);
     }
 
     @Override
@@ -354,10 +356,12 @@ public class Onem2mCoapProvider extends CoapServer
      * @param onem2mRequest The request to be sent.
      * @param nextHopUrl URL of the next hop where the request will be
      *                   forwarded to
+     * @param cseBaseCseId The CSE-ID of cseBase sending the request.
      * @return
      */
     @Override
-    public ResponsePrimitive sendRequestBlocking(RequestPrimitive onem2mRequest, String nextHopUrl) {
+    public ResponsePrimitive sendRequestBlocking(RequestPrimitive onem2mRequest, String nextHopUrl,
+                                                 String cseBaseCseId) {
         ResponsePrimitive onem2mResponseFailed = new ResponsePrimitive();
         onem2mResponseFailed.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
             onem2mResponseFailed.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));

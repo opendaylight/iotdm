@@ -175,5 +175,9 @@ public class Onem2mRequestPrimitiveClientBuilder {
     public String getPrimitiveValue(String key) {
         return onem2mRequest.getPrimitive(key);
     }
+
+    public void delPrimitive(String name) {
+        onem2mRequest.delPrimitive(name);
+    }
 }
 

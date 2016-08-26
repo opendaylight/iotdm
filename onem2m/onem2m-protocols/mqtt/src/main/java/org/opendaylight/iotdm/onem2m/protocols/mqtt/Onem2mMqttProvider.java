@@ -431,7 +431,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             }
 
             Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+            ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
             // Now place the fields from the onem2m result response back in the mqtt fields, and send
             if(mqttMessageFormat.contains(Onem2m.ContentFormat.JSON))
             {

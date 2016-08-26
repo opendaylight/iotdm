@@ -31,8 +31,9 @@ public interface Onem2mRouterPlugin {
      * @param request Onem2m request
      * @param nextHopUrl URL of the next hop where the request will be
      *                   forwarded to
+     * @param cseBaseCseId CSE-ID of the local cseBase which forwards request
      * @return Onem2m response
      */
-    ResponsePrimitive sendRequestBlocking(RequestPrimitive request, String nextHopUrl);
-
+    ResponsePrimitive sendRequestBlocking(RequestPrimitive request, String nextHopUrl,
+                                          String cseBaseCseId);
 }

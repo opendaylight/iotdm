@@ -30,6 +30,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.CoapServer;
 import org.eclipse.californium.core.coap.*;
@@ -80,7 +82,7 @@ class Onem2mHttpBaseHandler extends HttpServlet {
         IotDMPluginHttpRequest request = new IotDMPluginHttpRequest();
         IotDMPluginHttpResponse response = new IotDMPluginHttpResponse();
         request.setMethod(req.getMethod().toLowerCase());
-        LOG.info("service called");
+        LOG.trace("service called");
 
         //headers
         HashMap<String, String> headers = new HashMap<String, String>();
@@ -113,7 +115,7 @@ class Onem2mHttpBaseHandler extends HttpServlet {
             urlSplit = new URL(getFullURL(req));
             tmpUrl = trim(urlSplit.getPath());
             request.setUrl(tmpUrl);
-            LOG.info("Processed URL", tmpUrl);
+            LOG.trace("Processed URL", tmpUrl);
 
             AbstractIotDMPlugin plg = (AbstractIotDMPlugin) mgr.getPlugin(this.provider.instanceKey, tmpUrl,"http");
             if (plg != null) {
@@ -133,7 +135,7 @@ class Onem2mHttpBaseHandler extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
+            LOG.trace("Exception: {}", e.toString());
         }
    }
 
@@ -162,7 +164,7 @@ class Onem2mBaseProvider implements AbstractOnem2mProtocolProvider {
     public void setInstanceMode(Onem2mPluginManager.Mode mode) {
         instanceMode = mode;
     }
-    Onem2mPluginManager.Mode instanceMode;
+    protected Onem2mPluginManager.Mode instanceMode;
 
     public Onem2mBaseProvider() {
         this.instanceKey = UUID.randomUUID().toString();
@@ -275,7 +277,7 @@ class CoapServerProvider extends CoapServer {
             Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
             String tmpUrl = options.getURIPathString();
-            LOG.info("Processed URL", tmpUrl);
+            LOG.trace("Processed URL", tmpUrl);
             request.setUrl(tmpUrl);
             switch (code) {
                 case GET:
@@ -308,7 +310,7 @@ class CoapServerProvider extends CoapServer {
     }
 }
 class Onem2mCoapProvider extends Onem2mBaseProvider {
-    int __port;
+    private int __port;
     private CoapServerProvider server;
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapProvider.class);
@@ -352,18 +354,14 @@ class Onem2mCoapProvider extends Onem2mBaseProvider {
     }
 }
 class Onem2mHTTPProvider extends Onem2mBaseProvider {
-    static int __port;
-    private Server httpServer;
+    protected int __port;
+    protected Server httpServer;
     private FilterHolder cors;
     private ServletContextHandler context;
     private Onem2mHttpBaseHandler onem2mHttpBaseHandler;
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHTTPProvider.class);
 
-    @Override
-    public int init(int port, Onem2mPluginManager.Mode mode) {
-        this.__port = port;
-        this.instanceMode = mode;
-        httpServer = new Server(__port);
+    protected void prepareServer() {
         context = new ServletContextHandler();
         context.setContextPath("/");
         httpServer.setHandler(context);
@@ -376,7 +374,9 @@ class Onem2mHTTPProvider extends Onem2mBaseProvider {
         cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin");
         onem2mHttpBaseHandler = new Onem2mHttpBaseHandler(this);
         context.addServlet(new ServletHolder(onem2mHttpBaseHandler), "/*");
+    }
 
+    protected void startServer() {
         try {
             httpServer.start();
             LOG.info("startHttpServer: on port: {}", __port);
@@ -385,6 +385,19 @@ class Onem2mHTTPProvider extends Onem2mBaseProvider {
             e.printStackTrace();
             LOG.info("Exception: {}", e.toString());
         }
+    }
+
+    @Override
+    public int init(int port, Onem2mPluginManager.Mode mode) {
+        this.__port = port;
+        this.instanceMode = mode;
+        httpServer = new Server(__port);
+
+        // Prepare the httpServer instance
+        this.prepareServer();
+
+        // Start the prepared server
+        this.startServer();
         return 0;
     }
 
@@ -419,6 +432,9 @@ interface AbstractOnem2mPluginManager {
 
     public int registerPluginAtPort(String protocol, AbstractIotDMPlugin intstnce, int port, Onem2mPluginManager.Mode mode);
 
+    public int registerPluginAtPort(String protocol, AbstractIotDMPlugin intstnce, int port, Onem2mPluginManager.Mode mode,
+                                    Object configuration);
+
     public int deRegisterPlugin(String pluginName);
 
     public int registerProtocol(String protocol, AbstractOnem2mProtocolProvider instance);
@@ -438,19 +454,13 @@ class IotDMSamplePlugin implements AbstractIotDMPlugin, AutoCloseable {
     }
 
     @Override
-    public void cleanup() {
-        Onem2mPluginManager.getInstance().deRegisterPlugin(this.pluginName());
-    }
-
-
-    @Override
     public String pluginName() {
         return "example";
     }
 
     @Override
     public void close() throws Exception {
-
+        Onem2mPluginManager.getInstance().deRegisterPlugin(this.pluginName());
     }
 
     @Override
@@ -467,14 +477,14 @@ public class Onem2mPluginManager implements AbstractOnem2mPluginManager, AutoClo
         NotInUse, Shared, Exclusive
     }
 
-
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPluginManager.class);
-    //TODU callback model support for multiple plugin for same path
+    //TODO callback model support for multiple plugin for same path
     static HashMap<String, AbstractIotDMPlugin> registeredPlugin;
     static HashMap<String, AbstractOnem2mProtocolProvider> registeredProtocolList;
     static ArrayList<Onem2mBaseProvider> protocolProviders;
     static HashMap<String, ArrayList<AbstractIotDMPlugin>> pluginProviderBinding;
 
+    private final Map<String, Onem2mBaseProvider> pluginNameToProvider = new ConcurrentHashMap<>();
 
     public Onem2mBaseProvider getProvider(String protocolName, Onem2mPluginManager.Mode operatingMode) {
         for (Onem2mBaseProvider provider : protocolProviders) {
@@ -596,10 +606,30 @@ public class Onem2mPluginManager implements AbstractOnem2mPluginManager, AutoClo
     }
 
     public AbstractOnem2mProtocolProvider createProvider(String protocol, AbstractIotDMPlugin instance, int port, Onem2mPluginManager.Mode mode) {
+        return this.createProvider(protocol, instance, port, mode, null);
+    }
+
+    public AbstractOnem2mProtocolProvider createProvider(String protocol,
+                                                         AbstractIotDMPlugin instance,
+                                                         int port, Onem2mPluginManager.Mode mode,
+                                                         Object configuration) {
         Onem2mBaseProvider provider;
         if ( protocol.equals("http")) {
             provider = new Onem2mHTTPProvider();
             LOG.info("Onem2mHTTPProvider {}", provider.getInstanceKey());
+        }
+        else if ( protocol.equals("https")) {
+            if (null == configuration) {
+                LOG.error("Configuration for HTTPS server not passed");
+                return null;
+            }
+
+            if (! (configuration instanceof Onem2mHttpsPluginServer.HttpsServerConfiguration)) {
+                LOG.error("Invalid HTTPS server configuration type");
+                return null;
+            }
+
+            provider = new Onem2mHttpsPluginServer((Onem2mHttpsPluginServer.HttpsServerConfiguration) configuration);
         }
         else if ( protocol.equals("coap"))
         {
@@ -616,16 +646,23 @@ public class Onem2mPluginManager implements AbstractOnem2mPluginManager, AutoClo
         ArrayList<AbstractIotDMPlugin> tmp = new ArrayList<AbstractIotDMPlugin>();
         pluginProviderBinding.put(provider.getInstanceKey(), tmp);
         tmp.add(instance);
+        pluginNameToProvider.put(instance.pluginName(), provider);
         return provider;
     }
 
     @Override
     public int registerPluginAtPort(String protocol, AbstractIotDMPlugin instance, int port, Onem2mPluginManager.Mode mode) {
+        return this.registerPluginAtPort(protocol, instance, port, mode, null);
+    }
+
+    @Override
+    public int registerPluginAtPort(String protocol, AbstractIotDMPlugin instance, int port, Onem2mPluginManager.Mode mode,
+                                    Object configuration) {
         int rc = 1;
         Onem2mBaseProvider provider = (Onem2mBaseProvider) this.getProviderAtPort(port);
         // port is not in use, no provider at the port, hence create one
         if (provider == null) {
-            createProvider(protocol, instance, port, mode);
+            createProvider(protocol, instance, port, mode, configuration);
             return 0;
         }
         if (!(provider.getProtocol().equals(protocol)))
@@ -672,11 +709,43 @@ public class Onem2mPluginManager implements AbstractOnem2mPluginManager, AutoClo
         return 0;
     }
 
-
     @Override
     public int deRegisterPlugin(String pluginName) {
         if (registeredPlugin.containsKey(pluginName)) {
             registeredPlugin.remove(registeredPlugin.get(pluginName));
+        }
+
+
+        if (pluginNameToProvider.containsKey(pluginName)) {
+            Onem2mBaseProvider protoProvider = pluginNameToProvider.remove(pluginName);
+            if (null == protoProvider) {
+                return 0;
+            }
+
+            if (pluginProviderBinding.containsKey(protoProvider.getInstanceKey())) {
+                for (AbstractIotDMPlugin plugin : pluginProviderBinding.get(protoProvider.getInstanceKey())) {
+                    if (plugin.pluginName().equals(pluginName)) {
+                        boolean ret = false;
+                        ret = pluginProviderBinding.get(protoProvider.getInstanceKey()).remove(plugin);
+                        if (! ret) {
+                            LOG.error("Failed to remove plugin from plugin provider binding list");
+                            return 0;
+                        }
+
+                        if (pluginProviderBinding.get(protoProvider.getInstanceKey()).isEmpty()) {
+                            // The list of bound plugins to the provider is empty so the provider can be deleted
+                            pluginProviderBinding.remove(protoProvider.getInstanceKey());
+                            protocolProviders.remove(protoProvider);
+                            this.deRegisterProtocol(protoProvider.getProtocol());
+                            protoProvider.cleanup();
+                            LOG.info("Proto provider removed: protocol: {}, port: {}",
+                                     protoProvider.getProtocol(),
+                                     protoProvider.getPort());
+                            break;
+                        }
+                    }
+                }
+            }
         }
         return 0;
     }

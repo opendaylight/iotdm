@@ -4,7 +4,8 @@ module onem2m-protocol-http {
     prefix "onem2m-protocol-http";
 
     import config { prefix config; revision-date 2013-04-05; }
-    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28; }
+    import onem2m { prefix onem2m; revision-date 2015-01-05; }
 
     description
         "Service definition for onem2m project";
@@ -19,16 +20,96 @@ module onem2m-protocol-http {
         config:java-name-prefix Onem2mHttp;
     }
 
+    grouping http-protocol-server-config {
+        leaf server-port {
+            mandatory true;
+            type uint16;
+        }
+
+        leaf server-security-level {
+            mandatory true;
+            type onem2m:security-level;
+        }
+
+        leaf secure-connection {
+            mandatory true;
+            type boolean;
+        }
+    }
+
+    grouping http-protocol-sender-config {
+        leaf secure-connection {
+            mandatory true;
+            type boolean;
+        }
+    }
+
+    grouping http-secure-connection-config {
+        container key-store-config {
+            description "Configuration of the Java KeyStore.";
+
+            leaf key-store-file {
+                description "Path to the Java KeyStore file.";
+                mandatory true;
+                type string;
+            }
+
+            leaf key-store-password {
+                description "Password to access the KeyStore file.";
+                mandatory true;
+                type string;
+            }
+
+            leaf key-manager-password {
+                description "Password for key manager (needed if different from the key-store-password).";
+                mandatory false;
+                type string;
+            }
+        }
+
+        container trust-store-config {
+            description "Configuration of the Java TrustStore (required by notifier plugin and router plugin).";
+
+            leaf trust-store-file {
+                description "Path to the Java TrustStore file.";
+                mandatory true;
+                type string;
+            }
+
+            leaf trust-store-password {
+                description "Password to access the TrustStore file.";
+                mandatory true;
+                type string;
+            }
+        }
+    }
+
     augment "/config:modules/config:module/config:configuration" {
         case onem2m-protocol-http {
             when "/config:modules/config:module/config:type = 'onem2m-protocol-http'";
             container broker {
                 uses config:service-ref {
                     refine type {
-                        mandatory true;
+                        mandatory false;
                         config:required-identity md-sal-binding:binding-broker-osgi-registry;
                     }
                 }
+            }
+
+            container server-config {
+                uses http-protocol-server-config;
+            }
+
+            container notifier-plugin-config {
+                uses http-protocol-sender-config;
+            }
+
+            container router-plugin-config {
+                uses http-protocol-sender-config;
+            }
+
+            container https-config {
+                uses http-secure-connection-config;
             }
         }
     }

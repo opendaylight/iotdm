@@ -27,9 +27,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <mdsal.model.version>0.10.0-SNAPSHOT</mdsal.model.version>
         <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
         <dlux.version>0.5.0-SNAPSHOT</dlux.version>
-        <pax.web.version>3.2.6</pax.web.version>
+        <pax.web.version>3.2.9</pax.web.version>
         <mqttclient.version>1.0.2</mqttclient.version>
         <joda.version>2.7</joda.version>
+        <netconf.version>1.2.0-SNAPSHOT</netconf.version>
         <configfile.directory>etc/opendaylight/karaf</configfile.directory>
     </properties>
     <dependencyManagement>
@@ -141,6 +142,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocols-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-protocol-coap</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -179,6 +185,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <groupId>org.opendaylight.iotdm</groupId>
             <artifactId>onem2m-ui-bundle</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>features-netconf-connector</artifactId>
+            <classifier>features</classifier>
+            <type>xml</type>
+            <version>${netconf.version}</version>
         </dependency>
     </dependencies>
 </project>

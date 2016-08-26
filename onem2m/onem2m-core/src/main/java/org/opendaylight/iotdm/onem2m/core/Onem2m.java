@@ -8,15 +8,18 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
+import java.security.Security;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.opendaylight.iotdm.onem2m.core.security.authentication.Onem2mRequestAuthenticationToken;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,7 @@ import javax.annotation.Nonnull;
 // TODO: TS0004 8.3, and 8.4, short names are required
 
 public class Onem2m {
+    private static final Logger LOG = LoggerFactory.getLogger(Onem2m.class);
 
     private Onem2m() {
     }
@@ -38,6 +42,8 @@ public class Onem2m {
     public static final int MAX_NR_INSTANCES_PER_CONTAINER = 20;
     public static final int MAX_DISCOVERY_LIMIT  = 1000;
     public static final boolean USE_M2M_PREFIX = true;
+
+    public static final SecurityLevel DEFAULTSECURITYLEVEL = SecurityLevel.L0;
 
     public class Operation {
         public static final String CREATE = "1";
@@ -207,6 +213,7 @@ public class Onem2m {
         public static final String NOT_FOUND = "4004";
         public static final String OPERATION_NOT_ALLOWED = "4005";
         public static final String CONTENTS_UNACCEPTABLE = "4102";
+        public static final String ACCESS_DENIED = "4103";
         public static final String CONFLICT = "4105";
 
         public static final String INTERNAL_SERVER_ERROR = "5000";
@@ -381,15 +388,55 @@ public class Onem2m {
      * @param onem2mService response
      * @return the response primitives
      */
-    public static ResponsePrimitive serviceOnenm2mRequest(RequestPrimitive onem2mRequest, Onem2mService onem2mService) {
+    public static ResponsePrimitive serviceOnem2mRequest(@Nonnull final RequestPrimitive onem2mRequest,
+                                                         @Nonnull final Onem2mService onem2mService) {
+        Onem2mRequestPrimitiveInput input = new Onem2mRequestPrimitiveInputBuilder()
+                                                .setConfiguredSecurityLevel(DEFAULTSECURITYLEVEL)
+                                                .setCseBaseId(null)
+                                                .setSenderIdentity(null)
+                                                .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+        return processOnem2mRequestInput(input, onem2mService);
+    }
 
-        final Logger LOG = LoggerFactory.getLogger(Onem2m.class);
+    public static ResponsePrimitive serviceOnem2mRequest(@Nonnull final RequestPrimitive onem2mRequest,
+                                                         @Nonnull final Onem2mService onem2mService,
+                                                         @Nonnull final SecurityLevel securityLevel) {
+        Onem2mRequestPrimitiveInput input = new Onem2mRequestPrimitiveInputBuilder()
+                                                    .setConfiguredSecurityLevel(securityLevel)
+                                                    .setCseBaseId(null)
+                                                    .setSenderIdentity(null)
+                                                    .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+        return processOnem2mRequestInput(input, onem2mService);
+    }
 
-        ResponsePrimitive onem2mResponse;
+    /* TODO need to discuss whether the security level will be configured per protocol plugin or not */
+    public static ResponsePrimitive serviceOnem2mRequest(@Nonnull final RequestPrimitive onem2mRequest,
+                                                         @Nonnull final Onem2mService onem2mService,
+                                                         @Nonnull final SecurityLevel securityLevel,
+                                                         @Nonnull final Onem2mRequestAuthenticationToken authToken) {
+        ResponsePrimitive onem2mResponse = null;
+
+        if (!authToken.isAuthOk(securityLevel)) {
+            onem2mResponse = new ResponsePrimitive();
+            onem2mResponse.setRSC(ResponseStatusCode.OPERATION_NOT_ALLOWED, "Request not authenticated");
+            LOG.error("Request not authenticated");
+            authToken.setUsed();
+            return onem2mResponse;
+        }
 
         Onem2mRequestPrimitiveInput input = new Onem2mRequestPrimitiveInputBuilder()
-                .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+                                                    .setConfiguredSecurityLevel(securityLevel)
+                                                    .setSenderIsCse(authToken.isCse())
+                                                    .setCseBaseId(authToken.getCseBaseCseId())
+                                                    .setSenderIdentity(authToken.getEntityId())
+                                                    .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+        authToken.setUsed();
+        return processOnem2mRequestInput(input, onem2mService);
+    }
 
+    private static ResponsePrimitive processOnem2mRequestInput(Onem2mRequestPrimitiveInput input,
+                                                               Onem2mService onem2mService) {
+        ResponsePrimitive onem2mResponse = null;
         try {
             RpcResult<Onem2mRequestPrimitiveOutput> rpcResult = onem2mService.onem2mRequestPrimitive(input).get();
             onem2mResponse = new ResponsePrimitive();
@@ -397,7 +444,7 @@ public class Onem2m {
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
-            LOG.error("serviceOnenm2mRequest: RPC exception: msg: {}, cause: {}", e.getMessage(), e.getCause());
+            LOG.error("processOnem2mRequestInput: RPC exception: msg: {}, cause: {}", e.getMessage(), e.getCause());
         }
 
         return onem2mResponse;
@@ -425,7 +472,7 @@ public class Onem2m {
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
-            LOG.error("serviceOnenm2mRequest: RPC exception");
+            LOG.error("serviceOnem2mRequest: RPC exception");
         }
 
         return onem2mResponse;
