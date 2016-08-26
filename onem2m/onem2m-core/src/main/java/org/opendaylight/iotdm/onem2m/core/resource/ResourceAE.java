@@ -49,8 +49,9 @@ public class ResourceAE {
     public static final String CONTENT_SERIALIZATION = "csz";
 
 
-    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
+    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                                      RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                                      Onem2mDb.CseBaseResourceLocator resourceLocator) {
         // ensure resource can be created under the target resource
         if (onem2mRequest.isCreate) {
             String parentResourceType = onem2mRequest.getOnem2mResource().getResourceType();
@@ -89,13 +90,15 @@ public class ResourceAE {
          * (2) if yyyy still contains / return error.
          */
         String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-        String[] splitStrins = from.split("//");
-        // does not need to concern 2 //, we will check valid URI in the following steps
-        if (splitStrins.length == 2) {
-            String removedHead = splitStrins[1];
-            if (removedHead.contains("/")) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "From cannot contain / ");
-                return;
+        if (null != from) {
+            String[] splitStrins = from.split("//");
+            // does not need to concern 2 //, we will check valid URI in the following steps
+            if (splitStrins.length == 2) {
+                String removedHead = splitStrins[1];
+                if (removedHead.contains("/")) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "From cannot contain / ");
+                    return;
+                }
             }
         }
 
@@ -114,7 +117,7 @@ public class ResourceAE {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResourceAe(twc, trc, onem2mRequest, onem2mResponse, resourceLocator)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -261,8 +264,9 @@ public class ResourceAE {
      * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
+    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                          RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                          Onem2mDb.CseBaseResourceLocator resourceLocator) {
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
         resourceContent.parse(Onem2m.ResourceTypeString.AE, onem2mRequest, onem2mResponse);
@@ -282,7 +286,6 @@ public class ResourceAE {
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
-
-        ResourceAE.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        ResourceAE.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse, resourceLocator);
     }
 }

@@ -13,17 +13,22 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIds;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by gguliash on 5/20/16.
@@ -71,6 +76,69 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     public Onem2mResourceTree retrieveFullResourceList() {
         InstanceIdentifier<Onem2mResourceTree> iidTree = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
         return retrieve(iidTree, LogicalDatastoreType.OPERATIONAL);
+    }
+
+    /**
+     * Retrieve the resourceID of the AE by its AE-ID.
+     * @param cseBaseName The name of cseBase.
+     * @param aeId The AE-ID of the AE.
+     * @return resourceID of the AE
+     */
+    public String retrieveAeResourceIdByAeId(String cseBaseName, String aeId) {
+        InstanceIdentifier<Onem2mRegisteredAeIds> iid = InstanceIdentifier.create(Onem2mCseList.class)
+                                                                .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
+                                                                .child(Onem2mRegisteredAeIds.class, new Onem2mRegisteredAeIdsKey(aeId));
+
+        Onem2mRegisteredAeIds aeIds = retrieve(iid, LogicalDatastoreType.OPERATIONAL);
+
+        if (null == aeIds) {
+            LOG.trace("Failed to retrieve AE-ID to resourceID mapping for cseBaseName: {}, AE-ID: {}",
+                      cseBaseName, aeId);
+            return null;
+        }
+
+        return aeIds.getResourceId();
+    }
+
+    private String isEntityRegisteredAtCseBase(final String entityId, final String cseBaseCseId) {
+        /* TODO need to implement some CSE-ID to resource ID mapping */
+
+        if (null != this.retrieveAeResourceIdByAeId(cseBaseCseId, entityId)) {
+            // Entity is registered as AE
+            return Onem2m.ResourceType.AE;
+        }
+
+        // Entity is not registered
+        return null;
+    }
+
+    @Override
+    public String isEntityRegistered(String entityId, String cseBaseCseId) {
+
+        if (null != cseBaseCseId) {
+            return isEntityRegisteredAtCseBase(entityId, cseBaseCseId);
+        }
+
+        // retrieve list of cseBase resources because the cseBaseCseId is not specified
+        InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
+        Onem2mCseList cseList = retrieve(iidCseList, LogicalDatastoreType.OPERATIONAL);
+        List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();
+
+        // walk the list of cseBase resources and try to find AE or CSE with given ID
+        for (Onem2mCse cseBase : onem2mCseList) {
+
+            Onem2mResource cseBaseResource = this.retrieveResourceById(new Onem2mResourceKey(cseBase.getResourceId()));
+            if (null == cseBaseResource) {
+                LOG.error("Failed to retrieve cseBase resource");
+                continue;
+            }
+
+            // CSE-ID and name are the same in our implementation
+            cseBaseCseId = cseBase.getName();
+            return isEntityRegisteredAtCseBase(entityId, cseBaseCseId);
+        }
+
+        return null;
     }
 
     /**

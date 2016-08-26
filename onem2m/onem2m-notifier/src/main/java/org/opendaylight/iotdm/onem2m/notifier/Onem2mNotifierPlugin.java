@@ -12,6 +12,6 @@ public interface Onem2mNotifierPlugin {
 
     public String getNotifierPluginName();
 
-    public void sendNotification(String url, String payload);
+    public void sendNotification(String url, String payload, String cseBaseId);
 
 }

@@ -24,7 +24,7 @@ public class Onem2mRequestPrimitiveClient extends RequestPrimitive {
 
     public Onem2mResponsePrimitiveClient send(Onem2mService onem2mService) {
         Onem2mResponsePrimitiveClient onem2mResponse =
-                new Onem2mResponsePrimitiveClient(Onem2m.serviceOnenm2mRequest(this, onem2mService));
+                new Onem2mResponsePrimitiveClient(Onem2m.serviceOnem2mRequest(this, onem2mService));
         return onem2mResponse;
     }
 }

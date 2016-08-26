@@ -78,7 +78,9 @@ public class Onem2mNotifierService implements Onem2mListener, AutoCloseable {
 
             if (onem2mNotifierPluginMap.containsKey(pluginName)) {
                 Onem2mNotifierPlugin onem2mNotifierPlugin = onem2mNotifierPluginMap.get(pluginName);
-                onem2mNotifierPlugin.sendNotification(uri, payload);
+                onem2mNotifierPlugin.sendNotification(uri, payload, notification.getSenderCseId());
+            } else {
+                LOG.warn("Unable to send notification, no such plugin: {}", pluginName);
             }
         }
     }
@@ -117,7 +119,9 @@ public class Onem2mNotifierService implements Onem2mListener, AutoCloseable {
 
             if (onem2mNotifierPluginMap.containsKey(pluginName)) {
                 Onem2mNotifierPlugin onem2mNotifierPlugin = onem2mNotifierPluginMap.get(pluginName);
-                onem2mNotifierPlugin.sendNotification(uri, payload);
+                onem2mNotifierPlugin.sendNotification(uri, payload, notification.getSenderCseId());
+            } else {
+                LOG.warn("Unable to send notification, no such plugin: {}", pluginName);
             }
         }
     }

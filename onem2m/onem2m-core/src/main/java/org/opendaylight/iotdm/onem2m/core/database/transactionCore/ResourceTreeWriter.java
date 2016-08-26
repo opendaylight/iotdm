@@ -381,6 +381,29 @@ public class ResourceTreeWriter implements Closeable {
         return true;
     }
 
+    // TODO: migrate the routing table from Onem2mRouterService into the cache
+
+    public boolean createAeUnderCse(String cseBaseName,
+                                    String aeId, String aeResourceId) {
+        if (!daoWriter.createAeIdToResourceIdMapping(cseBaseName, aeId, aeResourceId)) {
+            LOG.error("createAeIdToResourceIdMapping: DB could not write");
+            return false;
+        }
+
+        // TODO: add caching
+        return true;
+    }
+
+    public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
+        if (!daoWriter.deleteAeIdToResourceIdMapping(cseBaseName, aeId)) {
+            LOG.error("deleteAeIdToResourceIdMapping: DB could not write");
+            return false;
+        }
+
+        // TODO: add caching
+        return true;
+    }
+
     /**
      * Cleanup the data store.
      */

@@ -23,6 +23,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIds;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -302,6 +305,54 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
             InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                     .child(Onem2mResource.class, key);
 
+
+            writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
+        } catch (Exception e) {
+            LOG.error("Exception {}", e.getMessage());
+            return false;
+        } finally {
+            writer.close();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean createAeIdToResourceIdMapping(String cseBaseName,
+                                                 String aeId, String aeResourceId) {
+        try {
+            writer.reload();
+
+            Onem2mRegisteredAeIds registeredAe = new Onem2mRegisteredAeIdsBuilder()
+                                                         .setKey(new Onem2mRegisteredAeIdsKey(aeId))
+                                                         .setRegisteredAeId(aeId)
+                                                         .setResourceId(aeResourceId)
+                                                         .build();
+
+            InstanceIdentifier<Onem2mRegisteredAeIds> iid =
+                    InstanceIdentifier.create(Onem2mCseList.class)
+                            .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
+                            .child(Onem2mRegisteredAeIds.class, registeredAe.getKey());
+
+            writer.create(iid, registeredAe, LogicalDatastoreType.OPERATIONAL);
+        } catch (Exception e) {
+            LOG.error("Exception {}", e.getMessage());
+            return false;
+        } finally {
+            writer.close();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
+        try {
+            writer.reload();
+            InstanceIdentifier<Onem2mRegisteredAeIds> iid =
+                    InstanceIdentifier.create(Onem2mCseList.class)
+                        .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
+                        .child(Onem2mRegisteredAeIds.class, new Onem2mRegisteredAeIdsKey(aeId));
 
             writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
         } catch (Exception e) {

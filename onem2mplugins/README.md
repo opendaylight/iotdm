@@ -29,7 +29,7 @@ coding.  The yang model has API's to tell the system how to handle basic message
 resource tree.  If you need a more complex model where you need to write code to handle your messages, then some
 infrastructure is provided to make it easier to handle your custom protocols.  An example of a more complex plugin is
 adapting LWM2M messages to ONEM2M.  There are some standard documented ways to adapt these message types to onem2m but
-code is requuired.  A onem2mlwm2m plugin is being developed and will illustrate how to use this infrastucture.
+code is required.  A onem2mlwm2m plugin is being developed and will illustrate how to use this infrastucture.
 
 ## Plugin Architecture and Structure
 

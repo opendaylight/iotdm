@@ -8,6 +8,8 @@
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
@@ -89,6 +91,36 @@ public class ResourceTreeReader {
         return cseStringList;
     }
 
+//    private String retrieveAeResourceIdByAeId(String cseBaseName, String aeId) {
+//        // TODO implement cache
+//        return daoResourceTreeReader.retrieveAeResourceIdByAeId(cseBaseName, aeId);
+//    }
+
+    /**
+     * Checks whether the entity specified by the entityId is registered at the cseBase.
+     * Returns type of entity as Onem2m resource type string if the entity is registered
+     * as AE or remoteCSE.
+     * @param entityId The ID of entity (CSE-ID or AE-ID)
+     * @param cseBaseCseId CSE-ID of the cseBase
+     * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
+     */
+    public String isEntityRegistered(String entityId, String cseBaseCseId) {
+        // TODO Temporary caching solution for CSE-IDs
+        if (null != cseBaseCseId) {
+            if (Onem2mRouterService.getInstance().hasRemoteCse(cseBaseCseId, entityId)) {
+                // Entity is registered as remoteCSE
+                return Onem2m.ResourceType.REMOTE_CSE;
+            }
+        } else {
+            if (Onem2mRouterService.getInstance().hasRemoteCse(entityId)) {
+                // Entity is registered as remoteCSE
+                return Onem2m.ResourceType.REMOTE_CSE;
+            }
+        }
+
+        // TODO implement cache
+        return daoResourceTreeReader.isEntityRegistered(entityId, cseBaseCseId);
+    }
 
     /**
      * Retrieve the OldestLatest structure using its resource type
@@ -141,6 +173,8 @@ public class ResourceTreeReader {
         return cache.retrieveChildResourceIDByName(new Onem2mResourceKey(resourceId),
                 new ChildKey(name));
     }
+
+    // TODO extend dumps with the AE-ID mappings ??
 
     /**
      * Dump resource info to the log

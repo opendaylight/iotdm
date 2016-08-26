@@ -30,7 +30,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>org.ops4j.pax.web</groupId>
       <artifactId>pax-web-jetty-bundle</artifactId>
-      <version>3.2.6</version>
+      <version>3.2.9</version>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>

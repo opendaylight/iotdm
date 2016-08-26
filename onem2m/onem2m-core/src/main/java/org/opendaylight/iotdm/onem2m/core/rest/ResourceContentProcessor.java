@@ -12,6 +12,7 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -32,16 +33,18 @@ public class ResourceContentProcessor {
      * @param trc database reader interface
      * @param onem2mRequest  request
      * @param onem2mResponse response
+     * @param resourceLocator Locator of the resource identified in the request.
      */
-    public static void handleCreate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
+    public static void handleCreate(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                    RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                    Onem2mDb.CseBaseResourceLocator resourceLocator) {
         onem2mRequest.isCreate = true;
 
         String resourceType = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
         switch (resourceType) {
 
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
+                ResourceAE.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse, resourceLocator);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_CREATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
@@ -150,7 +153,8 @@ public class ResourceContentProcessor {
      * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleUpdate(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                    RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         //String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
         String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
@@ -159,7 +163,7 @@ public class ResourceContentProcessor {
         onem2mRequest.isUpdate = true;
         switch (resourceType) {
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
+                ResourceAE.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse, null);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_UPDATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:

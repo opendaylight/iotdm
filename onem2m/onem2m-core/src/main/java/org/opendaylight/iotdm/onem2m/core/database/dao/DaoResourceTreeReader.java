@@ -43,4 +43,14 @@ public interface DaoResourceTreeReader {
      * @return all existing Resource elements
      */
     Onem2mResourceTree retrieveFullResourceList();
+
+    /**
+     * Checks whether the entity specified by the entityId is registered at the cseBase.
+     * Returns type of entity as Onem2m resource type string if the entity is registered
+     * as AE or remoteCSE.
+     * @param entityId The ID of entity (CSE-ID or AE-ID)
+     * @param cseBaseCseId CSE-ID of the cseBase
+     * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
+     */
+    String isEntityRegistered(String entityId, String cseBaseCseId);
 }

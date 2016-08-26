@@ -122,4 +122,21 @@ public interface DaoResourceTreeWriter extends Closeable {
                                        Child child,
                                        String prevId);
 
+    /**
+     * Add the AE-ID to resourceID mapping into Onem2mCseList.
+     * @param cseBaseName The name of cseBase
+     * @param aeId The AE-ID
+     * @param aeResourceId The resourceID related to the AE-ID
+     * @return True in case of success, False otherwise
+     */
+    boolean createAeIdToResourceIdMapping(String cseBaseName,
+                                          String aeId, String aeResourceId);
+
+    /**
+     * Delete AE-ID to resourceID mapping for specified cseBase.
+     * @param cseBaseName The name of cseBase
+     * @param aeId The AE-ID of the AE
+     * @return True in case of success, False otherwise
+     */
+    boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId);
 }

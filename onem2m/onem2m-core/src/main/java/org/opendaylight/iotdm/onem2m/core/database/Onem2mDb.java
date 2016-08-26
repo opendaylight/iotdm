@@ -20,6 +20,7 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.helper.Consumer;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
@@ -161,6 +162,7 @@ public class Onem2mDb implements TransactionChainListener {
                 containerJsonContent.toString());
     }
 
+
     /**
      * The create resource is carried out by this routine.  The onem2mRequest has the parameters in it to effect the
      * creation request.  The resource specific routines have in .../core/resource already vetted the parameters so
@@ -172,40 +174,23 @@ public class Onem2mDb implements TransactionChainListener {
      */
     public boolean createResource(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
+        String resourceType = Integer.toString(onem2mRequest
+                                                       .getResourceContent()
+                                                       .getInJsonContent()
+                                                       .optInt(ResourceContent.RESOURCE_TYPE));
+
+        return performResourceCreate(twc, trc, onem2mRequest, onem2mResponse, resourceType);
+    }
+
+    private boolean performResourceCreate(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                          RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                          String resourceType) {
+
         // generate a unique id for this new resource
         onem2mRequest.setResourceId(generateResourceId());
 
         Onem2mResource parentOnem2mResource = onem2mRequest.getOnem2mResource();
         String parentId = parentOnem2mResource.getResourceId();
-
-        String resourceType = Integer.toString(onem2mRequest
-                .getResourceContent()
-                .getInJsonContent()
-                .optInt(ResourceContent.RESOURCE_TYPE));
-        String resourceName = onem2mRequest.getResourceName();
-
-        // see resourceAE for comments on why AE_IDs have these naming rules
-        if (resourceType.contentEquals(Onem2m.ResourceType.AE)) {
-            String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-            if (from == null) {
-                if (resourceName == null) {
-                    onem2mRequest.setResourceName("C" + onem2mRequest.getResourceId());
-                }
-                JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceAE.AE_ID, onem2mRequest.getResourceName());
-            } else {
-                // in the last Design:
-                // if from !=null, since  resourceName at least = from, how can the following happen?
-                if (resourceName == null) {
-                    // remove the "http://" or anything before //, including the //
-                    String[] splitStrins = from.split("//");
-                    // does not need to concern 2 //, we will check valid URI in the following steps
-                    String removedHead = splitStrins[splitStrins.length - 1];
-                    onem2mRequest.setResourceName(removedHead);
-                }
-                //TODo : do we want to set the AE-ID like http://xxx/yyy  or  xxx?
-                JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceAE.AE_ID, onem2mRequest.getResourceName());
-            }
-        }
 
         /**
          * The resource name should be filled in with the resource-id if the name is blank.
@@ -215,7 +200,7 @@ public class Onem2mDb implements TransactionChainListener {
         }
 
         if (!twc.initializeElementInParentList(resourceType, parentId,
-                onem2mRequest.getResourceId(), onem2mRequest.getResourceName())) return false;
+                                               onem2mRequest.getResourceId(), onem2mRequest.getResourceName())) return false;
 
         // update the lmt of the parent to be the creation time of the child being created
         if (!parentId.equals(Onem2mDb.NULL_RESOURCE_ID)) {
@@ -247,6 +232,57 @@ public class Onem2mDb implements TransactionChainListener {
         onem2mRequest.setJsonResourceContent(onem2mRequest.getOnem2mResource().getResourceContentJsonString());
 
         return true;
+    }
+
+    /**
+     * Creates resource of AE type.
+     * @param onem2mRequest Received request
+     * @param onem2mResponse Response to be sent
+     * @param resourceLocator The resource locator
+     * @return True if success false otherwise.
+     */
+    public boolean createResourceAe(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                    RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                    Onem2mDb.CseBaseResourceLocator resourceLocator) {
+        String resourceName = onem2mRequest.getResourceName();
+        // see resourceAE for comments on why AE_IDs have these naming rules
+        String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
+        if (from == null) {
+            if (resourceName == null) {
+                onem2mRequest.setResourceName("C" + onem2mRequest.getResourceId());
+            }
+            JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceAE.AE_ID,
+                          onem2mRequest.getResourceName());
+        } else {
+            // in the last Design:
+            // if from !=null, since  resourceName at least = from, how can the following happen?
+            if (resourceName == null) {
+                // remove the "http://" or anything before //, including the //
+                String[] splitStrins = from.split("//");
+                // does not need to concern 2 //, we will check valid URI in the following steps
+                String removedHead = splitStrins[splitStrins.length - 1];
+                onem2mRequest.setResourceName(removedHead);
+            }
+            //TODo : do we want to set the AE-ID like http://xxx/yyy  or  xxx?
+            JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceAE.AE_ID,
+                          onem2mRequest.getResourceName());
+        }
+
+        boolean ret = false;
+        ret = performResourceCreate(twc, trc, onem2mRequest, onem2mResponse, Onem2m.ResourceType.AE);
+        if (!ret) {
+            return false;
+        }
+
+        // now create record in the AE-ID to resourceID mapping
+        String aeId = onem2mRequest.getResourceName();
+        String cseBaseName = resourceLocator.getCseBaseName();
+        if (null == cseBaseName) {
+            LOG.error("Can't get cseBase name from resource locator");
+            return false;
+        }
+
+        return twc.createAeUnderCse(cseBaseName, aeId, onem2mRequest.getResourceId());
     }
 
     /**
@@ -361,6 +397,137 @@ public class Onem2mDb implements TransactionChainListener {
             }
         }
         return null;
+    }
+
+    /**
+     * Creates origin locator object from the originatorEntityId for the cseBase identified by
+     * cseBaseCseId parameter.
+     * @param originatorEntityId The entity id specified in From parameter of received request.
+     * @param cseBaseCseId CseBase CSE-ID to which the sender (not originator) of request is authenticated.
+     * @return The object of originator locator implementing methods to access resources representing
+     * referenced entities.
+     * @throws IllegalArgumentException
+     */
+    public CseBaseOriginatorLocator getOriginLocator(String originatorEntityId, String cseBaseCseId)
+            throws IllegalArgumentException {
+
+        return new CseBaseOriginatorLocator(originatorEntityId, cseBaseCseId);
+    }
+
+    /**
+     * Class provides methods checking From parameter value if is valid entity ID and
+     * to gather information about the entity ID and the resource representing the entity.
+     */
+    public final class CseBaseOriginatorLocator {
+        private Onem2mResource resource = null;
+        private final String originatorEntityId;
+        private final String entityId;
+        private final String cseBaseCseId; // ID of the local cseBase which
+        private String registrarCseId = null;
+        private boolean isCseRelativeAeId = false;
+
+        /**
+         * Constructor splits originator entity ID and resolves entity ID type.
+         * @param originatorEntityId The entity ID set in From parameter of received request.
+         * @throws IllegalArgumentException Throws exception in case of invalid entity ID provided.
+         */
+        CseBaseOriginatorLocator(final String originatorEntityId,
+                                 final String cseBaseCseId)
+                throws IllegalArgumentException {
+
+            if (null == originatorEntityId) {
+                throw new IllegalArgumentException("No originator entity ID passed");
+            }
+
+            // TODO check FQDN and set specific cseBase CSE-ID in case of secure association
+            this.originatorEntityId = originatorEntityId;
+            this.cseBaseCseId = cseBaseCseId;
+
+            if (this.originatorEntityId.startsWith("//")) { // absolute CSE or AE id
+
+                String[] path = this.originatorEntityId.split("/");
+                if (path.length == 4) { // e.g.: //FQDN/entityId
+                    this.entityId = path[3];
+                } else if (path.length == 5) { // e.g.: //FQDN/registrarCseId/entityId
+                    this.entityId = path[4];
+                    this.registrarCseId = path[3];
+                } else {
+                    throw new IllegalArgumentException("Invalid entity identifier: " + originatorEntityId);
+                }
+
+            } else if (this.originatorEntityId.startsWith("/")) { // SP relative CSE or AE id
+
+                String[] path = this.originatorEntityId.split("/");
+                if (path.length == 3) { // e.g.: /registrarCseId/entityId
+                    this.entityId = path[2]; // AE
+                    this.registrarCseId = path[1];
+                } else if (path.length == 2) { // e.g.: /entityId
+                    this.entityId = path[1];
+                } else {
+                    throw new IllegalArgumentException("Invalid entity identifier: " + originatorEntityId);
+                }
+
+            } else { // relative AE id stem
+                this.entityId = this.originatorEntityId;
+                this.isCseRelativeAeId = true;
+            }
+        }
+
+        /**
+         * Returns SP-relative-CSE-ID or relative AE-ID Stem.
+         * @return The entity id.
+         */
+        public String getEntityId() { return this.entityId; }
+
+        /**
+         * Returns CSE-ID of registrar CSE of the AE
+         * @return The CSE-ID of the registrar CSE of AE if exists.
+         */
+        public String getRegistrarCseId() { return this.registrarCseId; }
+
+        /**
+         * Checks whether the originator entity ID is just C-type AE-ID Stem
+         * (without registrar CSE CSE-ID specified).
+         * @return True if the originator entity ID is relative C-type AE-ID Stem, false otherwise.
+         */
+        public boolean isCseRelativeCtypeAeId() {
+            if (! this.isCseRelativeAeId) {
+                return false;
+            }
+
+            if (this.entityId.startsWith("C")) {
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Checks whether the originator entity is locally registered.
+         * @return
+         */
+        public String isRegistered(ResourceTreeReader trc) {
+            // TODO return false if FQDN doesn't equal
+
+            if (null != registrarCseId) {
+                if (! Onem2mRouterService.getInstance().hasCseBaseCseId(registrarCseId)) {
+                    LOG.trace("RegistrarCSE is not any local cseBase, originator is not registered");
+                    return null;
+                }
+
+                // So the cseBase which received request and registrarCSE of the entity
+                // must be the same, otherwise the entity is not registered
+                if (null != cseBaseCseId) {
+                    if (! registrarCseId.equals(cseBaseCseId)) {
+                        LOG.trace("RegistrarCSE doesn't match cseBase which received request so originator" +
+                                  "is not registered");
+                        return null;
+                    }
+                }
+            }
+
+            return trc.isEntityRegistered(this.entityId, this.cseBaseCseId);
+        }
     }
 
     /**
@@ -484,6 +651,24 @@ public class Onem2mDb implements TransactionChainListener {
 
         public String getRemoteCseCseId() { return this.remoteCseCseId; }
 
+        public String getCseBaseCseId() {
+            if (null != this.cseBaseCseId) {
+                return this.cseBaseCseId;
+            }
+
+            // In our implementation the cseBaseName is the same as cseBase CSE-ID
+            return this.cseBaseName;
+        }
+
+        public String getCseBaseName() {
+            if (null != this.cseBaseName) {
+                return this.cseBaseName;
+            }
+
+            // In our implementation the cseBaseName is the same as cseBase CSE-ID
+            return this.cseBaseCseId;
+        }
+
         /**
          * Returns resource identified by the URI if the resource is local and
          * if exists, null is returned otherwise.
@@ -497,8 +682,7 @@ public class Onem2mDb implements TransactionChainListener {
             Onem2mCse cseBase = null;
             Onem2mResource resource = null;
             if (this.hierarchyPathIndex >= this.hierarchyPath.length) {
-                // the resource identified by URI is the CSE
-
+                // the resource identified by URI is the cseBase
                 cseBase = this.retrieveCseBase(trc);
                 if (null == cseBase) {
                     LOG.trace("Can't get resource without cseBase");
@@ -601,7 +785,15 @@ public class Onem2mDb implements TransactionChainListener {
         return cse.getResourceId();
     }
 
-    public CseBaseResourceLocator createResourceLocator(String targetURI) {
+    /**
+     * Creates resource locator object from the target URI.
+     * @param targetURI URI set as TO parameter value in received request.
+     * @return The resource locator object implementing methods to access resources referenced by the URI.
+     * @throws IllegalArgumentException
+     */
+    public CseBaseResourceLocator createResourceLocator(String targetURI)
+            throws IllegalArgumentException {
+
         return new CseBaseResourceLocator(targetURI);
     }
 
@@ -612,6 +804,48 @@ public class Onem2mDb implements TransactionChainListener {
      */
     public Boolean isLocalResourceURI(String targetURI) {
         return new CseBaseResourceLocator(targetURI).isLocalResource();
+    }
+
+    private String getCseIdFromResource(Onem2mResource cseResource) {
+        // get the content as JSON string and create a JSON object
+        String jsonString = cseResource.getResourceContentJsonString();
+        if (null == jsonString) {
+            LOG.error("CSE resource without content");
+            return null;
+        }
+        JSONObject jsonObj = new JSONObject(jsonString);
+        if (null == jsonObj) {
+            LOG.error("Failed to create Json object from CSE resource content");
+            return null;
+        }
+
+        if (! jsonObj.has("csi")) {
+            LOG.error("CSE resource without CSE-ID set");
+            return null;
+        }
+
+        return (String) jsonObj.get("csi");
+    }
+
+    private String getAeIdFromResource(Onem2mResource aeResource) {
+        // get the content as JSON string and create a JSON object
+        String jsonString = aeResource.getResourceContentJsonString();
+        if (null == jsonString) {
+            LOG.error("AE resource without content");
+            return null;
+        }
+        JSONObject jsonObj = new JSONObject(jsonString);
+        if (null == jsonObj) {
+            LOG.error("Failed to create Json object from AE resource content");
+            return null;
+        }
+
+        if (! jsonObj.has("aei")) {
+            LOG.error("AE resource without AE-ID set");
+            return null;
+        }
+
+        return (String) jsonObj.get("aei");
     }
 
     /**
@@ -1070,10 +1304,35 @@ public class Onem2mDb implements TransactionChainListener {
             }
         }
 
+        switch(resourceType) {
+            case Onem2m.ResourceType.CONTENT_INSTANCE:
+                // adjust the curr values in the parent container resource
+                if (!deleteContentInstance(twc, onem2mRequest, parentOnem2mResource)) {
+                    return false;
+                }
+                break;
 
-        // adjust the curr values in the parent container resource
-        if (resourceType.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
-            if (!deleteContentInstance(twc, onem2mRequest, parentOnem2mResource)) return false;
+            case Onem2m.ResourceType.AE:
+                // Parent of AE resource can be the cseBase resource only
+                String cseBaseCseId = getCseIdFromResource(parentOnem2mResource);
+                if (null == cseBaseCseId) {
+                    LOG.error("Failed to get cseBase CSE-ID of the AE parrent");
+                    break;
+                }
+
+                String aeId = getAeIdFromResource(onem2mRequest.getOnem2mResource());
+                if (null == aeId) {
+                    LOG.error("Failed to get AE-ID of AE resource: resourceID {}, name {}",
+                              onem2mRequest.getResourceId(), onem2mRequest.getResourceName());
+                    break;
+                }
+
+                // Delete also mapping of AE-ID to resourceID
+                if (!twc.deleteAeIdToResourceIdMapping(cseBaseCseId, aeId)) {
+                    LOG.error("Failed to delete AE-ID to resourceID mapping for: cseBaseCseId: {}, aeId: {}",
+                              cseBaseCseId, aeId);
+                }
+                break;
         }
 
         // now in a transaction, smoke all the resources under this ResourceId

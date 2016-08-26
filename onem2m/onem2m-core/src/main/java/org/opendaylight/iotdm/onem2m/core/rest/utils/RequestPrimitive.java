@@ -18,16 +18,28 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+
 public class RequestPrimitive extends BasePrimitive {
 
     private static final Logger LOG = LoggerFactory.getLogger(RequestPrimitive.class);
 
+    private Onem2mDb.CseBaseResourceLocator targetResourceLocator = null;
+
+    public void setTargetResourceLocator(@Nonnull final Onem2mDb.CseBaseResourceLocator resourceLocator) {
+        this.targetResourceLocator = resourceLocator;
+    }
+
+    public Onem2mDb.CseBaseResourceLocator getTargetResourceLocator() {
+        return this.targetResourceLocator;
+    }
 
     /**
      * This is the onem2m request primitive.  Parameters can be filled in by restconf, or they will be filled in by the
