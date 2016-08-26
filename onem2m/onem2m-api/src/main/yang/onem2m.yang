@@ -47,6 +47,19 @@ module onem2m {
             leaf resource-id {
                 type string;
             }
+
+            /*
+             * Defines mapping of AE-ID to resourceID per cseBase
+             */
+            list onem2m-registered-ae-ids {
+                key registered-ae-id;
+                leaf registered-ae-id {
+                    type string;
+                }
+                leaf resource-id {
+                    type string;
+                }
+            }
         }
     }
     container onem2m-resource-tree {
@@ -129,12 +142,40 @@ module onem2m {
         }
     }
 
+    typedef security-level{
+        type enumeration {
+            enum l0 {
+                description "No security: Requests are not authenticated and registrations of request originator and sender are not verified";
+            }
+
+            enum l1 {
+                description "Mid security: Authentication of requests can be used otherwise the request originator must be registered";
+            }
+
+            enum l2 {
+                description "Full security: Authentication of requests is mandatory and request originators and senders must be registered";
+            }
+        }
+    }
+
     rpc onem2m-request-primitive {
         description
           "Perform an onem2m operation on this resource";
 
         input {
             uses onem2m-primitive-list;
+            leaf configured-security-level {
+                type security-level;
+            }
+            leaf cse-base-id {
+                type string;
+            }
+            leaf sender-is-cse {
+                type boolean;
+            }
+            leaf sender-identity {
+                type string;
+            }
         }
         output {
             uses onem2m-primitive-list;
@@ -213,10 +254,19 @@ module onem2m {
         }
     }
 
-    notification resourceChanged{
+    grouping notification-common {
+        leaf sender-cse-id {
+            type string;
+        }
         uses onem2m-primitive-list;
     }
+
+    notification resourceChanged{
+        uses notification-common;
+        /*uses onem2m-primitive-list;*/
+    }
     notification subscriptionDeleted{
-        uses onem2m-primitive-list;
+        uses notification-common;
+        /*uses onem2m-primitive-list;*/
     }
 }

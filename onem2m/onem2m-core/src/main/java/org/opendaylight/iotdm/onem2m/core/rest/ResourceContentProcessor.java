@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
+import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -29,8 +30,10 @@ public class ResourceContentProcessor {
      *
      * @param onem2mRequest request
      * @param onem2mResponse response
+     * @param resourceLocator Locator of the resource identified in the request.
      */
-    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                    Onem2mDb.CseBaseResourceLocator resourceLocator) {
 
         onem2mRequest.isCreate = true;
 
@@ -38,7 +41,7 @@ public class ResourceContentProcessor {
         switch (resourceType) {
 
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse, resourceLocator);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_CREATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
@@ -155,7 +158,7 @@ public class ResourceContentProcessor {
         onem2mRequest.isUpdate = true;
         switch (resourceType) {
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse, null);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_UPDATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:

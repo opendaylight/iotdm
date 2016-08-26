@@ -9,9 +9,9 @@ package org.opendaylight.iotdm.onem2m.plugins;
 
 import java.util.HashMap;
 
-public interface AbstractIotDMPlugin {
+public interface AbstractIotDMPlugin<Treq extends IotDMPluginRequest,
+                                     Trsp extends IotDMPluginResponse> extends AutoCloseable {
     void init();
-    void cleanup();
     String pluginName();
-    public void handle(IotDMPluginRequest request, IotDMPluginResponse response);
+    void handle(Treq request, Trsp response);
 }

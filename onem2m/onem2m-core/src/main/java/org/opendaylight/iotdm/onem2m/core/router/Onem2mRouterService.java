@@ -17,14 +17,12 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.collect.ImmutableSet;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -37,10 +35,10 @@ public class Onem2mRouterService {
     private static final String defaultPluginName = "http";
     private static Onem2mRouterService routerService = new Onem2mRouterService();
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mRouterService.class);
-    Map<String, Onem2mRouterPlugin> routerServicePluginMap = new HashMap<>();
+    private final Map<String, Onem2mRouterPlugin> routerServicePluginMap = new ConcurrentHashMap<>();
+
     private final ExecutorService executor;
     private static final Onem2mRoutingTable routingTable = new Onem2mRoutingTable();
-
 
     private Onem2mRouterService() {
         executor = Executors.newFixedThreadPool(32);
@@ -58,12 +56,25 @@ public class Onem2mRouterService {
         routingTable.cleanRoutingTable();
     }
 
-    /**
-     * Registers plugin
-     * @param plugin The router plugin
-     */
     public void pluginRegistration(Onem2mRouterPlugin plugin) {
-        routerServicePluginMap.put(plugin.getRouterPluginName().toLowerCase(), plugin);
+        String name = plugin.getRouterPluginName().toLowerCase();
+        if (routerServicePluginMap.containsKey(name) &&
+            (routerServicePluginMap.get(name) != plugin)) {
+            throw new IllegalArgumentException("Multiple router plugin registrations with name " + name);
+        }
+
+        routerServicePluginMap.put(name, plugin);
+        LOG.info("Added default router plugin: {}", name);
+    }
+
+    public void unregister(Onem2mRouterPlugin plugin) {
+        String name = plugin.getRouterPluginName().toLowerCase();
+        if (routerServicePluginMap.containsKey(name)) {
+            if (routerServicePluginMap.get(name) == plugin) {
+                routerServicePluginMap.remove(name);
+                LOG.info("Default router plugin removed: {}", name);
+            }
+        }
     }
 
     /**
@@ -192,6 +203,8 @@ public class Onem2mRouterService {
                                                       CseRoutingDataRemote routingData) {
 
         Onem2mRouterPlugin routerPlugin = null;
+        CseRoutingDataBase cseBaseData = routingTable.getCseBase(routingData.parentCseBaseName);
+
         try {
             if (routingData.requestReachable && (null != routingData.pointOfAccess)) {
                 // loop over the pointOfAccess URIs and try to forward the request there
@@ -204,7 +217,8 @@ public class Onem2mRouterService {
                         continue;
                     }
 
-                    response = routerPlugin.sendRequestBlocking(requestNextHop, nextHopUrl);
+                    response = routerPlugin.sendRequestBlocking(requestNextHop, nextHopUrl,
+                                                                routingData.parentCseBaseCseId);
                     if (null == response) {
                         LOG.trace("No response returned by plugin: {}", routerPlugin.getRouterPluginName());
                         continue;
@@ -223,6 +237,9 @@ public class Onem2mRouterService {
                             LOG.trace("Target unreachable through next hop: {}", nextHopUrl);
                             continue;
 
+                        case Onem2m.ResponseStatusCode.ACCESS_DENIED:
+                            LOG.info("This CSEBase is unauthorized ath next hop: {}", nextHopUrl);
+                            continue;
                         default:
                             return response;
                     }
@@ -285,6 +302,28 @@ public class Onem2mRouterService {
         return (data.cseId.equals(cseId));
     }
 
+    public boolean hasRemoteCse(String cseBaseCseId, String remoteCseCseId) {
+        CseRoutingDataBase data = routingTable.getCseBaseByCseId(cseBaseCseId);
+        if (null == data) {
+            return false;
+        }
+
+        if (null == data.getRemoteCse(remoteCseCseId)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Ineffective and ambiguous version, because cseBaseCseId is not specified
+    public boolean hasRemoteCse(String remoteCseCseId) {
+        CseRoutingData data = routingTable.findFirstRemoteCse(remoteCseCseId);
+        if (null != data) {
+            return true;
+        }
+
+        return false;
+    }
 
     /*
      * Methods processing request primitives and updates
@@ -308,7 +347,8 @@ public class Onem2mRouterService {
         String oldValue = routingTable.getCseBase(cseBaseName).FQDN;
 
         // updated and check if successful
-        if (null == routingTable.updateCseBase(builder.setFQDN(FQDN).build())) {
+        builder.setFQDN(FQDN);
+        if ((! builder.verify()) || (null == routingTable.updateCseBase(builder.build()))) {
             LOG.error("Failed to update CSEBase routing data, name: {}, FQDN {}", cseBaseName, FQDN);
         } else {
             LOG.trace("RoutingData CSEBase: {}, FQDN changed: old: {}, new: {}",
@@ -335,7 +375,8 @@ public class Onem2mRouterService {
         String oldValue = routingTable.getCseBase(cseBaseName).registrarCseId;
 
         // updated and check if successful
-        if (null == routingTable.updateCseBase(builder.setRegistrarCseId(registrarCseId).build())) {
+        builder.setRegistrarCseId(registrarCseId);
+        if ((! builder.verify()) || (null == routingTable.updateCseBase(builder.build()))) {
             LOG.error("Failed to update CSEBase routing data, name: {}, registrarCse {}", cseBaseName, registrarCseId);
         } else {
             LOG.trace("RoutingData CSEBase ({}) registrarCSE changed: old: {}, new: {}", cseBaseName, oldValue, registrarCseId);
@@ -364,7 +405,8 @@ public class Onem2mRouterService {
         String oldValue = routingTable.getRemoteCse(cseBaseName, remoteCseId).polingChannel;
 
         // update and check if successful
-        if (null == routingTable.updateRemoteCse(builder.setPolingChannel(polingChannel).build())) {
+        builder.setPolingChannel(polingChannel);
+        if ((! builder.verify()) || (null == routingTable.updateRemoteCse(builder.build()))) {
             LOG.error("Failed to update remoteCSE poling channel, cseBaseName: {}, remoteCseId: {}",
                       cseBaseName, remoteCseId);
         } else {
@@ -402,6 +444,7 @@ public class Onem2mRouterService {
     private void updateRoutingTableCseBase(RequestPrimitive request) {
         final String baseCseTypeAttribute = "CSE_TYPE";
         final String baseCseIDAttribute = "CSE_ID";
+        final String baseCsePassword = "CSE_PASSWORD";
 
         String name = request.getResourceName();
         String operation = null;
@@ -423,6 +466,7 @@ public class Onem2mRouterService {
                     .setCseId(request.getPrimitive(baseCseIDAttribute))
                     .setCseType(request.getPrimitive(baseCseTypeAttribute))
                     .build();
+
                 if (null == newRoutingData) {
                     LOG.error("Failed to create CSEBase routing data from request");
                     break;
@@ -472,6 +516,12 @@ public class Onem2mRouterService {
             return;
         }
 
+        CseRoutingDataBase base = routingTable.getCseBase(parent.getName());
+        if (null == base) {
+            LOG.error("No such cseBase in routing table: {}", parent.getName());
+            return;
+        }
+
         // get some data common for all operations
         String cseBaseName = parent.getName();
         String remoteCseId = request.getContentAttributeString(ResourceRemoteCse.CSE_ID);
@@ -489,6 +539,7 @@ public class Onem2mRouterService {
                         .setCseId(remoteCseId)
                         .setCseType(cseType)
                         .setParentCseBaseName(cseBaseName)
+                        .setCseBaseCseId(base.cseId)
                         .setRequestReachable(
                                 request.getContentAttributeBoolean(ResourceRemoteCse.REQUEST_REACHABILITY))
                         .setPointOfAccess(

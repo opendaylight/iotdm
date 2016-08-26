@@ -26,6 +26,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+
 /**
  * This the service side handler for the RequestPrimitives.  When the RPC is called, this class is used to
  * processes the primitives in the request.
@@ -57,6 +59,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                     // replace the primitive with the short name
                     // for now fall thru and error
                 }
+
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "REQUEST_PRIMITIVES(" + onem2mResource.getName() + ") not valid/supported");
                 return false;
@@ -416,6 +419,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 handleOperationNotify(onem2mResponse);
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "OPERATION(" + RequestPrimitive.OPERATION + ") NOTIFY not implemented");
+                LOG.warn("Received NOTIFY operation but handling is not implemented, from: {}.",
+                         this.getPrimitive(RequestPrimitive.FROM));
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
@@ -660,7 +665,8 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             // if the a name is provided, ensure it is valid and unique at this hierarchical level
             if (resourceName != null) {
                 // using the parent, see if this new resource name already exists under this parent resource
-                if (Onem2mDb.getInstance().findResourceUsingIdAndName(this.getOnem2mResource().getResourceId(), resourceName)) {
+                if (Onem2mDb.getInstance().findResourceUsingIdAndName(this.getOnem2mResource().getResourceId(),
+                                                                      resourceName)) {
                     // TS0004: 7.2.3.2
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
                             "Resource already exists: " + this.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
@@ -682,7 +688,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         }
 
         // process the resource specific attributes
-        ResourceContentProcessor.handleCreate(this, onem2mResponse);
+        ResourceContentProcessor.handleCreate(this, onem2mResponse, this.getTargetResourceLocator());
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
             return;
         }
@@ -1011,7 +1017,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
 
             // process the resource specific attributes
-            ResourceContentProcessor.handleCreate(this, onem2mResponse);
+            ResourceContentProcessor.handleCreate(this, onem2mResponse, null);
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
                 return;
             }

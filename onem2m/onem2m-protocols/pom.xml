@@ -19,5 +19,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>coap</module>
     <module>http</module>
     <module>mqtt</module>
+    <module>common</module>
   </modules>
 </project>

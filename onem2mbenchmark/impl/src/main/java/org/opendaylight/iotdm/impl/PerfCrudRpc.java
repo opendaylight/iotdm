@@ -195,7 +195,7 @@ public class PerfCrudRpc {
                 .setOperationRetrieve()
                 .build();
 
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
         String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
         String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
         if (rscString == null || rscString.charAt(0) != '2') {
@@ -273,7 +273,7 @@ public class PerfCrudRpc {
                 .setOperationDelete()
                 .build();
 
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
         String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
         String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
         if (rscString == null || rscString.charAt(0) != '2') {

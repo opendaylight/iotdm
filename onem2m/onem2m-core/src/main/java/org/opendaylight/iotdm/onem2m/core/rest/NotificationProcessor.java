@@ -398,9 +398,19 @@ public class NotificationProcessor {
             notification.put(SUBSCRIPTION_REFERENCE, name);
             onem2mNotification.setPrimitive(NotificationPrimitive.CONTENT, notification.toString());
 
+            // Get the sender CSE-ID if set
+            String senderCse = null;
+            if (null != onem2mRequest.getTargetResourceLocator() &&
+                null != onem2mRequest.getTargetResourceLocator().getCseBaseCseId()) {
+                senderCse = onem2mRequest.getTargetResourceLocator().getCseBaseCseId();
+            } else {
+                LOG.warn("Unable to get sender CSEBase CSE-ID");
+            }
+
             // copy the URI's to the notification,
             ResourceChanged rc = new ResourceChangedBuilder()
                     .setOnem2mPrimitive(onem2mNotification.getPrimitivesList())
+                    .setSenderCseId(senderCse)
                     .build();
 
             // now that we have a NotificationPrimitive, we need to send it to the Notifier
@@ -500,8 +510,18 @@ public class NotificationProcessor {
         JsonUtils.put(notification, SUBSCRIPTION_REFERENCE, name);
         onem2mNotification.setPrimitive(NotificationPrimitive.CONTENT, notification.toString());
 
+        // Get the sender CSE-ID if set
+        String senderCse = null;
+        if (null != onem2mRequest.getTargetResourceLocator() &&
+            null != onem2mRequest.getTargetResourceLocator().getCseBaseCseId()) {
+            senderCse = onem2mRequest.getTargetResourceLocator().getCseBaseCseId();
+        } else {
+            LOG.warn("Unable to get sender CSEBase CSE-ID");
+        }
+
         SubscriptionDeleted sd = new SubscriptionDeletedBuilder()
                     .setOnem2mPrimitive(onem2mNotification.getPrimitivesList())
+                    .setSenderCseId(senderCse)
                     .build();
 
         // now that we have a NotificationPrimitive, we need to send it to the Notifier

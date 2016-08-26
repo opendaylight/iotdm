@@ -87,7 +87,7 @@ public class Onem2mExampleCustomProtocol implements AbstractIotDMPlugin {
     }
 
     @Override
-    public void cleanup() {
+    public void close() {
     }
 
     @Override

@@ -122,7 +122,7 @@ public class BasicSanityRpc {
 
         resourceNameList.add(toUri + "/" + AE_APP_NAME);
 
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
         String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
         try {
             Onem2mResponse or = new Onem2mResponse(responseContent);
@@ -291,7 +291,7 @@ public class BasicSanityRpc {
                     .setResultContent("1")
                     .build();
 
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+            ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
             String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             try {
                 Onem2mResponse or = new Onem2mResponse(responseContent);
@@ -335,7 +335,7 @@ public class BasicSanityRpc {
                     .setOperationDelete()
                     .build();
 
-            ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+            ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
             String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
             String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             try {
@@ -387,7 +387,7 @@ public class BasicSanityRpc {
                 .setResultContent("1")
                 .build();
 
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+        ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
 
         toURI += "/" + CONTAINER_NAME;
 
@@ -411,7 +411,7 @@ public class BasicSanityRpc {
                     .setResultContent("1")
                     .build();
 
-            onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
+            onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
 
             String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
             try {
