@@ -29,12 +29,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
            <groupId>org.eclipse.californium</groupId>
            <artifactId>californium-osgi</artifactId>
-           <version>1.0.0-M1</version>
+           <version>1.0.2</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.aggregate</groupId>
-            <artifactId>jetty-all-server</artifactId>
-            <version>8.1.15.v20140411</version>
+            <groupId>org.ops4j.pax.web</groupId>
+            <artifactId>pax-web-jetty-bundle</artifactId>
+            <version>3.2.9</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>

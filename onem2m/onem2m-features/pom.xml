@@ -22,12 +22,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <maven>3.1.1</maven>
     </prerequisites>
     <properties>
-        <restconf.version>1.5.0-SNAPSHOT</restconf.version>
-        <mdsal.version>1.5.0-SNAPSHOT</mdsal.version>
         <mdsal.model.version>0.10.0-SNAPSHOT</mdsal.model.version>
+        <mdsal.version>1.5.0-SNAPSHOT</mdsal.version>
+        <restconf.version>1.5.0-SNAPSHOT</restconf.version>
         <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
         <dlux.version>0.5.0-SNAPSHOT</dlux.version>
-        <pax.web.version>3.2.6</pax.web.version>
+        <pax.web.version>3.2.9</pax.web.version>
         <mqttclient.version>1.0.2</mqttclient.version>
         <joda.version>2.7</joda.version>
         <configfile.directory>etc/opendaylight/karaf</configfile.directory>
@@ -42,6 +42,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.opendaylight.netconf</groupId>
+                <artifactId>restconf-artifacts</artifactId>
+                <version>${restconf.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.opendaylight.yangtools</groupId>
+                <artifactId>yangtools-artifacts</artifactId>
+                <version>${yangtools.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -49,7 +63,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>features-yangtools</artifactId>
             <classifier>features</classifier>
-            <version>${yangtools.version}</version>
             <type>xml</type>
             <scope>runtime</scope>
         </dependency>
@@ -65,7 +78,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>features-mdsal</artifactId>
             <classifier>features</classifier>
-            <version>${mdsal.version}</version>
             <type>xml</type>
             <scope>runtime</scope>
         </dependency>
@@ -73,16 +85,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <groupId>org.opendaylight.netconf</groupId>
             <artifactId>features-restconf</artifactId>
             <classifier>features</classifier>
-            <version>${restconf.version}</version>
             <type>xml</type>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.dlux</groupId>
             <artifactId>features-dlux</artifactId>
-            <version>${dlux.version}</version>
             <classifier>features</classifier>
+            <version>${dlux.version}</version>
             <type>xml</type>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.web</groupId>
@@ -90,6 +102,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <version>${pax.web.version}</version>
             <classifier>features</classifier>
             <type>xml</type>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
