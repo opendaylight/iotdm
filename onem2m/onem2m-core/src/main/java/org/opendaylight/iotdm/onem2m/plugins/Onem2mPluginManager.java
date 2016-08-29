@@ -36,7 +36,7 @@ import org.eclipse.californium.core.coap.*;
 import org.eclipse.californium.core.network.Exchange;
 import org.eclipse.californium.core.server.resources.CoapExchange;
 import org.eclipse.californium.core.server.resources.Resource;
-import org.eclipse.californium.core.network.CoAPEndpoint;
+import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.EndpointManager;
 import org.eclipse.californium.core.network.config.NetworkConfig;
 
@@ -213,7 +213,7 @@ class CoapServerProvider extends CoapServer {
                 System.out.println("addr: "+addr.toString());
                 InetSocketAddress bindToAddress = new InetSocketAddress(addr, port);
                 System.out.println("bindToAddress: "+bindToAddress.toString());
-                addEndpoint(new CoAPEndpoint(bindToAddress));
+                addEndpoint(new CoapEndpoint(bindToAddress));
             }
         }
     }
@@ -274,7 +274,7 @@ class CoapServerProvider extends CoapServer {
 
             Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
-            String tmpUrl = options.getURIPathString();
+            String tmpUrl = options.getUriPathString();
             LOG.info("Processed URL", tmpUrl);
             request.setUrl(tmpUrl);
             switch (code) {
@@ -433,8 +433,8 @@ class IotDMSamplePlugin implements AbstractIotDMPlugin, AutoCloseable {
     @Override
     public void init() {
         //Onem2mPluginManager.getInstance().registerPlugin("http", this, Onem2mPluginManager.Mode.Shared);
-        Onem2mPluginManager.getInstance().registerPluginAtPort("http", this, 8284,Onem2mPluginManager.Mode.Shared);
-        Onem2mPluginManager.getInstance().registerPluginAtPort("http", this, 8284,Onem2mPluginManager.Mode.Exclusive);
+        //Onem2mPluginManager.getInstance().registerPluginAtPort("http", this, 8284,Onem2mPluginManager.Mode.Shared);
+        //Onem2mPluginManager.getInstance().registerPluginAtPort("http", this, 8284,Onem2mPluginManager.Mode.Exclusive);
         //Onem2mPluginManager.getInstance().registerPluginAtPort("coap", this, 8285,Onem2mPluginManager.Mode.Exclusive);
     }
 
