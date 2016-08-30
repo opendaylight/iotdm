@@ -1,0 +1,7 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+2: Lionel Florit <lflorit@cisco.com>
+Submitted-by: Lionel Florit <lflorit@cisco.com>
+Submitted-at: Tue, 30 Aug 2016 19:13:24 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/44818
+Project: iotdm
+Branch: refs/heads/stable/boron
