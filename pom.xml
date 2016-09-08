@@ -28,7 +28,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>onem2m</module>
     <module>onem2mplugins</module>
     <module>onem2mbenchmark</module>
-    <module>onem2mexample</module>
     <module>onem2mall</module>
   </modules>
 

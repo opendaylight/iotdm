@@ -1016,11 +1016,14 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 return;
             }
 
+            ResultContentProcessor.handleCreate(this, onem2mResponse);
+
             // TODO: see TS0004 6.8
             // if the create was successful, ie no error has already happened, set CREATED for status code here
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
-                        "Provisioned cseBase: " + cseId + " type: " + cseType);
+//                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
+//                        "Provisioned cseBase: " + cseId + " type: " + cseType);
+                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.OK);
             }
         } finally {
             this.crudMonitor.leave();

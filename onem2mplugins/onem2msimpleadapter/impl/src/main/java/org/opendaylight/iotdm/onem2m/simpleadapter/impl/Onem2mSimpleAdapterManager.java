@@ -22,7 +22,6 @@ import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.Onem2mSimpleAdapterConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.SimpleAdapterParmsDesc;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.onem2m.simple.adapter.config.SimpleAdapterDesc;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -232,9 +231,9 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
 
     private boolean getContainer(String parent, String name) {
 
-        Onem2mContainerRequestBuilder b;
+        Container b;
 
-        b = new Onem2mContainerRequestBuilder();
+        b = new Container();
         b.setTo(parent + "/" + name);
         b.setOperationRetrieve();
         Onem2mRequestPrimitiveClient req = b.build();
@@ -266,9 +265,9 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
 
     private boolean createContainer(String parent, String name, SimpleAdapterDesc simpleAdapterDesc) {
 
-        Onem2mContainerRequestBuilder b;
+        Container b;
 
-        b = new Onem2mContainerRequestBuilder();
+        b = new Container();
         b.setTo(parent);
         b.setOperationCreate();
         b.setPrimitiveContent(simpleAdapterDesc.getOnem2mContainerJsonString());
@@ -298,9 +297,9 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
 
     private boolean createContainer2(String parent, String name, SimpleAdapterDesc simpleAdapterDesc) {
 
-        Onem2mContainerRequestBuilder b;
+        Container b;
 
-        b = new Onem2mContainerRequestBuilder();
+        b = new Container();
         b.setTo(parent);
         b.setOperationCreate();
         b.setPrimitiveContent(simpleAdapterDesc.getOnem2mContainerJsonString());
@@ -331,9 +330,9 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
 
     private boolean createContentInstance(String parent, String content, SimpleAdapterDesc simpleAdapterDesc) {
 
-        Onem2mContentInstanceRequestBuilder b;
+        ContentInstance b;
 
-        b = new Onem2mContentInstanceRequestBuilder();
+        b = new ContentInstance();
         b.setTo(parent);
         b.setOperationCreate();
         b.setPrimitiveContent(simpleAdapterDesc.getOnem2mContentInstanceJsonString());

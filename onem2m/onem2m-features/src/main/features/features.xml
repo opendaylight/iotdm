@@ -103,6 +103,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <!-- TODO: comment out next line to disable restconf, sql, and apidocs -->
         <feature version="${project.version}">odl-onem2m-ui</feature>
 
+        <feature version="${dlux.version}">odl-dlux-yangman</feature>
         <feature version="${project.version}">odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
 

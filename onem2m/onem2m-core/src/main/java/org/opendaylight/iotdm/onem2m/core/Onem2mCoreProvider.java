@@ -67,7 +67,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);
-        initializePerfCse();
         LOG.info("Session Initiated");
     }
 
@@ -84,17 +83,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             db.close();
         }
         LOG.info("Session Closed");
-    }
-
-    private void initializePerfCse() {
-        if (!Onem2mDb.getInstance().findCseByName(Onem2m.SYS_PERF_TEST_CSE)) {
-            RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-            onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
-            onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
-            onem2mRequest.setPrimitive("CSE_TYPE", Onem2m.CseType.INCSE);
-            ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-            onem2mRequest.provisionCse(onem2mResponse);
-        }
     }
 
     /**
@@ -114,6 +102,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public Future<RpcResult<Onem2mRequestPrimitiveOutput>> onem2mRequestPrimitive(Onem2mRequestPrimitiveInput input) {
 
         //LOG.info("RPC: begin handle op ...");
+        Onem2mRequestPrimitiveOutput output = null;
 
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
         // todo: if it is a group/fanoutpoint, new a GroupRequestPrimitiveProcessor then called a lot of single processor?
@@ -123,12 +112,48 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
         Onem2mDb.CseBaseResourceLocator resourceLocator = null;
         try {
+            String nativeAppName = onem2mRequest.getPrimitive(RequestPrimitive.NATIVEAPP_NAME);
+            if(nativeAppName != null && nativeAppName.equals("CSEProvisioning")) {
+
+                Onem2mCseProvisioningInput cseInput = new Onem2mCseProvisioningInputBuilder()
+                        .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+                Future<RpcResult<Onem2mCseProvisioningOutput>> rpcResult = onem2mCseProvisioning(cseInput);
+                try {
+                    onem2mPrimitiveList = rpcResult.get().getResult().getOnem2mPrimitive();
+
+                    output = new Onem2mRequestPrimitiveOutputBuilder()
+                            .setOnem2mPrimitive(onem2mPrimitiveList).build();
+                    return RpcResultBuilder.success(output).buildFuture();
+
+                } catch (InterruptedException | ExecutionException ex) {
+                    onem2mResponse = new ResponsePrimitive();
+                    onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
+                            onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cse Provisioning failed");
+                    onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
+                    output = new Onem2mRequestPrimitiveOutputBuilder()
+                            .setOnem2mPrimitive(onem2mPrimitiveList).build();
+                }
+
+                return RpcResultBuilder.success(output).buildFuture();
+            }
+        } catch (IllegalArgumentException ex) {
+            LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitive(RequestPrimitive.TO));
+            // rethrow the exception
+            throw ex;
+        }
+
+        try {
+            String to = onem2mRequest.getPrimitive(RequestPrimitive.TO);
+            onem2mRequest.delPrimitive(RequestPrimitive.TO);
+            onem2mRequest.setPrimitive(RequestPrimitive.TO, Onem2m.translateUriToOnem2m(to));
             resourceLocator = this.db.createResourceLocator(onem2mRequest.getPrimitive(RequestPrimitive.TO));
         } catch (IllegalArgumentException ex) {
             LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitive(RequestPrimitive.TO));
             // rethrow the exception
             throw ex;
         }
+
 
         // Check if the target URI points to local resource
         if (! resourceLocator.isLocalResource()) {
@@ -153,7 +178,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         }
 
         onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
-        Onem2mRequestPrimitiveOutput output = new Onem2mRequestPrimitiveOutputBuilder()
+        output = new Onem2mRequestPrimitiveOutputBuilder()
                 .setOnem2mPrimitive(onem2mPrimitiveList).build();
 
         //LOG.info("RPC: end handle op ...");
@@ -185,7 +210,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
         onem2mRequest.provisionCse(onem2mResponse);
 
-        if (onem2mResponse.getPrimitive("rsc").contains("Provisioned")) {
+        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE).equals(Onem2m.ResponseStatusCode.OK)) {
             RequestPrimitiveProcessor onem2mRequest1 = new RequestPrimitiveProcessor();
             onem2mRequest1.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mRequest1.setPrimitivesList(csePrimitiveList);
@@ -211,7 +236,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
         Onem2mDb.getInstance().cleanupDataStore();
         Onem2mRouterService.cleanRoutingTable();
-        initializePerfCse();
         Onem2mDb.getInstance().dumpResourceIdLog(null);
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }

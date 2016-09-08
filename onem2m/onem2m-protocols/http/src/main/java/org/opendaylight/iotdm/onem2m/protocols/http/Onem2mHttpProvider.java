@@ -56,17 +56,25 @@ public class Onem2mHttpProvider implements AbstractIotDMPlugin, Onem2mNotifierPl
         Onem2mNotifierService.getInstance().pluginRegistration(this);
         Onem2mRouterService.getInstance().pluginRegistration(this);
 
+        try {
+            client.start();
+        } catch (Exception e) {
+            LOG.info("Exception: {}", e.toString());
+        }
+
         LOG.info("Onem2mHttpProvider Session Initiated");
     }
 
     @Override
     public void close() throws Exception {
+        client.stop();
         LOG.info("Onem2mHttpProvider Closed");
     }
 
     public Onem2mHttpProvider() {
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
         mgr.registerPluginAtPort("http",this,8282,Onem2mPluginManager.Mode.Exclusive);
+        client = new HttpClient();
     }
 
     private String resolveContentFormat(String contentType) {
@@ -108,7 +116,7 @@ public void handle(IotDMPluginRequest request, IotDMPluginResponse response){
             return;
         }
 
-        clientBuilder.setTo(Onem2m.translateUriToOnem2m(httpRequest.getRequestURI()));
+        clientBuilder.setTo(httpRequest.getRequestURI());
 
         // pull fields out of the headers
         headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
