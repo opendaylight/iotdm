@@ -10,7 +10,6 @@ package org.opendaylight.iotdm.impl;
 import static java.lang.Thread.sleep;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.json.JSONException;
@@ -157,9 +156,9 @@ public class PerfCrudRpc {
 
     private boolean createOneTest(Integer resourceId) {
 
-        Onem2mContainerRequestBuilder b;
+        Container b;
 
-        b = new Onem2mContainerRequestBuilder();
+        b = new Container();
         b.setTo("/" + Onem2m.SYS_PERF_TEST_CSE);
         b.setOperationCreate();
         b.setMaxNrInstances(5);

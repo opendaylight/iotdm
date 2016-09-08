@@ -108,6 +108,7 @@ public class Onem2mCSEResponse extends Onem2mResponse {
                         return false;
                     }
                     JSONArray a = (JSONArray) o;
+                    this.supportedResourceTypes = new Integer[a.length()];
                     for (int i = 0; i < a.length(); i++) {
                         if (!(a.opt(i) instanceof Integer)) {
                             LOG.error("Integer expected for supported resource type: " + key);

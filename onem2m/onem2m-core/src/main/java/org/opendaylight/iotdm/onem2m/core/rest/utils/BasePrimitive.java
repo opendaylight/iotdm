@@ -95,7 +95,7 @@ public class BasePrimitive {
         return this.primitiveManyMap.get(primitiveName);
     }
 
-    private boolean delPrimitive(String primitiveName) {
+    public boolean delPrimitive(String primitiveName) {
         if (primitiveMap.containsKey(primitiveName)) {
             primitiveMap.remove(primitiveName);
             onem2mPrimitivesList.remove(primitiveName);

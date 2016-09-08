@@ -222,7 +222,7 @@ public class Onem2mCoapProvider extends CoapServer
                     return;
             }
 
-            clientBuilder.setTo(Onem2m.translateUriToOnem2m(options.getUriPathString())); // To/TargetURI
+            clientBuilder.setTo(options.getUriPathString()); // To/TargetURI
             // M3 clientBuilder.setTo(options.getUriPathString()); // To/TargetURI // M3
 
             Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();

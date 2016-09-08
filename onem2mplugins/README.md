@@ -121,6 +121,14 @@ Now cd into the onem2m-plugins folder, this is the root plugin folder and should
     
 To generate a new onem2m plugin,
 
+For Carbon,
+
+    mvn archetype:generate -DarchetypeGroupId=org.opendaylight.controller \
+    -DarchetypeArtifactId=opendaylight-startup-archetype \
+    -DarchetypeVersion=1.3.0-SNAPSHOT \
+    -DarchetypeRepository=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/ \
+    -DarchetypeCatalog=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/archetype-catalog.xml
+
 For Boron, 
 
     mvn archetype:generate -DarchetypeGroupId=org.opendaylight.controller \
@@ -133,7 +141,7 @@ For Beryllium,
 
     mvn archetype:generate -DarchetypeGroupId=org.opendaylight.controller \
     -DarchetypeArtifactId=opendaylight-startup-archetype \
-    -DarchetypeVersion=1.1.2-SNAPSHOT \
+    -DarchetypeVersion=1.1.4-SNAPSHOT \
     -DarchetypeRepository=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/ \
     -DarchetypeCatalog=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/archetype-catalog.xml
     
@@ -240,7 +248,7 @@ looking at other examples will help further your understanding of how features.x
 Add this line into the <properties> stanza where the other version statements are.  Note: the version number below
 should match the <version> from the iotdm/onem2m/onem2m-features/pom.xml
 
-      <onem2m.version>0.1.2-SNAPSHOT</onem2m.version>
+      <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
       
 Then, add the following lines to the <dependencies> section,
 
@@ -255,16 +263,26 @@ Then, add the following lines to the <dependencies> section,
     
 ### Edit file iotdm/onem2m_plugins/onem2m_<plugin-name>/impl/pom.xml
 
-Add the following lines to the <dependencies> section, note the 0.1.1-SNAPSHOT should match the <version>
+Add the following lines to the <dependencies> section, note the 0.3.0-SNAPSHOT should match the <version>
 from the iotdm/onem2m/onem2m-features/pom.xml.
 
       <dependency>
           <groupId>org.opendaylight.iotdm</groupId>
           <artifactId>onem2m-core</artifactId>
-          <version>0.1.2-SNAPSHOT</version>
+          <version>0.3.0-SNAPSHOT</version>
       </dependency>
 
-At this point, you might want to build your plugin using 'mvn clean install -SkipTests'.  It should be successful,
+It is recommended to also change the version of your new plugin to match the version of onem2m.  So, because the
+onem2m version is 0.3.0 (for Carbon) and you are creating your new plugin in Carbon.  You should change the project
+version.  In each of the pom.xml files for the folders: api, artifacts, cli, features, impl, it, karaf and the
+base pom.xml.
+
+The impl-blueprint.xml file in the impl/src/main/resources/org/opendaylight/blueprint folder needs an
+rpcProviderRegistry added to it.  See onem2mExample plugin for an example of what is required so that the onem2mService
+can be initilized and used.  Note: your plugin's <yourplugin>Provider.java will also need to support
+this rpcProviderRegistry so the onem2mService can be initialized.
+
+At this point, you might want to build your plugin using 'mvn clean install -DskipTests'.  It should be successful,
 if not, look at the reasons the build is failing and fix the issues.
 
 Now your are ready to write the rest of your plugin.  Again, looking at other plugin's helps.  Don't forget to

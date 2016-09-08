@@ -144,11 +144,11 @@ public class BasicSanityRpc {
     private boolean createAETest(List<String> resourceList, String toUri, List<String> resourceNameList) {
 
         Onem2mRequestPrimitiveClient aeRequest;
-        Onem2mAERequestBuilder aeBuilder;
+        AE aeBuilder;
 
         resourceNameList.add(toUri + "/" + AE_APP_NAME);
 
-        aeBuilder = new Onem2mAERequestBuilder();
+        aeBuilder = new AE();
         aeBuilder.setTo(toUri);
         aeBuilder.setOperationCreate();
         aeBuilder.setName(AE_APP_NAME);
@@ -190,9 +190,9 @@ public class BasicSanityRpc {
      */
     private boolean createContainerTest(List<String> resourceList, String toUri, List<String> resourceNameList) {
 
-        Onem2mContainerRequestBuilder b;
+        Container b;
 
-        b = new Onem2mContainerRequestBuilder();
+        b = new Container();
         b.setTo(toUri);
         b.setOperationCreate();
         b.setMaxNrInstances(1);
@@ -232,9 +232,9 @@ public class BasicSanityRpc {
      */
     private boolean createContentInstanceTest(List<String> resourceList, String toUri, List<String> resourceNameList) {
 
-        Onem2mContentInstanceRequestBuilder b;
+        ContentInstance b;
 
-        b = new Onem2mContentInstanceRequestBuilder();
+        b = new ContentInstance();
         b.setTo(toUri);
         b.setOperationCreate();
         b.setName(CONTENT_INSTANCE_NAME);

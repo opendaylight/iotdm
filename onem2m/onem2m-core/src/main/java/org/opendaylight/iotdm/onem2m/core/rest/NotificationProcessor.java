@@ -13,7 +13,6 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opendaylight.iotdm.onem2m.client.Onem2mContentInstanceRequestBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
