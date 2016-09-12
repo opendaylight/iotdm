@@ -32,6 +32,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${restconf.version}">odl-restconf</feature>
   </feature>
   <feature name='odl-onem2mexample-ui' version='${project.version}' description='OpenDaylight :: onem2mexample :: UI'>
+    <feature version="${project.version}">odl-onem2m-persistence-mdsal</feature>
     <feature version="${project.version}">odl-onem2mexample-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${mdsal.version}">odl-mdsal-xsql</feature>

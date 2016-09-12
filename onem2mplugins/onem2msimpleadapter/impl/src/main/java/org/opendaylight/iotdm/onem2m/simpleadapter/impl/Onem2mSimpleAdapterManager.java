@@ -19,7 +19,8 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.client.*;
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.Onem2mSimpleAdapterConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.onem2m.simple.adapter.config.SimpleAdapterDesc;
@@ -48,19 +49,18 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
     //private Onem2mSimpleAdapterMqttClient onem2mMqttClient = null;
     //private Onem2mSimpleAdapterCoapServer onem2mCoapServer = null;
     private Onem2mService onem2mService;
+    private ResourceTreeReader trc;
 
-    public Onem2mSimpleAdapterManager(DataBroker dataBroker, Onem2mService onem2mService) {
+    public Onem2mSimpleAdapterManager(ResourceTreeReader trc, DataBroker dataBroker, Onem2mService onem2mService) {
 
         this.dataBroker = dataBroker;
         // listen for changes to simple adapter descriptors
         dcReg = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.CONFIGURATION,
                 ONEM2M_SIMPLE_ADAPTER_DESC_IID), this);
-
         // cache each of the simple adapter descriptors
         simpleAdapterMap = new HashMap<String,SimpleAdapterDesc>();
-
         this.onem2mService = onem2mService;
-
+        this.trc = trc;
         LOG.info("Created Onem2mSimpleAdapterManager");
 
     }
@@ -78,7 +78,7 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
     public void close() {
         dcReg.close();
     }
-    
+
     /**
      * Configuration of the simple adapter has changed.
      * @param changes
@@ -155,7 +155,7 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
         for (Map.Entry<String, SimpleAdapterDesc> entry : simpleAdapterMap.entrySet()) {
             SimpleAdapterDesc desc = entry.getValue();
             if (uri.contentEquals(trim(desc.getOnem2mTargetId()))) {
-                String onem2mResourceId = Onem2mDb.getInstance().findResourceIdUsingURI(uri);
+                String onem2mResourceId = Onem2mPluginsDbApi.getInstance().findResourceIdUsingURI(uri);
                 return (onem2mResourceId != null) ? desc : null;
             }
         }
@@ -169,7 +169,7 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
         stringWithSlashes = stringWithSlashes.startsWith("/") ?
                 stringWithSlashes.substring("/".length()) : stringWithSlashes;
         stringWithSlashes = stringWithSlashes.endsWith("/") ?
-                stringWithSlashes.substring(0,stringWithSlashes.length()-1) : stringWithSlashes;
+                stringWithSlashes.substring(0, stringWithSlashes.length() - 1) : stringWithSlashes;
         return stringWithSlashes;
     }
 

@@ -15,7 +15,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * Created by canwu on 11/19/15.
  */
-public class IPAddressVidator {
+public class IPAddressValidator {
 
     private static Pattern VALID_IPV4_PATTERN = null;
     private static Pattern VALID_IPV6_PATTERN = null;

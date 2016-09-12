@@ -84,9 +84,9 @@ public class BasicSanityRpc {
         String to = "/" + Onem2m.SYS_PERF_TEST_CSE;
         if (!createAETest(resourceList, to, resourceNameList))
             return false;
-        if (!createContainerTest(resourceList, resourceNameList.get(resourceNameList.size()-1), resourceNameList))
+        if (!createContainerTest(resourceList, resourceNameList.get(resourceNameList.size() - 1), resourceNameList))
             return false;
-        if (!createContentInstanceTest(resourceList, resourceNameList.get(resourceNameList.size()-1), resourceNameList))
+        if (!createContentInstanceTest(resourceList, resourceNameList.get(resourceNameList.size() - 1), resourceNameList))
             return false;
         return true;
     }
@@ -161,7 +161,8 @@ public class BasicSanityRpc {
         Onem2mResponsePrimitiveClient onem2mResponse = aeRequest.send(onem2mService);
         if (!onem2mResponse.responseOk()) {
             LOG.error("AE create request: {}", onem2mResponse.getError());
-            return false;        }
+            return false;
+        }
         Onem2mAEResponse aeResponse = new Onem2mAEResponse(onem2mResponse.getContent());
         if (!aeResponse.responseOk()) {
             LOG.error("AE create request: {}", aeResponse.getError());
@@ -429,7 +430,7 @@ public class BasicSanityRpc {
         }
 
         // get the content instance resources by using ...//latest nad /oldest
-        
+
         return success;
     }
 }

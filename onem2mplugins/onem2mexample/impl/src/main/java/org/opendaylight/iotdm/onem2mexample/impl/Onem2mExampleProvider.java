@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2mexample.impl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 
@@ -33,9 +34,9 @@ public class Onem2mExampleProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-        try {
-            Thread.sleep(10000); // TODO: verify if we have to remove this ...
-        } catch(InterruptedException e) {
+
+        if (!Onem2mPluginsDbApi.getInstance().registerPlugin("Onem2mExampleProvider")) {
+            return;
         }
         onem2mService = rpcProviderRegistry.getRpcService(Onem2mService.class);
         onem2mExampleCustomProtocol = new Onem2mExampleCustomProtocol(dataBroker, onem2mService);

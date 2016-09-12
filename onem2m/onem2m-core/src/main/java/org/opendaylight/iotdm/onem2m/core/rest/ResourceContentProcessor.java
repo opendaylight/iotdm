@@ -10,6 +10,8 @@ package org.opendaylight.iotdm.onem2m.core.rest;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.resource.*;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -26,11 +28,12 @@ public class ResourceContentProcessor {
      * This routine parses the ResourceContent.  The RequestPrimitive contains a resource specific representation
      * of a particular resource encoded in some format.  Each of the resource specific handlers is responsible for
      * parsing its own content.
-     *
-     * @param onem2mRequest request
+     * @param twc database writer interface
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         onem2mRequest.isCreate = true;
 
@@ -38,47 +41,47 @@ public class ResourceContentProcessor {
         switch (resourceType) {
 
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceAE.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_CREATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
-                ResourceContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceContainer.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTAINER_CREATE);
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
-                ResourceContentInstance.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceContentInstance.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTENT_INSTANCE_CREATE);
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
-                ResourceSubscription.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceSubscription.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_SUBSCRIPTION_CREATE);
                 break;
             case Onem2m.ResourceType.CSE_BASE:
-                ResourceCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceCse.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_CREATE);
                 break;
             case Onem2m.ResourceType.NODE:
-                ResourceNode.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceNode.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_NODE_CREATE);
                 break;
             case Onem2m.ResourceType.GROUP:
-                ResourceGroup.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceGroup.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_GROUP_CREATE);
                 break;
             case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
-                ResourceAccessControlPolicy.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceAccessControlPolicy.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_CREATE);
                 break;
             case Onem2m.ResourceType.REMOTE_CSE:
-                ResourceRemoteCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceRemoteCse.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_CREATE);
                 break;
             case Onem2m.ResourceType.MGMT_OBJECT:
-                ResourceMgmtObject.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceMgmtObject.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_MGMT_OBJECT_CREATE);
                 break;
             case Onem2m.ResourceType.FLEX_CONTAINER:
-                ResourceFlexContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceFlexContainer.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_FLEX_CONTAINER_CREATE);
                 break;
             default:
@@ -142,11 +145,12 @@ public class ResourceContentProcessor {
      * This routine parses the ResourceContent.  The RequestPrimitive contains a resource specific representation
      * of a particular resource encoded in some format.  Each of the resource specific handlers is responsible for
      * parsing its own content.
-     *
-     * @param onem2mRequest request
+     * @param twc database writer interface
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         //String resourceType = Onem2mDb.getInstance().getResourceType(onem2mRequest.getOnem2mResource());
         String resourceType = onem2mRequest.getOnem2mResource().getResourceType();
@@ -155,47 +159,47 @@ public class ResourceContentProcessor {
         onem2mRequest.isUpdate = true;
         switch (resourceType) {
             case Onem2m.ResourceType.AE:
-                ResourceAE.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceAE.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_AE_UPDATE);
                 break;
             case Onem2m.ResourceType.CONTAINER:
-                ResourceContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceContainer.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTAINER_UPDATE);
                 break;
             case Onem2m.ResourceType.CONTENT_INSTANCE:
-                ResourceContentInstance.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceContentInstance.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CONTENT_INSTANCE_UPDATE);
                 break;
             case Onem2m.ResourceType.SUBSCRIPTION:
-                ResourceSubscription.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceSubscription.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_SUBSCRIPTION_UPDATE);
                 break;
             case Onem2m.ResourceType.CSE_BASE:
-                ResourceCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceCse.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_CSE_BASE_UPDATE);
                 break;
             case Onem2m.ResourceType.NODE:
-                ResourceNode.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceNode.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_NODE_UPDATE);
                 break;
             case Onem2m.ResourceType.GROUP:
-                ResourceGroup.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceGroup.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_GROUP_UPDATE);
                 break;
             case Onem2m.ResourceType.ACCESS_CONTROL_POLICY:
-                ResourceAccessControlPolicy.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceAccessControlPolicy.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_ACCESS_CONTROL_POLICY_UPDATE);
                 break;
             case Onem2m.ResourceType.REMOTE_CSE:
-                ResourceRemoteCse.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceRemoteCse.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_REMOTE_CSE_UPDATE);
                 break;
             case Onem2m.ResourceType.MGMT_OBJECT:
-                ResourceMgmtObject.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceMgmtObject.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_MGMT_OBJECT_UPDATE);
                 break;
             case Onem2m.ResourceType.FLEX_CONTAINER:
-                ResourceFlexContainer.handleCreateUpdate(onem2mRequest, onem2mResponse);
+                ResourceFlexContainer.handleCreateUpdate(twc, trc, onem2mRequest, onem2mResponse);
                 Onem2mStats.getInstance().inc(Onem2mStats.RESOURCE_FLEX_CONTAINER_UPDATE);
                 break;
             default:

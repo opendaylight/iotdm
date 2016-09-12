@@ -46,7 +46,7 @@ public class Onem2mAllModuleTest {
         AutoCloseable closeable = module.getInstance();
 
         // verify that the module registered the returned provider with the broker
-        verify(broker).registerProvider((Onem2mAllProvider)closeable);
+        verify(broker).registerProvider((Onem2mAllProvider) closeable);
 
         // ensure no exceptions on close
         closeable.close();

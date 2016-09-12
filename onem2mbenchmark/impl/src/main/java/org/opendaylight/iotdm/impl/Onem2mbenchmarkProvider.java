@@ -15,6 +15,11 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.iotdm.onem2m.client.CSE;
+import org.opendaylight.iotdm.onem2m.client.Onem2mCSEResponse;
+import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
+import org.opendaylight.iotdm.onem2m.client.Onem2mResponsePrimitiveClient;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.Onem2mbenchmarkService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mbenchmark.rev150105.StartTestInput;
@@ -43,6 +48,13 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
         onem2mService = session.getRpcService(Onem2mService.class);
         this.dataBroker = session.getSALService(DataBroker.class);
         setTestOperData(this.execStatus.get());
+
+        if (!getCse()) {
+            if (!provisionCse()) {
+                return;
+            }
+        }
+
         LOG.info("Onem2mbenchmarkProvider Session Initiated");
     }
 
@@ -59,7 +71,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
     @Override
     public Future<RpcResult<StartTestOutput>> startTest(StartTestInput input) {
         // Check if there is a test in progress
-        if ( execStatus.compareAndSet(ExecStatus.Idle, ExecStatus.Executing) == false ) {
+        if (execStatus.compareAndSet(ExecStatus.Idle, ExecStatus.Executing) == false) {
             LOG.info("Test in progress");
             return RpcResultBuilder.success(new StartTestOutputBuilder()
                     .setStatus(StartTestOutput.Status.TESTINPROGRESS)
@@ -83,7 +95,7 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
                 LOG.info("Test started: numResources: {} numThreads: {}",
                         numResources, numThreads);
                 PerfCrudRpc perfCrudRpc = new PerfCrudRpc(onem2mService);
-                boolean status = perfCrudRpc.runPerfTest((int) numResources, (int)numThreads);
+                boolean status = perfCrudRpc.runPerfTest((int) numResources, (int) numThreads);
                 setTestOperData(ExecStatus.Idle);
                 execStatus.set(ExecStatus.Idle);
 
@@ -196,5 +208,57 @@ public class Onem2mbenchmarkProvider implements Onem2mbenchmarkService, BindingA
         }
 
         LOG.info("DataStore test oper status populated: {}", status);
+    }
+
+
+
+
+    private boolean getCse() {
+
+        Onem2mRequestPrimitiveClient req = new CSE().setOperationRetrieve().setTo(Onem2m.SYS_PERF_TEST_CSE).build();
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getContent());
+            return false;
+        }
+        Onem2mCSEResponse cseResponse = new Onem2mCSEResponse(res.getContent());
+        if (!cseResponse.responseOk()) {
+            LOG.error(res.getError());
+            return false;
+        }        String resourceId = cseResponse.getResourceId();
+        if (resourceId == null) {
+            LOG.error("Create cannot parse resourceId for CSE get");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean provisionCse() {
+
+        CSE b;
+
+        b = new CSE();
+        b.setCseId(Onem2m.SYS_PERF_TEST_CSE);
+        b.setCseType(Onem2m.CseType.INCSE);
+        b.setOperationCreate();
+        Onem2mRequestPrimitiveClient req = b.build();
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
+            return false;
+        }
+        Onem2mCSEResponse cseResponse = new Onem2mCSEResponse(res.getContent());
+        if (!cseResponse.responseOk()) {
+            LOG.error(res.getError());
+            return false;
+        }
+        String resourceId = cseResponse.getResourceId();
+        if (resourceId == null) {
+            LOG.error("Create cannot parse resourceId for CSE provision");
+            return false;
+        }
+
+        return true;
     }
 }

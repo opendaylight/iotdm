@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
@@ -168,10 +169,12 @@ public class ResourceContent {
 
     /**
      * Ensure the create/updates follow the rules
-     * @param onem2mRequest request
+     *
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public void processCommonCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void processCommonCreateUpdateAttributes(ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         boolean isCSECreation = false;
         if (onem2mRequest.isCreate) {
 
@@ -183,7 +186,7 @@ public class ResourceContent {
 
             if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
                 String to = onem2mRequest.getPrimitive(RequestPrimitive.TO);
-                if (!Onem2mDb.getInstance().findResourceUsingURI(to, onem2mRequest, onem2mResponse)) {
+                if (!Onem2mDb.getInstance().findResourceUsingURI(trc, to, onem2mRequest, onem2mResponse)) {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                             "Resource target URI not found: " + to);
                     return;
@@ -197,7 +200,7 @@ public class ResourceContent {
                 // if the a name is provided, ensure it is valid and unique at this hierarchical level
                 if (resourceName != null) {
                     // using the parent, see if this new resource name already exists under this parent resource
-                    if (Onem2mDb.getInstance().findResourceUsingIdAndName(onem2mRequest.getOnem2mResource().getResourceId(), resourceName)) {
+                    if (Onem2mDb.getInstance().findResourceUsingIdAndName(trc, onem2mRequest.getOnem2mResource().getResourceId(), resourceName)) {
                         // TS0004: 7.2.3.2
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
                                 "Resource already exists: " + onem2mRequest.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
@@ -245,7 +248,7 @@ public class ResourceContent {
                             "EXPIRATION_TIME: cannot be less than current time");
                     return;
                 }
-                if (!isValidExpTime(et, onem2mRequest)) {
+                if (!isValidExpTime(trc, et, onem2mRequest)) {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                             "EXPIRATION_TIME: cannot be later than parent Expiration Time");
                     return;
@@ -260,31 +263,31 @@ public class ResourceContent {
                 // creation's parent resource is stored in onem2mrequest.onem2mreosurce, update's self resource is stored there
 
 
-                Onem2mResource parentResource = getParentResource(onem2mRequest);
+                Onem2mResource parentResource = getParentResource(trc, onem2mRequest);
 
                 if (parentResource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
                     this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, Onem2mDateTime.FOREVER);
                 } else {
-                    this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, getParentExpTime(onem2mRequest));
+                    this.inJsonContent.put(ResourceContent.EXPIRATION_TIME, getParentExpTime(trc, onem2mRequest));
                 }
             }
         }
 
     }
 
-    private Onem2mResource getParentResource(RequestPrimitive onem2mRequest) {
+    private Onem2mResource getParentResource(ResourceTreeReader trc, RequestPrimitive onem2mRequest) {
         Onem2mResource parentResource;
         if (onem2mRequest.isCreate) {
             parentResource = onem2mRequest.getOnem2mResource();
         } else {
             String parentID = onem2mRequest.getOnem2mResource().getParentId();
-            parentResource = Onem2mDb.getInstance().getResource(parentID);
+            parentResource = Onem2mDb.getInstance().getResource(trc, parentID);
         }
         return parentResource;
     }
 
-    private Boolean isValidExpTime(String et, RequestPrimitive onem2mRequest) {
-        String parentExpirationTime = getParentExpTime(onem2mRequest);
+    private Boolean isValidExpTime(ResourceTreeReader trc, String et, RequestPrimitive onem2mRequest) {
+        String parentExpirationTime = getParentExpTime(trc, onem2mRequest);
         if (parentExpirationTime == null || parentExpirationTime.contentEquals(Onem2mDateTime.FOREVER)) {
             //CSE does not have ET
             return true;
@@ -293,8 +296,8 @@ public class ResourceContent {
 
     }
 
-    private String getParentExpTime(RequestPrimitive onem2mRequest) {
-        Onem2mResource parentResource = getParentResource(onem2mRequest);
+    private String getParentExpTime(ResourceTreeReader trc, RequestPrimitive onem2mRequest) {
+        Onem2mResource parentResource = getParentResource(trc, onem2mRequest);
         JSONObject parentJson = new JSONObject(parentResource.getResourceContentJsonString());
         return parentJson.optString(ResourceContent.EXPIRATION_TIME);
     }

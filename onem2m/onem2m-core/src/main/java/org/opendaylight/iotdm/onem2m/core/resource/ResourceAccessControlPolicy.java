@@ -13,10 +13,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.core.utils.IPAddressVidator;
+import org.opendaylight.iotdm.onem2m.core.utils.IPAddressValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,7 @@ public class ResourceAccessControlPolicy {
      * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
      * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
      * Maybe the next iteration of code, I'll create json files for each resource.
+
      * @param onem2mRequest
      * @param onem2mResponse
      */
@@ -172,7 +175,8 @@ public class ResourceAccessControlPolicy {
                                                                                                 return;
                                                                                             } else {
                                                                                                 String ipv4Address = ipv4Array.optString(j);
-                                                                                                if (!IPAddressVidator.isIpv4Address(ipv4Address)) {
+
+                                                                                                if (!IPAddressValidator.isIpv4Address(ipv4Address)) {
                                                                                                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                                             "PRIVILEGES("  + IP_V4_ADDRESSES+ ") : "  + ipv4Address+ " is not a valid Ipv4 address.");
                                                                                                     return;
@@ -197,7 +201,7 @@ public class ResourceAccessControlPolicy {
                                                                                                 return;
                                                                                             } else {
                                                                                                 String ipv6Address = ipv6Array.optString(j);
-                                                                                                if (!IPAddressVidator.isIpv6Address(ipv6Address)) {
+                                                                                                if (!IPAddressValidator.isIpv6Address(ipv6Address)) {
                                                                                                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                                                             "PRIVILEGES("  + IP_V6_ADDRESSES+ ") : " + ipv6Address+ " is not a valid Ipv6 address.");
                                                                                                     return;
@@ -326,10 +330,12 @@ public class ResourceAccessControlPolicy {
 
     /**
      * Ensure the create/update parameters follow the rules
-     * @param onem2mRequest request
+     * @param twc database writer interface
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String tempStr;
         Integer tempInt;
@@ -382,13 +388,13 @@ public class ResourceAccessControlPolicy {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -398,6 +404,7 @@ public class ResourceAccessControlPolicy {
 
     /**
      * check the 2 mandatory attributes of pv, accessControlOriginators and accessControlOperations
+
      * @param onem2mResponse
      * @param pvjsonObject
      * @return
@@ -422,10 +429,12 @@ public class ResourceAccessControlPolicy {
 
     /**
      * Parse the CONTENT resource representation.
-     * @param onem2mRequest request
+     * @param twc database writer interface
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -438,18 +447,18 @@ public class ResourceAccessControlPolicy {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleSelfCreateUpdate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleSelfCreateUpdate(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
         // handle the special attribtue for AccessControlPolicy
-        ResourceAccessControlPolicy.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        ResourceAccessControlPolicy.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
 
     }
 
-    public static void handleDefaultCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleDefaultCreate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -458,9 +467,9 @@ public class ResourceAccessControlPolicy {
         if (resourceContent.isJson()) {
             parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
         }
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
         // handle the special attribtue for AccessControlPolicy
-        ResourceAccessControlPolicy.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        ResourceAccessControlPolicy.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
 
     }
 

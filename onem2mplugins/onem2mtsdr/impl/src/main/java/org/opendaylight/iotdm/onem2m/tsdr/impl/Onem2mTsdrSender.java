@@ -20,7 +20,8 @@ import java.util.concurrent.Executors;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.yang.gen.v1.opendaylight.tsdr.rev150219.DataCategory;
 import org.opendaylight.yang.gen.v1.opendaylight.tsdr.log.data.rev160325.tsdrlog.RecordAttributes;
@@ -94,21 +95,21 @@ public class Onem2mTsdrSender {
      * @param h hierarchical resource string
      * @param onem2mResource resource
      */
-    public void sendDataToTsdr(Onem2mTargetDesc t, String h, Onem2mResource onem2mResource) {
+    public void sendDataToTsdr(ResourceTreeReader trc, Onem2mTargetDesc t, String h, Onem2mResource onem2mResource) {
 
         switch (t.getContentType()) {
             case LATESTCICONTSDRMETRIC:
-                if (Onem2mDb.getInstance().isLatestCI(onem2mResource)) {
+                if (Onem2mPluginsDbApi.getInstance().isLatestCI(onem2mResource)) {
                     sendCIConUsingTsdrMetric(t, h, onem2mResource);
                 }
                 break;
             case LATESTCICONTSDRLOG:
-                if (Onem2mDb.getInstance().isLatestCI(onem2mResource)) {
+                if (Onem2mPluginsDbApi.getInstance().isLatestCI(onem2mResource)) {
                     sendCIConUsingTsdrLog(t, h, onem2mResource);
                 }
                 break;
             case LATESTCI:
-                if (Onem2mDb.getInstance().isLatestCI(onem2mResource)) {
+                if (Onem2mPluginsDbApi.getInstance().isLatestCI(onem2mResource)) {
                     sendOnem2mResourceUsingTsdrLog(t, h, onem2mResource);
                 }
                 break;
@@ -236,7 +237,7 @@ public class Onem2mTsdrSender {
             BigDecimal bd = new BigDecimal(content);
             recordBuilder.setMetricValue(bd);
             TSDRMetricRecord tsdrMetricRecord = recordBuilder.build();
-            synchronized (metricRecords){
+            synchronized (metricRecords) {
                 metricRecords.add(tsdrMetricRecord);
             }
         } catch (NumberFormatException e) {
@@ -249,26 +250,26 @@ public class Onem2mTsdrSender {
                             String content) {
         LOG.info("tsdrLog:  keys:{}, content:{}", tsdrKeys, content);
         TSDRLogRecordBuilder recordBuilder = new TSDRLogRecordBuilder();
-                recordBuilder.setTSDRDataCategory(DataCategory.EXTERNAL); // TODO: TSDR needs new enum
-                recordBuilder.setNodeID(tsdrNodeId);
-                recordBuilder.setRecordKeys(tsdrKeys);
-                recordBuilder.setIndex(tsdrRollingIndex++);
-                recordBuilder.setRecordAttributes(recordAttrsList);
-                recordBuilder.setTimeStamp(System.currentTimeMillis());
-                recordBuilder.setRecordFullText(content);
+        recordBuilder.setTSDRDataCategory(DataCategory.EXTERNAL); // TODO: TSDR needs new enum
+        recordBuilder.setNodeID(tsdrNodeId);
+        recordBuilder.setRecordKeys(tsdrKeys);
+        recordBuilder.setIndex(tsdrRollingIndex++);
+        recordBuilder.setRecordAttributes(recordAttrsList);
+        recordBuilder.setTimeStamp(System.currentTimeMillis());
+        recordBuilder.setRecordFullText(content);
         TSDRLogRecord tsdrLogRecord = recordBuilder.build();
-        synchronized (logRecords){
+        synchronized (logRecords) {
             logRecords.add(tsdrLogRecord);
         }
     }
 
-    private void storeLogRecords(){
+    private void storeLogRecords() {
 
         if (logRecords.size() == 0) return;
 
         InsertTSDRLogRecordInputBuilder builder = new InsertTSDRLogRecordInputBuilder();
         builder.setCollectorCodeName(ONEM2M_TSDR_CATEGORY_NAME);
-        synchronized (logRecords){
+        synchronized (logRecords) {
             List<TSDRLogRecord> tsdrList = logRecords;
             LOG.info("storeLogRecords: storing records ... reccount={}", tsdrList.size());
             logRecords = new LinkedList<TSDRLogRecord>();
@@ -278,13 +279,13 @@ public class Onem2mTsdrSender {
     }
 
 
-    private void storeMetricRecords(){
+    private void storeMetricRecords() {
 
         if (metricRecords.size() == 0) return;
 
         InsertTSDRMetricRecordInputBuilder builder = new InsertTSDRMetricRecordInputBuilder();
         builder.setCollectorCodeName(ONEM2M_TSDR_CATEGORY_NAME);
-        synchronized (metricRecords){
+        synchronized (metricRecords) {
             List<TSDRMetricRecord> tsdrList = metricRecords;
             LOG.info("storeMetricRecords: storing records ... reccount={}", tsdrList.size());
             metricRecords = new LinkedList<TSDRMetricRecord>();

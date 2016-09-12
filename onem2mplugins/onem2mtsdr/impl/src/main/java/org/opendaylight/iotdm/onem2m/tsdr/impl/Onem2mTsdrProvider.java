@@ -17,9 +17,13 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mDatastoreListener;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.Onem2mTsdrConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.TsdrParmsDesc;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.onem2m.tsdr.config.Onem2mTargetDesc;
@@ -39,7 +43,7 @@ public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
     private Onem2mTsdrAsyncManager onem2mTsdrAsyncManager;
 
     private HashMap<String,Onem2mTargetDesc> tsdrMap;
-
+    private TransactionManager transactionManager;
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
@@ -48,12 +52,16 @@ public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
         tsdrMap = new HashMap<String,Onem2mTargetDesc>();
 
         DataBroker dataBroker = session.getSALService(DataBroker.class);
+        if (!Onem2mPluginsDbApi.getInstance().registerPlugin("Onem2mTsdrProvider")) {
+            return;
+        }
+
         TsdrCollectorSpiService tsdrService = session.getRpcService(TsdrCollectorSpiService.class);
 
         onem2mTsdrSender = new Onem2mTsdrSender(tsdrService);
-        onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(onem2mTsdrSender);
+        onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(Onem2mPluginsDbApi.getInstance().getTransactionReader(), onem2mTsdrSender);
         onem2mTsdrAsyncManager = new Onem2mTsdrAsyncManager(onem2mTsdrSender);
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(dataBroker);
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
         tsdrTargetDataStoreChangeHandler = new TsdrTargetDescDataStoreChangeHandler(dataBroker);
         tsdrConfigDataStoreChangeHandler = new TsdrConfigDataStoreChangeHandler(dataBroker);
     }
@@ -63,13 +71,14 @@ public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
         LOG.info("Onem2mTsdrProvider Closed");
         onem2mTsdrPeriodicManager.close();
         onem2mTsdrAsyncManager.close();
+        transactionManager.close();
     }
 
     // listen for changes to the onem2m resource tree, only the async manager needs to be informed
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
 
-        public Onem2mDataStoreChangeHandler(DataBroker dataBroker) {
-            super(dataBroker);
+        public Onem2mDataStoreChangeHandler(ResourceTreeReader trc, DataBroker dataBroker) {
+            super(trc, dataBroker);
         }
 
         @Override
@@ -79,7 +88,8 @@ public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
                     onem2mResource.getResourceId(),
                     onem2mResource.getResourceType());
             // only async cares about onem2m data tree changes
-            onem2mTsdrAsyncManager.onem2mResourceUpdate(hierarchicalResourceName, onem2mResource);
+            onem2mTsdrAsyncManager.onem2mResourceUpdate(this.getTransactionReader(), hierarchicalResourceName, onem2mResource);
+
         }
 
         @Override
@@ -88,7 +98,7 @@ public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
                     hierarchicalResourceName,
                     onem2mResource.getResourceId(),
                     onem2mResource.getResourceType());
-            onem2mTsdrAsyncManager.onem2mResourceUpdate(hierarchicalResourceName, onem2mResource);
+            onem2mTsdrAsyncManager.onem2mResourceUpdate(this.getTransactionReader(), hierarchicalResourceName, onem2mResource);
         }
 
         @Override

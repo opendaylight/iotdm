@@ -17,6 +17,8 @@ import java.util.Iterator;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.modules.module.configuration.Onem2mCore;
@@ -283,7 +285,7 @@ public class ResourceFlexContainer {
         }
     }
 
-    public static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         if (onem2mRequest.isCreate) {
             String parentResourceType = onem2mRequest.getOnem2mResource().getResourceType();
@@ -324,13 +326,13 @@ public class ResourceFlexContainer {
          */
 
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -339,7 +341,7 @@ public class ResourceFlexContainer {
         }
     }
 
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         boolean val = validateDeviceXSD(xsdurl, xmlurl);
         if (val == true) {
@@ -363,10 +365,10 @@ public class ResourceFlexContainer {
                 return;
         }
 
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
-        ResourceFlexContainer.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        ResourceFlexContainer.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
 
     }
 

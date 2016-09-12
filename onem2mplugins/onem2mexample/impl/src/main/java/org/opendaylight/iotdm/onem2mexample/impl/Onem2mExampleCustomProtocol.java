@@ -11,6 +11,8 @@ package org.opendaylight.iotdm.onem2mexample.impl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -34,19 +36,20 @@ public class Onem2mExampleCustomProtocol implements AbstractIotDMPlugin {
     private static final String ONEM2M_EXAMPLE_CSE_NAME = "ONEM2M_EXAMPLE_CSE_NAME";
     private static final String AENAME = "EXAMPLE_AE_NAME";
     private static final String CONTAINER_NAME = "EXAMPLE_CONTAINER_NAME";
-
+    private TransactionManager transactionManager;
 
 
     public Onem2mExampleCustomProtocol(DataBroker dataBroker, Onem2mService onem2mService) {
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(dataBroker);
+        this.onem2mService = onem2mService;
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
         mgr.registerPluginAtPort("http", this, 8283, Onem2mPluginManager.Mode.Exclusive);
     }
 
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
 
-        public Onem2mDataStoreChangeHandler(DataBroker dataBroker) {
-            super(dataBroker);
+        public Onem2mDataStoreChangeHandler(ResourceTreeReader trc, DataBroker dataBroker) {
+            super(trc, dataBroker);
         }
 
         @Override

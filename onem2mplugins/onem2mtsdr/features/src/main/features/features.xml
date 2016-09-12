@@ -51,6 +51,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   </feature>
   <feature name='odl-onem2mtsdr-ui' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: UI'>
     <feature version="${project.version}">odl-onem2mtsdr-rest</feature>
+    <feature version="${project.version}">odl-onem2m-persistence-mdsal</feature>
 
     <!-- ONLY one of the tsdr data stores can be used at a time ... choose one for testing the plugin -->
     <!-- When you write an app, include the appropriate onem2mtsdr-<datastore> feature in your app's feature.xml -->

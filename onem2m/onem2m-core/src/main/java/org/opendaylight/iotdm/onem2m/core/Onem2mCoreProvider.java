@@ -20,11 +20,18 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactory;
+import org.opendaylight.iotdm.onem2m.core.database.lock.ReadWriteLocker;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -37,15 +44,21 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoreProvider.class);
     private BindingAwareBroker.RpcRegistration<Onem2mService> rpcReg;
     private DataBroker dataBroker;
+    private TransactionManager transactionManager = null;
     private Onem2mStats stats;
     private Onem2mDb db;
     private static NotificationPublishService notifierService;
-
-
-
-
     private Monitor crudMonitor;
     private static Onem2mRouterService routerService;
+    private static Onem2mCoreProvider coreProvider;
+
+
+    private ResourceTreeWriter twc;
+    private ResourceTreeReader trc;
+
+    public static Onem2mCoreProvider getInstance() {
+        return coreProvider;
+    }
 
     public static NotificationPublishService getNotifier() {
         return Onem2mCoreProvider.notifierService;
@@ -58,6 +71,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
      */
     @Override
     public void onSessionInitiated(ProviderContext session) {
+        this.coreProvider = this;
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
         this.notifierService = session.getSALService(NotificationPublishService.class);
@@ -68,6 +82,18 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);
         LOG.info("Session Initiated");
+    }
+
+    public void registerDaoPlugin(DaoResourceTreeFactory daoResourceTreeFactory) {
+
+        if (this.twc != null || this.trc != null) {
+            LOG.error("Onem2mCoreProvider.registerDaoPlugin: new registration attempt ... not GOOD");
+            return;
+        }
+        this.transactionManager = new TransactionManager(daoResourceTreeFactory, new ReadWriteLocker(50));
+        this.twc = this.transactionManager.getDbResourceTreeWriter();
+        this.trc = this.transactionManager.getTransactionReader();
+        Onem2mPluginsDbApi.getInstance().registerDbReaderAndWriter(twc, trc);
     }
 
     /**
@@ -174,7 +200,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mResponse = new ResponsePrimitive();
 
-            onem2mRequest.handleOperation(onem2mResponse);
+            onem2mRequest.handleOperation(twc, trc, onem2mResponse);
         }
 
         onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
@@ -208,13 +234,13 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
         onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
 
-        onem2mRequest.provisionCse(onem2mResponse);
+        onem2mRequest.provisionCse(twc, trc, onem2mResponse);
 
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE).equals(Onem2m.ResponseStatusCode.OK)) {
             RequestPrimitiveProcessor onem2mRequest1 = new RequestPrimitiveProcessor();
             onem2mRequest1.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mRequest1.setPrimitivesList(csePrimitiveList);
-            onem2mRequest1.createDefaultACP(onem2mResponse);
+            onem2mRequest1.createDefaultACP(twc, trc, onem2mResponse);
         }
 
         csePrimitiveList = onem2mResponse.getPrimitivesList();
@@ -234,9 +260,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
      */
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
-        Onem2mDb.getInstance().cleanupDataStore();
+        Onem2mDb.getInstance().cleanupDataStore(twc);
         Onem2mRouterService.cleanRoutingTable();
-        Onem2mDb.getInstance().dumpResourceIdLog(null);
+        Onem2mDb.getInstance().dumpResourceIdLog(trc, null);
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }
 
@@ -258,7 +284,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         } else {
             String resourceUri = input.getResourceUri().trim();
             //onem2mRequest.setPrimitive(RequestPrimitive.TO, resourceUri);
-            if (!Onem2mDb.getInstance().findResourceUsingURI(resourceUri, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().findResourceUsingURI(trc, resourceUri, onem2mRequest, onem2mResponse)) {
                 LOG.error("Cannot find resourceUri: {}", resourceUri);
                 return Futures.immediateFuture(RpcResultBuilder.<Void>failed().build());
             }
@@ -267,10 +293,10 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         }
         switch (input.getDumpMethod()) {
             case RAW:
-                Onem2mDb.getInstance().dumpResourceIdLog(resourceId);
+                Onem2mDb.getInstance().dumpResourceIdLog(trc, resourceId);
                 break;
             case HIERARCHICAL:
-                Onem2mDb.getInstance().dumpHResourceIdToLog(resourceId);
+                Onem2mDb.getInstance().dumpHResourceIdToLog(trc, resourceId);
                 break;
             default:
                 LOG.error("Unknown dump method: {}", input.getDumpMethod());

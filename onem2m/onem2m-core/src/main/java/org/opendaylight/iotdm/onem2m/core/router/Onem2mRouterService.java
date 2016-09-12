@@ -11,6 +11,8 @@ package org.opendaylight.iotdm.onem2m.core.router;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceRemoteCse;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -379,14 +381,14 @@ public class Onem2mRouterService {
      * Only updates of cseBase and remoteCSE resources are expected.
      * @param request The request primitive
      */
-    public void updateRoutingTable(RequestPrimitive request) {
+    public void updateRoutingTable(ResourceTreeReader trc, RequestPrimitive request) {
         if (Onem2m.ResourceType.CSE_BASE.equals(request.getOnem2mResource().getResourceType())) {
             updateRoutingTableCseBase(request);
             return;
         }
 
         if (Onem2m.ResourceType.REMOTE_CSE.equals(request.getOnem2mResource().getResourceType())) {
-            updateRoutingTableRemoteCse(request);
+            updateRoutingTableRemoteCse(trc, request);
             return;
         }
 
@@ -457,9 +459,9 @@ public class Onem2mRouterService {
      * operation with remoteCSE resource
      * @param request The request primitive
      */
-    private void updateRoutingTableRemoteCse(RequestPrimitive request) {
+    private void updateRoutingTableRemoteCse(ResourceTreeReader trc, RequestPrimitive request) {
         // retrieve parent of the remoteCSE
-        Onem2mResource parent = Onem2mDb.getInstance().getResource(request.getOnem2mResource().getParentId());
+        Onem2mResource parent = Onem2mDb.getInstance().getResource(trc, request.getOnem2mResource().getParentId());
         if (null == parent) {
             LOG.error("Failed to get parent of the RemoteCSE resource");
             return;

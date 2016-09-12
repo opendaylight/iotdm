@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -136,7 +138,7 @@ public class ResourceRemoteCse {
         }
     }
 
-    private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         // ensure resource can be created under the target resource
         if (onem2mRequest.isCreate) {
@@ -174,7 +176,7 @@ public class ResourceRemoteCse {
             // store the default ACPID info into this place.
             String CSEid = onem2mRequest.getOnem2mResource().getResourceId();
             // to should be an CSE
-            String defaultAT = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
+            String defaultAT = Onem2mDb.getInstance().getChildResourceID(trc, CSEid,"_defaultACP");
             resourceContent.getInJsonContent().append(ANNOUNCE_TO,defaultAT);
         }
 
@@ -209,13 +211,13 @@ public class ResourceRemoteCse {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -225,16 +227,17 @@ public class ResourceRemoteCse {
         /*
          * Update routing table with the changes
          */
-        Onem2mRouterService.getInstance().updateRoutingTable(onem2mRequest);
+        Onem2mRouterService.getInstance().updateRoutingTable(trc, onem2mRequest);
     }
 
     /**
      * Parse the CONTENT resource representation for create and update
-     *
+     * @param twc database writer interface
+     * @param trc database reader interface
      * @param onem2mRequest  request primitive
      * @param onem2mResponse response primitive
      */
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -247,13 +250,13 @@ public class ResourceRemoteCse {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
-        ResourceRemoteCse.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        ResourceRemoteCse.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
     }
 }

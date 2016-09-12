@@ -69,7 +69,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
     private Monitor crudMonitor;
     Onem2mMqttConfigOutputBuilder statusBuilder = new Onem2mMqttConfigOutputBuilder();
     private Boolean validated = false;
-    private  String mqttBroker = null;
+    private String mqttBroker = null;
     private String mqttAddress = null;
     private String status = null;
     protected static HashSet<String> cseList = null;
@@ -107,8 +107,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
      * We support MANY cse's in oneM2M, not all maye be managed by a MQTT broker so an individual message is
      * required to indicate which cse's required mqtt.
      * @param input
-     * @return
-     * How to provision external mqtt broker : reference
+     * @return How to provision external mqtt broker : reference
      * https://wiki.opendaylight.org/view/Iotdm:MQTT-HowTo
      */
     @Override
@@ -119,30 +118,29 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         validated = validateBrokerAddress(input.getMqttBroker());
         /**
          * If broker is not connected, then store these values and call connectToMqttServer.
-        */
+         */
         if (!connectedToBroker && validated) {
             mqttBroker = input.getMqttBroker();
             mqttAddress = mqttBroker;
             addCSEListandConnect(tempCseList, mqttBroker);
-        }
-        else {
-             /**
+        } else {
+            /**
              * If broker is not changed, then ensure we only subscribe to the list of cse's in this new list.
              */
-            if (connectedToBroker && mqttAddress.equals(input.getMqttBroker()) && validated){
+            if (connectedToBroker && mqttAddress.equals(input.getMqttBroker()) && validated) {
                 cseList.clear();
-                    for (CseList c : tempCseList) {
-                        String cseId = c.getCseId();
-                        cseList.add(cseId);
-                    }
-                    for (String cseId : cseList) {
-                    boolean status=onem2mMqttClient.registerCseAsMqttSubscriber(cseId);
-                    }
+                for (CseList c : tempCseList) {
+                    String cseId = c.getCseId();
+                    cseList.add(cseId);
+                }
+                for (String cseId : cseList) {
+                    boolean status = onem2mMqttClient.registerCseAsMqttSubscriber(cseId);
+                }
             }
             /**
              * If the broker is changed, disconnect from old broker, then store these values and call connectToMqttServer.
              */
-            else if (connectedToBroker && !mqttAddress.equals(input.getMqttBroker()) && validated){
+            else if (connectedToBroker && !mqttAddress.equals(input.getMqttBroker()) && validated) {
                 onem2mMqttClient.disconnectFromMqttServer();
                 mqttAddress = input.getMqttBroker();
                 addCSEListandConnect(tempCseList, mqttAddress);
@@ -156,35 +154,32 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
     private boolean validateBrokerAddress(String mqttBroker) {
         // TODO Auto-generated method stub
 
-        if(mqttBroker == null )
-        {
-        LOG.error("Mqtt Broker Adress string : Incorrect format :: Address is empty or null ");
-        statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Address is empty or null ");
+        if (mqttBroker == null) {
+            LOG.error("Mqtt Broker Adress string : Incorrect format :: Address is empty or null ");
+            statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Address is empty or null ");
 
-        return false;
+            return false;
         }
-        String mqttBrokerData[]=mqttBroker.split(":");
-        String mqttBrokerIP[]=mqttBrokerData[1].split("//");
+        String mqttBrokerData[] = mqttBroker.split(":");
+        String mqttBrokerIP[] = mqttBrokerData[1].split("//");
         try {
             InetAddress.getByName(mqttBrokerIP[1]);
-            }catch (UnknownHostException e) {
+        } catch (UnknownHostException e) {
 
             statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Inorrect IP Address ");
             LOG.error("Mqtt Broker Adress string : Incorrect format :: Inorrect IP Address  ");
             return false;
-            }
-            if(!mqttBrokerData[0].equalsIgnoreCase("TCP"))
-                {
-                statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Wrong Protocol in Address ");
-                LOG.error("Mqtt Broker Adress string : Incorrect format :: Wrong Protocol in Address");
-                return false;
-                }
-            if(!mqttBrokerData[2].equalsIgnoreCase("1883"))
-                {
-                statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Wrong Port in Address");
-                LOG.error("Mqtt Broker Adress string : Incorrect format :: Wrong Port in Address");
-                return false;
-                }
+        }
+        if (!mqttBrokerData[0].equalsIgnoreCase("TCP")) {
+            statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Wrong Protocol in Address ");
+            LOG.error("Mqtt Broker Adress string : Incorrect format :: Wrong Protocol in Address");
+            return false;
+        }
+        if (!mqttBrokerData[2].equalsIgnoreCase("1883")) {
+            statusBuilder.setStatus("Mqtt Broker Adress string : Incorrect format :: Wrong Port in Address");
+            LOG.error("Mqtt Broker Adress string : Incorrect format :: Wrong Port in Address");
+            return false;
+        }
         return true;
     }
 
@@ -214,8 +209,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
                 client.disconnect();
             } catch (MqttException e) {
                 LOG.error("DisconnectFromMqttServer: trouble disconnecing {}", e.toString());
-            }
-            finally {
+            } finally {
                 connectedToBroker = false;
             }
         }
@@ -223,7 +217,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         public boolean registerCseAsMqttSubscriber(String cseId) {
 
             Boolean status = true;
-            String topic = "/oneM2M/" + Onem2m.MqttMessageType.REQUEST + "/+/" + cseId + "/+" ;
+            String topic = "/oneM2M/" + Onem2m.MqttMessageType.REQUEST + "/+/" + cseId + "/+";
             try {
                 client.subscribe(topic, 1);
             } catch (MqttException e) {
@@ -243,9 +237,9 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
 
             try {
                 client = new MqttAsyncClient(
-                         mqttBroker,//Broker Address
-                         MqttClient.generateClientId(), //ClientId
-                         new MemoryPersistence()); //Persistence
+                        mqttBroker,//Broker Address
+                        MqttClient.generateClientId(), //ClientId
+                        new MemoryPersistence()); //Persistence
                 MqttConnectOptions options = new MqttConnectOptions();
                 options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
                 options.setUserName("mqtt");
@@ -267,13 +261,13 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
                     @Override
                     public void messageArrived(String topic, MqttMessage message) throws Exception {
                         //check if Qos is not 0
-                        if ((message.isRetained()==false)&&(message.getQos() ==1)){
+                        if ((message.isRetained() == false) && (message.getQos() == 1)) {
                             handleMqttMessage(topic, message.toString());
                         }
-                        if (message.getQos() !=1){
+                        if (message.getQos() != 1) {
                             sendResponse(topic, "QoS must be 1");
                         }
-                        if (message.isRetained()==true){
+                        if (message.isRetained() == true) {
                             sendResponse(topic, "Message retained should be false");
                         }
                     }
@@ -282,22 +276,23 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
                     public void deliveryComplete(IMqttDeliveryToken token) {//Called when a outgoing publish is complete.
                     }
                 });
-                IMqttActionListener conListener=new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken arg0) {
-                    // TODO Auto-generated method stub
-                    LOG.info("Connection successfull with broker : " + mqttBroker);
-                    statusBuilder.setStatus("Mqtt broker provisioned.");
-                    connectedToBroker = true;
+                IMqttActionListener conListener = new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken arg0) {
+                        // TODO Auto-generated method stub
+                        LOG.info("Connection successfull with broker : " + mqttBroker);
+                        statusBuilder.setStatus("Mqtt broker provisioned.");
+                        connectedToBroker = true;
 
-                }
-                @Override
-                public void onFailure(IMqttToken arg0, Throwable arg1) {
-                    // TODO Auto-generated method stub
-                    LOG.error("Connection failed ");
-                }
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken arg0, Throwable arg1) {
+                        // TODO Auto-generated method stub
+                        LOG.error("Connection failed ");
+                    }
                 };
-                IMqttToken conToken=client.connect(options,"Connect async client to server",conListener);
+                IMqttToken conToken = client.connect(options, "Connect async client to server", conListener);
                 conToken.waitForCompletion();
                 //connecting client to server
                 if (!client.isConnected()) {
@@ -321,24 +316,24 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         void handleMqttMessage(String topic, String message) {
 
             String mqttMessageType = null;
-            String mqttMessageFormat=null;
-            String to=null;
-            String from=null;
+            String mqttMessageFormat = null;
+            String to = null;
+            String from = null;
             String hierarchyTopic[] = parseTopicString(topic);
-            mqttMessageFormat=hierarchyTopic[4];
-                if (hierarchyTopic[1].contains("req")) {
-                    mqttMessageType= Onem2m.MqttMessageType.REQUEST;
-                } else if (hierarchyTopic[1].contains("resp")) {
-                    mqttMessageType= Onem2m.MqttMessageType.RESPONSE;
-                }
-                if (hierarchyTopic[4].contains("json")) {
-                    mqttMessageFormat= Onem2m.ContentFormat.JSON;
-                } else if (hierarchyTopic[4].contains("xml")) {
-                    mqttMessageFormat= Onem2m.ContentFormat.XML;
-                }
+            mqttMessageFormat = hierarchyTopic[4];
+            if (hierarchyTopic[1].contains("req")) {
+                mqttMessageType = Onem2m.MqttMessageType.REQUEST;
+            } else if (hierarchyTopic[1].contains("resp")) {
+                mqttMessageType = Onem2m.MqttMessageType.RESPONSE;
+            }
+            if (hierarchyTopic[4].contains("json")) {
+                mqttMessageFormat = Onem2m.ContentFormat.JSON;
+            } else if (hierarchyTopic[4].contains("xml")) {
+                mqttMessageFormat = Onem2m.ContentFormat.XML;
+            }
 
-            to=hierarchyTopic[2].replace(":", "/");
-            from=hierarchyTopic[3].replace(":", "/");
+            to = hierarchyTopic[2].replace(":", "/");
+            from = hierarchyTopic[3].replace(":", "/");
 
             switch (mqttMessageType) {
                 case Onem2m.MqttMessageType.REQUEST:
@@ -360,17 +355,16 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             String hierarchy[] = topic.split("/");
 
             if (hierarchy.length != 5) {
-            LOG.error("Length of topics is less than expected");
+                LOG.error("Length of topics is less than expected");
             }
 
-            if (!hierarchy[0].toLowerCase().contentEquals("onem2m")){
+            if (!hierarchy[0].toLowerCase().contentEquals("onem2m")) {
                 LOG.error("Topic must contain onem2m");
             }
-            if (!hierarchy[1].contains("req")){
+            if (!hierarchy[1].contains("req")) {
                 LOG.error("Topic must contain req or resp");
             }
-            if(!(hierarchy[4].equalsIgnoreCase("json")||(hierarchy[4].equalsIgnoreCase("xml"))))
-            {
+            if (!(hierarchy[4].equalsIgnoreCase("json") || (hierarchy[4].equalsIgnoreCase("xml")))) {
                 LOG.error("Topic must include type as either json or xml only");
             }
             return hierarchy;
@@ -381,7 +375,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
 
             topic = topic.trim();
             topic = topic.startsWith("/") ? topic.substring("/".length()) : topic;
-            topic = topic.endsWith("/") ? topic.substring(0,topic.length()-1) : topic;
+            topic = topic.endsWith("/") ? topic.substring(0, topic.length() - 1) : topic;
             return topic;
         }
 
@@ -390,15 +384,13 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
             clientBuilder.setProtocol(Onem2m.Protocol.MQTT);
             Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS);
-            String hierarchy[]=parseTopicString(topic);
-            String mqttMessageFormat=hierarchy[4];
-            String operation=null;
-            if(mqttMessageFormat.contains(Onem2m.ContentFormat.JSON))
-            {
+            String hierarchy[] = parseTopicString(topic);
+            String mqttMessageFormat = hierarchy[4];
+            String operation = null;
+            if (mqttMessageFormat.contains(Onem2m.ContentFormat.JSON)) {
                 operation = processJsonRequestPrimitive(message, clientBuilder);
             }
-            if(mqttMessageFormat.contains(Onem2m.ContentFormat.XML))
-            {
+            if (mqttMessageFormat.contains(Onem2m.ContentFormat.XML)) {
                 operation = processXMLRequestPrimitive(message, clientBuilder);
                 sendResponse(topic, "XML format is not supported yet");
             }
@@ -433,19 +425,18 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             Onem2mRequestPrimitiveClient onem2mRequest = clientBuilder.build();
             ResponsePrimitive onem2mResponse = Onem2m.serviceOnenm2mRequest(onem2mRequest, onem2mService);
             // Now place the fields from the onem2m result response back in the mqtt fields, and send
-            if(mqttMessageFormat.contains(Onem2m.ContentFormat.JSON))
-            {
+            if (mqttMessageFormat.contains(Onem2m.ContentFormat.JSON)) {
                 sendMqttJsonResponseFromOnem2mResponse(topic, onem2mResponse);
             }
         }
 
-          private String processXMLRequestPrimitive(String message,
-                  Onem2mRequestPrimitiveClientBuilder clientBuilder) {
-                  // TODO Auto-generated method stub
-                  return null;
-          }
+        private String processXMLRequestPrimitive(String message,
+                                                  Onem2mRequestPrimitiveClientBuilder clientBuilder) {
+            // TODO Auto-generated method stub
+            return null;
+        }
 
-         /**
+        /**
          * The payload is a json string containing the request primitive attributes.
          * All the error checking is done in one place in the core.
          */
@@ -477,10 +468,10 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             }
 
             clientBuilder.setContentFormat("json");
-            return operation ;
+            return operation;
         }
 
-        private void sendMqttJsonResponseFromOnem2mResponse(String topic,ResponsePrimitive onem2mResponse){
+        private void sendMqttJsonResponseFromOnem2mResponse(String topic, ResponsePrimitive onem2mResponse) {
 
             JSONObject responseJsonObject = new JSONObject();
             String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
@@ -491,7 +482,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             JsonUtils.put(responseJsonObject, ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
             sendResponse(topic, responseJsonObject.toString());
 
-            if (rscString.charAt(0) =='2') {
+            if (rscString.charAt(0) == '2') {
                 Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS_OK);
             } else {
                 Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS_ERROR);
@@ -502,12 +493,12 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         void sendResponse(String requestTopic, String message) {
 
             String hierarchyTopic[] = trimTopic(requestTopic).split("/");
-            String format_type=hierarchyTopic[4];
+            String format_type = hierarchyTopic[4];
             String cse_name = hierarchyTopic[3].replace("/", ":");
             String resource_name = hierarchyTopic[2].replace("/", ":");
-            String responseTopic ="/oneM2M/" + Onem2m.MqttMessageType.RESPONSE + "/" + resource_name + "/" + cse_name + "/" +format_type;
+            String responseTopic = "/oneM2M/" + Onem2m.MqttMessageType.RESPONSE + "/" + resource_name + "/" + cse_name + "/" + format_type;
 
-            IMqttActionListener pubListener=new IMqttActionListener() {
+            IMqttActionListener pubListener = new IMqttActionListener() {
 
                 @Override
                 public void onSuccess(IMqttToken arg0) {
@@ -521,7 +512,7 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             };
             try {
                 client.publish(responseTopic, message.getBytes(), Onem2m.MqttOptions.QOS1,
-                               Onem2m.MqttOptions.RETAINED,"Pub Sample Context",pubListener);
+                        Onem2m.MqttOptions.RETAINED, "Pub Sample Context", pubListener);
             } catch (MqttPersistenceException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

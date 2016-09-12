@@ -96,7 +96,7 @@ public class PerfHttpClient {
             int rsc = 0;
             try {
                 responseContent = httpResponse.getResponseContent();
-                 rsc = httpResponse.getResponseStatus();
+                rsc = httpResponse.getResponseStatus();
             } catch (UnsupportedEncodingException e) {
                 LOG.error("get http content exception: {}", e.toString());
                 break;
@@ -117,7 +117,7 @@ public class PerfHttpClient {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         createsPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to create ... num/total: {}/{}, delta: {}ns, ops/s: {}",
                 numProcessed, numResources, delta, createsPerSec);
@@ -174,7 +174,7 @@ public class PerfHttpClient {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         retrievesPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to retrieve ... num/total: {}/{}, delta: {}ns, ops/s: {}",
                 numProcessed, numResources, delta, retrievesPerSec);
@@ -232,7 +232,7 @@ public class PerfHttpClient {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         deletesPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to delete ... num/total: {}/{}, delta: {}ns, ops/s: {}",
                 numProcessed, numResources, delta, deletesPerSec);
@@ -253,21 +253,21 @@ public class PerfHttpClient {
         if (delta >= 1000000000) {
             n = num / (delta / 1000000000);
         } else if (delta >= 100000000) {
-            n =  (num * 10)/ (delta / 100000000);
+            n = (num * 10) / (delta / 100000000);
         } else if (delta >= 10000000) {
-            n =  (num * 100)/ (delta / 10000000);
+            n = (num * 100) / (delta / 10000000);
         } else if (delta >= 1000000) {
-            n =  (num * 1000)/ (delta / 1000000);
+            n = (num * 1000) / (delta / 1000000);
         } else if (delta >= 100000) {
-            n =  (num * 10000)/ (delta / 100000);
+            n = (num * 10000) / (delta / 100000);
         } else if (delta >= 10000) {
-            n = (num * 100000)/ (delta / 10000);
+            n = (num * 100000) / (delta / 10000);
         } else if (delta >= 1000) {
-            n = (num * 1000000)/ (delta / 1000);
+            n = (num * 1000000) / (delta / 1000);
         } else if (delta >= 100) {
-            n = (num * 10000000)/ (delta / 100);
+            n = (num * 10000000) / (delta / 100);
         } else if (delta >= 10) {
-            n = (num * 100000000)/ (delta / 10);
+            n = (num * 100000000) / (delta / 10);
         } else {
             n = num * 1000000000 / delta;
         }

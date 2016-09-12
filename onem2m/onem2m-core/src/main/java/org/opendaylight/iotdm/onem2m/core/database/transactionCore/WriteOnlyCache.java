@@ -1,0 +1,123 @@
+/*
+ * Copyright (c) 2015 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
+
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
+
+/**
+ * Created by gguliash on 4/28/16.
+ * e-mail vinmesmiti@gmail.com; gguliash@cisco.com
+ */
+public interface WriteOnlyCache {
+
+    /**
+     * Resource with resourceId is removed from the Cache if exists.
+     *
+     * @param resourceId key
+     */
+    void deleteResourceById(String resourceId);
+
+    /**
+     * Cleans Cache.
+     */
+    void reInitializeDatastore();
+
+    /**
+     * Cache is notified about the Child remove from the parent children list.
+     * If Resource with parentResourceId is not in Cache has no effect.
+     *
+     * @param parentResourceId  id of the parent
+     * @param childResourceName name of the child.
+     */
+    void removeParentChildLink(String parentResourceId, String childResourceName);
+
+    /**
+     * Cache is notified about the Child Prev update.
+     * If Resource with parentResourceId is not in Cache has no effect.
+     *
+     * @param parentResourceId should not be null.
+     * @param child            instance.
+     * @param prevId           to update.
+     */
+    void updateChildSiblingPrevInfo(String parentResourceId,
+                                    Child child,
+                                    String prevId);
+
+    /**
+     * Cache is notified about the Child Next update.
+     * If Resource with parentResourceId is not in Cache has no effect.
+     *
+     * @param parentResourceId should not be null.
+     * @param child            instance.
+     * @param nextId           to update.
+     */
+    void updateChildSiblingNextInfo(String parentResourceId,
+                                    Child child,
+                                    String nextId);
+
+    /**
+     * Cache is notified about the Children list insertion.
+     * If Resource with key parentResourceId is not in Cahce, has no effect.
+     *
+     * @param parentResourceId should not be null.
+     * @param childName        should not be null.
+     * @param childResourceId  should not be null.
+     * @param prevId           should not be null.
+     * @param nextId           should not be null.
+     */
+    void createParentChildLink(String parentResourceId,
+                               String childName, String childResourceId,
+                               String prevId, String nextId);
+
+    /**
+     * Cache is notified about the update of json content.
+     * If Resource with resourceId is in Cache, updated resource, if not has no effect.
+     *
+     * @param resourceId          of the resource. Should not be null.
+     * @param jsonResourceContent to set.
+     */
+    void updateJsonResourceContentString(String resourceId, String jsonResourceContent);
+
+    /**
+     * Cache is notified about the update of OldestLatest with resourceType.
+     * If Resource with resourceId is not in Cache has no effect.
+     *
+     * @param resourceId   of the resource.
+     * @param resourceType of the OldestLatest.
+     * @param oldest       should not be null.
+     * @param latest       should not be null.
+     */
+    void updateResourceOldestLatestInfo(String resourceId,
+                                        String resourceType,
+                                        String oldest,
+                                        String latest);
+
+    /**
+     * Cache is notified about creation of new Resource element. Saves Resource in cache.
+     *
+     * @param resourceId       of the resource. Should not be null.
+     * @param resourceName     of the resource. Should not be null.
+     * @param jsonContent      of the resource. Should not be null.
+     * @param parentResourceId of the resource. Should not be null.
+     * @param resourceType     of the resource. Should not be null.
+     * @return Onem2mResource interface of the created resource.
+     */
+    Onem2mResource createResource(String resourceId, String resourceName, String jsonContent,
+                                  String parentResourceId, String resourceType);
+
+    /**
+     * Cache is notified about creation of new Cse element. Saves Cse in cache.
+     *
+     * @param name       of the Cse elem.
+     * @param resourceId of the Cse elem.
+     * @return true if successfully created.
+     */
+    boolean createCseByName(String name, String resourceId);
+
+}

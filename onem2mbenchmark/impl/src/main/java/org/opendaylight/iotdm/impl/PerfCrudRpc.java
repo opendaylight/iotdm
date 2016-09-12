@@ -51,13 +51,13 @@ public class PerfCrudRpc {
     private void buildResourceIdQueues(int numQueues, int numResources) {
         resourceIdQueues = new ArrayList<ArrayList<Integer>>(numQueues);
         for (int i = 0; i < numQueues; ++i) {
-            ArrayList<Integer> resourceArray = new ArrayList<Integer>(numResources/numQueues+1);
+            ArrayList<Integer> resourceArray = new ArrayList<Integer>(numResources / numQueues + 1);
             resourceIdQueues.add(resourceArray);
         }
         for (int i = 0; i < numResources; i++) {
-            int q = i%numQueues;
+            int q = i % numQueues;
             ArrayList<Integer> resourceArray = resourceIdQueues.get(q);
-            resourceArray.add(i+1);
+            resourceArray.add(i + 1);
         }
     }
 
@@ -81,7 +81,7 @@ public class PerfCrudRpc {
         totalSuccessful += deleteTest(numResources, numThreads);
         totalSuccessful += crudTest(numResources, numThreads);
 
-        return (numResources*4) == totalSuccessful;
+        return (numResources * 4) == totalSuccessful;
     }
 
 
@@ -115,7 +115,7 @@ public class PerfCrudRpc {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         createsPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to create ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, createsPerSec);
 
@@ -250,7 +250,7 @@ public class PerfCrudRpc {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         retrievesPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to retrieve ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, retrievesPerSec);
 
@@ -326,7 +326,7 @@ public class PerfCrudRpc {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         deletesPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to delete ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, deletesPerSec);
 
@@ -374,7 +374,7 @@ public class PerfCrudRpc {
             }
         }
         endTime = System.nanoTime();
-        delta = (endTime-startTime);
+        delta = (endTime - startTime);
         crudsPerSec = nPerSecond(numResources, delta);
         LOG.info("Time to CRUD ... num/total: {}/{}, delta: {}ns, ops/s: {}", numSuccessful, numResources, delta, crudsPerSec);
 
@@ -395,8 +395,8 @@ public class PerfCrudRpc {
 
     private long nPerSecond(int num, long delta) {
 
-        double secondsTotal = (double)delta / (double)1000000000;
-        return (long) (((double)num / secondsTotal));
+        double secondsTotal = (double) delta / (double) 1000000000;
+        return (long) (((double) num / secondsTotal));
 
 
     }

@@ -12,6 +12,8 @@ import java.util.Iterator;
 import org.json.JSONArray;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
@@ -40,7 +42,7 @@ public class ResourceCse {
     public static final String NOTIFICATION_CONGESTION_POLICY = "ncp";
     public static final String POINT_OF_ACCESS = "poa";
 
-    private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -65,13 +67,13 @@ public class ResourceCse {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createCseResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createCseResource(twc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -81,7 +83,7 @@ public class ResourceCse {
         /*
          * Update routing table with the changes
          */
-        Onem2mRouterService.getInstance().updateRoutingTable(onem2mRequest);
+        Onem2mRouterService.getInstance().updateRoutingTable(trc, onem2mRequest);
     }
 
     /**
@@ -153,10 +155,12 @@ public class ResourceCse {
 
     /**
      * Parse the CONTENT resource representation.
-     * @param onem2mRequest request
+     * @param twc database writer interface
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -169,11 +173,11 @@ public class ResourceCse {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
-        ResourceCse.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        ResourceCse.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
 
     }
 

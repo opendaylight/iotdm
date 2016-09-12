@@ -13,6 +13,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -35,7 +37,7 @@ public class ResourceContentInstance  {
     public static final String ONTOLOGY_REF = "or";
     public static final String CREATOR = "cr";
 
-    private static void processCreateUpdateAttributes(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         String tempStr;
         Integer tempInt;
@@ -105,13 +107,13 @@ public class ResourceContentInstance  {
                 newByteSize);
 
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -119,7 +121,7 @@ public class ResourceContentInstance  {
         }
 
         // may have to remove content instances to make room for this latest instance
-        ResourceContainer.checkAndFixCurrMaxRules(onem2mRequest.getPrimitive(RequestPrimitive.TO));
+        ResourceContainer.checkAndFixCurrMaxRules(twc, trc, onem2mRequest.getPrimitive(RequestPrimitive.TO));
     }
 
     /**
@@ -190,10 +192,12 @@ public class ResourceContentInstance  {
 
     /**
      * Parse the CONTENT resource representation.
-     * @param onem2mRequest request
+     * @param twc database writer interface
+     * @param trc database reader interface
+     * @param onem2mRequest  request
      * @param onem2mResponse response
      */
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
@@ -206,13 +210,13 @@ public class ResourceContentInstance  {
             if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
             return;
 
-        ResourceContentInstance.processCreateUpdateAttributes(onem2mRequest, onem2mResponse);
+        ResourceContentInstance.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
     }
 }

@@ -11,6 +11,8 @@ package org.opendaylight.iotdm.onem2m.simpleadapter.impl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ public class Onem2mSimpleAdapterProvider implements BindingAwareProvider, AutoCl
 
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mSimpleAdapterProvider.class);
+    private TransactionManager transactionManager;
     private DataBroker dataBroker;
     private Onem2mSimpleAdapterManager saMgr;
     private Onem2mSimpleAdapterHttpServer saHttpServer;
@@ -30,8 +33,13 @@ public class Onem2mSimpleAdapterProvider implements BindingAwareProvider, AutoCl
 
         LOG.info("Onem2mSimpleAdapterProvider Session Initiated");
         DataBroker dataBroker = session.getSALService(DataBroker.class);
+
+        if (!Onem2mPluginsDbApi.getInstance().registerPlugin("Onem2mSimpleAdapterProvider")) {
+            return;
+        }
+
         Onem2mService onem2mService = session.getRpcService(Onem2mService.class);
-        saMgr = new Onem2mSimpleAdapterManager(dataBroker, onem2mService);
+        saMgr = new Onem2mSimpleAdapterManager(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker, onem2mService);
         saHttpServer = new Onem2mSimpleAdapterHttpServer(saMgr);
         //saMqttClient = new Onem2mSimpleAdapterMqttClient(saMgr);
         //saCoapServer = new Onem2mSimpleAdapterCoapServer(saMgr);

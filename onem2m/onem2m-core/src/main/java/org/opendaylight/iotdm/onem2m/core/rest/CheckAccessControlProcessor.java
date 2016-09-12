@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceAccessControlPolicy;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceGroup;
@@ -32,7 +33,7 @@ public class CheckAccessControlProcessor {
     private CheckAccessControlProcessor() {}
 
 
-    public static void handleOperation(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse, String opCode) {
+    public static void handleOperation(ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse, String opCode) {
 
         List<String> AccessControlPolicyIDList = new ArrayList<>();
         String targetURI = onem2mRequest.getPrimitive(RequestPrimitive.TO);
@@ -46,25 +47,25 @@ public class CheckAccessControlProcessor {
                 }
                 if (AccessControlPolicyIDList.size() == 0) {
                     // if there is no ACPID, do nothing
-                    AccessControlPolicyIDList = getDefaultACPList(targetURI);
+                    AccessControlPolicyIDList = getDefaultACPList(trc, targetURI);
                 }
             }
             // if create opertaion, onem2mresource in onem2mrequest is the parent resource.
             else if (onem2mRequest.getOnem2mResource().getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)){
-                AccessControlPolicyIDList = getDefaultACPList(targetURI);
+                AccessControlPolicyIDList = getDefaultACPList(trc, targetURI);
             } else {
                 // if target is not CSE, check whether the parent(onem2mresource) conatains acpid
-                Onem2mResource parentresource = Onem2mDb.getInstance().getResource(onem2mRequest.getOnem2mResource().getParentId());
+                Onem2mResource parentresource = Onem2mDb.getInstance().getResource(trc, onem2mRequest.getOnem2mResource().getParentId());
                 try {
                     JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
                     while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
                         if (parentresource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-                            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(parentresource.getResourceId(),"_defaultACP");
-                            String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
+                            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(trc, parentresource.getResourceId(),"_defaultACP");
+                            String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(trc, defaultACPID);
                             AccessControlPolicyIDList.add(hierarchyURI);
                             break;
                         } else {
-                            parentresource = Onem2mDb.getInstance().getResource(parentresource.getParentId());
+                            parentresource = Onem2mDb.getInstance().getResource(trc, parentresource.getParentId());
                             jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
                         }
                     }
@@ -88,7 +89,7 @@ public class CheckAccessControlProcessor {
                 }
                 if (AccessControlPolicyIDList.size() == 0) {
                     // if there is no ACPID, do nothing
-                    AccessControlPolicyIDList = getDefaultACPList(targetURI);
+                    AccessControlPolicyIDList = getDefaultACPList(trc, targetURI);
                 }
 
             } else {
@@ -98,12 +99,12 @@ public class CheckAccessControlProcessor {
                     JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
                     while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
                         if (parentresource.getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-                            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(parentresource.getResourceId(), "_defaultACP");
-                            String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
+                            String defaultACPID = Onem2mDb.getInstance().getChildResourceID(trc, parentresource.getResourceId(), "_defaultACP");
+                            String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(trc, defaultACPID);
                             AccessControlPolicyIDList.add(hierarchyURI);
                             break;
                         } else {
-                            parentresource = Onem2mDb.getInstance().getResource(parentresource.getParentId());
+                            parentresource = Onem2mDb.getInstance().getResource(trc, parentresource.getParentId());
                             jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
                         }
                     }
@@ -126,7 +127,7 @@ public class CheckAccessControlProcessor {
         Boolean orininator_is_allowed = false;
         String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
         for (String accessControlPolicyID : AccessControlPolicyIDList) {
-            Onem2mResource accessControlPolicyResource = Onem2mDb.getInstance().getResourceUsingURI(accessControlPolicyID);
+            Onem2mResource accessControlPolicyResource = Onem2mDb.getInstance().getResourceUsingURI(trc, accessControlPolicyID);
             if (accessControlPolicyResource != null) {
                 try {
                     JSONObject jsonContent = new JSONObject(accessControlPolicyResource.getResourceContentJsonString());
@@ -149,7 +150,7 @@ public class CheckAccessControlProcessor {
                         } else {
                             // check the originator ID one by one to see if it contains <Group>
                             for (int j = 0; j < acorArray.length(); j++) {
-                                Onem2mResource testGroup = Onem2mDb.getInstance().getResource(acorArray.getString(j));
+                                Onem2mResource testGroup = Onem2mDb.getInstance().getResource(trc, acorArray.getString(j));
                                 if (testGroup != null && testGroup.getResourceType().contentEquals(Onem2m.ResourceType.GROUP)) {
 
                                     try {
@@ -244,43 +245,43 @@ public class CheckAccessControlProcessor {
 
     }
 
-    public static void handleCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleCreateUpdate(ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         if (onem2mRequest.isCreate) {
-            handleOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.CREATE);
+            handleOperation(trc, onem2mRequest, onem2mResponse, Onem2m.Operation.CREATE);
         } else {
-            handleOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.UPDATE);
+            handleOperation(trc, onem2mRequest, onem2mResponse, Onem2m.Operation.UPDATE);
         }
     }
 
-    public static void handleSelfCreateUpdate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleSelfCreateUpdate(ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
         if (onem2mRequest.isCreate) {
-            handleOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.CREATE);
+            handleOperation(trc, onem2mRequest, onem2mResponse, Onem2m.Operation.CREATE);
         } else {
             handleSelfOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.UPDATE);
         }
     }
 
-    public static void handleDelete(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-        if (onem2mRequest.getOnem2mResource().getResourceType().contentEquals(Onem2m.ResourceType.ACCESS_CONTROL_POLICY)){
+    public static void handleDelete(ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        if (onem2mRequest.getOnem2mResource().getResourceType().equals(Onem2m.ResourceType.ACCESS_CONTROL_POLICY)) {
             handleSelfOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.DELETE);
         } else {
-            handleOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.DELETE);
+            handleOperation(trc, onem2mRequest, onem2mResponse, Onem2m.Operation.DELETE);
         }
     }
 
-    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-        if (onem2mRequest.getOnem2mResource().getResourceType().contentEquals(Onem2m.ResourceType.ACCESS_CONTROL_POLICY)){
+    public static void handleRetrieve(ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        if (onem2mRequest.getOnem2mResource().getResourceType().contentEquals(Onem2m.ResourceType.ACCESS_CONTROL_POLICY)) {
             handleSelfOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.RETRIEVE);
         } else {
-            handleOperation(onem2mRequest, onem2mResponse, Onem2m.Operation.RETRIEVE);
+            handleOperation(trc, onem2mRequest, onem2mResponse, Onem2m.Operation.RETRIEVE);
         }
     }
 
-    public static List getDefaultACPList(String resourceURI) {
+    public static List getDefaultACPList(ResourceTreeReader trc, String resourceURI) {
         List<String> AccessControlPolicyIDList = new ArrayList<>();
-        String CSEid = Onem2mDb.getInstance().getCSEid(resourceURI);
-        String defaultACPID = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
-        String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(defaultACPID);
+        String CSEid = Onem2mDb.getInstance().getCSEid(trc, resourceURI);
+        String defaultACPID = Onem2mDb.getInstance().getChildResourceID(trc, CSEid, "_defaultACP");
+        String hierarchyURI = Onem2mDb.getInstance().getNonHierarchicalNameForResource(trc, defaultACPID);
         AccessControlPolicyIDList.add(hierarchyURI);
         return AccessControlPolicyIDList;
     }

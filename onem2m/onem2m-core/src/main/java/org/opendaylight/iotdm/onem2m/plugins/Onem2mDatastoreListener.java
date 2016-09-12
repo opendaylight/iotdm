@@ -13,6 +13,7 @@ import java.util.List;
 import org.opendaylight.controller.md.sal.binding.api.*;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
@@ -29,11 +30,18 @@ public abstract class Onem2mDatastoreListener implements ClusteredDataTreeChange
                     .child(Onem2mResource.class).build();
     private ListenerRegistration<Onem2mDatastoreListener> dcReg;
     private DataBroker dataBroker;
+    private ResourceTreeReader trc;
 
-    public Onem2mDatastoreListener(DataBroker dataBroker) {
+
+    public Onem2mDatastoreListener(ResourceTreeReader trc, DataBroker dataBroker) {
+        this.trc = trc;
         this.dataBroker = dataBroker;
         dcReg = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.OPERATIONAL,
                 RESOURCE_IID), this);
+    }
+
+    public ResourceTreeReader getTransactionReader() {
+        return this.trc;
     }
 
     @Override
@@ -45,7 +53,7 @@ public abstract class Onem2mDatastoreListener implements ClusteredDataTreeChange
             switch (change.getRootNode().getModificationType()) {
                 case WRITE:
                     onem2mResourceId = change.getRootNode().getDataAfter().getResourceId();
-                    onem2mResourceCreated(onem2mResourceId);
+                    onem2mResourceCreated(trc, onem2mResourceId);
                     break;
                 case SUBTREE_MODIFIED:
                     String beforeJsonResourceContent = change.getRootNode().getDataBefore().getResourceContentJsonString();
@@ -53,18 +61,18 @@ public abstract class Onem2mDatastoreListener implements ClusteredDataTreeChange
                     if (beforeJsonResourceContent == null) {
                         if (afterJsonResourceContent != null) {
                             onem2mResourceId = change.getRootNode().getDataAfter().getResourceId();
-                            onem2mResourceChanged(onem2mResourceId);
+                            onem2mResourceChanged(trc, onem2mResourceId);
                         }
                     } else {
                         if (afterJsonResourceContent == null || !beforeJsonResourceContent.contentEquals(afterJsonResourceContent)) {
                             onem2mResourceId = change.getRootNode().getDataAfter().getResourceId();
-                            onem2mResourceChanged(onem2mResourceId);
+                            onem2mResourceChanged(trc, onem2mResourceId);
                         }
                     }
                     break;
                 case DELETE:
                     Onem2mResource onem2mResource = change.getRootNode().getDataBefore();
-                    onem2mResourceDeleted(onem2mResource);
+                    onem2mResourceDeleted(trc, onem2mResource);
                     break;
                 default:
                     LOG.error("Onem2mDatastoreListener: onDataTreeChanged(Onem2mResource) non handled modification {}",
@@ -74,23 +82,23 @@ public abstract class Onem2mDatastoreListener implements ClusteredDataTreeChange
         }
     }
 
-    private void onem2mResourceCreated(String onem2mResourceId) {
+    private void onem2mResourceCreated(ResourceTreeReader trc, String onem2mResourceId) {
 
-        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResourceId);
+        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(trc, onem2mResourceId);
         LOG.info("onem2mResourceCreated: {} ...", h);
-        onem2mResourceCreated(h, Onem2mDb.getInstance().getResource(onem2mResourceId));
+        onem2mResourceCreated(h, Onem2mDb.getInstance().getResource(trc, onem2mResourceId));
     }
 
-    private void onem2mResourceChanged(String onem2mResourceId) {
+    private void onem2mResourceChanged(ResourceTreeReader trc, String onem2mResourceId) {
 
-        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResourceId);
+        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(trc, onem2mResourceId);
         LOG.info("onem2mResourceChanged: {} ...", h);
-        onem2mResourceChanged(h, Onem2mDb.getInstance().getResource(onem2mResourceId));
+        onem2mResourceChanged(h, Onem2mDb.getInstance().getResource(trc, onem2mResourceId));
     }
 
-    private void onem2mResourceDeleted(Onem2mResource onem2mResource) {
+    private void onem2mResourceDeleted(ResourceTreeReader trc, Onem2mResource onem2mResource) {
 
-        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource);
+        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(trc, onem2mResource);
         LOG.info("onem2mResourceDeleted: {} ...", h);
         onem2mResourceDeleted(h, onem2mResource);
     }
