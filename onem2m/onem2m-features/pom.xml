@@ -10,23 +10,23 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>features-parent</artifactId>
-        <version>1.7.0-SNAPSHOT</version>
+        <version>1.7.0-Boron</version>
         <relativePath/>
     </parent>
     <groupId>org.opendaylight.iotdm</groupId>
     <artifactId>onem2m-features</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0-Boron</version>
     <name>${project.artifactId}</name>
     <modelVersion>4.0.0</modelVersion>
     <prerequisites>
         <maven>3.1.1</maven>
     </prerequisites>
     <properties>
-        <restconf.version>1.4.0-SNAPSHOT</restconf.version>
-        <mdsal.version>1.4.0-SNAPSHOT</mdsal.version>
-        <mdsal.model.version>0.9.0-SNAPSHOT</mdsal.model.version>
-        <yangtools.version>1.0.0-SNAPSHOT</yangtools.version>
-        <dlux.version>0.4.0-SNAPSHOT</dlux.version>
+        <restconf.version>1.4.0-Boron</restconf.version>
+        <mdsal.version>1.4.0-Boron</mdsal.version>
+        <mdsal.model.version>0.9.0-Boron</mdsal.model.version>
+        <yangtools.version>1.0.0-Boron</yangtools.version>
+        <dlux.version>0.4.0-Boron</dlux.version>
         <pax.web.version>3.2.9</pax.web.version>
         <mqttclient.version>1.0.2</mqttclient.version>
         <joda.version>2.7</joda.version>
