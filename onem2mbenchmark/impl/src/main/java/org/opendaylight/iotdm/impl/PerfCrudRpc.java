@@ -26,6 +26,7 @@ public class PerfCrudRpc {
 
     private static final Logger LOG = LoggerFactory.getLogger(PerfCrudRpc.class);
     private Onem2mService onem2mService;
+
     public long createsPerSec, retrievesPerSec, crudsPerSec, deletesPerSec;
     private ExecutorService executor;
     private Integer nextQueueId = 0;
@@ -74,6 +75,12 @@ public class PerfCrudRpc {
      * @return
      */
     public boolean runPerfTest(int numResources, int numThreads) {
+
+        if (!getCse()) {
+            if (!provisionCse()) {
+                return false;
+            }
+        }
 
         int totalSuccessful = 0;
         totalSuccessful += createTest(numResources, numThreads);
@@ -400,4 +407,54 @@ public class PerfCrudRpc {
 
 
     }
+
+    private boolean getCse() {
+
+    Onem2mRequestPrimitiveClient req = new CSE().setOperationRetrieve().setTo(Onem2m.SYS_PERF_TEST_CSE).build();
+    Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+        LOG.error(res.getContent());
+        return false;
+    }
+    Onem2mCSEResponse cseResponse = new Onem2mCSEResponse(res.getContent());
+        if (!cseResponse.responseOk()) {
+        LOG.error(res.getError());
+        return false;
+    }        String resourceId = cseResponse.getResourceId();
+        if (resourceId == null) {
+        LOG.error("Create cannot parse resourceId for CSE get");
+        return false;
+    }
+
+        return true;
+}
+
+    private boolean provisionCse() {
+
+        CSE b;
+
+        b = new CSE();
+        b.setCseId(Onem2m.SYS_PERF_TEST_CSE);
+        b.setCseType(Onem2m.CseType.INCSE);
+        b.setOperationCreate();
+        Onem2mRequestPrimitiveClient req = b.build();
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
+            return false;
+        }
+        Onem2mCSEResponse cseResponse = new Onem2mCSEResponse(res.getContent());
+        if (!cseResponse.responseOk()) {
+            LOG.error(res.getError());
+            return false;
+        }
+        String resourceId = cseResponse.getResourceId();
+        if (resourceId == null) {
+            LOG.error("Create cannot parse resourceId for CSE provision");
+            return false;
+        }
+
+        return true;
+    }
+    
 }
