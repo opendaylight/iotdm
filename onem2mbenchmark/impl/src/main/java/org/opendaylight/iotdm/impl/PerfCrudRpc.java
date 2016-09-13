@@ -26,6 +26,7 @@ public class PerfCrudRpc {
 
     private static final Logger LOG = LoggerFactory.getLogger(PerfCrudRpc.class);
     private Onem2mService onem2mService;
+
     public long createsPerSec, retrievesPerSec, crudsPerSec, deletesPerSec;
     private ExecutorService executor;
     private Integer nextQueueId = 0;
@@ -397,7 +398,5 @@ public class PerfCrudRpc {
 
         double secondsTotal = (double)delta / (double)1000000000;
         return (long) (((double)num / secondsTotal));
-
-
     }
 }
