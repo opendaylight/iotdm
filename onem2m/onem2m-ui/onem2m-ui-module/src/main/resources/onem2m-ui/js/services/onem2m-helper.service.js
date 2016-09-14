@@ -1,4 +1,5 @@
-define(['app/onem2m-ui/js/services/module'],function(app){
+define(['iotdm-gui.services.module'], function(app) {
+    'use strict';
 
     function Onem2mHelperService($log, $filter) {
 

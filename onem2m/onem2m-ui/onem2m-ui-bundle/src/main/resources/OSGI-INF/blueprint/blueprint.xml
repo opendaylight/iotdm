@@ -5,11 +5,11 @@
     <bean id="bundle" init-method="initialize" destroy-method="clean" class="org.opendaylight.dlux.loader.DluxModule">
         <property name="httpService" ref="httpService"/>
         <property name="loader" ref="loader"/>
-        <property name="moduleName" value="onem2m-ui"/>
+        <property name="moduleName" value="app.iotdm-gui.module"/>
         <property name="url" value="/src/app/onem2m-ui"/>
         <property name="directory" value="/onem2m-ui"/>
         <property name="requireJs" value="app/onem2m-ui/js/main"/>
-        <property name="angularJs" value="app.onem2m-ui"/>
+        <property name="angularJs" value="app.iotdm-gui"/>
         <property name="cssDependencies">
             <list>
                 <value>src/app/onem2m-ui/vendor/next-bower/css/next.css</value>

@@ -1,4 +1,5 @@
-define(['app/onem2m-ui/js/services/module','d3'],function(app){
+define(['iotdm-gui.services.module'], function(app) {
+    'use strict';
     function TreeLayoutService(Onem2m) {
         if (!d3)
             throw "ThreeLayoutService dependent on d3, which is not exist";
@@ -22,4 +23,4 @@ define(['app/onem2m-ui/js/services/module','d3'],function(app){
     }
     TreeLayoutService.$inject = ['Onem2mHelperService'];
     app.service('TreeLayoutService', TreeLayoutService);
-});
+})

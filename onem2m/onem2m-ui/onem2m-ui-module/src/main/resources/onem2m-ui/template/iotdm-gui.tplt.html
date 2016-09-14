@@ -1,0 +1,23 @@
+<div layout="column" class="iotdm-container" id="iotdm">
+    <md-toolbar class="md-whiteframe-1dp toolbar-main">
+        <div class="md-toolbar-tools toolbar-main">
+            <span class="logo">Iotdm</span>
+            <span flex></span>
+            <md-button class="animate-hide" aria-label="description" md-ripple-size="full" ui-sref=".retrieve-cse" ng-click="ctrl.openSidePanel()" ng-hide="ctrl.isSelect">Retrieve CSE</md-button>
+            <md-button class="animate-hide" aria-label="description" md-ripple-size="full" ui-sref=".create({operation:1})" ng-click="ctrl.openSidePanel()" ng-show="ctrl.isSelect">Create</md-button>
+            <md-button class="animate-hide" aria-label="description" md-ripple-size="full" ui-sref=".retrieve({operation:2})" ng-click="ctrl.openSidePanel()" ng-show="ctrl.isSelect">Retrieve</md-button>
+            <md-button class="animate-hide" aria-label="description" md-ripple-size="full" ui-sref=".update({operation:3})" ng-click="ctrl.openSidePanel()" ng-show="ctrl.isSelect">Update</md-button>
+            <md-button class="animate-hide" aria-label="description" md-ripple-size="full" ui-sref=".delete({operation:4})" ng-click="ctrl.openSidePanel()" ng-show="ctrl.isSelect">Delete</md-button>
+        </div>
+    </md-toolbar>
+
+    <section layout="row" flex class="iotdm-content">
+        <div id="topology" flex></div>
+        <section class="side-panel md-whiteframe-1dp h100" ng-class="{'side-panel-hide':ctrl.sidePanel.hide}">
+            <div class="show-tag icon-container md-whiteframe-1dp" ng-hide="ctrl.sidePanel.hide" ng-click="ctrl.closeSidePanel()">
+                <span class="material-icons">chevron_right</span>
+            </div>
+            <div ui-view class="h100 w100"></div>
+        </section>
+    </section>
+</div>

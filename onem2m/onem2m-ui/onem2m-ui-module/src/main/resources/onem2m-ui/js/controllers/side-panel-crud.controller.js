@@ -1,12 +1,12 @@
+define(['iotdm-gui.controllers.module'], function(app) {
+    'use strict';
+    var ROOT_KEY = "requestPrimitive";
 
-define(['app/onem2m-ui/js/controllers/module'], function(app) {
-
-    function SidePanelCRUDCtrl($scope, Alert, Topology, TopologyHelper, DataStore, Onem2m, CRUD, Onem2mDescription) {
-        var ROOT_KEY="requestPrimitive";
+    function SidePanelCRUDCtrl($scope, Alert, Topology, TopologyHelper, DataStore, Onem2m, CRUD, Onem2mDescription, $stateParams) {
         var _this = this;
         var descriptions = {};
 
-        _this.operation = $scope.operation;
+        _this.operation = $stateParams.operation;
 
         _this.path = [];
         _this.root = {};
@@ -30,133 +30,134 @@ define(['app/onem2m-ui/js/controllers/module'], function(app) {
         _this.removeOneItem = removeOneItem;
         _this.description = description;
 
-        init();
+        init(TopologyHelper.getSelectedNode());
 
-        function init() {
-            var reset = null;
-            descriptions = Onem2mDescription.descriptionByResourceType();
+        function init(node) {
+            if (node) {
+                var reset = null;
+                descriptions = Onem2mDescription.descriptionByResourceType();
 
-            if (_this.operation === Onem2m.operation.create) {
-                reset = function() {
-                    var node = TopologyHelper.getSelectedNode();
-                    _this.request = Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.create);
+                if (_this.operation === Onem2m.operation.create) {
+                    reset = function() {
+                        _this.request = Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.create);
+                        _this.request.fr = Onem2m.assignFrom();
+                        _this.request.rqi = Onem2m.assignRequestIdentifier();
+                        _this.request.to = Onem2m.id(node);
+                        _this.root = {};
+                        _this.path = [];
+                        _this.root[ROOT_KEY] = _this.request;
+                        _this.path.push(ROOT_KEY);
+
+                        var resourceType = node.value.ty;
+                        descriptions = Onem2mDescription.descriptionByResourceType(resourceType);
+                    };
+                    $scope.$watch(function() {
+                            return _this.request.ty;
+                        },
+                        function(newValue, oldValue) {
+                            if (newValue && newValue != oldValue) {
+                                descriptions = Onem2mDescription.descriptionByResourceType(newValue);
+                                var resource = Onem2m.getResourceByResourceTypeAndOperation(newValue, Onem2m.operation.create);
+                                _this.request.pc = resource;
+                                _this.request.ty = newValue;
+                                _this.path.push("pc");
+                                Object.keys(resource).forEach(function(key) {
+                                    _this.path.push(key);
+                                });
+                            } else {
+                                _this.request.pc = null;
+                            }
+                        });
+                    reset();
+                } else if (_this.operation === Onem2m.operation.retrieve) {
+                    _this.advancedMode = false;
+                    _this.mode = "Childrens";
+                    _this.modes = [
+                        "Childrens",
+                        "Descendants",
+                        "Custom"
+                    ];
+                    _this.hasMultipleModes = true;
+                    reset = function() {
+                        _this.root = {};
+                        _this.path = [];
+                        _this.root[ROOT_KEY] = _this.request;
+                        _this.path.push(ROOT_KEY);
+                    };
+                    _this.twoModes = true;
+                    reset();
+                    $scope.$watch(function() {
+                        return _this.mode;
+                    }, function(newMode) {
+                        if (newMode) {
+                            _this.inputDisabled = true;
+                            _this.request = newMode === _this.modes[2] ? Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.retrieve) : {};
+                            _this.request.op = Onem2m.operation.retrieve;
+                            _this.request.fr = Onem2m.assignFrom();
+                            _this.request.rqi = Onem2m.assignRequestIdentifier();
+                            _this.request.to = Onem2m.id(node);
+                            if (newMode === _this.modes[0]) {
+                                _this.request.rcn = Onem2m.resultContent["attributes and child resources"];
+                            } else if (newMode === _this.modes[1]) {
+                                _this.request.fc = {};
+                                _this.request.fc.fu = Onem2m.filterUsage["Discovery Criteria"];
+                            }
+                            reset();
+                        }
+                    });
+                } else if (_this.operation === Onem2m.operation.update) {
+                    _this.showChange = true;
+
+                    _this.request = Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.update);
                     _this.request.fr = Onem2m.assignFrom();
                     _this.request.rqi = Onem2m.assignRequestIdentifier();
                     _this.request.to = Onem2m.id(node);
-                    _this.root = {};
-                    _this.path = [];
-                    _this.root[ROOT_KEY] = _this.request;
-                    _this.path.push(ROOT_KEY);
 
-                    var resourceType = node.value.ty;
-                    descriptions = Onem2mDescription.descriptionByResourceType(resourceType);
-                };
-                $scope.$watch(function() {
-                        return _this.request.ty;
-                    },
-                    function(newValue, oldValue) {
-                        if (newValue && newValue != oldValue) {
-                            descriptions = Onem2mDescription.descriptionByResourceType(newValue);
-                            var resource = Onem2m.getResourceByResourceTypeAndOperation(newValue, Onem2m.operation.create);
-                            _this.request.pc = resource;
-                            _this.request.ty = newValue;
-                            _this.path.push("pc");
-                            Object.keys(resource).forEach(function(key) {
-                                _this.path.push(key);
-                            });
-                        } else {
-                            _this.request.pc = null;
-                        }
-                    });
-                reset();
-            } else if (_this.operation === Onem2m.operation.retrieve) {
-                _this.advancedMode = false;
-                _this.mode = "Childrens";
-                _this.modes = [
-                    "Childrens",
-                    "Descendants",
-                    "Custom"
-                ];
-                _this.hasMultipleModes = true;
-                reset = function() {
-                    _this.root = {};
-                    _this.path = [];
-                    _this.root[ROOT_KEY] = _this.request;
-                    _this.path.push(ROOT_KEY);
-                };
-                _this.twoModes = true;
-                reset();
-                $scope.$watch(function() {
-                    return _this.mode;
-                }, function(newMode) {
-                    if (newMode) {
-                        _this.inputDisabled = true;
-                        _this.request = newMode === _this.modes[2] ? Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.retrieve) : {};
-                        _this.request.op = Onem2m.operation.retrieve;
+                    var ty = Onem2m.readResourceType(node);
+                    descriptions = Onem2mDescription.descriptionByResourceType(ty);
+
+                    var template = Onem2m.getResourceByResourceTypeAndOperation(ty, Onem2m.operation.update);
+
+                    if (template) {
+                        var key = node.key;
+                        readDataToTemplate(template[key], node.value);
+                        _this.request.pc = template;
+
+                        _this.root = {};
+                        _this.path = [];
+                        _this.root[ROOT_KEY] = _this.request;
+                        _this.path.push(ROOT_KEY, "pc", key);
+                    }
+                } else if (_this.operation === Onem2m.operation.delete) {
+                    _this.hasTwoModes = true;
+                    reset = function() {
+                        _this.request.op = Onem2m.operation.delete;
                         _this.request.fr = Onem2m.assignFrom();
                         _this.request.rqi = Onem2m.assignRequestIdentifier();
-                        _this.request.to = Onem2m.id(TopologyHelper.getSelectedNode());
-                        if (newMode === _this.modes[0]) {
-                            _this.request.rcn = Onem2m.resultContent["attributes and child resources"];
-                        } else if (newMode === _this.modes[1]) {
-                            _this.request.fc = {};
-                            _this.request.fc.fu = Onem2m.filterUsage["Discovery Criteria"];
+                        _this.request.to = Onem2m.id(node);
+
+                        _this.root = {};
+                        _this.path = [];
+                        _this.root[ROOT_KEY] = _this.request;
+                        _this.path.push(ROOT_KEY);
+                    };
+                    $scope.$watch(function() {
+                        return _this.advancedMode;
+                    }, function(advancedMode) {
+                        var request = {};
+                        if (advancedMode) {
+                            _this.request = Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.delete);
+                        } else {
+                            _this.request = {};
                         }
                         reset();
-                    }
-                });
-            } else if (_this.operation === Onem2m.operation.update) {
-                _this.showChange = true;
-                var node = TopologyHelper.getSelectedNode();
-                _this.request = Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.update);
-                _this.request.fr = Onem2m.assignFrom();
-                _this.request.rqi = Onem2m.assignRequestIdentifier();
-                _this.request.to = Onem2m.id(node);
-
-                var ty = Onem2m.readResourceType(node);
-                descriptions = Onem2mDescription.descriptionByResourceType(ty);
-
-                var template = Onem2m.getResourceByResourceTypeAndOperation(ty, Onem2m.operation.update);
-
-                if (template) {
-                    var key = node.key;
-                    readDataToTemplate(template[key], node.value);
-                    _this.request.pc = template;
-
-                    _this.root = {};
-                    _this.path = [];
-                    _this.root[ROOT_KEY] = _this.request;
-                    _this.path.push(ROOT_KEY, "pc", key);
-                }
-            } else if (_this.operation === Onem2m.operation.delete) {
-                _this.hasTwoModes = true;
-                reset = function() {
-                    _this.request.op = Onem2m.operation.delete;
-                    _this.request.fr = Onem2m.assignFrom();
-                    _this.request.rqi = Onem2m.assignRequestIdentifier();
-                    _this.request.to = Onem2m.id(TopologyHelper.getSelectedNode());
-
-                    _this.root = {};
-                    _this.path = [];
-                    _this.root[ROOT_KEY] = _this.request;
-                    _this.path.push(ROOT_KEY);
-                };
-                $scope.$watch(function() {
-                    return _this.advancedMode;
-                }, function(advancedMode) {
-                    var request = {};
-                    if (advancedMode) {
-                        _this.request = Onem2m.getRequestPrimitiveByOperation(Onem2m.operation.delete);
-                    } else {
-                        _this.request = {};
-                    }
+                    });
                     reset();
-                });
-                reset();
-            }
+                }
 
-            _this.root_copy = angular.copy(_this.root);
-            _this.request_copy = _this.root_copy[ROOT_KEY];
+                _this.root_copy = angular.copy(_this.root);
+                _this.request_copy = _this.root_copy[ROOT_KEY];
+            }
         }
 
 
@@ -288,6 +289,6 @@ define(['app/onem2m-ui/js/controllers/module'], function(app) {
             return descriptions[name];
         }
     }
-    SidePanelCRUDCtrl.$inject = ['$scope', 'AlertService', 'TopologyService', 'TopologyHelperService', 'DataStoreService', 'Onem2mHelperService', 'Onem2mCRUDService', 'Onem2mDescriptionService'];
+    SidePanelCRUDCtrl.$inject = ['$scope', 'AlertService', 'TopologyService', 'TopologyHelperService', 'DataStoreService', 'Onem2mHelperService', 'Onem2mCRUDService', 'Onem2mDescriptionService', '$stateParams','$state'];
     app.controller("SidePanelCRUDCtrl", SidePanelCRUDCtrl);
 });

@@ -1,4 +1,6 @@
-define(['app/onem2m-ui/js/services/module'],function(app){
+define(['iotdm-gui.services.module'], function(app) {
+    'use strict';
+
     var stringTemplate = '' +
         '<md-input-container class="md-block">' +
         '   <ng-form name="form">' +

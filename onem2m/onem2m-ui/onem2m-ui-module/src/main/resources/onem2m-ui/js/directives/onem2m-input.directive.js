@@ -1,4 +1,5 @@
-define(['app/onem2m-ui/js/directives/module'], function(app) {
+define(['iotdm-gui.directives.module'], function(app) {
+    'use strict';
     function onem2mInput($compile, $parse,Onem2mInputComponent) {
 
         return {

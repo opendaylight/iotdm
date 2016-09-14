@@ -1,4 +1,5 @@
-define(['app/onem2m-ui/js/services/module'],function(app){
+define(['iotdm-gui.services.module'], function(app) {
+    'use strict';
     var MIME = "application/json";
     var HOST = 'localhost';
     var PORT = '8181';
@@ -8,6 +9,17 @@ define(['app/onem2m-ui/js/services/module'],function(app){
         this.setBaseDir = setBaseDir;
         this.retrieveCSE = retrieveCSE;
         this.discovery = discovery;
+        this.retrieveChildren = retrieveChildren;
+
+        function retrieveChildren(node) {
+            var request = {};
+            request.op = Onem2m.operation.retrieve;
+            request.fr = Onem2m.assignFrom();
+            request.rqi = Onem2m.assignRequestIdentifier();
+            request.to = Onem2m.id(node);
+            request.rcn = Onem2m.resultContent["attributes and child resources"];
+            return CRUD(request);
+        };
 
         function setBaseDir(host, port) {
             HOST = host;
@@ -103,9 +115,9 @@ define(['app/onem2m-ui/js/services/module'],function(app){
             var pointer = root;
             for (var i = 1; i < arguments.length; i++) {
                 var arg = arguments[i];
-                if (pointer[arg] === undefined||pointer[arg]===null)
+                if (pointer[arg] === undefined || pointer[arg] === null)
                     break;
-                pointer=pointer[arg];
+                pointer = pointer[arg];
             }
             return angular.toJson(pointer);
         }
@@ -113,7 +125,7 @@ define(['app/onem2m-ui/js/services/module'],function(app){
         function parseRequest(request, host, port) {
             host = host ? host : HOST;
             port = port ? port : PORT;
-            var url = "http://" + host + ":" + port + "/"+ request.to;
+            var url = "http://" + host + ":" + port + "/" + request.to;
             var query = {};
             query.rt = request.rt && request.rt.rtv;
             query.rp = request.rp;
