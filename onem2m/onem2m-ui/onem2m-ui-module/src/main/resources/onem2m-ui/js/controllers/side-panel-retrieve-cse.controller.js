@@ -1,6 +1,5 @@
-
-define(['app/onem2m-ui/js/controllers/module'], function(app) {
-
+define(['iotdm-gui.controllers.module'], function(app) {
+    'use strict';
     function SidePanelRetrieveCSECtrl($scope, DataStore, Topology, CRUD, Alert) {
         var _this = this;
 
@@ -21,7 +20,7 @@ define(['app/onem2m-ui/js/controllers/module'], function(app) {
                 $scope.$emit("closeSidePanel");
                 Alert("Retrieve CSE Successfully", 'success');
             }, function(error) {
-                Alert(error, 'warn');
+                Alert(error,'warn');
             });
         }
 

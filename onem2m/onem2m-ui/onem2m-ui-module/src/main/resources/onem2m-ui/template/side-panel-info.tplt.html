@@ -1,4 +1,4 @@
-<div ng-controller="SidePanelInfoCtrl as ctrl" class="h100" layout="column">
+<div  class="h100" layout="column">
     <div class="side-panel-top md-whiteframe-1dp" layout="row">
         <div flex="30" class="h100" layout="row">
             <div class="nav-tag icon-container" ng-click="ctrl.parent()" ng-hide="ctrl.isRoot()">
@@ -48,7 +48,7 @@
             </div>
         </div>
     </div>
-    <div class="side-panel-bottom md-whiteframe-1dp breadcrumb">
+    <div class="side-panel-bottom md-whiteframe-1dp iotdm-breadcrumb">
         <a ng-repeat="value in ctrl.path" ng-click="ctrl.ancestor($index)">{{value|shortToLong}}</a>
     </div>
 </div>

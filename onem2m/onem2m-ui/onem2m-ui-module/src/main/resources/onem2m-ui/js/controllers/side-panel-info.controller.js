@@ -1,8 +1,9 @@
-define(['app/onem2m-ui/js/controllers/module'], function(app) {
+define(['iotdm-gui.controllers.module'], function(app) {
+    'use strict';
 
-    function SidePanelInfoCtrl($scope, Topology, TopologyHelper, Onem2m,Onem2mDescription) {
+    function SidePanelInfoCtrl($scope,DataStore,TopologyHelper,Onem2m, Onem2mDescription) {
         var _this = this;
-        var descriptions={};
+        var descriptions = {};
 
         _this.root = {};
         _this.path = [];
@@ -14,32 +15,29 @@ define(['app/onem2m-ui/js/controllers/module'], function(app) {
         _this.yourself = yourself;
         _this.isValue = isValue;
         _this.isRoot = isRoot;
-        _this.isArray=isArray;
-        _this.description=description;
+        _this.isArray = isArray;
+        _this.description = description;
 
         init();
 
         function init() {
-            var key = Topology.addSelectNodeListener(function() {
-                reset(TopologyHelper.getSelectedNode());
+            $scope.$on('selectNode',function(event,id){
+                reset(DataStore.retrieveNode(id));
                 $scope.$apply();
             });
-
-            $scope.$on("$destory", function() {
-                Topology.removeSelectNodeListener(key);
-            });
-
             reset(TopologyHelper.getSelectedNode());
         }
 
         function reset(node) {
+          if(node){
             _this.root = {};
             _this.path = [];
             _this.root[node.key] = node.value;
             _this.path.push(node.key);
 
-            var resourceType=node.value.ty;
-            descriptions=Onem2mDescription.descriptionByResourceType(resourceType);
+            var resourceType = node.value.ty;
+            descriptions = Onem2mDescription.descriptionByResourceType(resourceType);
+          }
         }
 
         function ancestor(index) {
@@ -74,15 +72,15 @@ define(['app/onem2m-ui/js/controllers/module'], function(app) {
             return _this.path.length == 1;
         }
 
-        function isArray(array){
-          return angular.isArray(array);
+        function isArray(array) {
+            return angular.isArray(array);
         }
 
-        function description(name){
-          return descriptions[name];
+        function description(name) {
+            return descriptions[name];
         }
     }
 
-    SidePanelInfoCtrl.$inject = ['$scope', 'TopologyService', 'TopologyHelperService', 'Onem2mHelperService','Onem2mDescriptionService'];
+    SidePanelInfoCtrl.$inject = ['$scope', 'DataStoreService', 'TopologyHelperService','Onem2mHelperService', 'Onem2mDescriptionService'];
     app.controller('SidePanelInfoCtrl', SidePanelInfoCtrl);
 });

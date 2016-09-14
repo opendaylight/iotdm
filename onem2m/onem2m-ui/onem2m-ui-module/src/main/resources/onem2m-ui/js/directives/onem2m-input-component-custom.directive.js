@@ -1,4 +1,5 @@
-define(['app/onem2m-ui/js/directives/module'], function(app) {
+define(['iotdm-gui.directives.module'], function(app) {
+    'use strict';
     function Onem2mInputComponentCustom(Onem2mInputComponent) {
         return {
             restrict: 'A',
@@ -14,4 +15,4 @@ define(['app/onem2m-ui/js/directives/module'], function(app) {
     }
     Onem2mInputComponentCustom.$inject = ['Onem2mInputComponentService'];
     app.directive('onem2mInputComponentCustom', Onem2mInputComponentCustom);
-});
+})

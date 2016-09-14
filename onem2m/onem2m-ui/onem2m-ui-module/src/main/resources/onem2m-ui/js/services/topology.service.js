@@ -1,61 +1,53 @@
-define(['app/onem2m-ui/js/services/module'],function(app){
+define(['iotdm-gui.services.module'], function (app) {
+    'use strict';
 
-
-    function TopologyService(nx, Onem2m) {
+    function TopologyService($rootScope, Nx, Onem2m) {
         var _layout = null;
         var _dataStoreAccessKey = null;
-        var _selectNodeListeners = null;
-        var _unSelectNodeListeners = null;
         var _topo = null;
         var _selectedNodeId = null;
 
-        //todo: isSelectNodeAction is stopPropagation Flag since Event.stopPropagation not work. Need to ask
         this.initTopology = initTopology;
         this.layout = layout;
         this.setDataStoreAccessKey = setDataStoreAccessKey;
         this.update = update;
         this.getSelectedNodeId = getSelectedNodeId;
-        this.addSelectNodeListener = addSelectNodeListener();
-        this.addUnSelectNodeListener = addUnSelectNodeListener();
-        this.removeSelectNodeListener = removeSelectNodeListener;
-        this.removeUnSelectNodeListener = removeUnSelectNodeListener;
         this.adaptToContainer = adaptToContainer;
 
         init();
 
         function init() {
-            _layout = function(data) {};
+            _layout = function (data) {
+            };
 
             _dataStoreAccessKey = {
-                getData: function() {
+                getData: function () {
                     return null;
                 }
             };
 
-            _selectNodeListeners = {};
-            _unSelectNodeListeners = {};
 
-            _topo = new nx.graphic.Topology({
+            _topo = new Nx.graphic.Topology({
                 adaptive: true,
                 nodeConfig: {
-                    iconType: function(vertex) {
+                    iconType: function (vertex) {
                         return Onem2m.icon(vertex.getData());
                     },
-                    label: function(vertex) {
+                    label: function (vertex) {
                         return Onem2m.label(vertex.getData());
                     }
                 },
                 tooltipManagerConfig: {
-                       showNodeTooltip: false,
-                       showLinkTooltip:false
+                    showNodeTooltip: false,
+                    showLinkTooltip: false
                 },
                 showIcon: true,
                 identityKey: Onem2m.id()
             });
 
-            nx.define('onem2m.Tree', nx.ui.Application, {
+            Nx.define('onem2m.Tree', Nx.ui.Application, {
                 methods: {
-                    start: function() {
+                    start: function () {
                         _topo.attach(this);
                     }
                 }
@@ -64,48 +56,56 @@ define(['app/onem2m-ui/js/services/module'],function(app){
 
         function initTopology(htmlElementId) {
             var application = new onem2m.Tree();
-            var isSelectNodeAction = false;
             application.container(document.getElementById(htmlElementId));
             application.start();
-            _topo.on('topologyGenerated', function(sender, event) {
-                sender.eachNode(function(node) {
-                    node.onclickNode(function(sender, event) {
+            _topo.on('topologyGenerated', function (sender, event) {
+                sender.eachNode(function (node) {
+                    node.onclickNode(function (sender, event) {
                         selectNode(sender.id());
-                        isSelectNodeAction = true;
                     });
                 });
-                _topo.adaptToContainer();
             });
-            _topo.on('clickStage', function(sender, event) {
-                if (!isSelectNodeAction) {
+            _topo.stage().on('dblclick', function (sender, event) {
+                var target = event.target;
+                var nodesLayerDom = _topo.getLayer('nodes').dom().$dom;
+                var linksLayerDom = _topo.getLayer('links').dom().$dom;
+                var nodeSetLayerDom = _topo.getLayer('nodeSet').dom().$dom;
+                var id;
+
+
+                //db click node
+                if (nodesLayerDom.contains(target)) {
+                    while (!target.classList.contains('node')) {
+                        target = target.parentElement;
+                    }
+                    id = target.getAttribute('data-id');
+                    $rootScope.$broadcast('dblclick', id);
+                    return;
+                }
+            });
+
+            // var popup = new Nx.ui.Popover({
+            //     width: 300,
+            //     height: 200,
+            //     offset: 5
+            // });
+            //
+            // _topo.on('contextmenu', function(sender, event) {
+            //     popup.open({
+            //         target: {
+            //             x: event.offsetX,
+            //             y: event.offsetY
+            //         }
+            //     });
+            // });
+
+            _topo.on('clickStage', function (sender, event) {
+                var target = event.target;
+                var nodesLayerDom = _topo.getLayer('nodes').dom().$dom;
+                if (!nodesLayerDom.contains(target)) {
                     unSelectNode();
                 }
-                isSelectNodeAction = false;
             });
-        }
-
-        function addSelectNodeListener() {
-            var counter = 0;
-            return function(listener) {
-                _selectNodeListeners[counter++] = listener;
-                return counter;
-            };
-        }
-
-        function addUnSelectNodeListener() {
-            var counter = 0;
-            return function(listener) {
-                _unSelectNodeListeners[counter++] = listener;
-                return counter;
-            };
-        }
-
-        function removeSelectNodeListener(key) {
-            delete _selectNodeListeners[key];
-        }
-
-        function removeUnSelectNodeListener(key) {
-            delete _unSelectNodeListeners[key];
         }
 
         function layout(layout) {
@@ -117,19 +117,13 @@ define(['app/onem2m-ui/js/services/module'],function(app){
         }
 
         function selectNode(id) {
+            $rootScope.$broadcast('selectNode', id);
             _selectedNodeId = id;
-            notifyListeners(_selectNodeListeners, _selectedNodeId);
         }
 
         function unSelectNode() {
+            $rootScope.$broadcast('unSelectNode', _selectedNodeId);
             _selectedNodeId = null;
-            notifyListeners(_unSelectNodeListeners);
-        }
-
-        function notifyListeners(listeners, notification) {
-            for (var key in listeners) {
-                listeners[key](notification);
-            }
         }
 
         function update() {
@@ -148,6 +142,6 @@ define(['app/onem2m-ui/js/services/module'],function(app){
         }
     }
 
-    TopologyService.$inject = ['NxService', 'Onem2mHelperService'];
+    TopologyService.$inject = ['$rootScope', 'Nx', 'Onem2mHelperService'];
     app.service('TopologyService', TopologyService);
 });

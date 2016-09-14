@@ -1,5 +1,5 @@
-define(['app/onem2m-ui/js/services/module'],function(app){
-
+define(['iotdm-gui.services.module'], function(app) {
+    'use strict';
     function Onem2mDescriptionService() {
         var universalDescription = {
             "ty": "Resource Type. This Read Only (assigned at creation time. and then cannot be changed) attribute identifies the type of the resource as specified in clause 9.6. Each resource shall have a resourceType attribute.",
