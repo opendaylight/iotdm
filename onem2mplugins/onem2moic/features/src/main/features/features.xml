@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright © 2016 Cisco Systems Inc and others. All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-onem2moic-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+  <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
+  <feature name='odl-onem2moic-api' version='${project.version}' description='OpenDaylight :: onem2moic :: api'>
+    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+    <bundle>mvn:org.opendaylight.iotdm/onem2moic-api/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-onem2moic' version='${project.version}' description='OpenDaylight :: onem2moic'>
+    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version='${project.version}'>odl-onem2moic-api</feature>
+    <feature version='${onem2m.version}'>odl-onem2m-core</feature>
+      <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/2.3.2</bundle>
+      <bundle>mvn:com.fasterxml.jackson.dataformat/jackson-dataformat-cbor/2.3.2</bundle>
+      <bundle>mvn:org.opendaylight.iotdm/onem2moic-impl/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-onem2moic-rest' version='${project.version}' description='OpenDaylight :: onem2moic :: REST'>
+    <feature version="${project.version}">odl-onem2moic</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+  <feature name='odl-onem2moic-ui' version='${project.version}' description='OpenDaylight :: onem2moic :: UI'>
+    <feature version="${project.version}">odl-onem2moic-rest</feature>
+    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+    <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
+    <feature version="${dlux.version}">odl-dlux-yangui</feature>
+  </feature>
+  <feature name='odl-onem2moic-cli' version='${project.version}' description='OpenDaylight :: onem2moic :: CLI'>
+    <feature version="${project.version}">odl-onem2moic</feature>
+    <bundle>mvn:org.opendaylight.iotdm/onem2moic-cli/{{VERSION}}</bundle>
+  </feature>
+</features>
