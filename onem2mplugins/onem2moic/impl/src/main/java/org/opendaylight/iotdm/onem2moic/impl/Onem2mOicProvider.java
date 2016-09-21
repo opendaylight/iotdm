@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2moic.impl;
 
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.Request;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
@@ -31,7 +32,7 @@ public class Onem2mOicProvider {
 
     private int OIC_MULTICAST_PORT = 5683;
     private String OIC_MULTICAST_ADDRESS = "224.0.1.187";
-    private String oicURI = "coap://192.168.238.145:5683/oic/d";
+    private String oicURI = "coap://192.168.238.148:5683/oic/d";
 
 
     public Onem2mOicProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcProviderRegistry) {
@@ -48,8 +49,10 @@ public class Onem2mOicProvider {
         onem2mService = rpcProviderRegistry.getRpcService(Onem2mService.class);
         oicIpe = new Onem2mOicIPE(onem2mService);
 
-        /* For now discover from init, need to move it to session */
-        discoverOicDevices();
+        /*
+         * TODO Commenting discover devices for now, need to move to session
+         */
+        //discoverOicDevices();
     }
 
     public void discoverOicDevices() {
@@ -79,6 +82,7 @@ public class Onem2mOicProvider {
         };
 
         oicClient.oicDeviceReq(discoverHandler);
+
         /* try {
             mulitcastReceive();
         } catch (IOException ioe) {
@@ -108,25 +112,32 @@ public class Onem2mOicProvider {
 
             if("vmnet8".contains(name)) {
             //System.out.println("Adding " + name + " to our interface set");
-            socket.joinGroup(socketAddress, xface);
+                socket.joinGroup(socketAddress, xface);
+                break;
             }
         }
 
+        Request discover = Request.newGet();
+        discover.setURI("coap://224.0.1.187:5683/oic/d");
+        System.out.println(discover.toString());
+        //DatagramPacket packet = new DatagramPacket(discover.getBytes(), 45);
+        //socket.send(packet);
+
         byte[] buffer = new byte[1500];
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        DatagramPacket packet1 = new DatagramPacket(buffer, buffer.length);
 
         try {
-            packet.setData(buffer, 0, buffer.length);
+            packet1.setData(buffer, 0, buffer.length);
 
 
             //if the socket does not receive anything in 1 second,
             //it will timeout and throw a SocketTimeoutException
             //you can catch the exception if you need to log, or you can ignore it
             socket.setSoTimeout(100000);
-            socket.receive(packet);
+            socket.receive(packet1);
             //System.out.println("Received pkt from " + packet.getAddress() +
             //            " of length " + packet.getLength());
-            //System.out.println(packet.getData().toString());
+            System.out.println(packet1.getData().toString());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
