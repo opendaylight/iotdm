@@ -31,7 +31,7 @@ public class Onem2mOicProvider {
 
     private int OIC_MULTICAST_PORT = 5683;
     private String OIC_MULTICAST_ADDRESS = "224.0.1.187";
-    private String oicURI = "coap://192.168.238.145:5683/oic/d";
+    private String oicURI = "coap://192.168.238.148:5683/oic/d";
 
 
     public Onem2mOicProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcProviderRegistry) {
@@ -79,11 +79,13 @@ public class Onem2mOicProvider {
         };
 
         oicClient.oicDeviceReq(discoverHandler);
-        /* try {
+
+        /*
+        try {
             mulitcastReceive();
         } catch (IOException ioe) {
             System.out.println(ioe);
-        } */
+        }*/
 
     }
 
@@ -108,7 +110,8 @@ public class Onem2mOicProvider {
 
             if("vmnet8".contains(name)) {
             //System.out.println("Adding " + name + " to our interface set");
-            socket.joinGroup(socketAddress, xface);
+                socket.joinGroup(socketAddress, xface);
+                break;
             }
         }
 
@@ -126,7 +129,7 @@ public class Onem2mOicProvider {
             socket.receive(packet);
             //System.out.println("Received pkt from " + packet.getAddress() +
             //            " of length " + packet.getLength());
-            //System.out.println(packet.getData().toString());
+            System.out.println(packet.getData().toString());
         } catch (IOException ex) {
             ex.printStackTrace();
         }

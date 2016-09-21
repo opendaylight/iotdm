@@ -31,6 +31,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <onem2msimpleadapter.version>0.3.0-SNAPSHOT</onem2msimpleadapter.version>
     <onem2mexample.version>0.3.0-SNAPSHOT</onem2mexample.version>
     <onem2mtsdr.version>0.3.0-SNAPSHOT</onem2mtsdr.version>
+    <onem2moic.version>0.3.0-SNAPSHOT</onem2moic.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>
@@ -125,6 +126,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2mtsdr-features</artifactId>
       <version>${onem2mtsdr.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.iotdm</groupId>
+      <artifactId>onem2moic-features</artifactId>
+      <version>${onem2moic.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
       <scope>runtime</scope>
