@@ -79,6 +79,7 @@ public class Onem2mOicProvider {
         };
 
         oicClient.oicDeviceReq(discoverHandler);
+
         /* try {
             mulitcastReceive();
         } catch (IOException ioe) {
