@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a6b29fe_fbffe731",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "Semicolon not needed here.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_06f7e6d3",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "Move this at the begin (before the first enum definition). It\u0027s good convention I think.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_a62f123e",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "It seems that OIC provides schemas defining OIC devices right ? If so, you could use them to generate java classes for OIC devices if possible.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_5b925bf6",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "Please use TODO prefix for the lines of comments describing some outstanding work.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_3b52ff34",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "It\u0027s good convestion to define all variables and types before the first definition of method. So I whould move this variable and the enum above at the begin of the class definition.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_66e69a45",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "If these printing methods are not intended to be used from outside of the class then they should be private.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_86d6564d",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "We are using java 8 so you can simply use switch(fieldname)",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_06c24684",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "We are using java 8 so you can simply use switch(fieldname)",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_66bdfa01",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "We are using java 8 so you can simply use switch(fieldname)",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_a63a7296",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "We are using java 8 so you can simply use switch(fieldname)",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_3b1affc5",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "Seems as if you create new cseBase if doesn\u0027t exist. But cseBase resources should be created manually (through RPC call) by administrator. I think it should result with failure instead of attempt to create the new cseBase instance.",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_9bca3319",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-22T12:34:45Z",
+      "side": 1,
+      "message": "The getAE is called here just to make sure that the createAE was successful right ? If so, I\u0027d suggest to don\u0027t do the get operation after every create. You should rather check result code of the create operation in the createAE method instead. The createAE method must return true if and only if the AE resources has been for 100% created. This way, you don\u0027t need the getAE method (It\u0027s little bit confusing if you have such method but it\u0027s not required by specification. I mean that IPE don\u0027t do any GET AE, just Create / Delete AE right ?)",
+      "revId": "4aa0a66538109cad5c4030e2cdf24849e65e9224",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
