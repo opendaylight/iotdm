@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a6b29fe_ad140a4d",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-26T05:48:15Z",
+      "side": 1,
+      "message": "Please remove the commented printing or replace with log.trace if needed. You can group cases executing the same code. The same for all switch statements in other methods.",
+      "revId": "f3b0241afa8e1b9fd5de2355740aac050bed9743",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_cd11865e",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicProvider.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-09-26T05:48:15Z",
+      "side": 1,
+      "message": "Please add comments and describe what is the purpose of the method.",
+      "revId": "f3b0241afa8e1b9fd5de2355740aac050bed9743",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
