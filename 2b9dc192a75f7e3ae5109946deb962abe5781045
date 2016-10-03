@@ -1,0 +1,327 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a6b29fe_401b6d80",
+        "filename": "onem2mplugins/onem2moic/README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "If you\u0027re using IntelliJ Idea you can simply install plugin for .md files wchich will show you HTML preview.\nYou should indent this piece of yang definition one tabulator left. This way it will be considered as one block and displayed correctly in the HTML preview.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_e04719a1",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Use .isEmpty() instead of \u0027\u003d\u003d\u0027",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_c0ddbde1",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "This should be moved at the end of definition of last attribute: CoapHandler discoverHandler) {",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_20f47159",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Use .isEmpty() instead of \u0027\u003d\u003d\u0027",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_20c2b1e8",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Don\u0027t you need also default: ?\nHow do you want to handle the empty string: \"\" ?\nAdd some spaces in order to make it more clear:\nswitch(fieldname\u003d\u003dnull ? \"\" : fieldname)",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_e0a39940",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Add some TODO: comment and describe why is it empty for now.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_606f89fc",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_c0793dc9",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Why is this empty ?",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_8043c56a",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Don\u0027t you need also default: ?",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_00805589",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_e07a79b8",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_a05b6152",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_40340dfb",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "What about default here ?",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_3d1bfe81",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "You shouldn\u0027t use the \"\u003d\u003d\" operator to compare strings in general. Please use .equals() instead in whole code.\nBut this is special case because you\u0027re checking whether the string is empty. You can use .isEmpty() method.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_dd280a99",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "I think that it\u0027s OK to log error here since this should never happen.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_7d11f65b",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Add some comment at the begin.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_80590590",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "I would add comment also here.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_c0565d5b",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Is this method really needed ?",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_bd270ec9",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicProvider.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-10-03T10:31:32Z",
+      "side": 1,
+      "message": "Add some comment before the ioe.toString().",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
