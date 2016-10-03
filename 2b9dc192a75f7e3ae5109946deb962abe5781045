@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_b64d6b40",
+        "filename": "onem2mplugins/onem2moic/README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_401b6d80",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_e04719a1",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_f63243f0",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_e04719a1",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_c0ddbde1",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
         "patchSetId": 7
@@ -47,6 +83,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "This should be moved at the end of definition of last attribute: CoapHandler discoverHandler) {",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_d62d8790",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_c0ddbde1",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_d6446748",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_20c2b1e8",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_e0a39940",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
         "patchSetId": 7
@@ -98,6 +170,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "Add some TODO: comment and describe why is it empty for now.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_36779ba1",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_e0a39940",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -121,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_167a5f87",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_606f89fc",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_c0793dc9",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
         "patchSetId": 7
@@ -132,6 +240,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "Why is this empty ?",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_b66a8bb0",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "In this change, i am committing just the basic infra for parsing /oic/d. All other parsing /oic/in, oic/p, oic/res will be committed in the next set of changes. But since i knew the structure i added the skeleton code. I have added a TODO items for the same.",
+      "parentUuid": "7a6b29fe_c0793dc9",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -155,6 +281,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_9665cfe2",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_8043c56a",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_00805589",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
         "patchSetId": 7
@@ -166,6 +310,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "Same as above.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_d65bc71f",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_00805589",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -189,6 +351,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_369e7bb9",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_e07a79b8",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_a05b6152",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
         "patchSetId": 7
@@ -200,6 +380,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "Same as above.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_767bd37a",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_a05b6152",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -223,6 +421,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_567e976a",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicClient.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_40340dfb",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_3d1bfe81",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
         "patchSetId": 7
@@ -234,6 +450,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "You shouldn\u0027t use the \"\u003d\u003d\" operator to compare strings in general. Please use .equals() instead in whole code.\nBut this is special case because you\u0027re checking whether the string is empty. You can use .isEmpty() method.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_96930fa2",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_3d1bfe81",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -257,6 +491,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_d6890770",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "In the testing i found that if the plugin is not configured properly then this log can come for every \"poll-period\", so commented out the error.",
+      "parentUuid": "7a6b29fe_dd280a99",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_7d11f65b",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
         "patchSetId": 7
@@ -268,6 +520,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "Add some comment at the begin.",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_16efff1e",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_7d11f65b",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -291,6 +561,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_76f2b306",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_80590590",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_c0565d5b",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
         "patchSetId": 7
@@ -308,6 +596,24 @@
     },
     {
       "key": {
+        "uuid": "7a6b29fe_d6e0e727",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicIPE.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Have planned 5-6 commits to commit all changes for OIC plugin. Since I am not sure of the all the mappings as of now, will retain it for now. If not required, will remove in later changes.",
+      "parentUuid": "7a6b29fe_c0565d5b",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a6b29fe_bd270ec9",
         "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicProvider.java",
         "patchSetId": 7
@@ -319,6 +625,24 @@
       "writtenOn": "2016-10-03T10:31:32Z",
       "side": 1,
       "message": "Add some comment before the ioe.toString().",
+      "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a6b29fe_7608f327",
+        "filename": "onem2mplugins/onem2moic/impl/src/main/java/org/opendaylight/iotdm/onem2moic/impl/Onem2mOicProvider.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 6457
+      },
+      "writtenOn": "2016-10-03T15:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6b29fe_bd270ec9",
       "revId": "2b9dc192a75f7e3ae5109946deb962abe5781045",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
