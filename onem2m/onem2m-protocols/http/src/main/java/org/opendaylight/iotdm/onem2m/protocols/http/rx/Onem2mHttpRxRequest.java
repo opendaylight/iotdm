@@ -13,8 +13,8 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.plugins.IotDMPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.IotDMPluginHttpResponse;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxRequest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * Implements complete handling logic for HTTP RxRequests.
@@ -37,8 +36,8 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
     /* Let's keep this data protected so they can be accessed by
      * Child classes
      */
-    protected final IotDMPluginHttpRequest request;
-    protected final IotDMPluginHttpResponse response;
+    protected final IotdmPluginHttpRequest request;
+    protected final IotdmPluginHttpResponse response;
     protected final HttpServletRequest httpRequest;
     protected final HttpServletResponse httpResponse;
     protected final Onem2mService onem2mService;
@@ -47,14 +46,14 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
     protected Onem2mRequestPrimitiveClientBuilder clientBuilder = null;
     protected ResponsePrimitive onem2mResponse = null;
 
-    public Onem2mHttpRxRequest(@Nonnull final IotDMPluginHttpRequest request,
-                               @Nonnull final IotDMPluginHttpResponse response,
+    public Onem2mHttpRxRequest(@Nonnull final IotdmPluginHttpRequest request,
+                               @Nonnull final IotdmPluginHttpResponse response,
                                @Nonnull final Onem2mService onem2mService,
                                final SecurityLevel securityLevel) {
 
         this.request = request;
         this.response = response;
-        this.httpRequest = request.getHttpRequest();
+        this.httpRequest = request.getOriginalRequest();
         this.httpResponse = response.getHttpResponse();
         this.onem2mService = onem2mService;
         this.securityLevel = securityLevel;
@@ -83,17 +82,6 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         return split[1];
     }
 
-    protected void prepareErrorResponse(String message, int statusCode) {
-        httpResponse.setStatus(statusCode);
-        try {
-            httpResponse.getWriter().println(message);
-            httpResponse.setContentType("text/json;charset=utf-8");
-        } catch (IOException e) {
-            LOG.error("Failed to write error message: {}", message);
-        }
-        Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
-    }
-
     @Override
     protected boolean translateRequestToOnem2m() {
         clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
@@ -110,7 +98,8 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         if (null != contentFormat) {
             clientBuilder.setContentFormat(contentFormat);
         } else {
-            prepareErrorResponse("Unsupported media type: " + contentType, HttpServletResponse.SC_NOT_ACCEPTABLE);
+            IotdmPluginHttpResponse.prepareErrorResponse(
+                    httpResponse, "Unsupported media type: " + contentType, HttpServletResponse.SC_NOT_ACCEPTABLE);
             return false;
         }
 
@@ -157,7 +146,8 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
             clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
         }
         if (resourceTypePresent && !method.contentEquals("post")) {
-            prepareErrorResponse("Specifying resource type not permitted.", HttpServletResponse.SC_BAD_REQUEST);
+            IotdmPluginHttpResponse.prepareErrorResponse(
+                    httpResponse, "Specifying resource type not permitted.", HttpServletResponse.SC_BAD_REQUEST);
             return false;
         }
 
@@ -190,7 +180,8 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
                 Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_DELETE);
                 break;
             default:
-                prepareErrorResponse("Unsupported method type: " + method, HttpServletResponse.SC_NOT_IMPLEMENTED);
+                IotdmPluginHttpResponse.prepareErrorResponse(
+                        httpResponse, "Unsupported method type: " + method, HttpServletResponse.SC_NOT_IMPLEMENTED);
                 return false;
         }
 
@@ -205,89 +196,52 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         return true;
     }
 
-    private int mapCoreResponseToHttpResponse(HttpServletResponse httpResponse, String rscString) {
-
-        httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RSC, rscString);
-        switch (rscString) {
-            case Onem2m.ResponseStatusCode.OK:
-                return HttpServletResponse.SC_OK;
-            case Onem2m.ResponseStatusCode.CREATED:
-                return HttpServletResponse.SC_CREATED;
-            case Onem2m.ResponseStatusCode.CHANGED:
-                return HttpServletResponse.SC_OK;
-            case Onem2m.ResponseStatusCode.DELETED:
-                return HttpServletResponse.SC_OK;
-
-            case Onem2m.ResponseStatusCode.NOT_FOUND:
-                return HttpServletResponse.SC_NOT_FOUND;
-            case Onem2m.ResponseStatusCode.ACCESS_DENIED:
-                return HttpServletResponse.SC_FORBIDDEN;
-            case Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED:
-                return HttpServletResponse.SC_METHOD_NOT_ALLOWED;
-            case Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE:
-                return HttpServletResponse.SC_BAD_REQUEST;
-            case Onem2m.ResponseStatusCode.CONFLICT:
-                return HttpServletResponse.SC_CONFLICT;
-
-            case Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR:
-                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-            case Onem2m.ResponseStatusCode.NOT_IMPLEMENTED:
-                return HttpServletResponse.SC_NOT_IMPLEMENTED;
-            case Onem2m.ResponseStatusCode.TARGET_NOT_REACHABLE:
-                return HttpServletResponse.SC_NOT_FOUND;
-            case Onem2m.ResponseStatusCode.ALREADY_EXISTS:
-                return HttpServletResponse.SC_FORBIDDEN;
-            case Onem2m.ResponseStatusCode.TARGET_NOT_SUBSCRIBABLE:
-                return HttpServletResponse.SC_FORBIDDEN;
-            case Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED:
-                return HttpServletResponse.SC_NOT_IMPLEMENTED;
-
-            case Onem2m.ResponseStatusCode.INVALID_ARGUMENTS:
-                return HttpServletResponse.SC_BAD_REQUEST;
-            case Onem2m.ResponseStatusCode.INSUFFICIENT_ARGUMENTS:
-                return HttpServletResponse.SC_BAD_REQUEST;
-        }
-        return HttpServletResponse.SC_BAD_REQUEST;
-    }
-
     @Override
     protected boolean translateResponseFromOnem2m() {
-        // the content is already in the required format ...
-        String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
         String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-        String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
-        if (rqi != null) {
-            httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, rqi);
-        }
-
-        int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
-        if (content != null) {
-            httpResponse.setStatus(httpRSC);
-
-            try {
-                httpResponse.getWriter().println(content);
-            } catch (IOException e) {
-                prepareErrorResponse("Failed to write response content", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                return false;
-            }
-        } else {
-            httpResponse.setStatus(httpRSC);
-        }
         if (rscString.charAt(0) =='2') {
             Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_OK);
         } else {
             Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
         }
+        return IotdmPluginHttpResponse.fromOnem2mResponseToHttp(onem2mResponse, httpResponse);
 
-        String ct = onem2mResponse.getPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE);
-        if (ct != null) {
-            httpResponse.setContentType(ct);
-        }
-        String cl = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT_LOCATION);
-        if (cl != null) {
-            httpResponse.setHeader("Content-Location", Onem2m.translateUriFromOnem2m(cl));
-        }
-        return true;
+//        // the content is already in the required format ...
+//        String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
+//        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+//        String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
+//        if (rqi != null) {
+//            httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, rqi);
+//        }
+//
+//        int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
+//        if (content != null) {
+//            httpResponse.setStatus(httpRSC);
+//
+//            try {
+//                httpResponse.getWriter().println(content);
+//            } catch (IOException e) {
+//                prepareErrorResponse("Failed to write response content", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+//                return false;
+//            }
+//        } else {
+//            httpResponse.setStatus(httpRSC);
+//        }
+//        if (rscString.charAt(0) =='2') {
+//            Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_OK);
+//        } else {
+//            Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
+//        }
+//
+//        String ct = onem2mResponse.getPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE);
+//        if (ct != null) {
+//            httpResponse.setContentType(ct);
+//        }
+//        String cl = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT_LOCATION);
+//        if (cl != null) {
+//            httpResponse.setHeader("Content-Location", Onem2m.translateUriFromOnem2m(cl));
+//        }
+//        return true;
     }
 
     @Override
