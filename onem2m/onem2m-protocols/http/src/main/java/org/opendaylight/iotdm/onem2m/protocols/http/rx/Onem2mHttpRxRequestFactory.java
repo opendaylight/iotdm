@@ -8,8 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.IotDMPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.IotDMPluginHttpResponse;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 
@@ -19,8 +19,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 public class Onem2mHttpRxRequestFactory implements Onem2mHttpRxRequestAbstractFactory {
 
     @Override
-    public Onem2mHttpRxRequest createHttpRxRequest(IotDMPluginHttpRequest request,
-                                                   IotDMPluginHttpResponse response,
+    public Onem2mHttpRxRequest createHttpRxRequest(IotdmPluginHttpRequest request,
+                                                   IotdmPluginHttpResponse response,
                                                    Onem2mService onem2mService,
                                                    SecurityLevel securityLevel) {
 

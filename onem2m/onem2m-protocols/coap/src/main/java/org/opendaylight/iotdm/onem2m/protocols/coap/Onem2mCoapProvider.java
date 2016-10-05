@@ -250,7 +250,7 @@ public class Onem2mCoapProvider extends CoapServer
 
             // prepare response to be sent
             Response response = new Response(coapRSC);
-
+//            org.eclipse.californium.core.coap.Response
             // set content and content format if exist
             if (content != null) {
                 response.setPayload(content);

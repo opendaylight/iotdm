@@ -14,6 +14,8 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.plugins.*;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
@@ -21,12 +23,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * Created by bjanosik on 9/9/16.
  */
-public class Onem2mExampleCustomProtocol implements AbstractIotDMPlugin {
+public class Onem2mExampleCustomProtocol extends IotdmPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mExampleCustomProtocol.class);
     protected DataBroker dataBroker;
@@ -40,10 +41,11 @@ public class Onem2mExampleCustomProtocol implements AbstractIotDMPlugin {
 
 
     public Onem2mExampleCustomProtocol(DataBroker dataBroker, Onem2mService onem2mService) {
+        super(Onem2mPluginManager.getInstance());
         this.onem2mService = onem2mService;
         onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-        mgr.registerPluginAtPort("http", this, 8283, Onem2mPluginManager.Mode.Exclusive);
+        mgr.registerPluginHttp(this, 8283, Onem2mPluginManager.Mode.Exclusive, null);
     }
 
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
@@ -86,10 +88,6 @@ public class Onem2mExampleCustomProtocol implements AbstractIotDMPlugin {
     }
 
     @Override
-    public void init() {
-    }
-
-    @Override
     public void close() {
     }
 
@@ -100,12 +98,12 @@ public class Onem2mExampleCustomProtocol implements AbstractIotDMPlugin {
 
     // handler for the HTTP registered plugin, see Onem2mHttpProvider.java for more info
     @Override
-    public void handle(IotDMPluginRequest request, IotDMPluginResponse response){
-        HttpServletRequest httpRequest = ((IotDMPluginHttpRequest)request).getHttpRequest();
-        HttpServletResponse httpResponse = ((IotDMPluginHttpResponse)response).getHttpResponse();
+    public void handle(IotdmPluginRequest request, IotdmPluginResponse response){
+        HttpServletRequest httpRequest = ((IotdmPluginHttpRequest)request).getOriginalRequest();
+        HttpServletResponse httpResponse = ((IotdmPluginHttpResponse)response).getHttpResponse();
 
         LOG.info("Onem2mExampleCustomProtocol: method: {}, url:{}, headers: {}, payload: {}",
-                request.getMethod(), request.getUrl(), request.getHeaders(), request.getPayLoad());
+                request.getMethod(), request.getUrl(), request.getHeadersAll(), request.getPayLoad());
     }
 
     /**

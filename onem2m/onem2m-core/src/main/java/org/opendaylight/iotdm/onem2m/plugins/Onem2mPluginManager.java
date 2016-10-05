@@ -8,767 +8,605 @@
 
 package org.opendaylight.iotdm.onem2m.plugins;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlets.CrossOriginFilter;
-import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
+import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpPluginServerFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServerFactory;
+import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
+import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
+import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedExactMatchRegistry;
+import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedPrefixMatchRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.eclipse.californium.core.CoapResource;
-import org.eclipse.californium.core.CoapServer;
-import org.eclipse.californium.core.coap.*;
-import org.eclipse.californium.core.network.Exchange;
-import org.eclipse.californium.core.server.resources.CoapExchange;
-import org.eclipse.californium.core.server.resources.Resource;
-import org.eclipse.californium.core.network.CoapEndpoint;
-import org.eclipse.californium.core.network.EndpointManager;
-import org.eclipse.californium.core.network.config.NetworkConfig;
-
-
-interface AbstractOnem2mProtocolProvider {
-
-    public int init(int port, Onem2mPluginManager.Mode operatingMode);
-
-    public void cleanup();
-
-    public int getPort();
-
-    public String getProtocol();
-
-    public Onem2mPluginManager.Mode getInstanceMode();
-}
-
-class Onem2mHttpBaseHandler extends HttpServlet {
-    private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpBaseHandler.class);
-    private Onem2mHTTPProvider provider;
-
-    public Onem2mHttpBaseHandler(Onem2mHTTPProvider provider) {
-        this.provider = provider;
-    }
-
-
-    public static String getFullURL(HttpServletRequest request) {
-        StringBuffer requestURL = request.getRequestURL();
-        String queryString = request.getQueryString();
-
-        if (queryString == null) {
-            return requestURL.toString();
-        } else {
-            return requestURL.append('?').append(queryString).toString();
-        }
-    }
-
-    @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //super.service(req, resp);
-        IotDMPluginHttpRequest request = new IotDMPluginHttpRequest();
-        IotDMPluginHttpResponse response = new IotDMPluginHttpResponse();
-        request.setMethod(req.getMethod().toLowerCase());
-        LOG.trace("service called");
-
-        //headers
-        HashMap<String, String> headers = new HashMap<String, String>();
-        Enumeration headerKeys = req.getHeaderNames();
-        String header;
-        while (headerKeys.hasMoreElements()) {
-            header = (String) headerKeys.nextElement();
-            request.addHeader(header, req.getHeader(header));
-        }
-        request.setHttpRequest(req);
-        response.setHttpResponse(resp);
-
-
-        String payload;
-        // Read from request
-        StringBuilder buffer = new StringBuilder();
-        BufferedReader reader = req.getReader();
-        String line;
-        String tmpUrl;
-
-        while ((line = reader.readLine()) != null) {
-            buffer.append(line);
-        }
-        request.setPayLoad(buffer.toString());
-
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-
-        try {
-            URL urlSplit;
-            urlSplit = new URL(getFullURL(req));
-            tmpUrl = trim(urlSplit.getPath());
-            request.setUrl(tmpUrl);
-            LOG.trace("Processed URL", tmpUrl);
-
-            AbstractIotDMPlugin plg = (AbstractIotDMPlugin) mgr.getPlugin(this.provider.instanceKey, tmpUrl,"http");
-            if (plg != null) {
-                plg.handle(request, response);
-                if ( response.getResponsePayload()!= null)
-                {
-                    resp.getWriter().println(response.getResponsePayload());
-                }
-                resp.setContentType("text/json;charset=utf-8");
-                if (response.getReturnCode() != -1) {
-                    resp.setStatus(response.getReturnCode());
-                }
-            }
-            else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.trace("Exception: {}", e.toString());
-        }
-   }
-
-    private String trim(String stringWithSlashes) {
-
-        stringWithSlashes = stringWithSlashes.trim();
-        stringWithSlashes = stringWithSlashes.startsWith("/") ?
-                stringWithSlashes.substring("/".length()) : stringWithSlashes;
-        stringWithSlashes = stringWithSlashes.endsWith("/") ?
-                stringWithSlashes.substring(0, stringWithSlashes.length() - 1) : stringWithSlashes;
-        return stringWithSlashes;
-    }
-
-}
-
-class Onem2mBaseProvider implements AbstractOnem2mProtocolProvider {
-
-    public String getInstanceKey() {
-        return instanceKey;
-    }
-    String instanceKey;
-
-    public Onem2mPluginManager.Mode getInstanceMode() {
-        return instanceMode;
-    }
-    public void setInstanceMode(Onem2mPluginManager.Mode mode) {
-        instanceMode = mode;
-    }
-    protected Onem2mPluginManager.Mode instanceMode;
-
-    public Onem2mBaseProvider() {
-        this.instanceKey = UUID.randomUUID().toString();
-    }
-    @Override
-    public int init(int port, Onem2mPluginManager.Mode operatingMode) {
-        return 0;
-    }
-    @Override
-    public void cleanup() {
-    }
-    @Override
-    public int getPort() {
-        return 0;
-    }
-    @Override
-    public String getProtocol() {
-        return null;
-    }
-}
-
-class CoapServerProvider extends CoapServer {
-    private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapProvider.class);
-    Onem2mBaseProvider provider;
-    int port;
-
-    CoapServerProvider(int port,Onem2mBaseProvider provider){
-        super(port);
-        this.port = port;
-        this.provider = provider;
-
-    }
-
-    Onem2mBaseProvider getCoapProvider()
-    {
-        return provider;
-    }
-
-    @Override
-    public Resource createRoot() {
-        return new RootResource(this);
-    }
-
-    public void addEndpoints() {
-        for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
-            // only binds to IPv4 addresses and localhost
-            if (addr instanceof Inet4Address || addr.isLoopbackAddress()) {
-                System.out.println("addr: "+addr.toString());
-                InetSocketAddress bindToAddress = new InetSocketAddress(addr, port);
-                System.out.println("bindToAddress: "+bindToAddress.toString());
-                addEndpoint(new CoapEndpoint(bindToAddress));
-            }
-        }
-    }
-
-    private class RootResource extends CoapResource {
-        CoapServerProvider coapServer;
-        Onem2mBaseProvider provider;
-        public RootResource(CoapServerProvider cServer)
-        {
-            super("OpenDaylight OneM2M CoAP Server");
-            this.coapServer = cServer;
-        }
-
-        @Override
-        public Resource getChild(String name) {
-            return this;
-        }
-
-        /**
-         * The handler for the CoAP request
-         *
-         * @param exchange coap parameters
-         */
-        @Override
-        public void handleRequest(final Exchange exchange) {
-            LOG.info("CoapServer - Handle Request: on port: {}");
-            CoAP.Code code = exchange.getRequest().getCode();
-            CoapExchange coapExchange = new CoapExchange(exchange, this);
-            OptionSet options = coapExchange.advanced().getRequest().getOptions();
-            IotDMPluginRequest request = new IotDMPluginRequest();
-            IotDMPluginResponse response = new IotDMPluginResponse();
-
-
-            if ((options.getContentFormat() != MediaTypeRegistry.APPLICATION_JSON)||
-                    (options.getContentFormat() == MediaTypeRegistry.APPLICATION_XML))
-            {
-                    coapExchange.respond(CoAP.ResponseCode.NOT_ACCEPTABLE, "Unknown media type: " +
-                        options.getContentFormat());
-                return;
-            }
-
-
-            // according to the spec, the uri query string can contain in short form, the
-            // resourceType, responseType, result persistence,  Delivery Aggregation, Result Content,
-            /*Boolean resourceTypePresent = options.getURIQueryString();
-
-            if (resourceTypePresent && code != CoAP.Code.POST) {
-                coapExchange.respond(CoAP.ResponseCode.BAD_REQUEST, "Specifying resource type not permitted.");
-                return;
-            }*/
-
-            // take the entire payload text and put it in the CONTENT field; it is the representation of the resource
-            String cn = coapExchange.getRequestText().trim();
-            if (cn != null && !cn.contentEquals("")) {
-                request.setPayLoad(cn);
-            }
-
-
-            Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-
-            String tmpUrl = options.getUriPathString();
-            LOG.trace("Processed URL", tmpUrl);
-            request.setUrl(tmpUrl);
-            switch (code) {
-                case GET:
-                    request.setMethod("GET");
-                    break;
-
-                case POST:
-                    request.setMethod("POST");
-                    break;
-
-                case PUT:
-                    request.setMethod("PUT");
-                    break;
-
-                case DELETE:
-                    request.setMethod("DELETE");
-                    break;
-            }
-
-
-            AbstractIotDMPlugin plg = (AbstractIotDMPlugin) mgr.getPlugin(this.coapServer.getCoapProvider().instanceKey, tmpUrl,"coap");
-            if (plg != null) {
-                plg.handle(request, response);
-                coapExchange.respond(CoAP.ResponseCode.CONTENT,response.getResponsePayload());
-            }
-            else {
-                coapExchange.respond(CoAP.ResponseCode.NOT_FOUND);
-            }
-        }
-    }
-}
-class Onem2mCoapProvider extends Onem2mBaseProvider {
-    private int __port;
-    private CoapServerProvider server;
-
-    private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapProvider.class);
-
-    @Override
-    public int init(int port, Onem2mPluginManager.Mode mode) {
-        this.__port = port;
-        this.instanceMode = mode;
-        CoapServerProvider server = new CoapServerProvider(__port,this);
-        server.addEndpoints();
-        try {
-            server.start();
-            LOG.info("startCoapServer: on port: {}", __port);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
-        }
-        return 0;
-    }
-
-    @Override
-    public void cleanup() {
-        try {
-            server.stop();
-            LOG.info("stopCoapServer: on port: {}", __port);
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
-        }
-    }
-
-    @Override
-    public int getPort() {
-        return this.__port;
-    }
-
-    @Override
-    public String getProtocol() {
-        return "coap";
-    }
-}
-class Onem2mHTTPProvider extends Onem2mBaseProvider {
-    protected int __port;
-    protected Server httpServer;
-    private FilterHolder cors;
-    private ServletContextHandler context;
-    private Onem2mHttpBaseHandler onem2mHttpBaseHandler;
-    private static final Logger LOG = LoggerFactory.getLogger(Onem2mHTTPProvider.class);
-
-    protected void prepareServer() {
-        context = new ServletContextHandler();
-        context.setContextPath("/");
-        httpServer.setHandler(context);
-
-
-        cors = context.addFilter(CrossOriginFilter.class, "*", EnumSet.of(DispatcherType.REQUEST));
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
-        cors.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,DELETE,PUT,HEAD");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin,X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC");
-        cors.setInitParameter(CrossOriginFilter.EXPOSED_HEADERS_PARAM,"X-Requested-With,Content-Type,Accept,Origin,X-M2M-Origin,X-M2M-RI,X-M2M-NM,X-M2M-GID,X-M2M-RTU,X-M2M-OT,X-M2M-RST,X-M2M-RET,X-M2M-OET,X-M2M-EC,X-M2M-RSC");
-        onem2mHttpBaseHandler = new Onem2mHttpBaseHandler(this);
-        context.addServlet(new ServletHolder(onem2mHttpBaseHandler), "/*");
-    }
-
-    protected void startServer() {
-        try {
-            httpServer.start();
-            LOG.info("startHttpServer: on port: {}", __port);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
-        }
-    }
-
-    @Override
-    public int init(int port, Onem2mPluginManager.Mode mode) {
-        this.__port = port;
-        this.instanceMode = mode;
-        httpServer = new Server(__port);
-
-        // Prepare the httpServer instance
-        this.prepareServer();
-
-        // Start the prepared server
-        this.startServer();
-        return 0;
-    }
-
-    @Override
-    public void cleanup() {
-        try {
-            httpServer.stop();
-            LOG.info("stopHttpServer: on port: {}", __port);
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
-        }
-    }
-
-    @Override
-    public int getPort() {
-        return this.__port;
-    }
-
-    @Override
-    public String getProtocol() {
-        return "http";
-    }
-}
-
-interface AbstractOnem2mPluginManager {
-    public AbstractIotDMPlugin getPlugin(String instanceKey, String url, String protocol);
-
-    public ArrayList<String> getLoadedPlugins();
-
-    public int registerPlugin(String protocol, AbstractIotDMPlugin instance, Onem2mPluginManager.Mode operatingMode);
-
-    public int registerPluginAtPort(String protocol, AbstractIotDMPlugin intstnce, int port, Onem2mPluginManager.Mode mode);
-
-    public int registerPluginAtPort(String protocol, AbstractIotDMPlugin intstnce, int port, Onem2mPluginManager.Mode mode,
-                                    Object configuration);
-
-    public int deRegisterPlugin(String pluginName);
-
-    public int registerProtocol(String protocol, AbstractOnem2mProtocolProvider instance);
-
-    public int deRegisterProtocol(String protocol);
-}
-
-class IotDMSamplePlugin implements AbstractIotDMPlugin, AutoCloseable {
-    private static final Logger LOG = LoggerFactory.getLogger(IotDMSamplePlugin.class);
-
-    @Override
-    public void init() {
-        //Onem2mPluginManager.getInstance().registerPlugin("http", this, Onem2mPluginManager.Mode.Shared);
-        //Onem2mPluginManager.getInstance().registerPluginAtPort("http", this, 8284,Onem2mPluginManager.Mode.Shared);
-        //Onem2mPluginManager.getInstance().registerPluginAtPort("http", this, 8284,Onem2mPluginManager.Mode.Exclusive);
-        //Onem2mPluginManager.getInstance().registerPluginAtPort("coap", this, 8285,Onem2mPluginManager.Mode.Exclusive);
-    }
-
-    @Override
-    public String pluginName() {
-        return "example";
-    }
-
-    @Override
-    public void close() throws Exception {
-        Onem2mPluginManager.getInstance().deRegisterPlugin(this.pluginName());
-    }
-
-    @Override
-    public void handle(IotDMPluginRequest request, IotDMPluginResponse response) {
-        LOG.info("Handle() method called");
-    }
-}
-
-public class Onem2mPluginManager implements AbstractOnem2mPluginManager, AutoCloseable {
-
-    static Onem2mPluginManager _instance;
-
-    public enum Mode {
-        NotInUse, Shared, Exclusive
-    }
-
+import java.util.stream.Stream;
+
+/**
+ * Implements the registration and un-registration methods for IotdmPlugin instances and
+ * stores registrations in registry according to registration mode specified in registration.
+ * PluginManager is implemented as singleton.
+ */
+public class Onem2mPluginManager implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPluginManager.class);
-    //TODO callback model support for multiple plugin for same path
-    static HashMap<String, AbstractIotDMPlugin> registeredPlugin;
-    static HashMap<String, AbstractOnem2mProtocolProvider> registeredProtocolList;
-    static ArrayList<Onem2mBaseProvider> protocolProviders;
-    static HashMap<String, ArrayList<AbstractIotDMPlugin>> pluginProviderBinding;
+    private static Onem2mPluginManager _instance;
 
-    private final Map<String, Onem2mBaseProvider> pluginNameToProvider = new ConcurrentHashMap<>();
+    /* Specific IP address which means that plugin registers for all
+     * local interfaces
+     */
+    public static final String AllInterfaces = "0.0.0.0";
 
-    public Onem2mBaseProvider getProvider(String protocolName, Onem2mPluginManager.Mode operatingMode) {
-        for (Onem2mBaseProvider provider : protocolProviders) {
-            if (provider.getProtocol().equals(protocolName) && provider.getInstanceMode() == operatingMode) {
-                return provider;
-            }
-        }
-        return null;
+    // Supported protocols
+    public static final String ProtocolHTTP = "http";
+    public static final String ProtocolHTTPS = "https";
+    // TODO: uncomment when support added
+//    public static final String ProtocolCoAP = "coap";
+//    public static final String ProtocolCoAPS = "coaps";
+//    public static final String ProtocolMQTT = "mqtt";
+//    public static final String ProtocolMQTTS = "mqtts";
+
+    // The main registry of the PluginManager
+    private final PluginManagerRegistry registry = new PluginManagerRegistry();
+
+    // Variable used for generating instance keys unique for every IotdmPlugin instance
+    private int pluginInstanceKeyGen = 0;
+
+    // Registration modes (specific registry classes are implemented for particular mode)
+    public enum Mode {
+
+        /* Registered channel is shared by plugins,
+         * request is passed to plugin in case of exact match of target URI
+         */
+        SharedExactMatch,
+
+        /* Registered channel is shared by plugins,
+         * request is passed to plugin which is registered for URI which matches the
+         * most sub-paths from the begin of the target URI of the request.
+         */
+        SharedPrefixMatch,
+
+        /* Registered channel is dedicated for one plugin only.
+         * All requests are passed to the plugin regardless to the target URI of the request.
+         */
+        Exclusive
     }
 
-    public AbstractOnem2mProtocolProvider getProviderAtPort(int port) {
-        for (AbstractOnem2mProtocolProvider provider : protocolProviders) {
-            if  (provider.getPort() == port ) {
-                return provider;
-            }
-        }
-        return null;
+    /* Definition of factories for instantiating of channels for specific protocol. */
+    private static final Map<String, Onem2mPluginChannelFactory> pluginChannelFactoryMap = new ConcurrentHashMap<>();
+    static {
+        pluginChannelFactoryMap.put(ProtocolHTTP, new Onem2mHttpPluginServerFactory());
+        pluginChannelFactoryMap.put(ProtocolHTTPS, new Onem2mHttpsPluginServerFactory());
+        // TODO add next supported protocols
     }
 
+    /**
+     * Returns the only instance of the PluginManager.
+     * @return Singleton instance.
+     */
     static public Onem2mPluginManager getInstance() {
         if (_instance == null) {
             _instance = new Onem2mPluginManager();
-            // TODO: Do we need this?
-            registeredPlugin = new HashMap<String, AbstractIotDMPlugin>();
-            // TODO: Do we need this?
-            registeredProtocolList = new HashMap<String, AbstractOnem2mProtocolProvider>();
-            // TODO: Do we need this?
-            protocolProviders = new ArrayList<Onem2mBaseProvider>();
-
-            pluginProviderBinding = new HashMap<String, ArrayList<AbstractIotDMPlugin>>();
-
-            // TODO to be removed later
-            IotDMSamplePlugin plg = new IotDMSamplePlugin();
-            plg.init();
-
-
         }
         return _instance;
     }
 
-    @Override
-    public AbstractIotDMPlugin getPlugin(String instanceKey, String url, String protocol) {
-        LOG.info("getplugin called");
-
-        ArrayList<AbstractIotDMPlugin> pluginList = pluginProviderBinding.get(instanceKey);
-        if (pluginList != null) {
-            if (pluginList.size() > 1) {
-                for (AbstractIotDMPlugin plugin : pluginList) {
-                    String path[] = url.split("/");
-                    // here process the url to resolve the plugin
-                    if (plugin.pluginName().equals(path[0]))
-                            return plugin;
-
-                }
-            }
-            else
-            {
-                // there is only one plugin return the same
-                return pluginList.get(0);
-            }
-        }
-        return null;
+    /**
+     * Generates unique instance key for instances of IotdmPlugin.
+     * @return Generated instance key.
+     */
+    protected int getNewPluginInstanceKey() {
+        return ++this.pluginInstanceKeyGen;
     }
 
-    public AbstractIotDMPlugin getPluginForPath(String instanceKey, String path) {
-        LOG.info("getplugin called");
-        ArrayList<AbstractIotDMPlugin> pluginList = pluginProviderBinding.get(instanceKey);
-        if (pluginList != null) {
-            if (pluginList.size() > 1) {
-                return pluginList.get(0);
-            }
-            for (AbstractIotDMPlugin plugin : pluginList) {
-                if (plugin.pluginName().equals(path)) {
-                    return plugin;
-                }
-            }
-        }
-        return null;
+    /**
+     * Registers plugin to receive HTTP requests. Port number of the
+     * HTTP server is specified and new server is started if needed.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local TCP port number of the HTTP server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginHttp(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+        return registerPlugin(plugin, ProtocolHTTP, AllInterfaces, port, mode, uri, null);
     }
 
-    @Override
-    public ArrayList<String> getLoadedPlugins() {
-        return (ArrayList<String>) registeredPlugin.keySet();
+    /**
+     * Registers plugin to receive HTTP requests. Port number of the
+     * HTTPS server is specified and new server is started if needed.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local TCP port number of the HTTPS server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @param configuration Configuration of HTTPS server.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                       String uri, Object configuration) {
+        return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, configuration);
     }
 
-    public ArrayList<String> getLoadedProtocols() {
-        return (ArrayList<String>) registeredProtocolList.keySet();
-    }
+    // TODO add registration methods for other supported protocols
 
-    public boolean isProtocolLoaded(String protocol) {
-        return registeredProtocolList.keySet().contains(protocol);
-    }
 
-    @Override
-    public int registerPlugin(String protocol, AbstractIotDMPlugin instance, Onem2mPluginManager.Mode operatingMode) {
-        // TODO Exception handling
-        int rc = 1;
-        do {
-            if (instance.pluginName() == null) {
-                break;
-            }
-            Onem2mBaseProvider provider = getProvider(protocol, operatingMode);
-            ArrayList<AbstractIotDMPlugin> tmp = pluginProviderBinding.get(provider.getInstanceKey());
-            if (tmp == null) {
-                tmp = new ArrayList<AbstractIotDMPlugin>();
-                pluginProviderBinding.put(provider.getInstanceKey(), tmp);
-            } else {
-                for (AbstractIotDMPlugin p : tmp) {
-                    if (p.pluginName().equals(instance.pluginName())) {
-                        rc = 2;
-                        break;
-                    }
-                }
-            }
-            tmp.add(instance);
-            rc = 0;
-        } while (false);
-        return rc;
-    }
-
-    public AbstractOnem2mProtocolProvider createProvider(String protocol, AbstractIotDMPlugin instance, int port, Onem2mPluginManager.Mode mode) {
-        return this.createProvider(protocol, instance, port, mode, null);
-    }
-
-    public AbstractOnem2mProtocolProvider createProvider(String protocol,
-                                                         AbstractIotDMPlugin instance,
-                                                         int port, Onem2mPluginManager.Mode mode,
-                                                         Object configuration) {
-        Onem2mBaseProvider provider;
-        if ( protocol.equals("http")) {
-            provider = new Onem2mHTTPProvider();
-            LOG.info("Onem2mHTTPProvider {}", provider.getInstanceKey());
-        }
-        else if ( protocol.equals("https")) {
-            if (null == configuration) {
-                LOG.error("Configuration for HTTPS server not passed");
-                return null;
-            }
-
-            if (! (configuration instanceof Onem2mHttpsPluginServer.HttpsServerConfiguration)) {
-                LOG.error("Invalid HTTPS server configuration type");
-                return null;
-            }
-
-            provider = new Onem2mHttpsPluginServer((Onem2mHttpsPluginServer.HttpsServerConfiguration) configuration);
-        }
-        else if ( protocol.equals("coap"))
-        {
-            provider = new Onem2mCoapProvider();
-            LOG.info("Onem2mCoapProvider {}", provider.getInstanceKey());
-        }
-        else
-        {
-            return null;
-        }
-        provider.init(port, mode);
-        protocolProviders.add(provider);
-        this.registerProtocol(protocol, provider);
-        ArrayList<AbstractIotDMPlugin> tmp = new ArrayList<AbstractIotDMPlugin>();
-        pluginProviderBinding.put(provider.getInstanceKey(), tmp);
-        tmp.add(instance);
-        pluginNameToProvider.put(instance.pluginName(), provider);
-        return provider;
-    }
-
-    @Override
-    public int registerPluginAtPort(String protocol, AbstractIotDMPlugin instance, int port, Onem2mPluginManager.Mode mode) {
+    // TODO this is here for backward compatibility purposes
+    public int registerPluginAtPort(String protocol, IotdmPlugin instance, int port, Onem2mPluginManager.Mode mode) {
         return this.registerPluginAtPort(protocol, instance, port, mode, null);
     }
 
-    @Override
-    public int registerPluginAtPort(String protocol, AbstractIotDMPlugin instance, int port, Onem2mPluginManager.Mode mode,
+    public int registerPluginAtPort(String protocol, IotdmPlugin instance, int port, Onem2mPluginManager.Mode mode,
                                     Object configuration) {
-        int rc = 1;
-        Onem2mBaseProvider provider = (Onem2mBaseProvider) this.getProviderAtPort(port);
-        // port is not in use, no provider at the port, hence create one
-        if (provider == null) {
-            createProvider(protocol, instance, port, mode, configuration);
-            return 0;
-        }
-        if (!(provider.getProtocol().equals(protocol)))
-        {
-
-            // provider already in use for a different protocol return error
-            rc = 3;
-            return rc;
-        }
-        //TODO: Check for port duplication
-
-        // if the port is in use and the req mode is exclusive
-        //      reject
-        //if the port is in use and the req mode is shared
-        //      check if the plugin name is same
-        //           reject
-
-        ArrayList<AbstractIotDMPlugin> tmp = pluginProviderBinding.get(provider.getInstanceKey());
-        if (tmp == null) {
-            // there is a provider at the port, but no one is using
-            // reuse
-            // Set the right mode
-            provider.setInstanceMode(mode);
-            tmp = new ArrayList<AbstractIotDMPlugin>();
-            pluginProviderBinding.put(provider.getInstanceKey(), tmp);
-
-        } else {
-            // plugin cannot be added if the provider is already in exclusive mode
-            // plugin cannot be added if the provider is already shared.
-            if ((mode == Mode.Exclusive) || (provider.getInstanceMode()== Mode.Exclusive)) {
-                //port is already in use, cannot use exclusively
-                // reject
-                rc = 2;
-                return 2;
-            }
-            for (AbstractIotDMPlugin p : tmp) {
-                if (p.pluginName().equals(instance.pluginName())) {
-                    rc = 2;
-                    return 2; //duplicate error
-                }
-            }
-        }
-        tmp.add(instance);
+        this.registerPlugin(instance, protocol, AllInterfaces, port, mode, null, configuration);
         return 0;
     }
 
-    @Override
-    public int deRegisterPlugin(String pluginName) {
-        if (registeredPlugin.containsKey(pluginName)) {
-            registeredPlugin.remove(registeredPlugin.get(pluginName));
+
+    private boolean isIpAll(String ipAdddress) {
+        if (ipAdddress.equals(AllInterfaces)) {
+            return true;
         }
 
+        return false;
+    }
 
-        if (pluginNameToProvider.containsKey(pluginName)) {
-            Onem2mBaseProvider protoProvider = pluginNameToProvider.remove(pluginName);
-            if (null == protoProvider) {
-                return 0;
+    private boolean validateIpAddress(String ipAddress) {
+        if (null == ipAddress || ipAddress.isEmpty()) {
+            return false;
+        }
+
+        String[] ip = ipAddress.split("\\.");
+        if (ip.length != 4) {
+            return false;
+        }
+
+        for (String octet : ip) {
+            try {
+                int val = Integer.valueOf(octet);
+                if (val < 0 || val > 255 ) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Method implementing the registration logic.
+     * @param plugin Plugin to be registered.
+     * @param protocolName Name of the protocol.
+     * @param ipAddress IP address of the:
+     *              - local interface for CommunicationChannels of type SERVER.
+     *                  All interfaces can be used if 0.0.0.0 is passed.
+     *              - remote interface for CommunicationChannels of type CLIENT.
+     * @param port Local port number for servers and remote port number for clients.
+     * @param mode Registration mode describing the way of sharing of the CommunicationChannel by plugins.
+     * @param uri Local URI (for CLIENTS as well as for SERVERS) for which the plugin is registering.
+     *            Null can be used if plugin registers for all URIs.
+     * @param configuration Configuration for CommunicationChannel if needed. Null can be passed.
+     * @return True if the registration has been successful, False otherwise.
+     */
+    private boolean registerPlugin(IotdmPlugin plugin, String protocolName,
+                                   String ipAddress, int port,
+                                   Onem2mPluginManager.Mode mode, String uri,
+                                   Object configuration) {
+
+        // Get channel factory
+        if (! this.pluginChannelFactoryMap.containsKey(protocolName)) {
+            LOG.error("Attempt to register for unsupported protocol: {}", protocolName);
+            return false;
+        }
+
+        Onem2mPluginChannelFactory channelFactory = pluginChannelFactoryMap.get(protocolName);
+
+        // Check the ipAddress
+        if (null == ipAddress || ipAddress.isEmpty()) {
+            ipAddress = AllInterfaces;
+        }
+        if (! validateIpAddress(ipAddress)) {
+            LOG.error("Invalid ipAddress passed: {}, plugin: {}", ipAddress, plugin.getDebugString());
+            return false;
+        }
+
+        // Prepare channel identifier
+        ChannelIdentifier chId = new ChannelIdentifier(channelFactory.getChannelType(),
+                                                       channelFactory.getTransportProtocol(),
+                                                       ipAddress, port, protocolName, mode);
+
+        if (! isIpAll(ipAddress)) {
+            // Check if the specific IP address doesn't collide with registration for all interfaces
+            Onem2mLocalEndpointRegistry registryAll = this.registry.getPluginRegistryAllInterfaces(chId);
+            if (null != registryAll) {
+                LOG.error("Failed to register plugin {} at channel: {}. Resources already used by channel: {}",
+                          plugin.getDebugString(), chId.getDebugString(), registryAll);
+                return false;
+            }
+        }
+
+        // Check if the specific IP address and port are not already in use for another protocol
+        Onem2mLocalEndpointRegistry endpointReg = this.registry.getPluginRegistry(chId);
+        if (null != endpointReg) {
+            if (! endpointReg.getProtocol().equals(chId.getProtocolName())) {
+                LOG.error("Failed to register plugin {} at channel: {}. Resources already used for protocol {}",
+                          plugin.getDebugString(), chId.getDebugString(), endpointReg.getProtocol());
+                return false;
             }
 
-            if (pluginProviderBinding.containsKey(protoProvider.getInstanceKey())) {
-                for (AbstractIotDMPlugin plugin : pluginProviderBinding.get(protoProvider.getInstanceKey())) {
-                    if (plugin.pluginName().equals(pluginName)) {
-                        boolean ret = false;
-                        ret = pluginProviderBinding.get(protoProvider.getInstanceKey()).remove(plugin);
-                        if (! ret) {
-                            LOG.error("Failed to remove plugin from plugin provider binding list");
-                            return 0;
-                        }
+            // Verify mode
+            if (endpointReg.getMode() != chId.mode) {
+                LOG.error("Failed to register plugin {} at channel: {}. Resources already used with mode: {}",
+                          plugin.getDebugString(), chId.getDebugString(), endpointReg.getMode());
+                return false;
+            }
 
-                        if (pluginProviderBinding.get(protoProvider.getInstanceKey()).isEmpty()) {
-                            // The list of bound plugins to the provider is empty so the provider can be deleted
-                            pluginProviderBinding.remove(protoProvider.getInstanceKey());
-                            protocolProviders.remove(protoProvider);
-                            this.deRegisterProtocol(protoProvider.getProtocol());
-                            protoProvider.cleanup();
-                            LOG.info("Proto provider removed: protocol: {}, port: {}",
-                                     protoProvider.getProtocol(),
-                                     protoProvider.getPort());
-                            break;
+            // Configuration must equal if exists
+            if (null != configuration) {
+                if (! endpointReg.getAssociatedChannel().validateConfig(configuration)) {
+                    LOG.error("Failed to register plugin {} at channel: {}. Invalid configuration passed",
+                              plugin.getDebugString(), chId.getDebugString());
+                    return false;
+                }
+
+                if (! endpointReg.getAssociatedChannel().compareConfig(configuration)) {
+                    LOG.error("Failed to register plugin {} at channel: {}. Different configuration passed",
+                              plugin.getDebugString(), chId.getDebugString());
+                    return false;
+                }
+            }
+
+            // Verify whether the same URI is not already registered
+            IotdmPlugin regPlugin = endpointReg.getPlugin(uri);
+            if (null != regPlugin) {
+                // Maybe double registration ?
+                if (regPlugin.isPlugin(plugin)) {
+                    LOG.warn("Double registration of plugin: {} at channel: {} or URI: {}",
+                             plugin.getDebugString(), chId.getDebugString(), uri);
+                    return true;
+                }
+
+                // URI already registered by another plugin
+                LOG.error("Failed to register plugin: {} at channel: {}. URI: {} already in use by plugin: {}",
+                          plugin.getDebugString(), chId.getDebugString(), uri, regPlugin.getDebugString());
+                return false;
+            }
+
+            // register plugin in the registry
+            if (! endpointReg.regPlugin(plugin, uri)) {
+                LOG.error("Failed to register plugin {} at channel: {}",
+                          plugin.getDebugString(), chId.getDebugString());
+                return false;
+            }
+
+            // registration successful
+            LOG.info("Plugin: {} registered at shared channel: {} for URI: {}",
+                     plugin.getDebugString(), chId.getDebugString(), uri);
+            return true;
+        } else { // IpAddress and port are not in use
+            // Instantiate registry according to specified mode
+            Onem2mLocalEndpointRegistry newRegistry = null;
+            switch (chId.getMode()) {
+                case Exclusive:
+                    newRegistry = new Onem2mExclusiveRegistry(chId);
+                    break;
+                case SharedPrefixMatch:
+                    newRegistry = new Onem2mSharedPrefixMatchRegistry(chId);
+                    break;
+                case SharedExactMatch:
+                    newRegistry = new Onem2mSharedExactMatchRegistry(chId);
+                    break;
+                default:
+                    LOG.error("Registry for mode: {} not implemented", chId.getMode());
+                    return false;
+            }
+
+            if (null == newRegistry) {
+                LOG.error("Failed to create new registry for plugin: {}, channel: {}",
+                          plugin.getDebugString(), chId.getDebugString());
+                return false;
+            }
+
+            // register plugin in the new registry
+            if (! newRegistry.regPlugin(plugin, uri)) {
+                LOG.error("Failed to register plugin {} at channel: {}",
+                          plugin.getDebugString(), chId.getDebugString());
+                return false;
+            }
+
+            // create new channel
+            Onem2mBaseCommunicationChannel newChannel =
+                    channelFactory.createInstance(chId.getIpAddress(), chId.getPort(), configuration,
+                                                  newRegistry);
+            if (null == newChannel) {
+                LOG.error("Failed to instantiate channel: {} for plugin: {}",
+                          chId.getDebugString(), plugin.getDebugString());
+                return false;
+            }
+
+            // associate channel and registry also in reverse direction
+            newRegistry.setAssociatedChannel(newChannel);
+
+            // store the endpoint registry in the PluginManager registry
+            if (! this.registry.setPluginRegistry(chId, newRegistry)) {
+                LOG.error("Failed to register plugin: {} at channel: {}. " +
+                          "Failed to store channel registry in PluginManager registry",
+                          plugin.getDebugString(), chId.getDebugString());
+                // close running channel
+                try {
+                    newChannel.close();
+                } catch (Exception e) {
+                    LOG.error("Failed to close running channel: {}", chId.getDebugString());
+                }
+                return false;
+            }
+
+            // registration successful
+            LOG.info("Plugin: {} registered at new channel: {} for URI: {}",
+                     plugin.getDebugString(), chId.getDebugString(), uri);
+            return true;
+        }
+    }
+
+    private void closeRegistryChannel(Onem2mLocalEndpointRegistry endpointRegistry) {
+        try {
+            endpointRegistry.getAssociatedChannel().close();
+        } catch (Exception e) {
+            LOG.error("Failed to close non used channel: {}, error: {}",
+                      endpointRegistry.getChannelId().getDebugString(), e);
+        }
+    }
+
+    /**
+     * Unregisters already registered plugin. Channels which
+     * are not needed anymore are closed.
+     * @param plugin The instance of IotdmPlugin to unregister.
+     */
+    public void unregisterPlugin(IotdmPlugin plugin) {
+        this.registry.registryStream().forEach( endpointRegistry -> {
+            if (endpointRegistry.hasPlugin(plugin)) {
+                // remove the plugin
+                if (! endpointRegistry.removePlugin(plugin)) {
+                    LOG.error("Failed to remove plugin from registry of channel: {}, plugin: {}",
+                              endpointRegistry.getChannelId().getDebugString(), plugin.getDebugString());
+                } else {
+                    // plugin has been removed, remove also registry if empty and close the channel
+                    if (endpointRegistry.isEmpty()) {
+                        if (null != this.registry.removePluginRegistry(endpointRegistry.getChannelId())) {
+                            // close also the channel
+                            closeRegistryChannel(endpointRegistry);
+                        } else {
+                            LOG.error("Failed to remove empty plugin registry of channel: {}",
+                                      endpointRegistry.getChannelId().getDebugString());
                         }
                     }
                 }
             }
-        }
-        return 0;
+        });
     }
 
-    @Override
-    public int registerProtocol(String protocol, AbstractOnem2mProtocolProvider instance) {
-        if (registeredProtocolList.get(protocol) == null) {
-            registeredProtocolList.put(protocol, instance);
-        } else {
-            return 1;
-        }
-        return 0;
-    }
-
-    @Override
-    public int deRegisterProtocol(String protocol) {
-        registeredProtocolList.remove(protocol);
-        return 0;
-    }
-
+    /**
+     * Closes all running channels.
+     * @throws Exception
+     */
     @Override
     public void close() throws Exception {
+        this.registry.registryStream().forEach( endpointRegistry -> {
+            closeRegistryChannel(endpointRegistry);
+            this.registry.removePluginRegistry(endpointRegistry.getChannelId());
+        });
+    }
 
+    /**
+     * Stores set of parameters of communication channel
+     */
+    public class ChannelIdentifier {
+        private final Onem2mBaseCommunicationChannel.CommunicationChannelType channelType;
+        private final Onem2mBaseCommunicationChannel.TransportProtocol transportProtocol;
+        private final String ipAddress;
+        private final int port;
+        private final String protocolName;
+        private final Mode mode;
+
+        private final String addrAndPort;
+
+        public ChannelIdentifier(Onem2mBaseCommunicationChannel.CommunicationChannelType channelType,
+                                 Onem2mBaseCommunicationChannel.TransportProtocol transportProtocol,
+                                 String ipAddress,
+                                 int port,
+                                 String protocolName,
+                                 Mode mode) {
+
+            this.channelType = channelType;
+            this.transportProtocol = transportProtocol;
+            this.ipAddress = ipAddress;
+            this.port = port;
+            this.protocolName = protocolName;
+            this.mode = mode;
+
+            this.addrAndPort = ipAddress + ":" + port;
+        }
+
+        public Onem2mBaseCommunicationChannel.CommunicationChannelType getChannelType() {
+            return channelType;
+        }
+
+        public Onem2mBaseCommunicationChannel.TransportProtocol getTransportProtocol() {
+            return transportProtocol;
+        }
+
+        public String getIpAddress() {
+            return ipAddress;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public String getAddrAndPort() {
+            return addrAndPort;
+        }
+
+        public String getProtocolName() {
+            return protocolName;
+        }
+
+        public Mode getMode() {
+            return mode;
+        }
+
+        /**
+         * Returns string of format: 0.0.0.0:'port'
+         * @return String describing registration for specific
+         * port number on all local interfaces.
+         */
+        public String getAllInterfacesAddrAndPort() {
+            return AllInterfaces + ":" + this.port;
+        }
+
+        /**
+         * Returns debug string including all parameters.
+         * @return Debug string
+         */
+        public String getDebugString() {
+            return new StringBuilder()
+                .append("Channel::")
+                    .append(" Type: ").append(channelType)
+                    .append(" Address: ").append(addrAndPort)
+                    .append(" Protocol: ").append(protocolName)
+                    .append(" Transport: ").append(transportProtocol)
+                    .append(" Mode: ").append(mode)
+                    .toString();
+        }
+    }
+}
+
+/**
+ * Implementation of the main registry of PluginManager.
+ * Stores registries for particular communication channel in four HashMaps:
+ *  - TCP clients
+ *  - TCP servers
+ *  - UDP clients
+ *  - UDP servers
+ *
+ *  Strings of format ipAddress:port are used as keys of these HashMaps and values are
+ *  instances of the Onem2mLocalEndpointRegistry where the running channel is stored
+ *  together with registered plugins.
+ */
+class PluginManagerRegistry {
+    private static final Logger LOG = LoggerFactory.getLogger(PluginManagerRegistry.class);
+
+    // TCP/UDP and Client/Server registries
+    private final Map<String, Onem2mLocalEndpointRegistry> tcpClientMap = new ConcurrentHashMap<>();
+    private final Map<String, Onem2mLocalEndpointRegistry> tcpServerMap = new ConcurrentHashMap<>();
+    private final Map<String, Onem2mLocalEndpointRegistry> udpClientMap = new ConcurrentHashMap<>();
+    private final Map<String, Onem2mLocalEndpointRegistry> udpServerMap = new ConcurrentHashMap<>();
+
+    /**
+     * Returns stream including all instances of the Onem2mLocalEndpointRegistry
+     * stored in all HashMaps.
+     * @return Stream of Onem2mLocalEndpointRegistry instances
+     */
+    public Stream<Onem2mLocalEndpointRegistry> registryStream() {
+        return Stream.concat(Stream.concat(this.tcpClientMap.values().parallelStream(),
+                                           this.tcpServerMap.values().parallelStream()),
+                             Stream.concat(this.udpClientMap.values().parallelStream(),
+                                           this.udpServerMap.values().parallelStream()));
+    }
+
+    /**
+     * Removes registry of the communication channel identified by the channelId.
+     * @param channelId Identification of channel.
+     * @return Removed registry.
+     */
+    public Onem2mLocalEndpointRegistry removePluginRegistry(Onem2mPluginManager.ChannelIdentifier channelId) {
+        Map<String, Onem2mLocalEndpointRegistry> map = getMap(channelId.getChannelType(),
+                                                              channelId.getTransportProtocol());
+        if (null == map) {
+            LOG.error("Unsupported channelType ({}) or transportProtocol ({})",
+                      channelId.getChannelType(), channelId.getTransportProtocol());
+            return null;
+        }
+
+        return map.remove(channelId.getAddrAndPort());
+    }
+
+    /**
+     * Stores new registry in the HashMap according to parameters included
+     * in the channelId.
+     * @param channelId The channelId.
+     * @param newRegistry The new registry to be stored.
+     * @return True in case of success, False otherwise.
+     */
+    public boolean setPluginRegistry(Onem2mPluginManager.ChannelIdentifier channelId,
+                                     Onem2mLocalEndpointRegistry newRegistry) {
+        Map<String, Onem2mLocalEndpointRegistry> map = getMap(channelId.getChannelType(),
+                                                              channelId.getTransportProtocol());
+        if (null == map) {
+            LOG.error("Unsupported channelType ({}) or transportProtocol ({})",
+                      channelId.getChannelType(), channelId.getTransportProtocol());
+            return false;
+        }
+
+        map.put(channelId.getAddrAndPort(), newRegistry);
+        return true;
+    }
+
+    private Map<String, Onem2mLocalEndpointRegistry> getMap(
+                                               Onem2mBaseCommunicationChannel.CommunicationChannelType channelType,
+                                               Onem2mBaseCommunicationChannel.TransportProtocol transportProtocol) {
+        switch (channelType) {
+            case SERVER:
+                switch (transportProtocol) {
+                    case UDP:
+                        return udpServerMap;
+                    case TCP:
+                        return tcpServerMap;
+                }
+            case CLIENT:
+                switch (transportProtocol) {
+                    case UDP:
+                        return udpClientMap;
+                    case TCP:
+                        return tcpClientMap;
+                }
+        }
+
+        return null;
+    }
+
+    private Onem2mLocalEndpointRegistry getRegistry(Onem2mBaseCommunicationChannel.CommunicationChannelType channelType,
+                                                    Onem2mBaseCommunicationChannel.TransportProtocol transportProtocol,
+                                                    String addrAndPort) {
+        Map<String, Onem2mLocalEndpointRegistry> map = getMap(channelType, transportProtocol);
+        if (null == map) {
+            LOG.error("Unsupported channelType ({}) or transportProtocol ({})", channelType, transportProtocol);
+            return null;
+        }
+
+        return map.get(addrAndPort);
+    }
+
+    /**
+     * Returns the stored registry exactly specified by the channelId.
+     * @param channelId Channel parameters.
+     * @return The registry if exists, null otherwise.
+     */
+    public Onem2mLocalEndpointRegistry getPluginRegistry(Onem2mPluginManager.ChannelIdentifier channelId) {
+        return getRegistry(channelId.getChannelType(), channelId.getTransportProtocol(),
+                           channelId.getAddrAndPort());
+    }
+
+    /**
+     * Returns the stored registry specified by the channelId but used ipAddres
+     * identifies all interfaces i.e.: "0.0.0.0".
+     * @param channelId Channel parameters (ipAddress is not used).
+     * @return The registry if exists, null otherwise. Null is returned even if one or
+     * more registries are stored for the same port but just for one specific ipAddress.
+     */
+    public Onem2mLocalEndpointRegistry getPluginRegistryAllInterfaces(Onem2mPluginManager.ChannelIdentifier channelId) {
+        return getRegistry(channelId.getChannelType(), channelId.getTransportProtocol(),
+                           channelId.getAllInterfacesAddrAndPort());
     }
 }
