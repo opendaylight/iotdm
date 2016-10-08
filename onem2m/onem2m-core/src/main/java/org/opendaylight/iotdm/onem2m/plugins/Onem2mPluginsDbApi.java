@@ -90,7 +90,12 @@ public class Onem2mPluginsDbApi {
         return Onem2mDb.getInstance().isResourceIdUnderTargetId(this.trc, targetResourceId, onem2mResourceId);
     }
 
-    public boolean registerPlugin(String pluginName) {
+    public String findCseForTarget(String targetResourceId) {
+        return Onem2mDb.getInstance().findCseForTarget(this.trc, targetResourceId);
+    }
+
+
+        public boolean registerPlugin(String pluginName) {
 
         int count = 60;
         while (--count >= 0) {

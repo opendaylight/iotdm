@@ -1009,6 +1009,30 @@ public class Onem2mDb implements TransactionChainListener {
         return false;
     }
 
+    public String findCseForTarget(ResourceTreeReader trc, String targetResourceId) {
+
+        if (targetResourceId == null || targetResourceId.contentEquals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return null;
+        }
+
+        String cseName = null;
+        Onem2mResource onem2mResource = trc.retrieveResourceById(targetResourceId);
+        while (onem2mResource != null) {
+
+            cseName = onem2mResource.getName();
+
+            if (onem2mResource.getParentId().contentEquals(NULL_RESOURCE_ID)) {
+                return cseName;
+            }
+
+            String resourceId = onem2mResource.getParentId();
+
+            onem2mResource = trc.retrieveResourceById(resourceId);
+        }
+
+        return null;
+    }
+
     /**
      * Using the resourceId, build the non hierarchical name of the path using the /cseName + /name of resource
      *
