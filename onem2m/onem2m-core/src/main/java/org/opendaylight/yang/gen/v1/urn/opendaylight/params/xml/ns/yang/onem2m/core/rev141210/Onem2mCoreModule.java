@@ -18,7 +18,7 @@ public class Onem2mCoreModule extends org.opendaylight.yang.gen.v1.urn.opendayli
 
     @Override
     public java.lang.AutoCloseable createInstance() {
-        Onem2mCoreProvider provider = new Onem2mCoreProvider();
+        Onem2mCoreProvider provider = Onem2mCoreProvider.getInstance();
         getBrokerDependency().registerProvider(provider);
         // register jmx access for jconsole to onem2m stats
         getRootRuntimeBeanRegistratorWrapper().register(provider);
