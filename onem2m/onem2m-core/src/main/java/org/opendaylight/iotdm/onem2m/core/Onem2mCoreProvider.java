@@ -57,11 +57,15 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private static NotificationPublishService notifierService;
     private Monitor crudMonitor;
     private static Onem2mRouterService routerService;
-    private static Onem2mCoreProvider coreProvider;
+    private static final Onem2mCoreProvider coreProvider = new Onem2mCoreProvider();
 
 
     private ResourceTreeWriter twc;
     private ResourceTreeReader trc;
+
+    protected Onem2mCoreProvider() {
+
+    }
 
     public static Onem2mCoreProvider getInstance() {
         return coreProvider;
@@ -81,7 +85,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
      */
     @Override
     public void onSessionInitiated(ProviderContext session) {
-        this.coreProvider = this;
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
         this.notifierService = session.getSALService(NotificationPublishService.class);
