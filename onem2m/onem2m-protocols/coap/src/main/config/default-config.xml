@@ -23,6 +23,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-broker-osgi-registry</type>
             <name>binding-osgi-broker</name>
           </broker>
+          <server-config>
+            <server-port>5683</server-port>
+            <server-security-level>l0</server-security-level>
+          </server-config>
+          <notifier-plugin-config>
+            <secure-connection>false</secure-connection>
+          </notifier-plugin-config>
+          <router-plugin-config>
+            <secure-connection>false</secure-connection>
+          </router-plugin-config>
         </module>
       </modules>
     </data>

@@ -9,9 +9,6 @@ package org.opendaylight.iotdm.onem2m.plugins;
 
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * Interfaces describes implementation of classes wrapping protocol specific
  * response allowing unified way of setting important parameters.
@@ -34,22 +31,6 @@ public interface IotdmPluginResponse {
      * @param contentType Type of the content as string value.
      */
     void setContentType(String contentType);
-
-    /**
-     * Sets header with given name to given value.
-     * Old value is overwritten if already exists.
-     * @param name Header name.
-     * @param value Header value to be set.
-     */
-    void setHeader(String name, String value);
-
-    /**
-     * Adds new header with given name and given value.
-     * Allows existence of multiple headers with the same name.
-     * @param name Header name.
-     * @param value Header value.
-     */
-    void addHeader(String name, String value);
 
     /**
      * Sets response parameter from the generic Onem2m response primitive.

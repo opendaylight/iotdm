@@ -5,6 +5,7 @@ module onem2m-core {
 
     import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import onem2m { prefix onem2m; revision-date 2015-01-05; }
 
     description
         "Service definition for onem2m project";
@@ -36,6 +37,12 @@ module onem2m-core {
                         mandatory true;
                         config:required-identity md-sal-binding:binding-async-data-broker;
                     }
+                }
+            }
+            container security-config {
+                leaf core-security-level {
+                    mandatory true;
+                    type onem2m:security-level;
                 }
             }
         }

@@ -47,16 +47,12 @@ public class Onem2mSharedExactMatchRegistry extends Onem2mLocalEndpointRegistry 
 
     @Override
     public boolean hasPlugin(IotdmPlugin plugin, String onem2mUri) {
-        if (! pluginMap.containsKey(onem2mUri)) {
+        if (!pluginMap.containsKey(onem2mUri)) {
             return false;
         }
 
         IotdmPlugin storedPlugin = pluginMap.get(onem2mUri);
-        if (null == storedPlugin) {
-            return false;
-        }
-
-        return storedPlugin.isPlugin(plugin);
+        return null != storedPlugin && storedPlugin.isPlugin(plugin);
     }
 
     @Override
@@ -73,11 +69,7 @@ public class Onem2mSharedExactMatchRegistry extends Onem2mLocalEndpointRegistry 
 
     @Override
     public boolean removePlugin(IotdmPlugin plugin, String onem2mUri) {
-        if (! this.hasPlugin(plugin, onem2mUri)) {
-            return false;
-        }
-
-        return (null != pluginMap.remove(onem2mUri));
+        return this.hasPlugin(plugin, onem2mUri) && (null != pluginMap.remove(onem2mUri));
     }
 
     @Override

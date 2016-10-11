@@ -12,6 +12,8 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderCo
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.http.rx.Onem2mHttpBaseIotdmPluginConfig;

@@ -10,6 +10,8 @@ package org.opendaylight.iotdm.onem2m.plugins.channels;
 
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 
+import javax.annotation.Nullable;
+
 /**
  * Describes implementation of CommunicationChannels in general.
  * Implements some methods used by PluginManager in order to maintain running
@@ -41,7 +43,7 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
      * @param config Configuration of the channel if required. Null can be passed.
      */
     public Onem2mBaseCommunicationChannel(String ipAddress, int port,
-                                          Onem2mLocalEndpointRegistry registry, Tconfig config) {
+                                          Onem2mLocalEndpointRegistry registry, @Nullable Tconfig config) {
         if (! this.validateConfig(config)) {
             throw new IllegalArgumentException("Invalid configuration passed");
         }
@@ -58,10 +60,7 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
      * @return True if valid, False otherwise.
      */
     public boolean validateConfig(Tconfig config) {
-        if (null == config) {
-            return true;
-        }
-        return false;
+        return null == config;
     }
 
     /**
@@ -73,10 +72,7 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
      * @return True if configuration are the same, False otherwise.
      */
     public boolean compareConfig(Tconfig config) {
-        if (null == config) {
-            return true;
-        }
-        return false;
+        return null == config;
     }
 
     /**
