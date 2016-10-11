@@ -103,7 +103,7 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin {
         HttpServletResponse httpResponse = ((IotdmPluginHttpResponse)response).getHttpResponse();
 
         LOG.info("Onem2mExampleCustomProtocol: method: {}, url:{}, headers: {}, payload: {}",
-                request.getMethod(), request.getUrl(), request.getHeadersAll(), request.getPayLoad());
+                request.getMethod(), request.getUrl(), ((IotdmPluginHttpRequest) request).getHeadersAll(), request.getPayLoad());
     }
 
     /**

@@ -6,13 +6,10 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.iotdm.onem2m.protocols.http.rx;
+package org.opendaylight.iotdm.onem2m.protocols.coap.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRequest;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginResponse;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
-import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxRequest;
+import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapRequest;
+import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
@@ -20,14 +17,14 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 /**
  * Implements the general RxRequest factory.
  */
-public class Onem2mHttpRxRequestFactory implements Onem2mRxRequestAbstractFactory<Onem2mHttpRxRequest,IotdmPluginHttpRequest,IotdmPluginHttpResponse> {
+public class Onem2mCoapRxRequestFactory implements Onem2mRxRequestAbstractFactory<Onem2mCoapRxRequest,IotdmPluginCoapRequest,IotdmPluginCoapResponse> {
 
     @Override
-    public Onem2mHttpRxRequest createRxRequest(IotdmPluginHttpRequest request,
-                                                   IotdmPluginHttpResponse response,
+    public Onem2mCoapRxRequest createRxRequest(IotdmPluginCoapRequest request,
+                                               IotdmPluginCoapResponse response,
                                                        Onem2mService onem2mService,
                                                        SecurityLevel securityLevel) {
 
-        return new Onem2mHttpRxRequest(request, response, onem2mService, securityLevel);
+        return new Onem2mCoapRxRequest(request, response, onem2mService, securityLevel);
     }
 }

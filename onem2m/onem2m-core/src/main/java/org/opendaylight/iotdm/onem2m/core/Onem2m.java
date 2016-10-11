@@ -61,18 +61,38 @@ public class Onem2m {
     }
 
     public class ContentType {
+        public static final String APPLICATION_XML = "application/xml";
+        public static final String APPLICATION_JSON = "application/json";
         public static final String APP_VND_RES_JSON = "application/vnd.onem2m-res+json";
         public static final String APP_VND_NTFY_JSON = "application/vnd.onem2m-ntfy+json";
-
         public static final String APP_VND_RES_XML = "application/vnd.onem2m-res+xml";
         public static final String APP_VND_NTFY_XML = "application/vnd.onem2m-ntfy+xml";
     }
 
-    public class CoapContentFormat {
+    public static class CoapContentFormat {
+        public static final int APPLICATION_XML = 41;
+        public static final int APPLICATION_JSON = 50;
         public static final int APP_VND_RES_XML = 10000;
         public static final int APP_VND_RES_JSON = 10001;
         public static final int APP_VND_NTFY_XML = 10002;
         public static final int APP_VND_NTFY_JSON = 10003;
+
+        public static final Map<Integer, String> map2String = new HashMap<>();
+        public static final Map<String, Integer> map2Int = new HashMap<>();
+
+
+        static {
+            map2String.put(APPLICATION_XML, ContentType.APPLICATION_XML);
+            map2String.put(APPLICATION_JSON, ContentType.APPLICATION_JSON);
+            map2String.put(APP_VND_RES_XML, ContentType.APP_VND_RES_XML);
+            map2String.put(APP_VND_RES_JSON, ContentType.APP_VND_RES_JSON);
+            map2String.put(APP_VND_NTFY_XML, ContentType.APP_VND_NTFY_XML);
+            map2String.put(APP_VND_NTFY_JSON, ContentType.APP_VND_NTFY_JSON);
+
+            for (Map.Entry<Integer, String> entry : map2String.entrySet()) {
+                map2Int.put(entry.getValue(), entry.getKey());
+            }
+        }
     }
 
     public class Protocol {

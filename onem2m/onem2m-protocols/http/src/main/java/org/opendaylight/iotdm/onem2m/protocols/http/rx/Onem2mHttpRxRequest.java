@@ -184,7 +184,6 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
                         httpResponse, "Unsupported method type: " + method, HttpServletResponse.SC_NOT_IMPLEMENTED);
                 return false;
         }
-
         return true;
     }
 

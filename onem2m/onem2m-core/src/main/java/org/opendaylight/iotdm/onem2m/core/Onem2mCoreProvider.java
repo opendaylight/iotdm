@@ -11,9 +11,8 @@ package org.opendaylight.iotdm.onem2m.core;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Monitor;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -37,8 +36,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.SecurityConfig;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
@@ -54,21 +53,21 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private TransactionManager transactionManager = null;
     private Onem2mStats stats;
     private Onem2mDb db;
+    private SecurityConfig securityConfig;
     private static NotificationPublishService notifierService;
     private Monitor crudMonitor;
     private static Onem2mRouterService routerService;
     private static final Onem2mCoreProvider coreProvider = new Onem2mCoreProvider();
 
-
     private ResourceTreeWriter twc;
     private ResourceTreeReader trc;
 
-    protected Onem2mCoreProvider() {
-
-    }
-
     public static Onem2mCoreProvider getInstance() {
         return coreProvider;
+    }
+
+    public void setSecurityConfig(SecurityConfig securityConfig) {
+        this.securityConfig = securityConfig;
     }
 
     public static NotificationPublishService getNotifier() {
@@ -78,6 +77,13 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     public static final String CONFIG_STATUS_OK = "OK";
     public static final String CONFIG_STATUS_FAILED = "FAILED";
+
+    private SecurityLevel evalSecurityLevel(@Nonnull SecurityLevel level) {
+        if (Objects.nonNull(securityConfig) && level.getIntValue() < securityConfig.getCoreSecurityLevel().getIntValue())
+            return securityConfig.getCoreSecurityLevel();
+        else
+            return level;
+    }
 
     /**
      * Perform session initialization
@@ -217,7 +223,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         }
 
         // verify whether the request is correct
-        SecurityLevel secLevel = input.getConfiguredSecurityLevel();
+        SecurityLevel secLevel = evalSecurityLevel(input.getConfiguredSecurityLevel());
         if ((null != input.getSenderIdentity()) && (! input.getSenderIdentity().isEmpty())) {
             LOG.trace("Checking permissions of the authenticated request");
             onem2mResponse = checkRequestPermissionsAuth(input, resourceLocator, onem2mRequest);

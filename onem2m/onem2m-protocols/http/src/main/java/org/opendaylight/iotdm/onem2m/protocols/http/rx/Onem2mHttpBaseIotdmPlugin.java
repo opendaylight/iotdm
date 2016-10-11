@@ -13,6 +13,7 @@ import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpReques
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServer;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
+import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
 import org.opendaylight.iotdm.onem2m.protocols.http.Onem2mHttpSecureConnectionConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxChannel;
@@ -29,7 +30,7 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpBaseIotdmPlugin.class);
 
     private final Onem2mProtocolRxHandler requestHandler;
-    private final Onem2mHttpRxRequestAbstractFactory requestFactory;
+    private final Onem2mRxRequestAbstractFactory<Onem2mHttpRxRequest,IotdmPluginHttpRequest,IotdmPluginHttpResponse> requestFactory;
     private final Onem2mService onem2mService;
     private final Onem2mHttpSecureConnectionConfig secConfig;
 
@@ -37,7 +38,7 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
     private ServerConfig currentConfig = null;
 
     public Onem2mHttpBaseIotdmPlugin(@Nonnull final Onem2mProtocolRxHandler requestHandler,
-                                     @Nonnull final Onem2mHttpRxRequestAbstractFactory requestFactory,
+                                     @Nonnull final Onem2mRxRequestAbstractFactory<Onem2mHttpRxRequest,IotdmPluginHttpRequest,IotdmPluginHttpResponse> requestFactory,
                                      @Nonnull final Onem2mService onem2mService,
                                      final Onem2mHttpSecureConnectionConfig secConfig) {
         super(Onem2mPluginManager.getInstance());
@@ -103,9 +104,9 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
     public void handle(IotdmPluginHttpRequest request, IotdmPluginHttpResponse response) {
         // TODO: how to remove the type casting ?
         Onem2mHttpRxRequest rxRequest =
-                    requestFactory.createHttpRxRequest((request),
-                                                       (response),
-                                                       onem2mService, securityLevel);
+                requestFactory.createRxRequest(request,
+                                                   response,
+                                                   onem2mService, securityLevel);
         requestHandler.handleRequest(rxRequest);
     }
 }

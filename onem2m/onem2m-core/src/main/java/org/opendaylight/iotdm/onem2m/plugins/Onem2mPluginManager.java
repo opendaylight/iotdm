@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.plugins;
 
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.coap.Onem2mCoapPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
@@ -23,6 +24,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 /**
  * Implements the registration and un-registration methods for IotdmPlugin instances and
  * stores registrations in registry according to registration mode specified in registration.
@@ -35,13 +39,13 @@ public class Onem2mPluginManager implements AutoCloseable {
     /* Specific IP address which means that plugin registers for all
      * local interfaces
      */
-    public static final String AllInterfaces = "0.0.0.0";
+    private static final String AllInterfaces = "0.0.0.0";
 
     // Supported protocols
     public static final String ProtocolHTTP = "http";
     public static final String ProtocolHTTPS = "https";
+    public static final String ProtocolCoAP = "coap";
     // TODO: uncomment when support added
-//    public static final String ProtocolCoAP = "coap";
 //    public static final String ProtocolCoAPS = "coaps";
 //    public static final String ProtocolMQTT = "mqtt";
 //    public static final String ProtocolMQTTS = "mqtts";
@@ -77,6 +81,7 @@ public class Onem2mPluginManager implements AutoCloseable {
     static {
         pluginChannelFactoryMap.put(ProtocolHTTP, new Onem2mHttpPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolHTTPS, new Onem2mHttpsPluginServerFactory());
+        pluginChannelFactoryMap.put(ProtocolCoAP, new Onem2mCoapPluginServerFactory());
         // TODO add next supported protocols
     }
 
@@ -127,6 +132,19 @@ public class Onem2mPluginManager implements AutoCloseable {
         return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, configuration);
     }
 
+    /**
+     * Registers plugin to receive COAP requests. Port number of the
+     * COAP server is specified and new server is started if needed.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local UDP port number of the COAP server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginCoap(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+        return registerPlugin(plugin, ProtocolCoAP, AllInterfaces, port, mode, uri, null);
+    }
+
     // TODO add registration methods for other supported protocols
 
 
@@ -143,15 +161,12 @@ public class Onem2mPluginManager implements AutoCloseable {
 
 
     private boolean isIpAll(String ipAdddress) {
-        if (ipAdddress.equals(AllInterfaces)) {
-            return true;
-        }
+        return ipAdddress.equals(AllInterfaces);
 
-        return false;
     }
 
     private boolean validateIpAddress(String ipAddress) {
-        if (null == ipAddress || ipAddress.isEmpty()) {
+        if (isNull(ipAddress) || ipAddress.isEmpty()) {
             return false;
         }
 
@@ -195,7 +210,7 @@ public class Onem2mPluginManager implements AutoCloseable {
                                    Object configuration) {
 
         // Get channel factory
-        if (! this.pluginChannelFactoryMap.containsKey(protocolName)) {
+        if (! pluginChannelFactoryMap.containsKey(protocolName)) {
             LOG.error("Attempt to register for unsupported protocol: {}", protocolName);
             return false;
         }
@@ -203,7 +218,7 @@ public class Onem2mPluginManager implements AutoCloseable {
         Onem2mPluginChannelFactory channelFactory = pluginChannelFactoryMap.get(protocolName);
 
         // Check the ipAddress
-        if (null == ipAddress || ipAddress.isEmpty()) {
+        if (isNull(ipAddress) || ipAddress.isEmpty()) {
             ipAddress = AllInterfaces;
         }
         if (! validateIpAddress(ipAddress)) {
@@ -219,7 +234,7 @@ public class Onem2mPluginManager implements AutoCloseable {
         if (! isIpAll(ipAddress)) {
             // Check if the specific IP address doesn't collide with registration for all interfaces
             Onem2mLocalEndpointRegistry registryAll = this.registry.getPluginRegistryAllInterfaces(chId);
-            if (null != registryAll) {
+            if (nonNull(registryAll)) {
                 LOG.error("Failed to register plugin {} at channel: {}. Resources already used by channel: {}",
                           plugin.getDebugString(), chId.getDebugString(), registryAll);
                 return false;
@@ -228,7 +243,7 @@ public class Onem2mPluginManager implements AutoCloseable {
 
         // Check if the specific IP address and port are not already in use for another protocol
         Onem2mLocalEndpointRegistry endpointReg = this.registry.getPluginRegistry(chId);
-        if (null != endpointReg) {
+        if (nonNull(endpointReg)) {
             if (! endpointReg.getProtocol().equals(chId.getProtocolName())) {
                 LOG.error("Failed to register plugin {} at channel: {}. Resources already used for protocol {}",
                           plugin.getDebugString(), chId.getDebugString(), endpointReg.getProtocol());
@@ -243,7 +258,7 @@ public class Onem2mPluginManager implements AutoCloseable {
             }
 
             // Configuration must equal if exists
-            if (null != configuration) {
+            if (nonNull(configuration)) {
                 if (! endpointReg.getAssociatedChannel().validateConfig(configuration)) {
                     LOG.error("Failed to register plugin {} at channel: {}. Invalid configuration passed",
                               plugin.getDebugString(), chId.getDebugString());
@@ -259,7 +274,7 @@ public class Onem2mPluginManager implements AutoCloseable {
 
             // Verify whether the same URI is not already registered
             IotdmPlugin regPlugin = endpointReg.getPlugin(uri);
-            if (null != regPlugin) {
+            if (nonNull(regPlugin)) {
                 // Maybe double registration ?
                 if (regPlugin.isPlugin(plugin)) {
                     LOG.warn("Double registration of plugin: {} at channel: {} or URI: {}",
@@ -286,7 +301,7 @@ public class Onem2mPluginManager implements AutoCloseable {
             return true;
         } else { // IpAddress and port are not in use
             // Instantiate registry according to specified mode
-            Onem2mLocalEndpointRegistry newRegistry = null;
+            Onem2mLocalEndpointRegistry newRegistry;
             switch (chId.getMode()) {
                 case Exclusive:
                     newRegistry = new Onem2mExclusiveRegistry(chId);
@@ -300,12 +315,6 @@ public class Onem2mPluginManager implements AutoCloseable {
                 default:
                     LOG.error("Registry for mode: {} not implemented", chId.getMode());
                     return false;
-            }
-
-            if (null == newRegistry) {
-                LOG.error("Failed to create new registry for plugin: {}, channel: {}",
-                          plugin.getDebugString(), chId.getDebugString());
-                return false;
             }
 
             // register plugin in the new registry
@@ -373,7 +382,7 @@ public class Onem2mPluginManager implements AutoCloseable {
                 } else {
                     // plugin has been removed, remove also registry if empty and close the channel
                     if (endpointRegistry.isEmpty()) {
-                        if (null != this.registry.removePluginRegistry(endpointRegistry.getChannelId())) {
+                        if (nonNull(this.registry.removePluginRegistry(endpointRegistry.getChannelId()))) {
                             // close also the channel
                             closeRegistryChannel(endpointRegistry);
                         } else {
@@ -388,7 +397,7 @@ public class Onem2mPluginManager implements AutoCloseable {
 
     /**
      * Closes all running channels.
-     * @throws Exception
+     * @throws Exception closing error
      */
     @Override
     public void close() throws Exception {
@@ -470,14 +479,12 @@ public class Onem2mPluginManager implements AutoCloseable {
          * @return Debug string
          */
         public String getDebugString() {
-            return new StringBuilder()
-                .append("Channel::")
-                    .append(" Type: ").append(channelType)
-                    .append(" Address: ").append(addrAndPort)
-                    .append(" Protocol: ").append(protocolName)
-                    .append(" Transport: ").append(transportProtocol)
-                    .append(" Mode: ").append(mode)
-                    .toString();
+            return "Channel::" +
+                    " Type: " + channelType +
+                    " Address: " + addrAndPort +
+                    " Protocol: " + protocolName +
+                    " Transport: " + transportProtocol +
+                    " Mode: " + mode;
         }
     }
 }
@@ -523,7 +530,7 @@ class PluginManagerRegistry {
     public Onem2mLocalEndpointRegistry removePluginRegistry(Onem2mPluginManager.ChannelIdentifier channelId) {
         Map<String, Onem2mLocalEndpointRegistry> map = getMap(channelId.getChannelType(),
                                                               channelId.getTransportProtocol());
-        if (null == map) {
+        if (isNull(map)) {
             LOG.error("Unsupported channelType ({}) or transportProtocol ({})",
                       channelId.getChannelType(), channelId.getTransportProtocol());
             return null;
@@ -543,7 +550,7 @@ class PluginManagerRegistry {
                                      Onem2mLocalEndpointRegistry newRegistry) {
         Map<String, Onem2mLocalEndpointRegistry> map = getMap(channelId.getChannelType(),
                                                               channelId.getTransportProtocol());
-        if (null == map) {
+        if (isNull(map)) {
             LOG.error("Unsupported channelType ({}) or transportProtocol ({})",
                       channelId.getChannelType(), channelId.getTransportProtocol());
             return false;
@@ -580,7 +587,7 @@ class PluginManagerRegistry {
                                                     Onem2mBaseCommunicationChannel.TransportProtocol transportProtocol,
                                                     String addrAndPort) {
         Map<String, Onem2mLocalEndpointRegistry> map = getMap(channelType, transportProtocol);
-        if (null == map) {
+        if (isNull(map)) {
             LOG.error("Unsupported channelType ({}) or transportProtocol ({})", channelType, transportProtocol);
             return null;
         }

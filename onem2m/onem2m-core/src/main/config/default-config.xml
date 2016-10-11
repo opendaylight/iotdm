@@ -26,6 +26,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                         <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
                         <name>pingpong-binding-data-broker</name>
                     </binding-data-broker>
+                    <security-config>
+                        <core-security-level>l0</core-security-level>
+                    </security-config>
                 </module>
             </modules>
         </data>
