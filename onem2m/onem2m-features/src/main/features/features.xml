@@ -65,6 +65,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
         <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap/{{VERSION}}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-protocol-coap.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-coap/{{VERSION}}/xml/config</configfile>
         <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->

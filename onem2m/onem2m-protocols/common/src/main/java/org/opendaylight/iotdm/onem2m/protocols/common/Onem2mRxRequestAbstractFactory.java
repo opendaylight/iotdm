@@ -6,30 +6,30 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.opendaylight.iotdm.onem2m.protocols.http.rx;
+package org.opendaylight.iotdm.onem2m.protocols.common;
 
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRequest;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginResponse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 
 /**
- * Defines abstract factory for HTTP RxRequests.
+ * Defines abstract factory for RxRequests.
  */
-public interface Onem2mHttpRxRequestAbstractFactory { //TODO: check if refactoring to Onem2mRxRequestAbstractFactory is ok
+public interface Onem2mRxRequestAbstractFactory<TRxRequest extends Onem2mProtocolRxRequest, TIotdmPluginRequest extends IotdmPluginRequest,TIotdmPluginResponse extends IotdmPluginResponse> {
 
     /**
-     * Creates Onem2mHttpRxRequest for further processing.
+     * Creates Onem2mRxRequest for further processing.
      * @param request The plugin manager request.
      * @param response The plugin manager response.
      * @param onem2mService Onem2m service which is used for the
      *                      processing of request.
      * @param securityLevel The security level configured at the
      *                      time when the request was received.
-     * @return The generic HTTP RxRequest which can be handled by RxHandler.
+     * @return The generic RxRequest which can be handled by RxHandler.
      */
-    Onem2mHttpRxRequest createHttpRxRequest(IotdmPluginHttpRequest request,
-                                            IotdmPluginHttpResponse response,
+    TRxRequest createRxRequest(TIotdmPluginRequest request,
+                                            TIotdmPluginResponse response,
                                             Onem2mService onem2mService,
                                             SecurityLevel securityLevel);
 }

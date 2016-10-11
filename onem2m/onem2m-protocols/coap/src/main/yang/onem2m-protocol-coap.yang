@@ -5,6 +5,7 @@ module onem2m-protocol-coap {
 
     import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import onem2m { prefix onem2m; revision-date 2015-01-05; }
 
     description
         "Service definition for onem2m project";
@@ -19,6 +20,13 @@ module onem2m-protocol-coap {
         config:java-name-prefix Onem2mCoap;
     }
 
+    grouping coap-protocol-sender-config {
+        leaf secure-connection {
+            mandatory true;
+            type boolean;
+        }
+    }
+
     augment "/config:modules/config:module/config:configuration" {
         case onem2m-protocol-coap {
             when "/config:modules/config:module/config:type = 'onem2m-protocol-coap'";
@@ -29,6 +37,25 @@ module onem2m-protocol-coap {
                         config:required-identity md-sal-binding:binding-broker-osgi-registry;
                     }
                 }
+            }
+            container server-config {
+                    leaf server-port {
+                        mandatory true;
+                        type uint16;
+                    }
+
+                    leaf server-security-level {
+                        mandatory true;
+                        type onem2m:security-level;
+                    }
+            }
+
+            container notifier-plugin-config {
+                uses coap-protocol-sender-config;
+            }
+
+            container router-plugin-config {
+                uses coap-protocol-sender-config;
             }
         }
     }

@@ -40,8 +40,7 @@ public class Onem2mExclusiveRegistry extends Onem2mLocalEndpointRegistry {
 
     @Override
     public boolean hasPlugin(IotdmPlugin plugin) {
-        if (null == this.plugin) return false;
-        return plugin.pluginName().equals(this.plugin.pluginName());
+        return null != this.plugin && plugin.pluginName().equals(this.plugin.pluginName());
     }
 
     @Override
@@ -65,5 +64,5 @@ public class Onem2mExclusiveRegistry extends Onem2mLocalEndpointRegistry {
     }
 
     @Override
-    public boolean isEmpty() { return (this.plugin == null); }
+    public boolean isEmpty() { return this.plugin == null; }
 }

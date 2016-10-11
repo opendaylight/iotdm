@@ -24,9 +24,9 @@ import java.io.IOException;
 public class IotdmPluginHttpResponse implements IotdmPluginResponse {
     private static final Logger LOG = LoggerFactory.getLogger(IotdmPluginHttpResponse.class);
 
-    protected final HttpServletResponse httpResponse; // The original HTTP response
+    private final HttpServletResponse httpResponse; // The original HTTP response
 
-    public IotdmPluginHttpResponse(HttpServletResponse httpResponse) {
+    IotdmPluginHttpResponse(HttpServletResponse httpResponse) {
         this.httpResponse = httpResponse;
     }
 
@@ -59,14 +59,12 @@ public class IotdmPluginHttpResponse implements IotdmPluginResponse {
         }
     }
 
-    @Override
     public void setHeader(String name, String value) {
         if (null != name && null != value) {
             this.httpResponse.setHeader(name, value);
         }
     }
 
-    @Override
     public void addHeader(String name, String value) {
         if (null != name && null != value) {
             this.httpResponse.addHeader(name, value);

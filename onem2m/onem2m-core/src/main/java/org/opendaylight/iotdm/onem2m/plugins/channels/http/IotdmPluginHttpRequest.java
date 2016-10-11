@@ -143,7 +143,6 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
         }
     }
 
-    @Override
     public HashMap<String, String[]> getHeadersAll() {
         if (null == this.headers) {
             this.getAndStoreAllHeaders();
@@ -152,7 +151,6 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
         return this.headers;
     }
 
-    @Override
     public String[] getHeaders(String key) {
         if (null == this.headers) {
             this.getAndStoreAllHeaders();
@@ -160,7 +158,6 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
         return this.headers.get(key);
     }
 
-    @Override
     public String getHeader(String key) {
         return this.httpRequest.getHeader(key);
     }
