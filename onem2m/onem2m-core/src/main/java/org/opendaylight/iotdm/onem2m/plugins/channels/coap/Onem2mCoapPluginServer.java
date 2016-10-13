@@ -84,7 +84,7 @@ class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
 
     @Override
     public String getProtocol() {
-        return "coap";
+        return Onem2mPluginManager.ProtocolCoAP;
     }
 
     /**
@@ -160,8 +160,6 @@ class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
                     }
                     request.setPayLoad(cn);
                 }
-
-                Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
                 IotdmPlugin plg = pluginRegistry.getPlugin(options.getUriPathString());
                 if (nonNull(plg)) {

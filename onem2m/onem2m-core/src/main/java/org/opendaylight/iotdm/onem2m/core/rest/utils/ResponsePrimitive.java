@@ -94,4 +94,21 @@ public class ResponsePrimitive extends BasePrimitive {
     public JSONObject getJsonResourceContent() {
         return this.jsonResourceContent;
     }
+
+    /**
+     * @return JSONObject built from basic primitive fields
+     */
+    public JSONObject toJson() {
+        JSONObject responseJson = new JSONObject();
+        JsonUtils.put(
+                responseJson, ResponsePrimitive.CONTENT,
+                this.getPrimitive(ResponsePrimitive.CONTENT));
+        JsonUtils.put(
+                responseJson, ResponsePrimitive.RESPONSE_STATUS_CODE,
+                this.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE));
+        JsonUtils.put(
+                responseJson, ResponsePrimitive.REQUEST_IDENTIFIER,
+                this.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
+        return responseJson;
+    }
 }
