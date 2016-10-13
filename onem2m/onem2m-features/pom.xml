@@ -196,6 +196,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocol-websocket</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocol-websocket</artifactId>
+            <version>${project.version}</version>
+            <classifier>config</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-protocol-mqtt</artifactId>
             <version>${project.version}</version>
         </dependency>
