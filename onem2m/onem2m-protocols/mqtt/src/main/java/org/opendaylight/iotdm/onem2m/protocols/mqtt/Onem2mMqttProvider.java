@@ -10,7 +10,6 @@ package org.opendaylight.iotdm.onem2m.protocols.mqtt;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,7 +26,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
@@ -39,9 +37,8 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.mqtt.rev150105.Onem2mMqttClientService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.mqtt.rev150105.Onem2mMqttConfigInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.mqtt.rev150105.Onem2mMqttConfigOutput;
@@ -372,7 +369,6 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         }
 
         private String trimTopic(String topic) {
-
             topic = topic.trim();
             topic = topic.startsWith("/") ? topic.substring("/".length()) : topic;
             topic = topic.endsWith("/") ? topic.substring(0, topic.length() - 1) : topic;
@@ -380,15 +376,15 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
         }
 
         private void handleRequest(String topic, String message, String from, String to) {
-
             Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
             clientBuilder.setProtocol(Onem2m.Protocol.MQTT);
             Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS);
-            String hierarchy[] = parseTopicString(topic);
-            String mqttMessageFormat = hierarchy[4];
-            String operation = null;
-            if (mqttMessageFormat.contains(Onem2m.ContentFormat.JSON)) {
-                operation = processJsonRequestPrimitive(message, clientBuilder);
+            String hierarchy[]=parseTopicString(topic);
+            String mqttMessageFormat=hierarchy[4];
+            String operation=null;
+            if(mqttMessageFormat.contains(Onem2m.ContentFormat.JSON))
+            {
+                operation = Onem2mProtocolUtils.processRequestPrimitiveFromJson(message, clientBuilder);
             }
             if (mqttMessageFormat.contains(Onem2m.ContentFormat.XML)) {
                 operation = processXMLRequestPrimitive(message, clientBuilder);
@@ -436,55 +432,14 @@ public class Onem2mMqttProvider implements Onem2mMqttClientService, BindingAware
             return null;
         }
 
-        /**
-         * The payload is a json string containing the request primitive attributes.
-         * All the error checking is done in one place in the core.
-         */
-        private String processJsonRequestPrimitive(String message,
-                Onem2mRequestPrimitiveClientBuilder clientBuilder) {
-            JSONObject jsonContent = null;
-            String operation = null;
-            if (message == null) {
-                LOG.info("Content not specified");
-                return null;
-            }
-            try {
-                jsonContent = new JSONObject(message);
-            } catch (JSONException e) {
-                LOG.info("Content Unacceptable");
-                return null;
-            }
+        private void sendMqttJsonResponseFromOnem2mResponse(String topic,ResponsePrimitive onem2mResponse){
+            JSONObject jsonResponse = onem2mResponse.toJson();
+            sendResponse(topic, jsonResponse.toString());
 
-            Iterator<?> keys = jsonContent.keys();
-            while (keys.hasNext()) {
-                String key = (String) keys.next();
-                Object o = jsonContent.opt(key);
-                if (o != null) {
-                    clientBuilder.setPrimitiveNameValue(key, o.toString());
-                    if (key.contentEquals(RequestPrimitive.OPERATION)) {
-                        operation = o.toString();
-                    }
-                }
-            }
-
-            clientBuilder.setContentFormat("json");
-            return operation;
-        }
-
-        private void sendMqttJsonResponseFromOnem2mResponse(String topic, ResponsePrimitive onem2mResponse) {
-
-            JSONObject responseJsonObject = new JSONObject();
-            String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-            JsonUtils.put(responseJsonObject, ResponsePrimitive.CONTENT, content);
-            String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-            JsonUtils.put(responseJsonObject, ResponsePrimitive.RESPONSE_STATUS_CODE, rscString);
-            String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
-            JsonUtils.put(responseJsonObject, ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
-            sendResponse(topic, responseJsonObject.toString());
-
-            if (rscString.charAt(0) == '2') {
+            if (jsonResponse.getString(ResponsePrimitive.RESPONSE_STATUS_CODE).charAt(0) =='2') {
                 Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS_OK);
-            } else {
+            }
+            else {
                 Onem2mStats.getInstance().inc(Onem2mStats.MQTT_REQUESTS_ERROR);
             }
 

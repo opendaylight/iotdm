@@ -16,6 +16,7 @@ import org.opendaylight.iotdm.onem2m.plugins.channels.coap.Onem2mCoapsPluginServ
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmHttpsConfigBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServerFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.websocket.Onem2mWebsocketPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedExactMatchRegistry;
@@ -49,6 +50,7 @@ public class Onem2mPluginManager implements AutoCloseable {
     public static final String ProtocolHTTPS = "https";
     public static final String ProtocolCoAP = "coap";
     public static final String ProtocolCoAPS = "coaps";
+    public static final String ProtocolWebsocket = "websocket";
     // TODO: uncomment when support added
 //    public static final String ProtocolMQTT = "mqtt";
 //    public static final String ProtocolMQTTS = "mqtts";
@@ -86,6 +88,7 @@ public class Onem2mPluginManager implements AutoCloseable {
         pluginChannelFactoryMap.put(ProtocolHTTPS, new Onem2mHttpsPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolCoAP, new Onem2mCoapPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolCoAPS, new Onem2mCoapsPluginServerFactory());
+        pluginChannelFactoryMap.put(ProtocolWebsocket, new Onem2mWebsocketPluginServerFactory());
         // TODO add next supported protocols
     }
 
@@ -191,6 +194,19 @@ public class Onem2mPluginManager implements AutoCloseable {
     public boolean registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
         IotdmCoapsConfigBuilder builder = new IotdmCoapsConfigBuilder().setUseDefault(true);
         return registerPlugin(plugin, ProtocolCoAPS, AllInterfaces, port, mode, uri, builder);
+    }
+
+     /**
+     * Registers plugin to receive Websocket requests. Port number of the
+     * Websocket server is specified and new server is started if needed.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local TCP port number of the Websocket server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginWebsocket(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+        return registerPlugin(plugin, ProtocolWebsocket, AllInterfaces, port, mode, uri, null);
     }
 
     // TODO add registration methods for other supported protocols

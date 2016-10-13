@@ -9,15 +9,14 @@
 package org.opendaylight.iotdm.onem2m.core;
 
 import java.security.Security;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.security.authentication.Onem2mRequestAuthenticationToken;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -69,6 +68,10 @@ public class Onem2m {
         public static final String APP_VND_NTFY_XML = "application/vnd.onem2m-ntfy+xml";
     }
 
+    public class ResponseContentType {
+        public static final String JSON_UTF8 = "text/json;charset=utf-8";
+    }
+
     public static class CoapContentFormat {
         public static final int APPLICATION_XML = 41;
         public static final int APPLICATION_JSON = 50;
@@ -100,6 +103,12 @@ public class Onem2m {
         public static final String MQTT = "Mqtt";
         public static final String HTTP = "Http";
         public static final String NATIVEAPP = "NativeApp";
+    }
+
+    public class SubProtocol { //see 6.2.2.9 in TS0020
+        public static final String JSON = "oneM2M.R2.0.json";
+        public static final String XML = "oneM2M.R2.0.xml";
+        //public static final String CBOR = "oneM2M.R2.0.cbor";
     }
 
     // TODO: ts0004 6.3.3.2.1, 8.2.4-1, why are there ENUMS and SHORT NAMES ???? WHICH ONE DO WE USE
@@ -434,7 +443,7 @@ public class Onem2m {
                                                          @Nonnull final Onem2mService onem2mService,
                                                          @Nonnull final SecurityLevel securityLevel,
                                                          @Nonnull final Onem2mRequestAuthenticationToken authToken) {
-        ResponsePrimitive onem2mResponse = null;
+        ResponsePrimitive onem2mResponse;
 
         if (!authToken.isAuthOk(securityLevel)) {
             onem2mResponse = new ResponsePrimitive();
@@ -500,17 +509,17 @@ public class Onem2m {
 
     /**
      * Translates URI string from the protocol format into Onem2m format.
-     * @param protocolUri
-     * @return
+     * @param protocolUri uri
+     * @return translated uri
      */
     public static String translateUriToOnem2m(@Nonnull String protocolUri) {
         protocolUri = Onem2mDb.trimURI(protocolUri);
 
-        if (-1 != protocolUri.indexOf("~/")) {
+        if (protocolUri.contains("~/")) {
             return protocolUri.replaceFirst("~/", "/");
         }
 
-        if (-1 != protocolUri.indexOf("_/")) {
+        if (protocolUri.contains("_/")) {
             return protocolUri.replaceFirst("_/", "//");
         }
 
@@ -523,8 +532,8 @@ public class Onem2m {
 
     /**
      * Translates URI from Onem2m format into protocol format.
-     * @param onem2mUri
-     * @return
+     * @param onem2mUri uri in onem2m format
+     * @return translated uri
      */
     public static String translateUriFromOnem2m(@Nonnull String onem2mUri) {
         if (onem2mUri.startsWith("//")) {
@@ -536,6 +545,34 @@ public class Onem2m {
         }
 
         return "/" + onem2mUri;
+    }
+
+    /**
+     * Resolve content format or return empty option
+     * @param contentType string representation of content type
+     * @return option of content format or empty one
+     */
+    public static Optional<String> resolveContentFormat(String contentType) {
+        if (contentType.contains("json")) {
+            return Optional.of(ContentFormat.JSON);
+        } else if (contentType.contains("xml")) {
+            return Optional.of(ContentFormat.XML);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * @param maybeRqpJson - onem2m primitive json
+     * @return - rqp primitive json string or original string if m2m:rqp not found or unable to parse
+     */
+    public static String getRqpJsonPrimitive(String maybeRqpJson) {
+        Optional<JSONObject> jsonContent = JsonUtils.stringToJsonObject(maybeRqpJson);
+        if(jsonContent.isPresent() && jsonContent.get().has("m2m:rqp")) {
+            return jsonContent.get().get("m2m:rqp").toString();
+        }
+        else {
+            return maybeRqpJson;
+        }
     }
 }
 

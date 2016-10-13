@@ -9,8 +9,11 @@
 package org.opendaylight.iotdm.onem2m.core.utils;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Optional;
 
 /**
  * JSON utility class (mainly to avoid handling JSONException).
@@ -42,5 +45,21 @@ public class JsonUtils {
             // TODO Determine when this can happen
         }
         return jsonObject;
+    }
+
+    /**
+     * @param jsonString - string containing json
+     * @return - parsed JsonObject or empty option if given string is not parsable or empty
+     */
+    public static Optional<JSONObject> stringToJsonObject(String jsonString) {
+        JSONObject jsonContent = null;
+
+        try {
+            if (!StringUtils.isEmpty(jsonString)) {
+                jsonContent = new JSONObject(jsonString);
+            }
+        } catch (JSONException ignored) {/*no action needed, return Optional.empty*/}
+
+        return Optional.ofNullable(jsonContent);
     }
 }

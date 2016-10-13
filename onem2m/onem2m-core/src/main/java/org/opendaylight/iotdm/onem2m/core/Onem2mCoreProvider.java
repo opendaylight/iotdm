@@ -106,8 +106,11 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public static final String CONFIG_STATUS_OK = "OK";
     public static final String CONFIG_STATUS_FAILED = "FAILED";
 
-    private SecurityLevel evalSecurityLevel(@Nonnull SecurityLevel level) {
-        if (Objects.nonNull(securityConfig) && level.getIntValue() < securityConfig.getCoreSecurityLevel().getIntValue())
+    private SecurityLevel evalSecurityLevel(SecurityLevel level) {
+        if(Objects.isNull(level)) {
+            throw new IllegalArgumentException("Security level is not defined");
+        }
+        else if (Objects.nonNull(securityConfig) && level.getIntValue() < securityConfig.getCoreSecurityLevel().getIntValue())
             return securityConfig.getCoreSecurityLevel();
         else
             return level;

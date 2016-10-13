@@ -20,6 +20,7 @@ import org.eclipse.californium.core.server.resources.CoapExchange;
 import org.eclipse.californium.core.server.resources.Resource;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ abstract class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationCha
 
     @Override
     public String getProtocol() {
-        return "coap";
+        return Onem2mPluginManager.ProtocolCoAP;
     }
 
     /**

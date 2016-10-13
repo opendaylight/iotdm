@@ -85,12 +85,26 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <configfile finalname="${configfile.directory}/onem2m-protocol-http.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}/xml/config</configfile>
     </feature>
 
+    <!-- oneM2M messaging over Websocket protocol base implementation -->
+    <feature name='odl-onem2m-websocket' version='${project.version}' description='OpenDaylight :: onem2m :: Websocket'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <!--<feature version="${project.version}">odl-onem2m-notifier</feature>-->
+        <feature version='${pax.web.version}'>pax-http</feature>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-protocol-websocket.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}/xml/config</configfile>
+    </feature>
+
     <!-- oneM2M messaging over MQTT protocol -->
     <feature name='odl-onem2m-mqtt' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/{{VERSION}}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-protocol-mqtt.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/{{VERSION}}/xml/config</configfile>
     </feature>
@@ -133,6 +147,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version="${project.version}">odl-onem2m-coap</feature>
         <!-- TODO: comment out next line if onem2m/http access is not required -->
         <feature version="${project.version}">odl-onem2m-http</feature>
+        <!-- TODO: comment out next line if onem2m/websocket access is not required -->
+        <feature version="${project.version}">odl-onem2m-websocket</feature>
         <!-- TODO: comment out next line if onem2m/mqtt access is not required -->
         <feature version="${project.version}">odl-onem2m-mqtt</feature>
     </feature>
