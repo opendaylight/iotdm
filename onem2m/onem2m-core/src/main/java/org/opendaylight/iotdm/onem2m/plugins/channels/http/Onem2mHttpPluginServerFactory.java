@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.plugins.channels.http;
 
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurationBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
@@ -26,9 +27,10 @@ public class Onem2mHttpPluginServerFactory extends Onem2mPluginChannelFactory {
     }
 
 
-    public Onem2mBaseCommunicationChannel createInstance(String ipAddress, int port, Object config,
+    public Onem2mBaseCommunicationChannel createInstance(String ipAddress, int port,
+                                                         IotdmPluginConfigurationBuilder configBuilder,
                                                          Onem2mLocalEndpointRegistry registry) {
-        if (null != config) {
+        if (null != configBuilder) {
             // configuration must be null
             return null;
         }

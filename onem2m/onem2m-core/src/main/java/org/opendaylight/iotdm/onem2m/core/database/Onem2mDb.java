@@ -254,16 +254,14 @@ public class Onem2mDb implements TransactionChainListener {
             JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceAE.AE_ID,
                           onem2mRequest.getResourceName());
         } else {
-            // in the last Design:
-            // if from !=null, since  resourceName at least = from, how can the following happen?
             if (resourceName == null) {
-                // remove the "http://" or anything before //, including the //
-                String[] splitStrins = from.split("//");
-                // does not need to concern 2 //, we will check valid URI in the following steps
+                // Use the AE-ID from the From parameter as the resourceName
+                // Now use just the AE-ID (ignore FQDN and CSE-ID if used because they should be already verified)
+                String[] splitStrins = from.split("/");
                 String removedHead = splitStrins[splitStrins.length - 1];
                 onem2mRequest.setResourceName(removedHead);
             }
-            //TODo : do we want to set the AE-ID like http://xxx/yyy  or  xxx?
+
             JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceAE.AE_ID,
                           onem2mRequest.getResourceName());
         }

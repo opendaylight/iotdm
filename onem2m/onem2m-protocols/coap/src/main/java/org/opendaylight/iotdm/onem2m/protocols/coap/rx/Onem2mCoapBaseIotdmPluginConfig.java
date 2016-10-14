@@ -8,7 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.rx;
 
-import org.opendaylight.iotdm.onem2m.protocols.common.utils.IoTdmProtocolConfigGetter;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.IotdmProtocolConfigGetter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev141210.ServerConfig;
 
@@ -22,9 +22,11 @@ public class Onem2mCoapBaseIotdmPluginConfig extends ServerConfig {
 
     public Onem2mCoapBaseIotdmPluginConfig(Object config) {
         super();
-        this.setServerPort(IoTdmProtocolConfigGetter.getAttribute(config, "getServerPort", Integer.class));
-        this.setServerSecurityLevel(IoTdmProtocolConfigGetter.getAttribute(config, "getServerSecurityLevel",
+        this.setServerPort(IotdmProtocolConfigGetter.getAttribute(config, "getServerPort", Integer.class));
+        this.setServerSecurityLevel(IotdmProtocolConfigGetter.getAttribute(config, "getServerSecurityLevel",
                                                                            SecurityLevel.class));
+        this.setSecureConnection(IotdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
+        this.setUsePresharedKeys(IotdmProtocolConfigGetter.getAttribute(config, "getUsePresharedKeys", Boolean.class));
     }
 
 }

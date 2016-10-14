@@ -32,6 +32,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
            <version>1.0.2</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.californium</groupId>
+            <artifactId>scandium</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
             <groupId>org.ops4j.pax.web</groupId>
             <artifactId>pax-web-jetty-bundle</artifactId>
             <version>3.2.9</version>

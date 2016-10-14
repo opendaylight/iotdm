@@ -26,6 +26,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
           <server-config>
             <server-port>5683</server-port>
             <server-security-level>l0</server-security-level>
+            <secure-connection>false</secure-connection>
           </server-config>
           <notifier-plugin-config>
             <secure-connection>false</secure-connection>

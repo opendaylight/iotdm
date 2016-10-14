@@ -8,44 +8,133 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.tx;
 
-import org.eclipse.californium.core.CoapClient;
-import org.eclipse.californium.core.coap.Option;
-import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
-import org.eclipse.californium.core.coap.Response;
-import org.eclipse.jetty.client.ContentExchange;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.eclipse.californium.core.network.CoapEndpoint;
+import org.eclipse.californium.core.network.EndpointManager;
+import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.scandium.DTLSConnector;
+import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
+import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
+import org.eclipse.californium.scandium.dtls.pskstore.InMemoryPskStore;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxChannel;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev141210.CsePsk;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev141210.TrustStoreConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev141210.TrustedCertificates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.util.List;
 
 /**
- * Common COAP client base class for COAP notifier and routing plugins.
+ * Common COAP(S) client base class for COAP(S) notifier and routing plugins.
  */
 public abstract class Onem2mCoapClient implements Onem2mProtocolTxChannel<Onem2mCoapClientConfiguration> {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapClient.class);
 
     protected String pluginName = "coap";
+    protected DTLSConnector dtlsConnector = null;
+    protected Onem2mCoapClientConfiguration configuration = null;
 
     @Override
     public void start(Onem2mCoapClientConfiguration configuration)
             throws RuntimeException {
-        //not needed to start as coap is on udp
+        if (null != configuration && configuration.isSecureConnection()) {
+            if (null == configuration.getSecureConnectionConfig()) {
+                throw new IllegalArgumentException("Configured secure connection without config passed");
+            }
+
+            if (configuration.isUsePsk()) {
+                this.initializeDtlsPsk(configuration.getSecureConnectionConfig().getDtlsPskRemoteCse().getCsePsk());
+            } else {
+                TrustStoreConfig tConfig =
+                        configuration.getSecureConnectionConfig().getDtlsCertificatesConfig().getTrustStoreConfig();
+                this.initializeDtls(tConfig.getTrustStoreFile(), tConfig.getTrustStorePassword(),
+                                    tConfig.getTrustedCertificates());
+            }
+
+            this.pluginName = "coaps";
+        } else {
+            this.pluginName = "coap";
+        }
     }
 
     @Override
     public void close() {
-        //not needed to close as coap is on udp
+        // nothing to do
+    }
+
+    // This method is common with Java IoTDM client
+    // TODO: Think about keeping the Java IoTDM client in the same repository
+    // TODO: with IoTDM
+    private void initializeDtlsPsk(List<CsePsk> pskList) {
+        if (null == pskList) {
+            throw new IllegalArgumentException("No PSK list passed");
+        }
+
+        //Set up DTLS PSK
+        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
+        builder.setClientOnly();
+
+        InMemoryPskStore pskStore = new InMemoryPskStore();
+        for(CsePsk entry : pskList) {
+            pskStore.setKey(entry.getCseId(), entry.getPsk().getBytes());
+        }
+
+        builder.setPskStore(pskStore);
+        builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8,
+                                                           CipherSuite.TLS_PSK_WITH_AES_128_CBC_SHA256});
+
+        dtlsConnector = new DTLSConnector(builder.build());
+        EndpointManager.getEndpointManager().setDefaultSecureEndpoint(
+                new CoapEndpoint(dtlsConnector, NetworkConfig.getStandard()));
+    }
+
+    // This method is common with Java IoTDM client
+    // TODO: Think about keeping the Java IoTDM client in the same repository
+    // TODO: with IoTDM
+    private void initializeDtls(final String trustStore, final String trustStorePassword,
+                                final List<TrustedCertificates> trustedCertificates) {
+        if (trustStore == null || trustStore.isEmpty() ||
+            trustStorePassword == null || trustStorePassword.isEmpty() ||
+            null == trustedCertificates) {
+            throw new IllegalArgumentException("Invalid arguments passed");
+        }
+        //Set up DTLS
+        try {
+            // load trust store
+            KeyStore trust = KeyStore.getInstance("JKS");
+            InputStream inTrust = new FileInputStream(trustStore);
+            trust.load(inTrust, trustStorePassword.toCharArray());
+
+            // You can load multiple certificates if needed
+            Certificate[] certs = new Certificate[trustedCertificates.size()];
+            int i = 0;
+            for (TrustedCertificates entry : trustedCertificates) {
+                certs[i] = trust.getCertificate(entry.getCertificateName());
+                i++;
+            }
+
+            DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
+            builder.setClientOnly();
+
+            builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+                                                               CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
+            builder.setTrustStore(certs);
+
+            dtlsConnector = new DTLSConnector(builder.build());
+            EndpointManager.getEndpointManager().setDefaultSecureEndpoint(
+                    new CoapEndpoint(dtlsConnector, NetworkConfig.getStandard()));
+        } catch (GeneralSecurityException | IOException e) {
+            System.err.println("Could not load the keystore");
+            e.printStackTrace();
+        }
     }
 
     /**

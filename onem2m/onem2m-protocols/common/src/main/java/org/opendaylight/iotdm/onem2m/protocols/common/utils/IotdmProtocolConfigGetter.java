@@ -16,8 +16,8 @@ import java.lang.reflect.Method;
 /**
  * Utility class implementing static methods for processing configuration.
  */
-public class IoTdmProtocolConfigGetter {
-    private static final Logger LOG = LoggerFactory.getLogger(IoTdmProtocolConfigGetter.class);
+public class IotdmProtocolConfigGetter {
+    private static final Logger LOG = LoggerFactory.getLogger(IotdmProtocolConfigGetter.class);
 
     /**
      * Generic method for calling methods identified by
@@ -35,7 +35,7 @@ public class IoTdmProtocolConfigGetter {
             Method m = src.getClass().getMethod(getterName);
             return (T) m.invoke(src);
         } catch (Exception e) {
-            LOG.info("Failed to get attribute: {}, msg: {}", getterName, e);
+            LOG.trace("Failed to get attribute: {}, msg: {}", getterName, e);
             return null;
         }
     }

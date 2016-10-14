@@ -83,26 +83,6 @@ public class ResourceAE {
             return;
         }
 
-
-        /**
-         * Check the From, if
-         * (1) the From is xxx:// yyyy, remove xxx://
-         * (2) if yyyy still contains / return error.
-         */
-        String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-        if (null != from) {
-            String[] splitStrins = from.split("//");
-            // does not need to concern 2 //, we will check valid URI in the following steps
-            if (splitStrins.length == 2) {
-                String removedHead = splitStrins[1];
-                if (removedHead.contains("/")) {
-                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "From cannot contain / ");
-                    return;
-                }
-            }
-        }
-
-
         /**
          * Construct the AE_ID field ... using some rules
          * 1) FROM field is null --> generate an aei using either the resource name which must be unique, or

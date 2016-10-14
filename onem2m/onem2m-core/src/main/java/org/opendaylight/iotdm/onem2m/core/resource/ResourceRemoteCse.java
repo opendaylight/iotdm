@@ -181,33 +181,6 @@ public class ResourceRemoteCse {
         }
 
         /**
-         * Check the From, if
-         * (1) the From is xxx:// yyyy, remove xxx://
-         * (2) if yyyy still contains / return error.
-         */
-        String from = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-        String[] splitStrins = from.split("//");
-        // does not need to concern 2 //, we will check valid URI in the following steps
-        if (splitStrins.length == 2) {
-            String removedHead = splitStrins[1];
-            if (removedHead.contains("/")) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "From cannot contain / ");
-                return;
-            }
-        }
-
-
-        /**
-         * Construct the AE_ID field ... using some rules
-         * 1) FROM field is null --> generate an aei using either the resource name which must be unique, or
-         * if the resource name is not provided, gerate one via generate, then apply it to the aei and res name.
-         * 2) if the FROM field has something, then use it in the aei, and the resource name if the res name is
-         * null.
-         *
-         * This logic will runs in the createResource as it can generate unique id's
-         */
-
-        /**
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {

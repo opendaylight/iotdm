@@ -8,6 +8,33 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.tx;
 
-public class Onem2mCoapClientConfiguration { //TODO:fake class, configuration is not needed yet
+import org.opendaylight.iotdm.onem2m.protocols.coap.Onem2mCoapSecureConnectionConfig;
 
+/**
+ * Configuration used by CoAP client.
+ */
+public class Onem2mCoapClientConfiguration {
+    protected final boolean secureConnection;
+    protected final Onem2mCoapSecureConnectionConfig secureConnectionConfig;
+    protected final boolean usePsk;
+
+    public Onem2mCoapClientConfiguration(boolean secureConnection,
+                                         boolean usePsk,
+                                         Onem2mCoapSecureConnectionConfig secureConnectionConfig) {
+        this.secureConnection = secureConnection;
+        this.secureConnectionConfig = secureConnectionConfig;
+        this.usePsk = usePsk;
+    }
+
+    public boolean isUsePsk() {
+        return usePsk;
+    }
+
+    public boolean isSecureConnection() {
+        return secureConnection;
+    }
+
+    public Onem2mCoapSecureConnectionConfig getSecureConnectionConfig() {
+        return secureConnectionConfig;
+    }
 }

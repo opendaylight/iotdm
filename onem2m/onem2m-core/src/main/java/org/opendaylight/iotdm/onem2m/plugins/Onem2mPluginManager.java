@@ -10,7 +10,10 @@ package org.opendaylight.iotdm.onem2m.plugins;
 
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmCoapsConfigBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.coap.Onem2mCoapPluginServerFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.coap.Onem2mCoapsPluginServerFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmHttpsConfigBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
@@ -45,8 +48,8 @@ public class Onem2mPluginManager implements AutoCloseable {
     public static final String ProtocolHTTP = "http";
     public static final String ProtocolHTTPS = "https";
     public static final String ProtocolCoAP = "coap";
+    public static final String ProtocolCoAPS = "coaps";
     // TODO: uncomment when support added
-//    public static final String ProtocolCoAPS = "coaps";
 //    public static final String ProtocolMQTT = "mqtt";
 //    public static final String ProtocolMQTTS = "mqtts";
 
@@ -82,6 +85,7 @@ public class Onem2mPluginManager implements AutoCloseable {
         pluginChannelFactoryMap.put(ProtocolHTTP, new Onem2mHttpPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolHTTPS, new Onem2mHttpsPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolCoAP, new Onem2mCoapPluginServerFactory());
+        pluginChannelFactoryMap.put(ProtocolCoAPS, new Onem2mCoapsPluginServerFactory());
         // TODO add next supported protocols
     }
 
@@ -120,16 +124,31 @@ public class Onem2mPluginManager implements AutoCloseable {
     /**
      * Registers plugin to receive HTTP requests. Port number of the
      * HTTPS server is specified and new server is started if needed.
+     * Default KeyStore configuration is used.
      * @param plugin Instance of IotdmPlugin to register.
      * @param port Local TCP port number of the HTTPS server.
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
-     * @param configuration Configuration of HTTPS server.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+        IotdmHttpsConfigBuilder builder = new IotdmHttpsConfigBuilder().setUseDefault(true);
+        return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, builder);
+    }
+
+    /**
+     * Registers plugin to receive HTTP requests. Port number of the
+     * HTTPS server is specified and new server is started if needed.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local TCP port number of the HTTPS server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @param configurationBuilder Configuration builder for HTTPS server.
      * @return True in case of successful registration, False otherwise.
      */
     public boolean registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
-                                       String uri, Object configuration) {
-        return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, configuration);
+                                       String uri, IotdmHttpsConfigBuilder configurationBuilder) {
+        return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, configurationBuilder);
     }
 
     /**
@@ -145,6 +164,35 @@ public class Onem2mPluginManager implements AutoCloseable {
         return registerPlugin(plugin, ProtocolCoAP, AllInterfaces, port, mode, uri, null);
     }
 
+    /**
+     * Registers plugin to receive COAPS requests. The new COAPS server is started af the specified port (if needed)
+     * and the configuration provided in the configurationBuilder is used to configure the new server instance.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local UDP port number of the COAPS server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @param configuratonBuilder Configuration builder for COAPS server.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri,
+                                       IotdmCoapsConfigBuilder configuratonBuilder) {
+        return registerPlugin(plugin, ProtocolCoAPS, AllInterfaces, port, mode, uri, configuratonBuilder);
+    }
+
+    /**
+     * Registers plugin to receive COAPS requests. The new COAPS server is started af the specified port (if needed)
+     * and the configuration provided in the configurationBuilder is used to configure the new server instance.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port Local UDP port number of the COAPS server.
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+        IotdmCoapsConfigBuilder builder = new IotdmCoapsConfigBuilder().setUseDefault(true);
+        return registerPlugin(plugin, ProtocolCoAPS, AllInterfaces, port, mode, uri, builder);
+    }
+
     // TODO add registration methods for other supported protocols
 
 
@@ -154,8 +202,8 @@ public class Onem2mPluginManager implements AutoCloseable {
     }
 
     public int registerPluginAtPort(String protocol, IotdmPlugin instance, int port, Onem2mPluginManager.Mode mode,
-                                    Object configuration) {
-        this.registerPlugin(instance, protocol, AllInterfaces, port, mode, null, configuration);
+                                    IotdmPluginConfigurationBuilder configurationBuilder) {
+        this.registerPlugin(instance, protocol, AllInterfaces, port, mode, null, configurationBuilder);
         return 0;
     }
 
@@ -201,13 +249,14 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param mode Registration mode describing the way of sharing of the CommunicationChannel by plugins.
      * @param uri Local URI (for CLIENTS as well as for SERVERS) for which the plugin is registering.
      *            Null can be used if plugin registers for all URIs.
-     * @param configuration Configuration for CommunicationChannel if needed. Null can be passed.
+     * @param configurationBuilder Configuration builder for CommunicationChannel if needed.
+     *                             Null can be passed.
      * @return True if the registration has been successful, False otherwise.
      */
     private boolean registerPlugin(IotdmPlugin plugin, String protocolName,
                                    String ipAddress, int port,
                                    Onem2mPluginManager.Mode mode, String uri,
-                                   Object configuration) {
+                                   IotdmPluginConfigurationBuilder configurationBuilder) {
 
         // Get channel factory
         if (! pluginChannelFactoryMap.containsKey(protocolName)) {
@@ -258,14 +307,8 @@ public class Onem2mPluginManager implements AutoCloseable {
             }
 
             // Configuration must equal if exists
-            if (nonNull(configuration)) {
-                if (! endpointReg.getAssociatedChannel().validateConfig(configuration)) {
-                    LOG.error("Failed to register plugin {} at channel: {}. Invalid configuration passed",
-                              plugin.getDebugString(), chId.getDebugString());
-                    return false;
-                }
-
-                if (! endpointReg.getAssociatedChannel().compareConfig(configuration)) {
+            if (nonNull(configurationBuilder)) {
+                if (! endpointReg.getAssociatedChannel().compareConfig(configurationBuilder)) {
                     LOG.error("Failed to register plugin {} at channel: {}. Different configuration passed",
                               plugin.getDebugString(), chId.getDebugString());
                     return false;
@@ -326,7 +369,7 @@ public class Onem2mPluginManager implements AutoCloseable {
 
             // create new channel
             Onem2mBaseCommunicationChannel newChannel =
-                    channelFactory.createInstance(chId.getIpAddress(), chId.getPort(), configuration,
+                    channelFactory.createInstance(chId.getIpAddress(), chId.getPort(), configurationBuilder,
                                                   newRegistry);
             if (null == newChannel) {
                 LOG.error("Failed to instantiate channel: {} for plugin: {}",
@@ -393,6 +436,37 @@ public class Onem2mPluginManager implements AutoCloseable {
                 }
             }
         });
+    }
+
+    /**
+     * This method is called when default configuration has changed.
+     * Walks all running CommunicationChannels and re-initializes channels
+     * which uses default configuration.
+     */
+    public void handleDefaultConfigUpdate() {
+        try {
+            this.registry.registryStream().forEach(endpointRegistry -> {
+                if (endpointRegistry.getAssociatedChannel().getUsesDefaultConfiguration()) {
+                    try {
+                        endpointRegistry.getAssociatedChannel().close();
+                    } catch (Exception e) {
+                        LOG.error("Failed to close old channel: {}", endpointRegistry.getChannelId().getDebugString());
+                    }
+                    endpointRegistry.unsetAssociatedChannel();
+
+                    Onem2mPluginChannelFactory factory =
+                            this.pluginChannelFactoryMap.get(endpointRegistry.getProtocol());
+                    Onem2mBaseCommunicationChannel newChannel =
+                            factory.createInstance(endpointRegistry.getIpAddress(), endpointRegistry.getPort(), null,
+                                                   endpointRegistry);
+                    if (null != newChannel) {
+                        endpointRegistry.setAssociatedChannel(newChannel);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            LOG.error("Failed to handle update of default configuration: {}", e);
+        }
     }
 
     /**

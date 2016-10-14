@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.plugins.channels.coap;
 
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurationBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
@@ -28,9 +29,10 @@ public class Onem2mCoapPluginServerFactory extends Onem2mPluginChannelFactory {
     }
 
 
-    public Onem2mBaseCommunicationChannel createInstance(String ipAddress, int port, Object config,
+    public Onem2mBaseCommunicationChannel createInstance(String ipAddress, int port,
+                                                         IotdmPluginConfigurationBuilder configBuilder,
                                                          Onem2mLocalEndpointRegistry registry) {
-        if (Objects.nonNull(config)) {
+        if (Objects.nonNull(configBuilder)) {
             // configuration must be null
             return null;
         }

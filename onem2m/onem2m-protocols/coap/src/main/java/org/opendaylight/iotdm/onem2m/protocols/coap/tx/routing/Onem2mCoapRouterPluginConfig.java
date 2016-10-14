@@ -8,7 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.tx.routing;
 
-import org.opendaylight.iotdm.onem2m.protocols.common.utils.IoTdmProtocolConfigGetter;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.IotdmProtocolConfigGetter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev141210.RouterPluginConfig;
 
 /**
@@ -20,6 +20,7 @@ public class Onem2mCoapRouterPluginConfig extends RouterPluginConfig {
 
     public Onem2mCoapRouterPluginConfig(Object config) {
         super();
-        this.setSecureConnection(IoTdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
+        this.setSecureConnection(IotdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
+        this.setUsePresharedKeys(IotdmProtocolConfigGetter.getAttribute(config, "getUsePresharedKeys", Boolean.class));
     }
 }

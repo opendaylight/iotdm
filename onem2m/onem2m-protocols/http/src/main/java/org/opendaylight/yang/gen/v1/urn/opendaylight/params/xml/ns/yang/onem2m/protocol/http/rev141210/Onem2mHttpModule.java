@@ -1,6 +1,7 @@
 package org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev141210;
 
 import org.opendaylight.controller.config.api.JmxAttributeValidationException;
+import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.protocols.http.Onem2mHttpProvider;
 import org.opendaylight.iotdm.onem2m.protocols.http.Onem2mHttpSecureConnectionConfig;
 import org.opendaylight.iotdm.onem2m.protocols.http.rx.Onem2mHttpBaseIotdmPluginConfig;
@@ -39,27 +40,12 @@ public class Onem2mHttpModule extends org.opendaylight.yang.gen.v1.urn.opendayli
                                                        "Invalid port number " + serverCfg.getServerPort(),
                                                        serverConfigJmxAttribute);
 
-        if (null != serverCfg.getSecureConnection() && serverCfg.getSecureConnection()) {
-            JmxAttributeValidationException.checkNotNull(secCfg, "Secure connection enabled for server but " +
-                                                                 "parameters are not configured",
-                                                         httpsConfigJmxAttribute);
-            JmxAttributeValidationException.checkNotNull(secCfg.getKeyStoreConfig(),
-                                                         "Secure connection enabled for server but KeyStore is " +
-                                                         "not configured",
-                                                         httpsConfigJmxAttribute);
-        }
-
         if (null != notifierCfg && null != notifierCfg.getSecureConnection() && notifierCfg.getSecureConnection()) {
             JmxAttributeValidationException.checkNotNull(secCfg, "Secure connection enabled for notifier but " +
                                                                  "parameters are not configured",
                                                          httpsConfigJmxAttribute);
             JmxAttributeValidationException.checkNotNull(secCfg.getTrustStoreConfig(),
                                                          "Secure connection enabled for notifier but TrustStore is " +
-                                                         "not configured",
-                                                         httpsConfigJmxAttribute);
-            // TODO remove this for jetty 9 and upper versions
-            JmxAttributeValidationException.checkNotNull(secCfg.getKeyStoreConfig(),
-                                                         "Secure connection enabled for notifier but KeyStore is " +
                                                          "not configured",
                                                          httpsConfigJmxAttribute);
         }
@@ -70,11 +56,6 @@ public class Onem2mHttpModule extends org.opendaylight.yang.gen.v1.urn.opendayli
                                                          httpsConfigJmxAttribute);
             JmxAttributeValidationException.checkNotNull(secCfg.getTrustStoreConfig(),
                                                          "Secure connection enabled for router plugin but TrustStore" +
-                                                         "is not configured",
-                                                         httpsConfigJmxAttribute);
-            // TODO remove this for jetty 9 and upper versions
-            JmxAttributeValidationException.checkNotNull(secCfg.getKeyStoreConfig(),
-                                                         "Secure connection enabled for router plugin but KeyStore" +
                                                          "is not configured",
                                                          httpsConfigJmxAttribute);
         }
