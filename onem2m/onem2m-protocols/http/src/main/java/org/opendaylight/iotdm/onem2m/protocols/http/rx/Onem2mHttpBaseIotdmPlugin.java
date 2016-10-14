@@ -9,6 +9,7 @@
 package org.opendaylight.iotdm.onem2m.protocols.http.rx;
 
 import org.opendaylight.iotdm.onem2m.plugins.*;
+import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmHttpsConfigBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServer;
@@ -60,31 +61,42 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
             throw new IllegalArgumentException("Starting Http base server without configuration");
         }
 
+        boolean ret = false;
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
+        // Check whether HTTP or HTTPS is used
         if ((null != configuration.getSecureConnection()) && (true == configuration.getSecureConnection())) {
+            IotdmHttpsConfigBuilder cfgBuilder = IotdmPluginConfigurationBuilderFactory.getNewHttpsConfigBuilder();
+
             if (null == this.secConfig || null == this.secConfig.getKeyStoreConfig()) {
-                throw new IllegalArgumentException("No HTTPS KeyStore configuration set");
-            }
-
-            Onem2mHttpsPluginServer.HttpsServerConfiguration httpsConfig = null;
-            if (null == this.secConfig.getKeyStoreConfig().getKeyManagerPassword()) {
-                httpsConfig = new Onem2mHttpsPluginServer.HttpsServerConfiguration(
-                                this.secConfig.getKeyStoreConfig().getKeyStoreFile(),
-                                this.secConfig.getKeyStoreConfig().getKeyStorePassword());
+                // Use HTTPS server with default configuration
+                cfgBuilder.setUseDefault(true);
             } else {
-                httpsConfig = new Onem2mHttpsPluginServer.HttpsServerConfiguration(
-                                this.secConfig.getKeyStoreConfig().getKeyStoreFile(),
-                                this.secConfig.getKeyStoreConfig().getKeyStorePassword(),
-                                this.secConfig.getKeyStoreConfig().getKeyManagerPassword());
+                // Prepare custom configuration for HTTPS server
+                cfgBuilder
+                    .setKeyStoreFile(this.secConfig.getKeyStoreConfig().getKeyStoreFile())
+                    .setKeyStorePassword(this.secConfig.getKeyStoreConfig().getKeyStorePassword())
+                    .setKeyManagerPassword(this.secConfig.getKeyStoreConfig().getKeyManagerPassword());
             }
-            mgr.registerPluginHttps(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive,
-                                    null, httpsConfig);
-        } else {
-            mgr.registerPluginHttp(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
 
-            LOG.info("Started HTTP Base IoTDM plugin at port: {}, security level: {}",
-                     configuration.getServerPort(), configuration.getServerSecurityLevel());
+            cfgBuilder.verify();
+            ret = mgr.registerPluginHttps(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive,
+                                          null, cfgBuilder);
+            if (ret) {
+                LOG.info("Started HTTPS Base IoTDM plugin at port: {}, security level: {}",
+                         configuration.getServerPort(), configuration.getServerSecurityLevel());
+            } else {
+                LOG.error("Failed to start HTTPS Base IoTDM plugin");
+            }
+        } else {
+            ret = mgr.registerPluginHttp(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
+
+            if (ret) {
+                LOG.info("Started HTTP Base IoTDM plugin at port: {}, security level: {}",
+                         configuration.getServerPort(), configuration.getServerSecurityLevel());
+            } else {
+                LOG.error("Failed to start HTTP Base IoTDM plugin");
+            }
         }
 
         this.currentConfig = configuration;

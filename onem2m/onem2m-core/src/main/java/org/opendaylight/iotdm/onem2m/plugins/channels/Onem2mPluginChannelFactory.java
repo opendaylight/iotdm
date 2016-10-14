@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.plugins.channels;
 
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurationBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 
 import javax.annotation.Nonnull;
@@ -19,9 +20,9 @@ import javax.annotation.Nonnull;
  *  - protocol name
  *  - channel type
  *  - used transport protocol type
- * @param <Tconfig>
+ * @param <Tcb> Type of the configuration builder used to builde configuration.
  */
-public abstract class Onem2mPluginChannelFactory<Tconfig> {
+public abstract class Onem2mPluginChannelFactory<Tcb extends IotdmPluginConfigurationBuilder> {
     protected final String protocol;
     protected final Onem2mBaseCommunicationChannel.CommunicationChannelType channelType;
     protected final Onem2mBaseCommunicationChannel.TransportProtocol transportProtocol;
@@ -41,12 +42,15 @@ public abstract class Onem2mPluginChannelFactory<Tconfig> {
      *                  remote interface for CLIENT channel type.
      *                  All interfaces are used for SERVER if 0.0.0.0 is passed.
      * @param port Port number to be used. Local port for SERVER, remote for CLIENT.
-     * @param config Configuration for the new CommunicationChannel instance if needed.
+     * @param configBuilder Configuration builder with pre-set values if needed. Build method of the
+     *                      builder will be called and new configuration will be used to configure new
+     *                      instance of CommunicationChannel.
      * @param registry Registry of local endpoints and registered plugins maintained by PluginManager.
      *                 Is used by CommunicationChannel to find the right plugin for handling of the request.
      * @return The new instance of the CommunicationChannel.
      */
-    public abstract Onem2mBaseCommunicationChannel createInstance(String ipAddress, int port, Object config,
+    public abstract Onem2mBaseCommunicationChannel createInstance(String ipAddress, int port,
+                                                                  Tcb configBuilder,
                                                                   Onem2mLocalEndpointRegistry registry);
 
     /**

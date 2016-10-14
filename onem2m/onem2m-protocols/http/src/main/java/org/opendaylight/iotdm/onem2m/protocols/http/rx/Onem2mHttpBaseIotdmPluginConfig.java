@@ -8,7 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http.rx;
 
-import org.opendaylight.iotdm.onem2m.protocols.common.utils.IoTdmProtocolConfigGetter;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.IotdmProtocolConfigGetter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev141210.ServerConfig;
 
@@ -22,9 +22,9 @@ public class Onem2mHttpBaseIotdmPluginConfig extends ServerConfig {
 
     public Onem2mHttpBaseIotdmPluginConfig(Object config) {
         super();
-        this.setSecureConnection(IoTdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
-        this.setServerPort(IoTdmProtocolConfigGetter.getAttribute(config, "getServerPort", Integer.class));
-        this.setServerSecurityLevel(IoTdmProtocolConfigGetter.getAttribute(config, "getServerSecurityLevel",
+        this.setSecureConnection(IotdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
+        this.setServerPort(IotdmProtocolConfigGetter.getAttribute(config, "getServerPort", Integer.class));
+        this.setServerSecurityLevel(IotdmProtocolConfigGetter.getAttribute(config, "getServerSecurityLevel",
                                                                            SecurityLevel.class));
     }
 

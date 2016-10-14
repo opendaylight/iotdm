@@ -31,11 +31,14 @@ import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultCoapsConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.SecurityConfig;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -48,19 +51,24 @@ import javax.annotation.Nonnull;
 public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBean, BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoreProvider.class);
+    private Onem2mStats stats;
+    private Monitor crudMonitor;
+
     private BindingAwareBroker.RpcRegistration<Onem2mService> rpcReg;
     private DataBroker dataBroker;
     private TransactionManager transactionManager = null;
-    private Onem2mStats stats;
+
     private Onem2mDb db;
-    private SecurityConfig securityConfig;
+    private ResourceTreeWriter twc;
+    private ResourceTreeReader trc;
+
     private static NotificationPublishService notifierService;
-    private Monitor crudMonitor;
     private static Onem2mRouterService routerService;
     private static final Onem2mCoreProvider coreProvider = new Onem2mCoreProvider();
 
-    private ResourceTreeWriter twc;
-    private ResourceTreeReader trc;
+    private SecurityConfig securityConfig = null;
+    private DefaultHttpsConfig defaultHttpsConfig = null;
+    private DefaultCoapsConfig defaultCoapsConfig = null;
 
     public static Onem2mCoreProvider getInstance() {
         return coreProvider;
@@ -68,6 +76,26 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     public void setSecurityConfig(SecurityConfig securityConfig) {
         this.securityConfig = securityConfig;
+    }
+
+    public SecurityConfig getSecurityConfig() {
+        return this.securityConfig;
+    }
+
+    public void setDefaultHttpsConfig(DefaultHttpsConfig keyStoreConfig) {
+        this.defaultHttpsConfig = keyStoreConfig;
+    }
+
+    public DefaultHttpsConfig getDefaultHttpsConfig() {
+        return this.defaultHttpsConfig;
+    }
+
+    public DefaultCoapsConfig getDefaultCoapsConfig() {
+        return defaultCoapsConfig;
+    }
+
+    public void setDefaultCoapsConfig(DefaultCoapsConfig defaultCoapsConfig) {
+        this.defaultCoapsConfig = defaultCoapsConfig;
     }
 
     public static NotificationPublishService getNotifier() {
@@ -100,6 +128,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);
+        Onem2mPluginManager.getInstance().handleDefaultConfigUpdate();
         LOG.info("Session Initiated");
     }
 

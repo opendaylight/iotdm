@@ -6,6 +6,7 @@ module onem2m-protocol-coap {
     import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
+    import onem2m-core { prefix onem2m-core; revision-date "2014-12-10"; }
 
     description
         "Service definition for onem2m project";
@@ -20,10 +21,44 @@ module onem2m-protocol-coap {
         config:java-name-prefix Onem2mCoap;
     }
 
-    grouping coap-protocol-sender-config {
+    grouping coap-channel-common-config {
         leaf secure-connection {
             mandatory true;
             type boolean;
+        }
+        leaf use-preshared-keys {
+            type boolean;
+        }
+    }
+
+    grouping coap-security-config {
+        container dtls-certificates-config {
+            container key-store-config {
+                uses onem2m-core:coaps-keystore-config;
+            }
+            container trust-store-config {
+                leaf trust-store-file {
+                    mandatory true;
+                    type string;
+                }
+                leaf trust-store-password {
+                    mandatory true;
+                    type string;
+                }
+                list trusted-certificates {
+                    leaf certificate-name {
+                        type string;
+                    }
+                }
+            }
+        }
+
+        container dtls-psk-local-cse-base {
+            uses onem2m-core:coaps-psk-config;
+        }
+
+        container dtls-psk-remote-cse {
+            uses onem2m-core:coaps-psk-config;
         }
     }
 
@@ -39,23 +74,28 @@ module onem2m-protocol-coap {
                 }
             }
             container server-config {
-                    leaf server-port {
-                        mandatory true;
-                        type uint16;
-                    }
+                leaf server-port {
+                    mandatory true;
+                    type uint16;
+                }
+                leaf server-security-level {
+                    mandatory true;
+                    type onem2m:security-level;
+                }
 
-                    leaf server-security-level {
-                        mandatory true;
-                        type onem2m:security-level;
-                    }
+                uses coap-channel-common-config;
             }
 
             container notifier-plugin-config {
-                uses coap-protocol-sender-config;
+                uses coap-channel-common-config;
             }
 
             container router-plugin-config {
-                uses coap-protocol-sender-config;
+                uses coap-channel-common-config;
+            }
+
+            container coaps-config {
+                uses coap-security-config;
             }
         }
     }

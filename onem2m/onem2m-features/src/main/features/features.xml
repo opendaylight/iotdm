@@ -37,6 +37,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <bundle>wrap:mvn:joda-time/joda-time/{{VERSION}}</bundle>
         <feature version='${pax.web.version}'>pax-http</feature>
         <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-core.xml"> mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}/xml/config
         </configfile>
     </feature>

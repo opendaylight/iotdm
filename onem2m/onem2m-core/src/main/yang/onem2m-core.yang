@@ -20,6 +20,47 @@ module onem2m-core {
         config:java-name-prefix Onem2mCore;
     }
 
+    grouping java-key-store-config {
+        leaf key-store-file {
+            description "Path to the Java KeyStore file.";
+            mandatory true;
+            type string;
+        }
+
+        leaf key-store-password {
+            description "Password to access the KeyStore file.";
+            mandatory true;
+            type string;
+        }
+
+        leaf key-manager-password {
+            description "Password for key manager (needed if different from the key-store-password).";
+            mandatory false;
+            type string;
+        }
+    }
+
+    grouping coaps-keystore-config {
+        uses java-key-store-config;
+
+        leaf key-alias {
+            mandatory true;
+            type string;
+        }
+    }
+
+    grouping coaps-psk-config {
+        list cse-psk {
+            key cse-id;
+            leaf cse-id {
+                type string;
+            }
+            leaf psk {
+                type string;
+            }
+        }
+    }
+
     augment "/config:modules/config:module/config:configuration" {
         case onem2m-core {
             when "/config:modules/config:module/config:type = 'onem2m-core'";
@@ -39,11 +80,23 @@ module onem2m-core {
                     }
                 }
             }
+
             container security-config {
                 leaf core-security-level {
                     mandatory true;
                     type onem2m:security-level;
                 }
+            }
+
+            container default-https-config {
+                description "Default configuration of Java KeyStore file which is used for HTTPS connections by default.";
+                uses java-key-store-config;
+            }
+
+            container default-coaps-config {
+                description "Default configuration of Java KeyStore file and PresharedKeys used for CoAPS communication by default.";
+                uses coaps-keystore-config;
+                uses coaps-psk-config;
             }
         }
     }

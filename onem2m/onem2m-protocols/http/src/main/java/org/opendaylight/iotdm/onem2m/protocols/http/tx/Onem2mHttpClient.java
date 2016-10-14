@@ -11,9 +11,9 @@ package org.opendaylight.iotdm.onem2m.protocols.http.tx;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxChannel;
-import org.opendaylight.iotdm.onem2m.protocols.http.Onem2mHttpSecureConnectionConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +58,15 @@ public abstract class Onem2mHttpClient implements Onem2mProtocolTxChannel<Onem2m
                     } else {
                         sslContextFactory.setKeyManagerPassword(
                                 configuration.getSecureConnectionConfig().getKeyStoreConfig().getKeyStorePassword());
+                    }
+                } else if (null != Onem2mCoreProvider.getInstance().getDefaultHttpsConfig()) {
+                    DefaultHttpsConfig keyStore = Onem2mCoreProvider.getInstance().getDefaultHttpsConfig();
+                    sslContextFactory.setKeyStorePath(keyStore.getKeyStoreFile());
+                    sslContextFactory.setKeyStorePassword(keyStore.getKeyStorePassword());
+                    if (null != keyStore.getKeyManagerPassword()) {
+                        sslContextFactory.setKeyManagerPassword(keyStore.getKeyManagerPassword());
+                    } else {
+                        sslContextFactory.setKeyManagerPassword(keyStore.getKeyStorePassword());
                     }
                 } else {
                     LOG.error("Keystore not configured, required by jetty 8");

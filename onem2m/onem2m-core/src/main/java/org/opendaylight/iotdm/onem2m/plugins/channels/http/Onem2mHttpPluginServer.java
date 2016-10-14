@@ -33,7 +33,7 @@ import java.util.EnumSet;
 public class Onem2mHttpPluginServer extends Onem2mHttpBaseChannel {
     public Onem2mHttpPluginServer(String ipAddress, int port,
                                  Onem2mLocalEndpointRegistry registry) {
-        super(ipAddress, port, registry, null);
+        super(ipAddress, port, registry, null, false);
     }
 }
 
@@ -50,8 +50,8 @@ class Onem2mHttpBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
 
     public Onem2mHttpBaseChannel(String ipAddress, int port,
                                  Onem2mLocalEndpointRegistry registry,
-                                 Tconfig config) {
-        super(ipAddress, port, registry, config);
+                                 Tconfig config, boolean usesDefaultCfg) {
+        super(ipAddress, port, registry, config, usesDefaultCfg);
     }
 
     protected void prepareServer() {
@@ -73,14 +73,15 @@ class Onem2mHttpBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
         context.addServlet(new ServletHolder(onem2mHttpBaseHandler), "/*");
     }
 
-    protected void startServer() {
+    protected boolean startServer() {
         try {
             httpServer.start();
             LOG.info("startHttpServer: on port: {}", port);
-
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             LOG.info("Exception: {}", e.toString());
+            return false;
         }
     }
 
@@ -92,7 +93,11 @@ class Onem2mHttpBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
         this.prepareServer();
 
         // Start the prepared server
-        this.startServer();
+        if (this.startServer()) {
+            this.setState(ChannelState.RUNNING);
+        } else {
+            this.setState(ChannelState.INITFAILED);
+        }
         return true;
     }
 
