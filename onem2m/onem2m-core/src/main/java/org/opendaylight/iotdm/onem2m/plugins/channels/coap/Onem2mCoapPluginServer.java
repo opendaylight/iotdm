@@ -14,31 +14,59 @@ import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.network.CoapEndpoint;
-import org.eclipse.californium.core.network.EndpointManager;
 import org.eclipse.californium.core.network.Exchange;
+import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.eclipse.californium.core.server.resources.CoapExchange;
 import org.eclipse.californium.core.server.resources.Resource;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 
 import static java.util.Objects.nonNull;
 
 /**
  * Implementation of server specific for COAP protocol. No configuration needed.
  */
-class Onem2mCoapPluginServer extends Onem2mCoapBaseChannel {
+public class Onem2mCoapPluginServer extends Onem2mCoapBaseChannel {
+    private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapPluginServer.class);
     Onem2mCoapPluginServer(String ipAddress, int port,
                            Onem2mLocalEndpointRegistry registry) {
-        super(ipAddress, port, registry, null);
+        super(ipAddress, port, registry, null, false);
+    }
+
+    @Override
+    public boolean init() {
+        onem2mCoapBaseHandler = new Onem2mCoapBaseHandler(port);
+        onem2mCoapBaseHandler.addEndpoints();
+
+        try {
+            onem2mCoapBaseHandler.start();
+            this.setState(ChannelState.RUNNING);
+            LOG.info("Started CoAP Server: on port: {}", port);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error("Failed to start CoAP server: {}", e.toString());
+            this.setState(ChannelState.INITFAILED);
+        }
+        return true;
+    }
+
+    @Override
+    public void close() {
+        if (null == onem2mCoapBaseHandler) {
+            return;
+        }
+        try {
+            onem2mCoapBaseHandler.stop();
+            onem2mCoapBaseHandler.destroy();
+            LOG.info("Stopped CoAP Server: on port: {}", port);
+        } catch (Exception e) {
+            LOG.error("Failed to stop CoAP server: {}", e.toString());
+        }
     }
 }
 
@@ -46,40 +74,14 @@ class Onem2mCoapPluginServer extends Onem2mCoapBaseChannel {
  * Implementation of generic class for COAP and COAPS servers.
  * @param <Tconfig> Type of the configuration of server.
  */
-class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tconfig> {
-    private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapPluginServer.class);
-    private Onem2mCoapBaseHandler onem2mCoapBaseHandler;
+abstract class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tconfig> {
+    private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapBaseChannel.class);
+    protected Onem2mCoapBaseHandler onem2mCoapBaseHandler = null;
 
     Onem2mCoapBaseChannel(String ipAddress, int port,
                           Onem2mLocalEndpointRegistry registry,
-                          Tconfig config) {
-        super(ipAddress, port, registry, config);
-    }
-
-    @Override
-    public boolean init() {
-        onem2mCoapBaseHandler = new Onem2mCoapBaseHandler(port);
-        onem2mCoapBaseHandler.addEndpoints();
-        try {
-            onem2mCoapBaseHandler.start();
-            LOG.info("startCoapServer: on port: {}", port);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
-        }
-        return true;
-    }
-
-    @Override
-    public void close() {
-        try {
-            onem2mCoapBaseHandler.stop();
-            LOG.info("stopCoapServer: on port: {}", port);
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOG.info("Exception: {}", e.toString());
-        }
+                          Tconfig config, boolean usesDefaultCfg) {
+        super(ipAddress, port, registry, config, usesDefaultCfg);
     }
 
     @Override
@@ -90,38 +92,46 @@ class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
     /**
      * Implementation of COAP server for the base COAP channel
      */
-    private class Onem2mCoapBaseHandler extends CoapServer {
-        private final Logger LOG = LoggerFactory.getLogger(Onem2mCoapBaseHandler.class);
-        int port;
+    protected class Onem2mCoapBaseHandler extends CoapServer {
 
-        Onem2mCoapBaseHandler(int port){
+        protected Onem2mCoapBaseHandler() {
+            // Do not call constructor of superclass here !!!
+            // Otherwise DTLS will not work in subclasses implementing CoAPS !!!
+        }
+
+        public Onem2mCoapBaseHandler(int port){
             super(port);
-            this.port = port;
         }
 
         @Override
         public Resource createRoot() {
-            return new RootResource(this);
+            return new RootResource();// (this);
         }
 
-        void addEndpoints() {
-            for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
-                // only binds to IPv4 addresses and localhost
-                if (addr instanceof Inet4Address || addr.isLoopbackAddress()) {
-                    System.out.println("addr: "+addr.toString());
-                    InetSocketAddress bindToAddress = new InetSocketAddress(addr, port);
-                    System.out.println("bindToAddress: "+bindToAddress.toString());
-                    addEndpoint(new CoapEndpoint(bindToAddress));
-                }
+        protected void addEndpoints() {
+            addEndpoint(new CoapEndpoint(NetworkConfig.getStandard()));
+        }
+
+//        void addEndpoints() {
+//            for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
+//                // only binds to IPv4 addresses and localhost
+//                if (addr instanceof Inet4Address || addr.isLoopbackAddress()) {
+//                    LOG.info("CoAP server: addr: "+addr.toString());
+//                    InetSocketAddress bindToAddress = new InetSocketAddress(addr, port);
+//                    LOG.info("CoAP server: bindToAddress: "+bindToAddress.toString());
+//                    addEndpoint(new CoapEndpoint(bindToAddress));
+//                }
+//            }
+//        }
+
+        protected class RootResource extends CoapResource {
+            protected RootResource(String serverMessage) {
+                super(serverMessage);
             }
-        }
 
-        private class RootResource extends CoapResource {
-            Onem2mCoapBaseHandler coapServer;
-            RootResource(Onem2mCoapBaseHandler cServer)
+            public RootResource()
             {
                 super("OpenDaylight OneM2M CoAP Server");
-                this.coapServer = cServer;
             }
 
             @Override
@@ -141,7 +151,7 @@ class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
                 IotdmPluginCoapRequest request = new IotdmPluginCoapRequest(exchange);
                 IotdmPluginCoapResponse response = new IotdmPluginCoapResponse();
 
-                LOG.info("CoapServer - Handle Request: on port: {}", options.getUriPort());
+                LOG.trace("CoapServer - Handle Request: on port: {}", options.getUriPort());
 
                 // take the entire payload text and put it in the CONTENT field; it is the representation of the resource
                 String cn = coapExchange.getRequestText().trim();
@@ -160,8 +170,6 @@ class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationChannel<Tcon
                     }
                     request.setPayLoad(cn);
                 }
-
-                Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
                 IotdmPlugin plg = pluginRegistry.getPlugin(options.getUriPathString());
                 if (nonNull(plg)) {

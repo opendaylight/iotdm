@@ -36,13 +36,19 @@ public class Onem2mCoapProvider implements BindingAwareProvider, AutoCloseable {
     private Onem2mCoapBaseIotdmPlugin onem2mCoapBaseIotdmPlugin = null;
     protected Onem2mCoapNotifierPluginConfig notifierConfig = null;
     protected Onem2mCoapRouterPluginConfig routerConfig = null;
+    protected Onem2mCoapSecureConnectionConfig secureConnectionConfig = null;
     private Onem2mCoapNotifierPlugin notifierPlugin;
     private Onem2mCoapRouterPlugin routerPlugin;
 
-    public Onem2mCoapProvider(Onem2mCoapBaseIotdmPluginConfig serverConfig, Onem2mCoapNotifierPluginConfig notifierConfig, Onem2mCoapRouterPluginConfig routerConfig) {
+
+    public Onem2mCoapProvider(Onem2mCoapBaseIotdmPluginConfig serverConfig,
+                              Onem2mCoapNotifierPluginConfig notifierConfig,
+                              Onem2mCoapRouterPluginConfig routerConfig,
+                              Onem2mCoapSecureConnectionConfig secureConnectionConfig) {
         this.serverConfig = serverConfig;
         this.notifierConfig = notifierConfig;
         this.routerConfig = routerConfig;
+        this.secureConnectionConfig = secureConnectionConfig;
     }
 
     @Override
@@ -51,19 +57,26 @@ public class Onem2mCoapProvider implements BindingAwareProvider, AutoCloseable {
 
         try {
             onem2mCoapBaseIotdmPlugin = new Onem2mCoapBaseIotdmPlugin(new Onem2mProtocolRxHandler(),
-                    new Onem2mCoapRxRequestFactory(),
-                    onem2mService);
+                                                                      new Onem2mCoapRxRequestFactory(),
+                                                                      onem2mService,
+                                                                      this.secureConnectionConfig);
             onem2mCoapBaseIotdmPlugin.start(this.serverConfig);
         } catch (Exception e) {
             LOG.error("Failed to start COAP server: {}", e);
         }
 
         try {
-//            boolean secureConnection = false;
-//            if (null != this.routerConfig && null != this.routerConfig.getSecureConnection()) {
-//                secureConnection = this.routerConfig.getSecureConnection();
-//            }
-            Onem2mCoapClientConfiguration cfg = new Onem2mCoapClientConfiguration(); //TODO: empty configuration yet
+            boolean secureConnection = false;
+            boolean usePsk = false;
+            if (null != this.routerConfig && null != this.routerConfig.getSecureConnection()) {
+                secureConnection = this.routerConfig.getSecureConnection();
+                if (null != this.routerConfig.getUsePresharedKeys()) {
+                    usePsk = this.routerConfig.getUsePresharedKeys();
+                }
+            }
+
+            Onem2mCoapClientConfiguration cfg =
+                    new Onem2mCoapClientConfiguration(secureConnection, usePsk, secureConnectionConfig);
 
             routerPlugin = new Onem2mCoapRouterPlugin(new Onem2mProtocolTxHandler(),
                                                       new Onem2mCoapRouterRequestFactory(false));
@@ -74,11 +87,16 @@ public class Onem2mCoapProvider implements BindingAwareProvider, AutoCloseable {
         }
 
         try {
-//            boolean secureConnection = false;
-//            if (null != this.notifierConfig && null != this.notifierConfig.getSecureConnection()) {
-//                secureConnection = this.notifierConfig.getSecureConnection();
-//            }
-            Onem2mCoapClientConfiguration cfg = new Onem2mCoapClientConfiguration(); //TODO: empty configuration yet
+            boolean secureConnection = false;
+            boolean usePsk = false;
+            if (null != this.notifierConfig && null != this.notifierConfig.getSecureConnection()) {
+                secureConnection = this.notifierConfig.getSecureConnection();
+                if (null != this.routerConfig.getUsePresharedKeys()) {
+                    usePsk = this.routerConfig.getUsePresharedKeys();
+                }
+            }
+            Onem2mCoapClientConfiguration cfg =
+                    new Onem2mCoapClientConfiguration(secureConnection, usePsk, secureConnectionConfig);
             notifierPlugin = new Onem2mCoapNotifierPlugin(new Onem2mProtocolTxHandler(),
                                                           new Onem2mCoapNotifierRequestFactory(false));
             notifierPlugin.start(cfg);

@@ -8,11 +8,19 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http;
 
-import org.opendaylight.iotdm.onem2m.protocols.common.utils.IoTdmProtocolConfigGetter;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.IotdmProtocolConfigGetter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev141210.HttpsConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev141210.KeyStoreConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev141210.TrustStoreConfig;
 
+/**
+ * Classes uses Java reflexions to allow conversions from
+ * objects implementing the same attributes and related getter methods.
+ * Can be used by modules extending the base HTTP provider and using
+ * own configuration classes.
+ * (This is useful because the configuration class is generated from yang model
+ * but it doesn't implement any common interface.)
+ */
 public class Onem2mHttpSecureConnectionConfig extends HttpsConfig {
     public Onem2mHttpSecureConnectionConfig(Object config) {
         super();
@@ -21,23 +29,23 @@ public class Onem2mHttpSecureConnectionConfig extends HttpsConfig {
         Object kConfig = null;
         Object tConfig = null;
 
-        kConfig = IoTdmProtocolConfigGetter.getAttribute(config, "getKeyStoreConfig", Object.class);
+        kConfig = IotdmProtocolConfigGetter.getAttribute(config, "getKeyStoreConfig", Object.class);
         if (null != kConfig) {
             keystore.setKeyStoreFile(
-                    IoTdmProtocolConfigGetter.getAttribute(kConfig, "getKeyStoreFile", String.class));
+                    IotdmProtocolConfigGetter.getAttribute(kConfig, "getKeyStoreFile", String.class));
             keystore.setKeyStorePassword(
-                    IoTdmProtocolConfigGetter.getAttribute(kConfig, "getKeyStorePassword", String.class));
+                    IotdmProtocolConfigGetter.getAttribute(kConfig, "getKeyStorePassword", String.class));
             keystore.setKeyManagerPassword(
-                    IoTdmProtocolConfigGetter.getAttribute(kConfig, "getKeyManagerPassword", String.class));
+                    IotdmProtocolConfigGetter.getAttribute(kConfig, "getKeyManagerPassword", String.class));
             this.setKeyStoreConfig(keystore);
         }
 
-        tConfig = IoTdmProtocolConfigGetter.getAttribute(config, "getTrustStoreConfig", Object.class);
+        tConfig = IotdmProtocolConfigGetter.getAttribute(config, "getTrustStoreConfig", Object.class);
         if (null != tConfig) {
             truststore.setTrustStoreFile(
-                    IoTdmProtocolConfigGetter.getAttribute(tConfig, "getTrustStoreFile", String.class));
+                    IotdmProtocolConfigGetter.getAttribute(tConfig, "getTrustStoreFile", String.class));
             truststore.setTrustStorePassword(
-                    IoTdmProtocolConfigGetter.getAttribute(tConfig, "getTrustStorePassword", String.class));
+                    IotdmProtocolConfigGetter.getAttribute(tConfig, "getTrustStorePassword", String.class));
             this.setTrustStoreConfig(truststore);
         }
     }

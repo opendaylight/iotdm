@@ -13,6 +13,7 @@ import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Implementation of abstract registry which registers plugins for
@@ -24,7 +25,7 @@ import javax.annotation.Nonnull;
  */
 public abstract class Onem2mLocalEndpointRegistry {
     private final Onem2mPluginManager.ChannelIdentifier channelId;
-    private Onem2mBaseCommunicationChannel associatedChannel = null;
+    private AtomicReference<Onem2mBaseCommunicationChannel> associatedChannel = new AtomicReference<>(null);
 
     /**
      * Constructor sets channelId which describes CommunicationChannel to which the
@@ -41,20 +42,23 @@ public abstract class Onem2mLocalEndpointRegistry {
      * @param channel The instance of associated CommunicationChannel
      */
     public void setAssociatedChannel(@Nonnull final Onem2mBaseCommunicationChannel channel) {
-        if (null != this.associatedChannel) {
+        if (null != this.associatedChannel.get()) {
             throw new RuntimeException("Attempt to associate multiple channels with one endpoint registry");
         }
-        this.associatedChannel = channel;
+        this.associatedChannel.set(channel);
+    }
+
+    public void unsetAssociatedChannel() {
+        this.associatedChannel.set(null);
     }
 
     // Getter methods
     public String getProtocol() { return this.channelId.getProtocolName(); }
     public String getIpAddress() { return this.channelId.getIpAddress(); }
     public int getPort() { return this.channelId.getPort(); }
-    public Onem2mBaseCommunicationChannel getAssociatedChannel() { return this.associatedChannel; }
+    public Onem2mBaseCommunicationChannel getAssociatedChannel() { return this.associatedChannel.get(); }
     public Onem2mPluginManager.Mode getMode() { return this.channelId.getMode(); }
     public Onem2mPluginManager.ChannelIdentifier getChannelId() { return this.channelId; }
-
 
     /* Abstract methods to be implemented */
 

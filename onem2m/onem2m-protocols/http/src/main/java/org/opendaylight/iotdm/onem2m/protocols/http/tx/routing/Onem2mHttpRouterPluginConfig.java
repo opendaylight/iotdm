@@ -8,7 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http.tx.routing;
 
-import org.opendaylight.iotdm.onem2m.protocols.common.utils.IoTdmProtocolConfigGetter;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.IotdmProtocolConfigGetter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev141210.RouterPluginConfig;
 
 /**
@@ -20,6 +20,6 @@ public class Onem2mHttpRouterPluginConfig extends RouterPluginConfig {
 
     public Onem2mHttpRouterPluginConfig(Object config) {
         super();
-        this.setSecureConnection(IoTdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
+        this.setSecureConnection(IotdmProtocolConfigGetter.getAttribute(config, "getSecureConnection", Boolean.class));
     }
 }
