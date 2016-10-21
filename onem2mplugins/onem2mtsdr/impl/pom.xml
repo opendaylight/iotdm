@@ -12,30 +12,30 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>config-parent</artifactId>
-    <version>0.4.4-SNAPSHOT</version>
+    <version>0.4.5-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2mtsdr-impl</artifactId>
-  <version>0.1.4-SNAPSHOT</version>
+  <version>0.1.5-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>onem2m-core</artifactId>
-      <version>0.1.4-SNAPSHOT</version>
+      <version>0.1.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.tsdr</groupId>
       <artifactId>tsdr-collector-spi</artifactId>
-      <version>1.1.4-SNAPSHOT</version>
+      <version>1.1.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.tsdr</groupId>
       <artifactId>tsdr-persistence-spi</artifactId>
-      <version>1.1.4-SNAPSHOT</version>
+      <version>1.1.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
