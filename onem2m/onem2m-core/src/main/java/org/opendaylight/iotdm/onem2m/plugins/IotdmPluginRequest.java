@@ -58,4 +58,8 @@ public interface IotdmPluginRequest<TOriginalRequest> {
      * @return Received request as object of the protocol specific class.
      */
     TOriginalRequest getOriginalRequest();
+
+    void setPayLoad(String s);
+
+    void setContentType(String contentType);
 }

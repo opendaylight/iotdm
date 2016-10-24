@@ -15,10 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Implementation of class wrapping original HTTP request.
@@ -29,6 +26,7 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
     protected final HttpServletRequest httpRequest; // The original HTTP request
     protected HashMap<String, String[]> headers = null; // HashMap with header names as keys and header values as values
     protected String payload = null; // Payload of the received request
+    private String contentType;
 
     /**
      * Constructor just sets orignal request. Headers and payload are not prepared
@@ -119,7 +117,10 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
 
     @Override
     public String getContentType() {
-        return this.httpRequest.getContentType();
+        if(Objects.isNull(contentType)) {
+            contentType = httpRequest.getContentType();
+        }
+        return contentType;
     }
 
     private void getAndStoreAllHeaders() {
@@ -165,5 +166,15 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
     @Override
     public HttpServletRequest getOriginalRequest() {
         return httpRequest;
+    }
+
+    @Override
+    public void setPayLoad(String s) {
+        this.payload = s;
+    }
+
+    @Override
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 }

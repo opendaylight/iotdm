@@ -19,6 +19,7 @@ public class IotdmPluginCoapRequest implements IotdmPluginRequest<Exchange> {
     private final Exchange exchange;
     private Request coapRequest = null;
     private String payload = null;
+    private String contentType;
 
     IotdmPluginCoapRequest(@Nonnull final Exchange exchange) {
         this.exchange = exchange;
@@ -66,13 +67,22 @@ public class IotdmPluginCoapRequest implements IotdmPluginRequest<Exchange> {
         return payload;
     }
 
-    void setPayLoad(String payload) {
+    @Override
+    public void setPayLoad(String payload) {
         this.payload = payload;
     }
 
     @Override
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    @Override
     public String getContentType() {
-        return Onem2m.CoapContentFormat.map2String.get(coapRequest.getOptions().getContentFormat());
+        if(Objects.isNull(contentType)) {
+            contentType = Onem2m.CoapContentFormat.map2String.get(coapRequest.getOptions().getContentFormat());
+        }
+        return contentType;
     }
 
     @Override
