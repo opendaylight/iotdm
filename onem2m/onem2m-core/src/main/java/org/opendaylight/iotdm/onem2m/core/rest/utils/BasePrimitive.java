@@ -8,10 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitiveBuilder;
 import org.slf4j.Logger;
@@ -104,12 +102,13 @@ public class BasePrimitive {
         if (primitiveMap.containsKey(primitiveName)) {
             primitiveMap.remove(primitiveName);
 
-            Onem2mPrimitive primitive = onem2mPrimitivesList.stream()
+            Optional<Onem2mPrimitive> primitive = onem2mPrimitivesList.stream()
                                                 .filter(p -> p.getName().equals(primitiveName))
-                                                .findFirst()
-                                                .get();
+                                                .findFirst();
 
-            onem2mPrimitivesList.remove(primitive);
+            if(primitive.isPresent()) {
+                onem2mPrimitivesList.remove(primitive.get());
+            }
             return true;
         }
         return false;

@@ -71,13 +71,28 @@ public class IotdmPluginWebsocketRequest implements IotdmPluginRequest<String> {
     }
 
     @Override
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    @Override
     public String getOriginalRequest() {
         return request;
     }
 
+    /**
+     * not implemented for websockets
+     * @param payload payload
+     */
+    @Override
+    public void setPayLoad(String payload) {}
+
+    /**
+     * not implemented for websockets - there are no special websocket methods
+     * @return null
+     */
     @Override
     public String getMethod() {
-        //there are no special websocket methods
         return null;
     }
 }

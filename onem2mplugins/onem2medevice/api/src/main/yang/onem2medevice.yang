@@ -1,0 +1,9 @@
+module onem2medevice {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2medevice";
+    prefix "onem2medevice";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2medevice model";
+    }
+}
