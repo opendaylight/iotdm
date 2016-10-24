@@ -45,6 +45,8 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin {
         this.onem2mService = onem2mService;
         onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+
+        //use suitable method for required plugin (https, coap, websocket ...)
         mgr.registerPluginHttp(this, 8283, Onem2mPluginManager.Mode.Exclusive, null);
     }
 

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Optional;
 
 /**
  * Implements complete handling logic for HTTP RxRequests.
@@ -64,15 +65,6 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         return true;
     }
 
-    public static String resolveContentFormat(String contentType) {
-        if (contentType.contains("json")) {
-            return Onem2m.ContentFormat.JSON;
-        } else if (contentType.contains("xml")) {
-            return Onem2m.ContentFormat.XML;
-        }
-        return null;
-    }
-
     private String parseContentTypeForResourceType(String contentType) {
 
         String split[] = contentType.trim().split(";");
@@ -93,10 +85,10 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         String contentType = httpRequest.getContentType();
         if (contentType == null) contentType = "json";
         contentType = contentType.toLowerCase();
-        String contentFormat = resolveContentFormat(contentType);
+        Optional<String> contentFormat = Onem2m.resolveContentFormat(contentType);
 
-        if (null != contentFormat) {
-            clientBuilder.setContentFormat(contentFormat);
+        if (contentFormat.isPresent()) {
+            clientBuilder.setContentFormat(contentFormat.get());
         } else {
             IotdmPluginHttpResponse.prepareErrorResponse(
                     httpResponse, "Unsupported media type: " + contentType, HttpServletResponse.SC_NOT_ACCEPTABLE);

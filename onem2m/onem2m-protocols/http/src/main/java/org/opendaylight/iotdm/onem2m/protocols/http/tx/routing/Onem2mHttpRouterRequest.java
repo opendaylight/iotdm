@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.Optional;
 
 public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpRouterRequest.class);
@@ -288,16 +289,11 @@ public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
 
             String contentType = fields.getStringField("Content-Type");
             if (contentType != null) {
-                value = contentType.toLowerCase();
-                value = Onem2mHttpRxRequest.resolveContentFormat(value);
-            }
-
-            if (null != value) {
-                response.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, value);
-            }
-
-            if (contentType != null) {
                 response.setPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE, contentType);
+                Optional<String> maybeResolvedFormat = Onem2m.resolveContentFormat(contentType.toLowerCase());
+                if(maybeResolvedFormat.isPresent()) {
+                    response.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, maybeResolvedFormat.get());
+                }
             }
 
             value = fields.getStringField("Content-Location");
