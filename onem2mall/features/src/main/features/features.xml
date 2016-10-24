@@ -19,6 +19,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.iotdm/onem2msimpleadapter-features/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.iotdm/onem2mtsdr-features/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.iotdm/onem2mexample-features/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.iotdm/onem2moic-features/{{VERSION}}/xml/features</repository>
 
   <feature name='odl-onem2mall-api' version='${project.version}' description='OpenDaylight :: onem2mall :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
@@ -39,6 +40,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${onem2mexample.version}'>odl-onem2mexample</feature>
     <feature version='${onem2msimpleadapter.version}'>odl-onem2msimpleadapter</feature>
     <feature version='${onem2mtsdr.version}'>odl-onem2mtsdr-hsqldb</feature>
+    <feature version='${onem2moic.version}'>odl-onem2moic</feature>
   </feature>
   <feature name='odl-onem2mall-ui' version='${project.version}' description='OpenDaylight :: onem2mall :: UI'>
     <feature version="${project.version}">odl-onem2mall-iotdm</feature>
