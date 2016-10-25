@@ -162,17 +162,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         LOG.info("Session Closed");
     }
 
-    private void initializePerfCse() {
-        if (!Onem2mDb.getInstance().findCseByName(trc, Onem2m.SYS_PERF_TEST_CSE)) {
-            RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-            onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
-            onem2mRequest.setPrimitive("CSE_ID", Onem2m.SYS_PERF_TEST_CSE);
-            onem2mRequest.setPrimitive("CSE_TYPE", Onem2m.CseType.INCSE);
-            ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-            onem2mRequest.provisionCse(twc, trc, onem2mResponse);
-        }
-    }
-
     private Future<RpcResult<Onem2mRequestPrimitiveOutput>> createOutputFromResponse(
                                                                            ResponsePrimitive onem2mResponse,
                                                                            List<Onem2mPrimitive> onem2mPrimitiveList) {

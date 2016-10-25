@@ -22,7 +22,7 @@ public class CSE extends Onem2mRequestPrimitiveClientBuilder {
         super();
 
         // set some default parameters that all internal apps have no need to set but the core expects
-        setFrom("onem2m://Onem2mCSERequest");
+        setFrom("/Onem2mCSERequest");
         setRequestIdentifier("Onem2mCSERequest-rqi");
         setProtocol(Onem2m.Protocol.NATIVEAPP);
     }

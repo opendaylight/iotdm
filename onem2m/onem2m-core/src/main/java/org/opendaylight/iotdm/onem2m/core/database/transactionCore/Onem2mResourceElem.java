@@ -10,8 +10,10 @@ package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.ChildKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatestKey;
 import org.opendaylight.yangtools.yang.binding.Augmentation;
@@ -31,12 +33,12 @@ public class Onem2mResourceElem implements Onem2mResource {
     private String name;
     private String resourceType;
     private Map<OldestLatestKey, OldestLatest> oldestLatestMap = new HashMap<>();
-    private Map<ChildKey, Child> childMap = new HashMap<>();
     private String resourceContentJsonString;
     private WeakReference<String> resourceContentJsonStringReference;
 
 
-    public Onem2mResourceElem(DaoResourceTreeReader daoResourceTreeReader, String resourceId, String parentId, String name, String resourceType, Collection<OldestLatest> oldestLatestCollection, Collection<Child> childCollection, String resourceContentJsonString) {
+    public Onem2mResourceElem(DaoResourceTreeReader daoResourceTreeReader, String resourceId, String parentId, String name,
+                              String resourceType, Collection<OldestLatest> oldestLatestCollection, String resourceContentJsonString) {
         this.daoResourceTreeReader = daoResourceTreeReader;
 
         this.resourceId = resourceId;
@@ -46,8 +48,6 @@ public class Onem2mResourceElem implements Onem2mResource {
 
         for (OldestLatest elem : oldestLatestCollection)
             this.oldestLatestMap.put(elem.getKey(), elem);
-        for (Child child : childCollection)
-            this.childMap.put(child.getKey(), child);
         setResourceContentJsonString(resourceContentJsonString);
     }
 
@@ -55,20 +55,8 @@ public class Onem2mResourceElem implements Onem2mResource {
         oldestLatestMap.put(key, value);
     }
 
-    protected void addChild(ChildKey key, Child value) {
-        childMap.put(key, value);
-    }
-
-    protected Child putIfAbsentChild(ChildKey key, Child value) {
-        return childMap.putIfAbsent(key, value);
-    }
-
     protected void removeOldestLatest(OldestLatestKey key) {
         oldestLatestMap.remove(key);
-    }
-
-    protected Child removeChild(ChildKey key) {
-        return childMap.remove(key);
     }
 
     public String getResourceId() {
@@ -105,15 +93,6 @@ public class Onem2mResourceElem implements Onem2mResource {
 
     public OldestLatest getOldestLatest(OldestLatestKey key) {
         return oldestLatestMap.get(key);
-    }
-
-    public Child getChild(ChildKey key) {
-        return childMap.get(key);
-    }
-
-    @Override
-    public List<Child> getChild() {
-        return new ArrayList<>(childMap.values());
     }
 
     @Override
@@ -160,7 +139,6 @@ public class Onem2mResourceElem implements Onem2mResource {
         if (resourceType != null ? !resourceType.equals(that.resourceType) : that.resourceType != null) return false;
         if (oldestLatestMap != null ? !oldestLatestMap.equals(that.oldestLatestMap) : that.oldestLatestMap != null)
             return false;
-        if (childMap != null ? !childMap.equals(that.childMap) : that.childMap != null) return false;
         return resourceContentJsonString != null ? resourceContentJsonString.equals(that.resourceContentJsonString) : that.resourceContentJsonString == null;
 
     }

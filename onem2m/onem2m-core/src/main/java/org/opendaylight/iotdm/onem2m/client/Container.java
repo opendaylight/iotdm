@@ -23,7 +23,7 @@ public class Container extends Onem2mRequestPrimitiveClientBuilder {
         b = new ResourceContainerBuilder();
 
         // set dome default parameters that all internal apps have no need to set but the core expects
-        setFrom("onem2m://Onem2mContainerRequest");
+        setFrom("/Onem2mContainerRequest");
         setRequestIdentifier("Onem2mContainerRequest-rqi");
         setProtocol(Onem2m.Protocol.NATIVEAPP);
         setContentFormat(Onem2m.ContentFormat.JSON);

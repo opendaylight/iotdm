@@ -8,7 +8,6 @@
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
 
 /**
  * Created by gguliash on 4/28/16.
@@ -27,53 +26,6 @@ public interface WriteOnlyCache {
      * Cleans Cache.
      */
     void reInitializeDatastore();
-
-    /**
-     * Cache is notified about the Child remove from the parent children list.
-     * If Resource with parentResourceId is not in Cache has no effect.
-     *
-     * @param parentResourceId  id of the parent
-     * @param childResourceName name of the child.
-     */
-    void removeParentChildLink(String parentResourceId, String childResourceName);
-
-    /**
-     * Cache is notified about the Child Prev update.
-     * If Resource with parentResourceId is not in Cache has no effect.
-     *
-     * @param parentResourceId should not be null.
-     * @param child            instance.
-     * @param prevId           to update.
-     */
-    void updateChildSiblingPrevInfo(String parentResourceId,
-                                    Child child,
-                                    String prevId);
-
-    /**
-     * Cache is notified about the Child Next update.
-     * If Resource with parentResourceId is not in Cache has no effect.
-     *
-     * @param parentResourceId should not be null.
-     * @param child            instance.
-     * @param nextId           to update.
-     */
-    void updateChildSiblingNextInfo(String parentResourceId,
-                                    Child child,
-                                    String nextId);
-
-    /**
-     * Cache is notified about the Children list insertion.
-     * If Resource with key parentResourceId is not in Cahce, has no effect.
-     *
-     * @param parentResourceId should not be null.
-     * @param childName        should not be null.
-     * @param childResourceId  should not be null.
-     * @param prevId           should not be null.
-     * @param nextId           should not be null.
-     */
-    void createParentChildLink(String parentResourceId,
-                               String childName, String childResourceId,
-                               String prevId, String nextId);
 
     /**
      * Cache is notified about the update of json content.

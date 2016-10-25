@@ -22,8 +22,13 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIds;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mParentChildList;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .Onem2mParentChildListKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.parent.child.list.Onem2mParentChildKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +68,28 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         if (resource == null) return null;
         else
             return new Onem2mResourceElem(this, resource.getResourceId(), resource.getParentId(), resource.getName(), resource.getResourceType(),
-                    resource.getOldestLatest(), resource.getChild(), resource.getResourceContentJsonString());
+                    resource.getOldestLatest(), resource.getResourceContentJsonString());
     }
+
+    @Override
+    public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key) {
+        InstanceIdentifier<Onem2mParentChildList> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mParentChildList.class, key);
+
+        Onem2mParentChildList list = retrieve(iid, LogicalDatastoreType.OPERATIONAL);;
+
+        return list.getOnem2mParentChild();
+    }
+
+    @Override
+    public Onem2mParentChild retrieveChildByName(String resourceId, String name) {
+        InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(resourceId))
+                .child(Onem2mParentChild.class, new Onem2mParentChildKey(name));
+
+        return retrieve(iid, LogicalDatastoreType.OPERATIONAL);
+    }
+
 
     @Override
     public Onem2mCseList retrieveFullCseList() {
@@ -122,6 +147,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         // retrieve list of cseBase resources because the cseBaseCseId is not specified
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
         Onem2mCseList cseList = retrieve(iidCseList, LogicalDatastoreType.OPERATIONAL);
+        if (cseList == null) return null;
         List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();
 
         // walk the list of cseBase resources and try to find AE or CSE with given ID

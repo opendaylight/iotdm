@@ -7,12 +7,17 @@
  */
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
+import java.util.List;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.ChildKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .Onem2mParentChildListKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatestKey;
 
@@ -46,30 +51,4 @@ public interface ReadOnlyCache {
      */
     Onem2mResourceElem retrieveResourceById(Onem2mResourceKey key);
 
-    /**
-     * If Resource with key is in cache retrieves from cache, if not retrieves from DB and saves in Cache. Does not support partial caching of the Children.
-     *
-     * @param key      of the resource
-     * @param childKey key of the child
-     * @return Child with childkey, of resource with key if exists, or else null
-     */
-    Child retrieveChildByName(Onem2mResourceKey key, ChildKey childKey);
-
-    /**
-     * If Resource with key is in cache retrieves from cache, if not retrieves from DB and saves in Cache. Does not support partial caching of the Children.
-     *
-     * @param key      of the resource
-     * @param childKey key of the child
-     * @return Id of the child with childKey of Resource with key, if exists, or else null
-     */
-    String retrieveChildResourceIDByName(Onem2mResourceKey key, ChildKey childKey);
-
-    /**
-     * If Resource with key is in cache retrieves from cache, if not retrieves from DB and saves in Cache. Does not support partial caching of the Children.
-     *
-     * @param key      of the resource
-     * @param childKey key of the child
-     * @return resource of the child
-     */
-    Onem2mResource retrieveChildResourceByName(Onem2mResourceKey key, ChildKey childKey);
 }
