@@ -92,8 +92,29 @@ module onem2m {
                     type string;
                 }
             }
-            list child {
-                key name;
+            /*
+            * The resource specific attributes are stored as a JSON serialized string.  When the attributes arrive in
+            * a create message, the JSON is parsed, and verified.  A new JSON object is created and attributes are
+            * "transferred" to the new JSON object, along with any internally generated attributes.
+            * Then the new JSON object is serialized as a string and written to the db.  This approach saves adding
+            * complex onem2m structures to the base resource object.
+            */
+            leaf resource-content-json-string {
+                type string;
+            }
+        }
+        list onem2m-parent-child-list {
+
+            key parent-resource-id;
+            leaf parent-resource-id {
+                type string;
+            }
+
+            list onem2m-parent-child {
+                key parent-child-key;
+                leaf parent-child-key {
+                    type string;
+                }
                 leaf name {
                     type string;
                 }
@@ -106,17 +127,6 @@ module onem2m {
                 leaf next-id {
                     type string;
                 }
-            }
-
-            /*
-            * The resource specific attributes are stored as a JSON serialized string.  When the attributes arrive in
-            * a create message, the JSON is parsed, and verified.  A new JSON object is created and attributes are
-            * "transferred" to the new JSON object, along with any internally generated attributes.
-            * Then the new JSON object is serialized as a string and written to the db.  This approach saves adding
-            * complex onem2m structures to the base resource object.
-            */
-            leaf resource-content-json-string {
-                type string;
             }
         }
     }

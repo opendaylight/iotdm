@@ -8,7 +8,10 @@
 package org.opendaylight.iotdm.onem2m.core.database.dao;
 
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 
 import java.io.Closeable;
 
@@ -85,7 +88,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @return true if successfully updated
      */
     boolean updateChildSiblingNextInfo(String parentResourceId,
-                                       Child child,
+                                       Onem2mParentChild child,
                                        String nextId);
 
     /**
@@ -119,7 +122,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @return true if successfully updated
      */
     boolean updateChildSiblingPrevInfo(String parentResourceId,
-                                       Child child,
+                                       Onem2mParentChild child,
                                        String prevId);
 
     /**

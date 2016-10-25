@@ -14,10 +14,13 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mParentChildListKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.ChildKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatestKey;
 import org.slf4j.Logger;
@@ -148,12 +151,21 @@ public class ResourceTreeReader {
      * Retrieve the child using its resource name
      *
      * @param resourceId this id
+     * @return the child
+     */
+    public List<Onem2mParentChild> retrieveParentChildList(String resourceId) {
+        return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+    }
+
+    /**
+     * Retrieve the child using its resource name
+     *
+     * @param resourceId this id
      * @param childName  name of child
      * @return the child
      */
-    public Child retrieveChildByName(String resourceId, String childName) {
-        return cache.retrieveChildByName(new Onem2mResourceKey(resourceId),
-                new ChildKey(childName));
+    public Onem2mParentChild retrieveChildByName(String resourceId, String childName) {
+        return daoResourceTreeReader.retrieveChildByName(resourceId, childName);
     }
 
     /**
@@ -164,14 +176,20 @@ public class ResourceTreeReader {
      * @return the resource
      */
     public Onem2mResource retrieveChildResourceByName(String resourceId, String name) {
-        return cache.retrieveChildResourceByName(new Onem2mResourceKey(resourceId),
-                new ChildKey(name));
+        Onem2mParentChild child = retrieveChildByName(resourceId, name);
+        if (child != null) {
+            return retrieveResourceById(child.getResourceId());
+        }
+        return null;
     }
 
 
     public String retrieveChildResourceIDByName(String resourceId, String name) {
-        return cache.retrieveChildResourceIDByName(new Onem2mResourceKey(resourceId),
-                new ChildKey(name));
+        Onem2mParentChild child = retrieveChildByName(resourceId, name);
+        if (child != null) {
+            return child.getResourceId();
+        }
+        return null;
     }
 
     // TODO extend dumps with the AE-ID mappings ??
@@ -191,10 +209,10 @@ public class ResourceTreeReader {
             LOG.info("        oldestLatest: resource type: {}, oldest: {}, latest: {}",
                     oldestLatest.getResourceType(), oldestLatest.getOldestId(), oldestLatest.getLatestId());
         }
-        List<Child> childList = onem2mResource.getChild();
+        List<Onem2mParentChild> childList = retrieveParentChildList(onem2mResource.getResourceId());
         LOG.info("    Child List: count: {}", childList.size());
         if (dumpChildList) {
-            for (Child child : childList) {
+            for (Onem2mParentChild child : childList) {
                 LOG.info("        Child: name: {}, id: {}, prev: {}, next: {}",
                         child.getName(), child.getResourceId(),
                         child.getPrevId(), child.getNextId());
@@ -249,8 +267,8 @@ public class ResourceTreeReader {
     private void dumpHierarchicalResourceToLog(String resourceId) {
         Onem2mResource onem2mResource = this.retrieveResourceById(resourceId);
         dumpResourceToLog(onem2mResource, false);
-        List<Child> childList = onem2mResource.getChild();
-        for (Child child : childList) {
+        List<Onem2mParentChild> childList = retrieveParentChildList(resourceId);
+        for (Onem2mParentChild child : childList) {
             dumpHierarchicalResourceToLog(child.getResourceId());
         }
     }

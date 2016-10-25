@@ -22,7 +22,10 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -373,13 +376,14 @@ public class ResultContentProcessor {
         String h = null;
         JSONArray ja = new JSONArray();
 
-        List<Child> childList = onem2mResource.getChild();
+        List<Onem2mParentChild> childList = Onem2mDb.getInstance().getParentChildList(trc, onem2mResource
+                .getResourceId());
 
         childList = checkChildList(twc, trc, onem2mRequest, onem2mResource, onem2mResponse, childList);
         if (childList.isEmpty())
             return;
 
-        for (Child child : childList) {
+        for (Onem2mParentChild child : childList) {
 
             if (limStr == null || count < lim) {
                 String resourceId = child.getResourceId();
@@ -477,7 +481,8 @@ public class ResultContentProcessor {
 
         String h = null;
         JSONArray ja = new JSONArray();
-        List<Child> childList = onem2mResource.getChild();
+        List<Onem2mParentChild> childList =
+                Onem2mDb.getInstance().getParentChildList(trc, onem2mResource.getResourceId());
 
         //  todo: Check Subscription, if there is no subscription, return error?
         // todo: if there is subscription type E, then send Notification, then wait 3 seconds, then check again?
@@ -485,7 +490,7 @@ public class ResultContentProcessor {
         if (childList.isEmpty())
             return;
 
-        for (Child child : childList) {
+        for (Onem2mParentChild child : childList) {
 
             if (limStr == null || count < lim) {
                 String resourceId = child.getResourceId();
@@ -504,13 +509,17 @@ public class ResultContentProcessor {
         JsonUtils.put(j, ResourceContent.CHILD_RESOURCE, ja);
     }
 
-    private static List<Child> checkChildList(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, Onem2mResource onem2mResource, ResponsePrimitive onem2mResponse, List<Child> childList) {
+    private static List<Onem2mParentChild> checkChildList(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                                          RequestPrimitive onem2mRequest,
+                                                          Onem2mResource onem2mResource,
+                                                          ResponsePrimitive onem2mResponse,
+                                                          List<Onem2mParentChild> childList) {
         if (!childList.isEmpty()) {
             // if there are several children, need to check whether they are expired
 
-            Iterator<Child> iterator = childList.iterator();
+            Iterator<Onem2mParentChild> iterator = childList.iterator();
             while (iterator.hasNext()) {
-                Child child = iterator.next();
+                Onem2mParentChild child = iterator.next();
                 String resourceId = child.getResourceId();
                 Onem2mResource childResource = Onem2mDb.getInstance().getResource(trc, resourceId);
                 if (!Onem2mDb.getInstance().isAlive(trc, childResource)) {
@@ -531,8 +540,7 @@ public class ResultContentProcessor {
                     e.printStackTrace();
                 }
 
-                onem2mResource = Onem2mDb.getInstance().getResource(trc, onem2mResource.getResourceId());
-                childList = onem2mResource.getChild();
+                childList = Onem2mDb.getInstance().getParentChildList(trc, onem2mResource.getResourceId());
                 if (childList.isEmpty()) {
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                             "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: empty child");

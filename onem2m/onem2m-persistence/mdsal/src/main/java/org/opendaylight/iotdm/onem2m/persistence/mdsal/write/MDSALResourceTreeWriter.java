@@ -22,6 +22,17 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .Onem2mParentChildList;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .Onem2mParentChildListBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .Onem2mParentChildListKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.parent.child.list.Onem2mParentChildBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIds;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsBuilder;
@@ -116,7 +127,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .setResourceType(resourceType)
                     .setParentId(parentResourceId) // parent resource
                     .setOldestLatest(oldestLatestList)
-                    .setChild(Collections.<Child>emptyList()) // new resource has NO children
+                    //.setChild(Collections.<Child>emptyList()) // moved to new parallel container
                     .setResourceContentJsonString(jsonContent)
                     .build();
 
@@ -125,6 +136,19 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
 
             writer.create(iid, onem2mResource, LogicalDatastoreType.OPERATIONAL);
+
+            Onem2mParentChildListKey parentChildListKey = new Onem2mParentChildListKey(onem2mRequest.getResourceId());
+            Onem2mParentChildList onem2mParentChildList = new Onem2mParentChildListBuilder()
+                    .setKey(parentChildListKey)
+                    .setParentResourceId(onem2mRequest.getResourceId())
+                    .setOnem2mParentChild(Collections.<Onem2mParentChild>emptyList()) // new resource has NO children
+                    .build();
+
+            InstanceIdentifier<Onem2mParentChildList> pciid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                    .child(Onem2mParentChildList.class, onem2mParentChildList.getKey());
+
+            writer.create(pciid, onem2mParentChildList, LogicalDatastoreType.OPERATIONAL);
+
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             return false;
@@ -193,21 +217,19 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         try {
             writer.reload();
 
-            Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-
-            Child child = new ChildBuilder()
-                    .setKey(new ChildKey(childName))
+            Onem2mParentChild onem2mParentChild = new Onem2mParentChildBuilder()
+                    .setKey(new Onem2mParentChildKey(childName))
                     .setName(childName)
                     .setResourceId(childResourceId)
                     .setNextId(nextId)
                     .setPrevId(prevId)
                     .build();
 
-            InstanceIdentifier<Child> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mResource.class, key)
-                    .child(Child.class, child.getKey());
+            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
+                    .child(Onem2mParentChild.class, onem2mParentChild.getKey());
 
-            writer.create(iid, child, LogicalDatastoreType.OPERATIONAL);
+            writer.create(iid, onem2mParentChild, LogicalDatastoreType.OPERATIONAL);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             return false;
@@ -219,19 +241,18 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean updateChildSiblingNextInfo(String parentResourceId, Child child, String nextId) {
+    public boolean updateChildSiblingNextInfo(String parentResourceId, Onem2mParentChild child, String
+            nextId) {
         try {
             writer.reload();
 
-            Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-
-            Child updateChild = new ChildBuilder(child)
+            Onem2mParentChild updateChild = new Onem2mParentChildBuilder(child)
                     .setNextId(nextId)
                     .build();
 
-            InstanceIdentifier<Child> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mResource.class, key)
-                    .child(Child.class, updateChild.getKey());
+            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
+                    .child(Onem2mParentChild.class, updateChild.getKey());
 
             writer.update(iid, updateChild, LogicalDatastoreType.OPERATIONAL);
         } catch (Exception e) {
@@ -246,20 +267,18 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
     @Override
     public boolean updateChildSiblingPrevInfo(String parentResourceId,
-                                              Child child,
+                                              Onem2mParentChild child,
                                               String prevId) {
         try {
             writer.reload();
 
-            Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-
-            Child updateChild = new ChildBuilder(child)
+            Onem2mParentChild updateChild = new Onem2mParentChildBuilder(child)
                     .setPrevId(prevId)
                     .build();
 
-            InstanceIdentifier<Child> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mResource.class, new Onem2mResourceKey(parentResourceId))
-                    .child(Child.class, updateChild.getKey());
+            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
+                    .child(Onem2mParentChild.class, updateChild.getKey());
 
             writer.update(iid, updateChild, LogicalDatastoreType.OPERATIONAL);
         } catch (Exception e) {
@@ -279,11 +298,10 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         try {
             writer.reload();
 
-            ChildKey childKey = new ChildKey(childResourceName);
-            Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-            InstanceIdentifier<Child> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mResource.class, key)
-                    .child(Child.class, childKey);
+            Onem2mParentChildKey childKey = new Onem2mParentChildKey(childResourceName);
+            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
+                    .child(Onem2mParentChild.class, childKey);
 
             writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
         } catch (Exception e) {
@@ -307,6 +325,14 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
 
             writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
+
+            Onem2mParentChildListKey parentChildListKey = new Onem2mParentChildListKey(resourceId);
+
+            InstanceIdentifier<Onem2mParentChildList> pciid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                    .child(Onem2mParentChildList.class, parentChildListKey);
+
+            writer.delete(pciid, LogicalDatastoreType.OPERATIONAL);
+
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             return false;

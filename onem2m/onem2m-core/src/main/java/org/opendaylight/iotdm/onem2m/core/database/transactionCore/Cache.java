@@ -16,6 +16,13 @@ import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mParentChildListKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
@@ -146,8 +153,7 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
         Onem2mResourceKey key = new Onem2mResourceKey(resourceId);
 
         Onem2mResourceElem cacheElem = new Onem2mResourceElem(daoResourceTreeReader, resourceId, parentResourceId,
-                resourceName, resourceType, oldestLatestList,
-                Collections.<Child>emptyList(), jsonContent);
+                resourceName, resourceType, oldestLatestList, jsonContent);
 
         onem2mResourceCache.put(key, cacheElem);
 
@@ -196,36 +202,6 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
         }
     }
 
-//    /**
-//     * Retrieve the attr by name from the data store
-//     * @param resourceId resource id of the attr
-//     * @param attrName name of attr
-//     * @return Attr
-//     */
-//    public Attr retrieveAttrByName(String resourceId, String attrName) {
-//
-//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(Attr.class, new AttrKey(attrName));
-//
-//        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
-//    /**
-//     * Delete the attr by name from the data store
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrName name
-//     */
-//    public void deleteAttr(DbTransaction dbTxn, String resourceId, String attrName) {
-//
-//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(Attr.class, new AttrKey(attrName));
-//
-//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
 
     @Override
     public void updateJsonResourceContentString(String resourceId, String jsonResourceContent) {
@@ -236,134 +212,6 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
 
         head.setResourceContentJsonString(jsonResourceContent);
 
-    }
-
-//    /**
-//     *
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrSet updated memberList
-//     */
-//    public void updateAttrSet(DbTransaction dbTxn, String resourceId, AttrSet attrSet) {
-//
-//        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(AttrSet.class, attrSet.getKey());
-//
-//        dbTxn.create(iid, attrSet, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
-//    /**
-//     * Delete the attr by name from the data store
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrSetName name
-//     */
-//    public void deleteAttrSet(DbTransaction dbTxn, String resourceId, String attrSetName) {
-//
-//        InstanceIdentifier<AttrSet> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(AttrSet.class, new AttrSetKey(attrSetName));
-//
-//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-
-
-    @Override
-    public Child retrieveChildByName(Onem2mResourceKey key, ChildKey childKey) {
-        Onem2mResourceElem head = retrieveResourceById(key);
-        if (head == null) return null;
-
-        return head.getChild(childKey);
-    }
-
-    @Override
-    public void createParentChildLink(String parentResourceId,
-                                      String childName, String childResourceId,
-                                      String prevId, String nextId) {
-        Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-        Onem2mResourceElem head = onem2mResourceCache.getIfPresent(key);
-        if (head == null) return;
-
-        Child child = new ChildBuilder()
-                .setKey(new ChildKey(childName))
-                .setName(childName)
-                .setResourceId(childResourceId)
-                .setNextId(nextId)
-                .setPrevId(prevId)
-                .build();
-
-        head.putIfAbsentChild(child.getKey(), child);
-
-    }
-
-    @Override
-    public void updateChildSiblingNextInfo(String parentResourceId,
-                                           Child child,
-                                           String nextId) {
-        Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-        Onem2mResourceElem head = onem2mResourceCache.getIfPresent(key);
-        if (head == null) return;
-
-        Child updateChild = new ChildBuilder(child)
-                .setNextId(nextId)
-                .build();
-
-        head.addChild(updateChild.getKey(), updateChild);
-    }
-
-    @Override
-    public void updateChildSiblingPrevInfo(String parentResourceId,
-                                           Child child,
-                                           String prevId) {
-        Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-        Onem2mResourceElem head = onem2mResourceCache.getIfPresent(key);
-        if (head == null) return;
-
-        Child updateChild = new ChildBuilder(child)
-                .setPrevId(prevId)
-                .build();
-
-        head.addChild(updateChild.getKey(), updateChild);
-
-    }
-
-    @Override
-    public void removeParentChildLink(String parentResourceId, String childResourceName) {
-        Onem2mResourceKey key = new Onem2mResourceKey(parentResourceId);
-        Onem2mResourceElem head = onem2mResourceCache.getIfPresent(key);
-        if (head == null) return;
-
-        ChildKey childKey = new ChildKey(childResourceName);
-        head.removeChild(childKey);
-
-    }
-
-    @Override
-    public Onem2mResource retrieveChildResourceByName(Onem2mResourceKey key, ChildKey childKey) {
-        String id = retrieveChildResourceIDByName(key, childKey);
-        if (id != null) {
-            Onem2mResource ret = retrieveResourceById(new Onem2mResourceKey(id));
-            return ret;
-        }
-
-        return null;
-
-    }
-
-    @Override
-    public String retrieveChildResourceIDByName(Onem2mResourceKey key, ChildKey childKey) {
-        Onem2mResourceElem head = retrieveResourceById(key);
-        if (head != null) {
-            Child child = head.getChild(childKey);
-            if (child != null) return child.getResourceId();
-            else {
-                return null;
-            }
-        } else {
-            LOG.error("retrieveChildResourceIDByName: Tried to retrieveChildResourceByName of parentResourceId  = {} but did not exist", key.getResourceId());
-            return null;
-        }
     }
 
     @Override

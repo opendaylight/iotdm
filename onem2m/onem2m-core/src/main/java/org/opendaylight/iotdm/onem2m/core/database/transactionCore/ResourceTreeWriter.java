@@ -12,7 +12,10 @@ import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.Child;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChildKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,8 +183,6 @@ public class ResourceTreeWriter implements Closeable {
             return false;
         }
 
-        cache.createParentChildLink(parentResourceId, childName, childResourceId, prevId, nextId);
-
         return true;
     }
 
@@ -208,11 +209,11 @@ public class ResourceTreeWriter implements Closeable {
             } else if (parentOldestLatest.getLatestId().equals(thisResourceId)) {
 
                 // deleting the latest, go back to prev and set is next to null, re point latest to prev
-                Child curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
                 String prevId = curr.getPrevId();
                 Onem2mResource prevOnem2mResource = resourceTreeReader.retrieveResourceById(prevId);
 
-                Child child = resourceTreeReader.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
+                Onem2mParentChild child = resourceTreeReader.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
 
                 if (!updateResourceOldestLatestInfo(parentResourceId, resourceType,
                         parentOldestLatest.getOldestId(),
@@ -223,11 +224,11 @@ public class ResourceTreeWriter implements Closeable {
             } else if (parentOldestLatest.getOldestId().equals(thisResourceId)) {
 
                 // deleting the oldest, go to next and set its prev to null, re point oldest to next
-                Child curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
                 String nextId = curr.getNextId();
                 Onem2mResource nextOnem2mResource = resourceTreeReader.retrieveResourceById(nextId);
 
-                Child child = resourceTreeReader.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
+                Onem2mParentChild child = resourceTreeReader.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
 
                 if (!updateResourceOldestLatestInfo(parentResourceId, resourceType,
                         nextId,
@@ -237,16 +238,16 @@ public class ResourceTreeWriter implements Closeable {
 
             } else {
 
-                Child curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
 
                 String nextId = curr.getNextId();
                 Onem2mResource nextOnem2mResource = resourceTreeReader.retrieveResourceById(nextId);
-                Child prevChild = resourceTreeReader.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
+                Onem2mParentChild prevChild = resourceTreeReader.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
 
 
                 String prevId = curr.getPrevId();
                 Onem2mResource prevOnem2mResource = resourceTreeReader.retrieveResourceById(prevId);
-                Child nextChild = resourceTreeReader.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
+                Onem2mParentChild nextChild = resourceTreeReader.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
 
 
                 if (!updateChildSiblingPrevInfo(parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID))
@@ -291,7 +292,7 @@ public class ResourceTreeWriter implements Closeable {
 
                 latestId = resourceId;
 
-                Child child = resourceTreeReader.retrieveChildByName(parentId, prevOnem2mResource.getName());
+                Onem2mParentChild child = resourceTreeReader.retrieveChildByName(parentId, prevOnem2mResource.getName());
 
                 if (!updateResourceOldestLatestInfo(parentId, resourceType, oldestId, latestId)) return false;
                 if (!updateChildSiblingNextInfo(parentId, child, latestId)) return false;
@@ -315,14 +316,12 @@ public class ResourceTreeWriter implements Closeable {
      * @param nextId           its next pointer
      */
     public boolean updateChildSiblingNextInfo(String parentResourceId,
-                                               Child child,
-                                               String nextId) {
+                                              Onem2mParentChild child,
+                                              String nextId) {
         if (!daoWriter.updateChildSiblingNextInfo(parentResourceId, child, nextId)) {
             LOG.error("updateChildSiblingNextInfo: DB could not write");
             return false;
         }
-
-        cache.updateChildSiblingNextInfo(parentResourceId, child, nextId);
 
         return true;
     }
@@ -335,15 +334,13 @@ public class ResourceTreeWriter implements Closeable {
      * @param prevId           prev pointer
      */
     public boolean updateChildSiblingPrevInfo(String parentResourceId,
-                                               Child child,
-                                               String prevId) {
+                                              Onem2mParentChild child,
+                                              String prevId) {
 
         if (!daoWriter.updateChildSiblingPrevInfo(parentResourceId, child, prevId)) {
             LOG.error("updateChildSiblingPrevInfo: DB could not write");
             return false;
         }
-
-        cache.updateChildSiblingPrevInfo(parentResourceId, child, prevId);
 
         return true;
     }
@@ -359,8 +356,6 @@ public class ResourceTreeWriter implements Closeable {
             LOG.error("removeParentChildLink: DB could not write");
             return false;
         }
-
-        cache.removeParentChildLink(parentResourceId, childResourceName);
 
         return true;
     }

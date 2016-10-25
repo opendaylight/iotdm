@@ -23,7 +23,7 @@ public class ContentInstance extends Onem2mRequestPrimitiveClientBuilder {
         b = new ResourceContentInstanceBuilder();
 
         // set dome default parameters that all internal apps have no need to set but the core expects
-        setFrom("onem2m://Onem2mContentInstanceRequest");
+        setFrom("/Onem2mContentInstanceRequest");
         setRequestIdentifier("Onem2mContentInstanceRequest-rqi");
         setProtocol(Onem2m.Protocol.NATIVEAPP);
         setContentFormat(Onem2m.ContentFormat.JSON);

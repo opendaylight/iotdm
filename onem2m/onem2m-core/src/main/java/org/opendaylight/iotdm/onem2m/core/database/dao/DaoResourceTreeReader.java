@@ -7,12 +7,17 @@
  */
 package org.opendaylight.iotdm.onem2m.core.database.dao;
 
+import java.util.List;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .onem2m.parent.child.list.Onem2mParentChild;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
+        .Onem2mParentChildListKey;
 
 /**
  * Created by gguliash on 5/20/16.
@@ -31,6 +36,14 @@ public interface DaoResourceTreeReader {
      * @return Resource element
      */
     Onem2mResourceElem retrieveResourceById(Onem2mResourceKey key);
+
+    /**
+     *
+     * @param key id of the Resource element
+     * @return childList list of resources
+     */
+    List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key);
+    Onem2mParentChild retrieveChildByName(String resourceId, String name);
 
     /**
      *
