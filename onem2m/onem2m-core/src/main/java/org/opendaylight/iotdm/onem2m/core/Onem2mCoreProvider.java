@@ -138,13 +138,30 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public void registerDaoPlugin(DaoResourceTreeFactory daoResourceTreeFactory) {
 
         if (this.twc != null || this.trc != null) {
-            LOG.error("Onem2mCoreProvider.registerDaoPlugin: new registration attempt ... not GOOD");
+            LOG.error("Onem2mCoreProvider.registerDaoPlugin: multiple registration attempt by factory: {}",
+                      daoResourceTreeFactory.getName());
             return;
         }
+
         this.transactionManager = new TransactionManager(daoResourceTreeFactory, new ReadWriteLocker(50));
         this.twc = this.transactionManager.getDbResourceTreeWriter();
         this.trc = this.transactionManager.getTransactionReader();
         Onem2mPluginsDbApi.getInstance().registerDbReaderAndWriter(twc, trc);
+
+        LOG.info("Onem2mCoreProvider.registerDaoPlugin: plugin registered: {}", daoResourceTreeFactory.getName());
+    }
+
+    public void unregisterDaoPlugin() {
+        Onem2mPluginsDbApi.getInstance().unregisterDbReaderAndWriter();
+
+        this.transactionManager.close();
+        this.transactionManager = null;
+
+        this.twc.close();
+        this.twc = null;
+
+        this.trc.close();
+        this.trc = null;
     }
 
     /**

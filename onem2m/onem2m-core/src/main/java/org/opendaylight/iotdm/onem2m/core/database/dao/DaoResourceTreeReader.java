@@ -14,10 +14,12 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 
+import java.io.Closeable;
+
 /**
  * Created by gguliash on 5/20/16.
  */
-public interface DaoResourceTreeReader {
+public interface DaoResourceTreeReader extends Closeable {
     /**
      *
      * @param key name of the CSE element

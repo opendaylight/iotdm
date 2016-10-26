@@ -171,5 +171,9 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         }
     }
 
+    @Override
+    public void close() {
+
+    }
 
 }

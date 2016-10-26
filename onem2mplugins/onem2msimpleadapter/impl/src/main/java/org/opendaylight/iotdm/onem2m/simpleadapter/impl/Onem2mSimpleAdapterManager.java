@@ -155,7 +155,12 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
         for (Map.Entry<String, SimpleAdapterDesc> entry : simpleAdapterMap.entrySet()) {
             SimpleAdapterDesc desc = entry.getValue();
             if (uri.contentEquals(trim(desc.getOnem2mTargetId()))) {
-                String onem2mResourceId = Onem2mPluginsDbApi.getInstance().findResourceIdUsingURI(uri);
+                String onem2mResourceId = null;
+                try {
+                    onem2mResourceId = Onem2mPluginsDbApi.getInstance().findResourceIdUsingURI(uri);
+                } catch (Exception e) {
+                    LOG.error("Failed to find resourceId: {}", e);
+                }
                 return (onem2mResourceId != null) ? desc : null;
             }
         }

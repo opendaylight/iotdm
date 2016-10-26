@@ -32,6 +32,7 @@ public class Onem2mPersistenceMdsalProvider implements BindingAwareProvider, Aut
 
     @Override
     public void close() throws Exception {
+        Onem2mCoreProvider.getInstance().unregisterDaoPlugin();
         LOG.info("Onem2mPersistenceMdsalProvider Closed");
     }
 
