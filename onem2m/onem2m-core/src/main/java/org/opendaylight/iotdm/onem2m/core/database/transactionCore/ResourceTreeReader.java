@@ -298,4 +298,12 @@ public class ResourceTreeReader {
         }
         LOG.info("Dumping Hierarchical Resource Tree: End ...");
     }
+
+    public void close() {
+        try {
+            this.daoResourceTreeReader.close();
+        } catch (Exception e) {
+            LOG.error("Failed to close DAO ResourceTreeReader: {}", e);
+        }
+    }
 }

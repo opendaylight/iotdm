@@ -12,6 +12,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
@@ -27,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Created by bjanosik on 9/9/16.
  */
-public class Onem2mExampleCustomProtocol extends IotdmPlugin {
+public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPluginDbClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mExampleCustomProtocol.class);
     protected DataBroker dataBroker;
@@ -43,11 +44,26 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin {
     public Onem2mExampleCustomProtocol(DataBroker dataBroker, Onem2mService onem2mService) {
         super(Onem2mPluginManager.getInstance());
         this.onem2mService = onem2mService;
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+        this.dataBroker = dataBroker;
+        Onem2mPluginsDbApi.getInstance().registerPlugin(this);
+    }
+
+    @Override
+    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
+
+        // Now the plugin can be registered at plugin manager and can start to handle requests
 
         //use suitable method for required plugin (https, coap, websocket ...)
-        mgr.registerPluginHttp(this, 8283, Onem2mPluginManager.Mode.Exclusive, null);
+        return Onem2mPluginManager.getInstance()
+                              .registerPluginHttp(this, 8283, Onem2mPluginManager.Mode.Exclusive, null);
+    }
+
+    @Override
+    public void dbClientStop() {
+        onem2mDataStoreChangeHandler = null;
+        // Unregister from the plugin manager because the DB is not accessible
+        Onem2mPluginManager.getInstance().unregisterPlugin(this);
     }
 
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
@@ -91,10 +107,12 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin {
 
     @Override
     public void close() {
+        Onem2mPluginsDbApi.getInstance().unregisterPlugin(this);
+        Onem2mPluginManager.getInstance().unregisterPlugin(this);
     }
 
     @Override
-    public String pluginName() {
+    public String getPluginName() {
         return "*";
     }
 

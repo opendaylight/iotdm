@@ -8,16 +8,13 @@
 package org.opendaylight.iotdm.onem2mexample.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.iotdm.onem2m.client.*;
-import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mExampleProvider {
+public class Onem2mExampleProvider implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mExampleProvider.class);
     protected Onem2mService onem2mService;
@@ -34,10 +31,6 @@ public class Onem2mExampleProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-
-        if (!Onem2mPluginsDbApi.getInstance().registerPlugin("Onem2mExampleProvider")) {
-            return;
-        }
         onem2mService = rpcProviderRegistry.getRpcService(Onem2mService.class);
         onem2mExampleCustomProtocol = new Onem2mExampleCustomProtocol(dataBroker, onem2mService);
 
@@ -48,6 +41,7 @@ public class Onem2mExampleProvider {
      * Method called when the blueprint container is destroyed.
      */
     public void close() {
+        onem2mExampleCustomProtocol.close();
         LOG.info("Onem2mExampleProvider Closed");
     }
 }

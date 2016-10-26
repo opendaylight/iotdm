@@ -50,7 +50,7 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
     }
 
     @Override
-    public String pluginName() {
+    public String getPluginName() {
         return "http(s)-base";
     }
 

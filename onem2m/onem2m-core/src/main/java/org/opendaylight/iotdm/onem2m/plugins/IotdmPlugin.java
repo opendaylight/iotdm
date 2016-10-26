@@ -19,7 +19,8 @@ import org.slf4j.LoggerFactory;
  * @param <Trsp> Type of the supported response.
  */
 public abstract class IotdmPlugin<Treq extends IotdmPluginRequest,
-                                  Trsp extends IotdmPluginResponse> implements AutoCloseable {
+                                  Trsp extends IotdmPluginResponse> implements AutoCloseable,
+                                                                               IotdmPluginCommonInterface {
     private static final Logger LOG = LoggerFactory.getLogger(IotdmPlugin.class);
 
     private final int instanceKey; // Value which is unique for this plugin instance
@@ -33,8 +34,8 @@ public abstract class IotdmPlugin<Treq extends IotdmPluginRequest,
     public IotdmPlugin(Onem2mPluginManager pluginManager) {
         this.pluginManager = pluginManager;
         this.instanceKey = pluginManager.getNewPluginInstanceKey();
-        LOG.info("New instance of IotdmPlugin with pluginName: {}, instanceKey: {}",
-                 this.pluginName(), this.instanceKey);
+        LOG.info("New instance of IotdmPlugin with getPluginName: {}, instanceKey: {}",
+                 this.getPluginName(), this.instanceKey);
     }
 
     /**
@@ -52,7 +53,7 @@ public abstract class IotdmPlugin<Treq extends IotdmPluginRequest,
      * @return True if the instances are the same, False otherwise.
      */
     public final boolean isPlugin(IotdmPlugin plugin) {
-        if (this.pluginName().equals(plugin.pluginName()) && this.getInstanceKey() == plugin.getInstanceKey()) {
+        if (this.getPluginName().equals(plugin.getPluginName()) && this.getInstanceKey() == plugin.getInstanceKey()) {
             return true;
         }
         return false;
@@ -63,14 +64,14 @@ public abstract class IotdmPlugin<Treq extends IotdmPluginRequest,
      * @return String with plugin parameters.
      */
     public final String getDebugString() {
-        return "pluginName: " + this.pluginName() + " instanceKey: " + this.getInstanceKey();
+        return "getPluginName: " + this.getPluginName() + " instanceKey: " + this.getInstanceKey();
     }
 
     /**
      * Returns the name of plugin (common for all instances).
      * @return Plugin name.
      */
-    public abstract String pluginName();
+    public abstract String getPluginName();
 
     /**
      * Implementation of the handler method.

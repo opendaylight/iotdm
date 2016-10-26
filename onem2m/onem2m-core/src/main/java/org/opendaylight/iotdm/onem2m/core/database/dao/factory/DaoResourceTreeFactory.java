@@ -16,7 +16,7 @@ import java.io.Closeable;
  * Created by gguliash on 5/20/16.
  * e-mail vinmesmiti@gmail.com; gguliash@cisco.com
  */
-public interface DaoResourceTreeFactory extends Closeable{
+public interface DaoResourceTreeFactory extends Closeable {
     /**
      *
      * @return Database reader interface
@@ -28,6 +28,12 @@ public interface DaoResourceTreeFactory extends Closeable{
      * @return Database writer interface
      */
     DaoResourceTreeReader getDaoResourceTreeReader();
+
+    /**
+     * Returns name of the factory used for debugging.
+     * @return Factory name
+     */
+    String getName();
 
     void close();
 }

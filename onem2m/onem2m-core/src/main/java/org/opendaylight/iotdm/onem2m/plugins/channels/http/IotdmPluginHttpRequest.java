@@ -133,11 +133,16 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
 
         for(String headerName = null;  headerNames.hasMoreElements(); headerName = headerNames.nextElement()) {
             String[] retArray = null;
-            ArrayList<String> arrayList = Collections.list(this.httpRequest.getHeaders(headerName));
-            if (null == arrayList) {
-                retArray = new String[0];
-            } else {
-                retArray = arrayList.toArray(retArray);
+            try {
+                ArrayList<String> arrayList = Collections.list(this.httpRequest.getHeaders(headerName));
+                if (null == arrayList) {
+                    retArray = new String[0];
+                } else {
+                    retArray = arrayList.toArray(retArray);
+                }
+            } catch (Exception e) {
+                LOG.error("Failed to get HTTP Header {}, {}", headerName, e);
+                continue;
             }
 
             this.headers.put(headerName, retArray);

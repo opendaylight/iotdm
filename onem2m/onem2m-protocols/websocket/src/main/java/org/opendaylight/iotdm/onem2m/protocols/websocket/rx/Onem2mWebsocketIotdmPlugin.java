@@ -44,7 +44,7 @@ public class Onem2mWebsocketIotdmPlugin extends IotdmPlugin<IotdmPluginOnem2mBas
     }
 
     @Override
-    public String pluginName() {
+    public String getPluginName() {
         return "ws";
     }
 

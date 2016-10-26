@@ -47,7 +47,11 @@ public class ResourceTreeWriter implements Closeable {
 
     @Override
     public void close() {
-        daoWriter.close();
+        try {
+            daoWriter.close();
+        } catch (Exception e) {
+            LOG.error("Failed to close DAO ResourceTreeWriter: {}", e);
+        }
     }
 
     public String generateResourceId(String parentResourceId, String resourceType, Integer

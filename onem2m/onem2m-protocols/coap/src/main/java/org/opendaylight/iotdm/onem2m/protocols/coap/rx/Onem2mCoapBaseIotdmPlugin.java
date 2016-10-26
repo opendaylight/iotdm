@@ -55,7 +55,7 @@ public class Onem2mCoapBaseIotdmPlugin extends IotdmPlugin<IotdmPluginCoapReques
     }
 
     @Override
-    public String pluginName() {
+    public String getPluginName() {
         return "coap(s)";
     }
 

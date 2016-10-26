@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2medevice.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapRequest;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
@@ -26,22 +27,38 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author jkosmel
  */
-class Onem2mEdeviceHandler extends IotdmPlugin {
+class Onem2mEdeviceHandler extends IotdmPlugin implements IotdmPluginDbClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mEdeviceHandler.class);
     protected DataBroker dataBroker;
     private Onem2mHttpHandler httpHandler;
     private Onem2mCoapHandler coapHandler;
-    private Onem2mDataStoreChangeHandler onem2mDataStoreChangeHandler;
+    private Onem2mDataStoreChangeHandler onem2mDataStoreChangeHandler = null;
 
     Onem2mEdeviceHandler(DataBroker dataBroker, Onem2mService onem2mService) {
         super(Onem2mPluginManager.getInstance());
         httpHandler = new Onem2mHttpHandler(onem2mService);
         coapHandler = new Onem2mCoapHandler(onem2mService);
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
+
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
         mgr.registerPluginHttp(this, 8284, Onem2mPluginManager.Mode.Exclusive, null);
         mgr.registerPluginCoap(this, 123, Onem2mPluginManager.Mode.Exclusive, null);
+
+        if (!Onem2mPluginsDbApi.getInstance().registerPlugin(this)) {
+            LOG.error("Failed to register as DB API plugin");
+            return;
+        }
+    }
+
+    @Override
+    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
+        return true;
+    }
+
+    @Override
+    public void dbClientStop() {
+        onem2mDataStoreChangeHandler = null;
     }
 
     @Override
@@ -89,7 +106,7 @@ class Onem2mEdeviceHandler extends IotdmPlugin {
     }
 
     @Override
-    public String pluginName() {
+    public String getPluginName() {
         return "edevice";
     }
 

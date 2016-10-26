@@ -18,7 +18,9 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -32,7 +34,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
+public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mTsdrProvider.class);
     private Onem2mTsdrSender onem2mTsdrSender;
@@ -44,26 +46,47 @@ public class Onem2mTsdrProvider implements BindingAwareProvider, AutoCloseable {
 
     private HashMap<String,Onem2mTargetDesc> tsdrMap;
     private TransactionManager transactionManager;
+    private DataBroker dataBroker;
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
-
-        LOG.info("Onem2mTsdrProvider Session Initiated");
         tsdrMap = new HashMap<String,Onem2mTargetDesc>();
+        dataBroker = session.getSALService(DataBroker.class);
 
-        DataBroker dataBroker = session.getSALService(DataBroker.class);
-        if (!Onem2mPluginsDbApi.getInstance().registerPlugin("Onem2mTsdrProvider")) {
+        TsdrCollectorSpiService tsdrService = session.getRpcService(TsdrCollectorSpiService.class);
+        onem2mTsdrSender = new Onem2mTsdrSender(tsdrService);
+        onem2mTsdrAsyncManager = new Onem2mTsdrAsyncManager(onem2mTsdrSender);
+        tsdrTargetDataStoreChangeHandler = new TsdrTargetDescDataStoreChangeHandler(dataBroker);
+        tsdrConfigDataStoreChangeHandler = new TsdrConfigDataStoreChangeHandler(dataBroker);
+
+        if (!Onem2mPluginsDbApi.getInstance().registerPlugin(this)) {
+            LOG.error("Failed to register as DB API plugin");
             return;
         }
 
-        TsdrCollectorSpiService tsdrService = session.getRpcService(TsdrCollectorSpiService.class);
+        LOG.info("Onem2mTsdrProvider Session Initiated");
+    }
 
-        onem2mTsdrSender = new Onem2mTsdrSender(tsdrService);
-        onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(Onem2mPluginsDbApi.getInstance().getTransactionReader(), onem2mTsdrSender);
-        onem2mTsdrAsyncManager = new Onem2mTsdrAsyncManager(onem2mTsdrSender);
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(Onem2mPluginsDbApi.getInstance().getTransactionReader(), dataBroker);
-        tsdrTargetDataStoreChangeHandler = new TsdrTargetDescDataStoreChangeHandler(dataBroker);
-        tsdrConfigDataStoreChangeHandler = new TsdrConfigDataStoreChangeHandler(dataBroker);
+    @Override
+    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+        onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(trc, onem2mTsdrSender);
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
+        return true;
+    }
+
+    @Override
+    public void dbClientStop() {
+        if (onem2mTsdrPeriodicManager != null) {
+            onem2mTsdrPeriodicManager.close();
+            onem2mTsdrPeriodicManager = null;
+        }
+
+        onem2mDataStoreChangeHandler = null;
+    }
+
+    @Override
+    public String getPluginName() {
+        return "Onem2mTsdrProvider";
     }
 
     @Override

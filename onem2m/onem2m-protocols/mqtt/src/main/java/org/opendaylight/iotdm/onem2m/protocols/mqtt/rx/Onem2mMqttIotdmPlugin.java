@@ -45,7 +45,7 @@ public class Onem2mMqttIotdmPlugin extends IotdmPlugin<IotdmPluginOnem2mBaseRequ
     }
 
     @Override
-    public String pluginName() {
+    public String getPluginName() {
         return "mqtt";
     }
 
