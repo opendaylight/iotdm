@@ -19,8 +19,6 @@ import java.io.Closeable;
 public interface DaoResourceTreeWriter extends Closeable {
     void finalize() throws Throwable;
 
-    void close();
-
     /**
      * Add the cse to the db store using its name/resourceId
      *

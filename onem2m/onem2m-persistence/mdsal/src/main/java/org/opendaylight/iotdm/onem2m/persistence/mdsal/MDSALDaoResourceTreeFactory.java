@@ -39,6 +39,9 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     }
 
     @Override
+    public String getName() { return "MDSALDaoResourceTreeFactory"; }
+
+    @Override
     public void close(){
 
     }
