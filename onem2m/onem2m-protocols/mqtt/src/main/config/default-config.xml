@@ -23,6 +23,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-broker-osgi-registry</type>
             <name>binding-osgi-broker</name>
           </broker>
+
+          <server-config>
+            <mqtt-broker-port>1883</mqtt-broker-port>
+            <mqtt-broker-ip>127.0.0.1</mqtt-broker-ip>
+            <server-security-level>l0</server-security-level>
+          </server-config>
         </module>
       </modules>
     </data>

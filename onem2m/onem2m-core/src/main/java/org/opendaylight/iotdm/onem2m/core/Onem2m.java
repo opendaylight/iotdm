@@ -8,7 +8,6 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
-import java.security.Security;
 import java.util.*;
 
 import org.json.JSONObject;
@@ -66,10 +65,6 @@ public class Onem2m {
         public static final String APP_VND_NTFY_JSON = "application/vnd.onem2m-ntfy+json";
         public static final String APP_VND_RES_XML = "application/vnd.onem2m-res+xml";
         public static final String APP_VND_NTFY_XML = "application/vnd.onem2m-ntfy+xml";
-    }
-
-    public class ResponseContentType {
-        public static final String JSON_UTF8 = "text/json;charset=utf-8";
     }
 
     public static class CoapContentFormat {
@@ -359,15 +354,18 @@ public class Onem2m {
         public static final String X_M2M_RSC = "X-M2M-RSC";
     }
 
+    public class Mqtt {
+        public static final String OM2M_TOPIC_LITERAL = "oneM2M";
 
-    public class MqttMessageType {
-        public static final String RESPONSE = "resp";
-        public static final String REQUEST = "req";
-    }
+        public class MessageType {
+            public static final String RESPONSE = "resp";
+            public static final String REQUEST = "req";
+        }
 
-    public class MqttOptions {
-        public static final int QOS1 = 1;
-        public static final boolean RETAINED = true;
+        public class Options {
+            public static final int QOS1 = 1;
+            public static final boolean RETAINED = true;
+        }
     }
 
     // set of primitive attributes which are mapped as query-string field in HTTP and CoAP

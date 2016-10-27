@@ -16,6 +16,7 @@ import org.opendaylight.iotdm.onem2m.plugins.channels.coap.Onem2mCoapsPluginServ
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmHttpsConfigBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.Onem2mHttpsPluginServerFactory;
+import org.opendaylight.iotdm.onem2m.plugins.channels.mqtt.Onem2mMqttPluginClientFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.websocket.Onem2mWebsocketPluginServerFactory;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
@@ -51,8 +52,8 @@ public class Onem2mPluginManager implements AutoCloseable {
     public static final String ProtocolCoAP = "coap";
     public static final String ProtocolCoAPS = "coaps";
     public static final String ProtocolWebsocket = "websocket";
+    public static final String ProtocolMQTT = "mqtt";
     // TODO: uncomment when support added
-//    public static final String ProtocolMQTT = "mqtt";
 //    public static final String ProtocolMQTTS = "mqtts";
 
     // The main registry of the PluginManager
@@ -89,6 +90,7 @@ public class Onem2mPluginManager implements AutoCloseable {
         pluginChannelFactoryMap.put(ProtocolCoAP, new Onem2mCoapPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolCoAPS, new Onem2mCoapsPluginServerFactory());
         pluginChannelFactoryMap.put(ProtocolWebsocket, new Onem2mWebsocketPluginServerFactory());
+        pluginChannelFactoryMap.put(ProtocolMQTT, new Onem2mMqttPluginClientFactory());
         // TODO add next supported protocols
     }
 
@@ -207,6 +209,20 @@ public class Onem2mPluginManager implements AutoCloseable {
      */
     public boolean registerPluginWebsocket(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
         return registerPlugin(plugin, ProtocolWebsocket, AllInterfaces, port, mode, uri, null);
+    }
+
+    /**
+     * Registers plugin to receive MQTT requests. Port number and ip address of a
+     * MQTT server is specified.
+     * @param plugin Instance of IotdmPlugin to register.
+     * @param port destination port of MQTT server.
+     * @param ipAddress destination ip address of MQTT server
+     * @param mode Registry sharing mode.
+     * @param uri Local URI for which the plugin is registering.
+     * @return True in case of successful registration, False otherwise.
+     */
+    public boolean registerPluginMQTT(IotdmPlugin plugin, int port, String ipAddress, Onem2mPluginManager.Mode mode, String uri) {
+        return registerPlugin(plugin, ProtocolMQTT, ipAddress, port, mode, uri, null);
     }
 
     // TODO add registration methods for other supported protocols
@@ -471,7 +487,7 @@ public class Onem2mPluginManager implements AutoCloseable {
                     endpointRegistry.unsetAssociatedChannel();
 
                     Onem2mPluginChannelFactory factory =
-                            this.pluginChannelFactoryMap.get(endpointRegistry.getProtocol());
+                            pluginChannelFactoryMap.get(endpointRegistry.getProtocol());
                     Onem2mBaseCommunicationChannel newChannel =
                             factory.createInstance(endpointRegistry.getIpAddress(), endpointRegistry.getPort(), null,
                                                    endpointRegistry);

@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.iotdm.onem2m.plugins.channels.websocket;
+package org.opendaylight.iotdm.onem2m.plugins.channels.common;
 
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -17,37 +17,38 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
+import java.util.Objects;
 
-
-public class IotdmPluginWebsocketResponse implements IotdmPluginResponse {
-    private static final Logger LOG = LoggerFactory.getLogger(IotdmPluginWebsocketResponse.class);
+/**
+ * Base implementation of IotdmPluginResponse. It can maintain the basic onem2m response primitive in json format.
+ */
+public class IotdmPluginOnem2mBaseResponse implements IotdmPluginResponse {
+    private static final Logger LOG = LoggerFactory.getLogger(IotdmPluginOnem2mBaseResponse.class);
 
     private ResponsePrimitive response;
 
     private void initResponse() {
-        if(isNull(response)) {
+        if(Objects.isNull(response)) {
             response = new ResponsePrimitive();
         }
     }
 
     /**
      * Make sure you filled out return response primitive before building response.
-     * @return websocket response message
+     * @return json response message
      * @throws IllegalArgumentException if response primitive is not filled
      */
     public String buildWebsocketResponse() {
-        if(nonNull(response)) {
+        if(Objects.nonNull(response)) {
             return response.toJson().toString();
         }
         else {
-            throw new IllegalArgumentException("IotdmPluginWebsocketResponse: response primitive undefined.");
+            throw new IllegalArgumentException("IotdmPluginOnem2mBaseResponse: response primitive undefined.");
         }
     }
 
     /**
-     * set given returnCode to this response, initialize if needed
+     * set given onem2m RESPONSE_STATUS_CODE (rsc) to this response, initialize if needed
      * @param returnCode The onem2m return code value to be set.
      */
     @Override
@@ -57,7 +58,7 @@ public class IotdmPluginWebsocketResponse implements IotdmPluginResponse {
     }
 
     /**
-     * set given responsePayload to this response, initialize if needed
+     * set given responsePayload (pc) to this response, initialize if needed
      * @param responsePayload Payload as a string to be set.
      */
     @Override
@@ -78,7 +79,7 @@ public class IotdmPluginWebsocketResponse implements IotdmPluginResponse {
 
     /**
      * set given ResponsePrimitive to this response
-     * @param onem2mResponse The Onem2m response primitive.
+     * @param onem2mResponse A Onem2m response primitive.
      * @return true when assigned to response
      */
     @Override
@@ -88,7 +89,7 @@ public class IotdmPluginWebsocketResponse implements IotdmPluginResponse {
     }
 
     /**
-     * set basic response fields with error body
+     * set basic response fields of ResponsePrimitive with error body
      * @param returnCode onem2m return code
      * @param message error message
      */
@@ -103,7 +104,7 @@ public class IotdmPluginWebsocketResponse implements IotdmPluginResponse {
      * build json error response
      * @param returnCode onem2m return code
      * @param message error message
-     * @return json error response
+     * @return json error response (ResponsePrimitive in json format)
      */
     public static String buildErrorResponse(@Nonnull String returnCode, @Nonnull String message) {
         ResponsePrimitive response = new ResponsePrimitive();

@@ -172,7 +172,7 @@ abstract class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationCha
                     request.setPayLoad(cn);
                 }
 
-                IotdmPlugin plg = pluginRegistry.getPlugin(options.getUriPathString());
+                IotdmPlugin plg = pluginRegistry.getPlugin(request.getOnem2mUri());
                 if (nonNull(plg)) {
                     plg.handle(request, response);
                     coapExchange.respond(response.buildCoapResponse());

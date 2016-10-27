@@ -124,9 +124,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public void onSessionInitiated(ProviderContext session) {
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
-        this.notifierService = session.getSALService(NotificationPublishService.class);
+        notifierService = session.getSALService(NotificationPublishService.class);
         crudMonitor = new Monitor();
-        this.routerService = Onem2mRouterService.getInstance();
+        routerService = Onem2mRouterService.getInstance();
 
         stats = Onem2mStats.getInstance();
         db = Onem2mDb.getInstance();

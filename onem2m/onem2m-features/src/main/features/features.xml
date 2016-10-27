@@ -38,6 +38,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${pax.web.version}'>pax-http</feature>
         <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-core.xml"> mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}/xml/config
         </configfile>
     </feature>
@@ -103,7 +104,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/{{VERSION}}</bundle>
         <configfile finalname="${configfile.directory}/onem2m-protocol-mqtt.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt/{{VERSION}}/xml/config</configfile>
