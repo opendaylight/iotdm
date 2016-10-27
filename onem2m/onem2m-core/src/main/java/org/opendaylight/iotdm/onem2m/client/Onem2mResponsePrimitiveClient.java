@@ -21,7 +21,7 @@ public class Onem2mResponsePrimitiveClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mResponsePrimitiveClient.class);
 
-    Onem2mResponse response;
+    private Onem2mResponse response;
 
     public Onem2mResponsePrimitiveClient(ResponsePrimitive onem2mResponse) {
 
@@ -44,6 +44,9 @@ public class Onem2mResponsePrimitiveClient {
     }
     public String getRequestIdentifier() {
         return this.requestIdentifier;
+    }
+    public Onem2mResponse getOnem2mResponse() {
+        return this.response;
     }
     public String getResponseStatusCode() {
         return this.responseStatusCode;

@@ -7,11 +7,6 @@
  */
 package org.opendaylight.iotdm.impl;
 
-import static java.lang.Thread.sleep;
-
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.*;
@@ -22,32 +17,40 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static java.lang.Thread.sleep;
+
 public class PerfCrudRpc {
 
     private static final Logger LOG = LoggerFactory.getLogger(PerfCrudRpc.class);
-    private Onem2mService onem2mService;
     public long createsPerSec, retrievesPerSec, crudsPerSec, deletesPerSec;
+    private Onem2mService onem2mService;
     private ExecutorService executor;
     private Integer nextQueueId = 0;
     private Integer numSuccessful = 0;
     private Integer numComplete = 0;
-
-    private synchronized Integer getNextQ() {
-        return nextQueueId++;
-    }
-    private synchronized void incNumSuccessful() {
-        ++numSuccessful;
-    }
-    private synchronized void incNumComplete() {
-        ++numComplete;
-    }
+    private ArrayList<ArrayList<Integer>> resourceIdQueues;
 
     public PerfCrudRpc(Onem2mService onem2mService) {
         this.onem2mService = onem2mService;
         executor = null;
     }
 
-    private ArrayList<ArrayList<Integer>> resourceIdQueues;
+    private synchronized Integer getNextQ() {
+        return nextQueueId++;
+    }
+
+    private synchronized void incNumSuccessful() {
+        ++numSuccessful;
+    }
+
+    private synchronized void incNumComplete() {
+        ++numComplete;
+    }
+
     private void buildResourceIdQueues(int numQueues, int numResources) {
         resourceIdQueues = new ArrayList<ArrayList<Integer>>(numQueues);
         for (int i = 0; i < numQueues; ++i) {
@@ -70,18 +73,25 @@ public class PerfCrudRpc {
      * I was thinking that when one deploys this feature, they might want to have some notion of how well it will
      * perform in their environment.  Conceivably, an administration/diagnostic function could be implemented that
      * would invoke the rpc with some number of resources, and the operator could know what performance to expect.
+     *
      * @param numResources
      * @return
      */
     public boolean runPerfTest(int numResources, int numThreads) {
 
+        setUpResourcesForTest(numResources);
+
         int totalSuccessful = 0;
         totalSuccessful += createTest(numResources, numThreads);
+        //onem2mService.onem2mDumpResourceTree(null);
         totalSuccessful += retrieveTest(numResources, numThreads);
-        totalSuccessful += deleteTest(numResources, numThreads);
-        totalSuccessful += crudTest(numResources, numThreads);
+        //totalSuccessful += deleteTest(numResources, numThreads);
+        //totalSuccessful += crudTest(numResources, numThreads);
 
-        return (numResources * 4) == totalSuccessful;
+        removeResourcesForTest();
+
+        //return (numResources * 4) == totalSuccessful;
+        return (numResources * 2) == totalSuccessful;
     }
 
 
@@ -154,18 +164,35 @@ public class PerfCrudRpc {
         }
     }
 
-    private boolean createOneTest(Integer resourceId) {
+    private boolean setUpResourcesForTest(Integer numResources) {
+
+        if (!createTestContainer("/" + Onem2m.SYS_PERF_TEST_CSE, "BASE_CONTAINER", numResources)) {
+            LOG.error("setUpResourcesForTest: cannot create base container");
+            return false;
+        }
+
+        for (int i = 1; i <= numResources; i++) {
+            if (!createTestContainer("/" + Onem2m.SYS_PERF_TEST_CSE + "/BASE_CONTAINER", "TEST_CONTAINER_" + i, 2)) {
+                LOG.error("setUpResourcesForTest: cannot create base container");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean createTestContainer(String target, String newResourceName, int maxNrResources) {
 
         Container b;
 
         b = new Container();
-        b.setTo("/" + Onem2m.SYS_PERF_TEST_CSE);
+        b.setTo(target);
         b.setOperationCreate();
-        b.setMaxNrInstances(5);
+        b.setMaxNrInstances(maxNrResources);
         b.setCreator(null);
         b.setMaxByteSize(100);
         b.setOntologyRef("http:/whoa/nelly");
-        b.setName("RN_" + resourceId);
+        b.setName(newResourceName);
         Onem2mRequestPrimitiveClient req = b.build();
 
         Onem2mResponsePrimitiveClient res = req.send(onem2mService);
@@ -182,38 +209,59 @@ public class PerfCrudRpc {
         return true;
     }
 
+    private boolean createTestContentInstance(String target, Integer resourceId, String content) {
+
+        ContentInstance b;
+        b = new ContentInstance();
+        b.setTo(target);
+        b.setOperationCreate();
+        b.setContent(content);
+        b.setName("RN_" + resourceId);
+        Onem2mRequestPrimitiveClient req = b.build();
+
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
+            return false;
+        }
+
+        Onem2mContentInstanceResponse ctrResponse = new Onem2mContentInstanceResponse(res.getContent());
+        if (!ctrResponse.responseOk()) {
+            LOG.error("Container create request: {}", ctrResponse.getError());
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean createOneTest(Integer resourceId) {
+
+        if (!createTestContentInstance("/" + Onem2m.SYS_PERF_TEST_CSE + "/BASE_CONTAINER/TEST_CONTAINER_" + resourceId,
+                resourceId, "TEST_CONTENT_" + resourceId)) {
+            LOG.error("createOneTest: create ci error {}", resourceId);
+            return false;
+        }
+
+        return true;
+    }
+
     private boolean retrieveOneTest(Integer resourceId) {
 
-        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/RN_" + resourceId;
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/BASE_CONTAINER/TEST_CONTAINER_" +
+                resourceId + "/RN_" + resourceId;
 
-        Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+        Onem2mRequestPrimitiveClient req = new Onem2mRequestPrimitiveClientBuilder()
                 .setProtocol(Onem2m.Protocol.NATIVEAPP)
                 .setContentFormat(Onem2m.ContentFormat.JSON)
                 .setTo(tempResourceId)
-                .setFrom("")
+                .setFrom("/retrieveOneTest")
                 .setRequestIdentifier("RQI_1234")
                 .setOperationRetrieve()
                 .build();
 
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
-        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-        String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-        if (rscString == null || rscString.charAt(0) != '2') {
-            LOG.error("retrieve: error code returned: {}, {}", rscString, responseContent);
-            return false;
-        }
-        try {
-            Onem2mResponse or = new Onem2mResponse(responseContent);
-            JSONObject j = or.getJSONObject();
-            String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
-            String expectedResourceName = "RN_" + resourceId;
-            if (resourceName == null || !resourceName.contentEquals(expectedResourceName)) {
-                LOG.error("retrieve: resource name error: expected {}, received {}, json: {}",
-                        expectedResourceName, resourceName, j.toString());
-                return false;
-            }
-        } catch (JSONException e) {
-            LOG.error("Retrieve parse responseContent error: {}", e);
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
             return false;
         }
 
@@ -261,39 +309,48 @@ public class PerfCrudRpc {
 
     private boolean deleteOneTest(Integer resourceId) {
 
-        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/RN_" + resourceId;
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/BASE_CONTAINER/TEST_CONTAINER_" +
+                resourceId + "/RN_" + resourceId;
 
-        Onem2mRequestPrimitiveClient onem2mRequest = new Onem2mRequestPrimitiveClientBuilder()
+        Onem2mRequestPrimitiveClient req = new Onem2mRequestPrimitiveClientBuilder()
                 .setProtocol(Onem2m.Protocol.NATIVEAPP)
                 .setContentFormat(Onem2m.ContentFormat.JSON)
                 .setTo(tempResourceId)
-                .setFrom("")
+                .setFrom("/deleteOneTest")
                 .setResultContent("1")
                 .setRequestIdentifier("RQI_1234")
                 .setOperationDelete()
                 .build();
 
-        ResponsePrimitive onem2mResponse = Onem2m.serviceOnem2mRequest(onem2mRequest, onem2mService);
-        String responseContent = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
-        if (rscString == null || rscString.charAt(0) != '2') {
-            LOG.error("delete: error code returned: {}, {}", rscString, responseContent);
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
             return false;
         }
-        try {
-            Onem2mResponse or = new Onem2mResponse(responseContent);
-            JSONObject j = or.getJSONObject();
-            String resourceName = j.getString(ResourceContent.RESOURCE_NAME);
-            String expectedResourceName = "RN_" + resourceId;
-            if (resourceName == null || !resourceName.contentEquals(expectedResourceName)) {
-                LOG.error("delete: resource name error: expected {}, received {}, json: {}",
-                        expectedResourceName, resourceName, j.toString());
-                return false;
-            }
-        } catch (JSONException e) {
-            LOG.error("Delete parse responseContent error: {}", e);
+
+        return true;
+    }
+
+    private boolean removeResourcesForTest() {
+
+        String tempResourceId = "/" + Onem2m.SYS_PERF_TEST_CSE + "/BASE_CONTAINER";
+
+        Onem2mRequestPrimitiveClient req = new Onem2mRequestPrimitiveClientBuilder()
+                .setProtocol(Onem2m.Protocol.NATIVEAPP)
+                .setContentFormat(Onem2m.ContentFormat.JSON)
+                .setTo(tempResourceId)
+                .setFrom("/removeResourcesForTest")
+                .setResultContent("1")
+                .setRequestIdentifier("RQI_1234")
+                .setOperationDelete()
+                .build();
+
+        Onem2mResponsePrimitiveClient res = req.send(onem2mService);
+        if (!res.responseOk()) {
+            LOG.error(res.getError());
             return false;
         }
+        
         return true;
     }
 
