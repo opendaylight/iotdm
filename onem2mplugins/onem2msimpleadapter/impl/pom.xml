@@ -12,14 +12,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>config-parent</artifactId>
-    <version>0.5.1-SNAPSHOT</version>
+    <version>0.5.1-Boron-SR1</version>
     <relativePath/>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2msimpleadapter-impl</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.1-Boron-SR1</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
@@ -49,7 +49,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>onem2m-core</artifactId>
-      <version>0.2.1-SNAPSHOT</version>
+      <version>0.2.1-Boron-SR1</version>
     </dependency>
     <!-- Testing Dependencies -->
     <dependency>
