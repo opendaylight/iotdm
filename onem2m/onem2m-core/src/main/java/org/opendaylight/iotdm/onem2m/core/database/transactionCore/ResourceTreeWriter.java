@@ -50,6 +50,11 @@ public class ResourceTreeWriter implements Closeable {
         daoWriter.close();
     }
 
+    public String generateResourceId(String parentResourceId, String resourceType, Integer
+            iotdmInstance) {
+        return daoWriter.generateResourceId(parentResourceId, resourceType, iotdmInstance);
+    }
+
 
     /**
      * Add the cse to the db store using its name/resourceId

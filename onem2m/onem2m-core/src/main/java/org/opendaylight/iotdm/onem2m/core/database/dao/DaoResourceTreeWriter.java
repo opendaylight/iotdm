@@ -24,6 +24,7 @@ public interface DaoResourceTreeWriter extends Closeable {
 
     void close();
 
+    public String generateResourceId(String parentResourceId, String resourceType, Integer iotdmInstance);
     /**
      * Add the cse to the db store using its name/resourceId
      *

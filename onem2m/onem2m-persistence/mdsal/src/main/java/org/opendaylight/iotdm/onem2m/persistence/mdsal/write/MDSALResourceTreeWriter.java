@@ -7,11 +7,14 @@
  */
 package org.opendaylight.iotdm.onem2m.persistence.mdsal.write;
 
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Monitor;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
+import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseListBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
@@ -52,17 +55,66 @@ import java.util.List;
 public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     private final Logger LOG = LoggerFactory.getLogger(MDSALResourceTreeWriter.class);
     private MDSALTransactionWriter writer;
+    private LogicalDatastoreType dsType = LogicalDatastoreType.CONFIGURATION;
+    private MDSALDaoResourceTreeFactory factory;
+    private List<Monitor> crudMonitor = Lists.newArrayList();
 
-    public MDSALResourceTreeWriter(MDSALTransactionWriter writer) {
+    private int numShards;
+
+    public MDSALResourceTreeWriter(MDSALDaoResourceTreeFactory factory, MDSALTransactionWriter writer) {
         this.writer = writer;
+        this.factory = factory;
+        numShards = 1;
+        for (int i = 0; i < numShards; i++)  {
+            crudMonitor.add(i, new Monitor());
+        }
+        initDataStore();
     }
 
     public void finalize() throws Throwable {
         super.finalize();
     }
 
+    private void initDataStore() {
+        writer.reload();
+
+        // overwrite the cseList with empty info
+        InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
+        Onem2mCseList cseList = new Onem2mCseListBuilder().setOnem2mCse(Collections.<Onem2mCse>emptyList()).build();
+
+        // overwrite the resource tree with empty information
+        InstanceIdentifier<Onem2mResourceTree> iidTreeList = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
+        Onem2mResourceTree tree = new Onem2mResourceTreeBuilder().setOnem2mResource(Collections.<Onem2mResource>emptyList()).build();
+
+        writer.update(iidCseList, cseList, LogicalDatastoreType.CONFIGURATION);
+        writer.update(iidTreeList, tree, LogicalDatastoreType.CONFIGURATION);
+
+        writer.close();
+    }
+
+    /**
+     * generateResourceId: mdsal needs to generate id's for the purpose of sharding ... contentInstances are ultimately
+     * created for each device.  Each device will ultimately have a container whose id will be used to decide which
+     * shard will be used.  The CI's for the container will all go in the same shard as its parent container. This will
+     * generally ensure that sensor updates per device are pipelined in order on the same shard.
+     *
+     * @param parentResourceId
+     * @param resourceType
+     * @param iotdmInstance
+     * @return unique resource id
+     */
+    @Override
+    public String generateResourceId(String parentResourceId,
+                                     String resourceType,
+                                     Integer iotdmInstance) {
+
+        return factory.generateResourceId(parentResourceId, resourceType, iotdmInstance);
+    }
+
     @Override
     public boolean createCseByName(String name, String resourceId) {
+        boolean status = true;
+        crudMonitor.get(0).enter();
         try {
             writer.reload();
             Onem2mCse onem2mCse = new Onem2mCseBuilder()
@@ -75,20 +127,23 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
             InstanceIdentifier<Onem2mCse> iid = InstanceIdentifier.create(Onem2mCseList.class)
                     .child(Onem2mCse.class, key);
 
-            writer.create(iid, onem2mCse, LogicalDatastoreType.OPERATIONAL);
+            writer.create(iid, onem2mCse, dsType);
 
-            return true;
         } catch (Exception e) {
             LOG.error("exception : {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(0).leave();
+            return status;
         }
-
     }
 
     @Override
     public boolean createResource(RequestPrimitive onem2mRequest, String parentResourceId, String resourceType) {
+        int shard = factory.getShardFromResourceId(onem2mRequest.getResourceId());
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -135,7 +190,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mResource.class, onem2mResource.getKey());
 
 
-            writer.create(iid, onem2mResource, LogicalDatastoreType.OPERATIONAL);
+            writer.create(iid, onem2mResource, dsType);
 
             Onem2mParentChildListKey parentChildListKey = new Onem2mParentChildListKey(onem2mRequest.getResourceId());
             Onem2mParentChildList onem2mParentChildList = new Onem2mParentChildListBuilder()
@@ -147,20 +202,23 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
             InstanceIdentifier<Onem2mParentChildList> pciid = InstanceIdentifier.create(Onem2mResourceTree.class)
                     .child(Onem2mParentChildList.class, onem2mParentChildList.getKey());
 
-            writer.create(pciid, onem2mParentChildList, LogicalDatastoreType.OPERATIONAL);
+            writer.create(pciid, onem2mParentChildList, dsType);
 
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean updateResourceOldestLatestInfo(String resourceId, String resourceType, String oldest, String latest) {
+        int shard = factory.getShardFromResourceId(resourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -177,18 +235,22 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mResource.class, key)
                     .child(OldestLatest.class, oldestKey);
 
-            writer.update(iid, oldestlatest, LogicalDatastoreType.OPERATIONAL);
+            writer.update(iid, oldestlatest, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-        return true;
     }
 
     @Override
     public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) {
+        int shard = factory.getShardFromResourceId(resourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -201,19 +263,22 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
             InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                     .child(Onem2mResource.class, onem2mResource.getKey());
 
-            writer.update(iid, onem2mResource, LogicalDatastoreType.OPERATIONAL);
+            writer.update(iid, onem2mResource, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean createParentChildLink(String parentResourceId, String childName, String childResourceId, String prevId, String nextId) {
+        int shard = factory.getShardFromResourceId(parentResourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -229,20 +294,23 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
                     .child(Onem2mParentChild.class, onem2mParentChild.getKey());
 
-            writer.create(iid, onem2mParentChild, LogicalDatastoreType.OPERATIONAL);
+            writer.create(iid, onem2mParentChild, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean updateChildSiblingNextInfo(String parentResourceId, Onem2mParentChild child, String
             nextId) {
+        int shard = factory.getShardFromResourceId(parentResourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -254,21 +322,24 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
                     .child(Onem2mParentChild.class, updateChild.getKey());
 
-            writer.update(iid, updateChild, LogicalDatastoreType.OPERATIONAL);
+            writer.update(iid, updateChild, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean updateChildSiblingPrevInfo(String parentResourceId,
                                               Onem2mParentChild child,
                                               String prevId) {
+        int shard = factory.getShardFromResourceId(parentResourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -280,21 +351,22 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
                     .child(Onem2mParentChild.class, updateChild.getKey());
 
-            writer.update(iid, updateChild, LogicalDatastoreType.OPERATIONAL);
+            writer.update(iid, updateChild, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
-
     }
 
     @Override
     public boolean removeParentChildLink(String parentResourceId, String childResourceName) {
-
+        int shard = factory.getShardFromResourceId(parentResourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -303,19 +375,22 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
                     .child(Onem2mParentChild.class, childKey);
 
-            writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
+            writer.delete(iid, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean deleteResourceById(String resourceId) {
+        int shard = factory.getShardFromResourceId(resourceId);
+        boolean status = true;
+        crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
@@ -324,28 +399,30 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mResource.class, key);
 
 
-            writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
+            writer.delete(iid, dsType);
 
             Onem2mParentChildListKey parentChildListKey = new Onem2mParentChildListKey(resourceId);
 
             InstanceIdentifier<Onem2mParentChildList> pciid = InstanceIdentifier.create(Onem2mResourceTree.class)
                     .child(Onem2mParentChildList.class, parentChildListKey);
 
-            writer.delete(pciid, LogicalDatastoreType.OPERATIONAL);
+            writer.delete(pciid, dsType);
 
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean createAeIdToResourceIdMapping(String cseBaseName,
                                                  String aeId, String aeResourceId) {
+        boolean status = true;
+        crudMonitor.get(0).enter();
         try {
             writer.reload();
 
@@ -360,19 +437,21 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                             .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
                             .child(Onem2mRegisteredAeIds.class, registeredAe.getKey());
 
-            writer.create(iid, registeredAe, LogicalDatastoreType.OPERATIONAL);
+            writer.create(iid, registeredAe, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(0).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
     public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
+        boolean status = true;
+        crudMonitor.get(0).enter();
         try {
             writer.reload();
             InstanceIdentifier<Onem2mRegisteredAeIds> iid =
@@ -380,15 +459,15 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                         .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
                         .child(Onem2mRegisteredAeIds.class, new Onem2mRegisteredAeIdsKey(aeId));
 
-            writer.delete(iid, LogicalDatastoreType.OPERATIONAL);
+            writer.delete(iid, dsType);
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
-            return false;
+            status = false;
         } finally {
             writer.close();
+            crudMonitor.get(0).leave();
+            return status;
         }
-
-        return true;
     }
 
     @Override
@@ -403,7 +482,9 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         InstanceIdentifier<Onem2mResourceTree> iidTreeList = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
         Onem2mResourceTree tree = new Onem2mResourceTreeBuilder().setOnem2mResource(Collections.<Onem2mResource>emptyList()).build();
 
+        writer.create(iidCseList, cseList, LogicalDatastoreType.CONFIGURATION);
         writer.create(iidCseList, cseList, LogicalDatastoreType.OPERATIONAL);
+        writer.create(iidTreeList, tree, LogicalDatastoreType.CONFIGURATION);
         writer.create(iidTreeList, tree, LogicalDatastoreType.OPERATIONAL);
         writer.close();
 

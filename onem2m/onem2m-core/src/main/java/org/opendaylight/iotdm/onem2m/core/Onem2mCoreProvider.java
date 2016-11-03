@@ -52,7 +52,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoreProvider.class);
     private Onem2mStats stats;
-    private Monitor crudMonitor;
 
     private BindingAwareBroker.RpcRegistration<Onem2mService> rpcReg;
     private DataBroker dataBroker;
@@ -125,7 +124,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
         this.dataBroker = session.getSALService(DataBroker.class);
         notifierService = session.getSALService(NotificationPublishService.class);
-        crudMonitor = new Monitor();
         routerService = Onem2mRouterService.getInstance();
 
         stats = Onem2mStats.getInstance();
@@ -145,6 +143,10 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         this.twc = this.transactionManager.getDbResourceTreeWriter();
         this.trc = this.transactionManager.getTransactionReader();
         Onem2mPluginsDbApi.getInstance().registerDbReaderAndWriter(twc, trc);
+    }
+
+    private boolean isDaoPluginRegistered() {
+        return this.twc != null && this.trc != null;
     }
 
     /**
@@ -190,6 +192,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     @Override
     public Future<RpcResult<Onem2mRequestPrimitiveOutput>> onem2mRequestPrimitive(Onem2mRequestPrimitiveInput input) {
 
+
         //LOG.info("RPC: begin handle op ...");
         Onem2mRequestPrimitiveOutput output = null;
 
@@ -198,6 +201,13 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         ResponsePrimitive onem2mResponse = null;
         onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
+
+        if (!isDaoPluginRegistered()) {
+            onem2mResponse = new ResponsePrimitive();
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+                    "DaoPlugin not yet registered");
+            return createOutputFromResponse(onem2mResponse, onem2mPrimitiveList);
+        }
 
         Onem2mDb.CseBaseResourceLocator resourceLocator = null;
         try {
@@ -285,7 +295,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         } else {
             LOG.trace("Local resource requested by URI {}", resourceLocator.getTargetURI());
 
-            onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mRequest.setTargetResourceLocator(resourceLocator);
             onem2mResponse = new ResponsePrimitive();
 
@@ -705,13 +714,11 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         onem2mRequest.setPrimitivesList(csePrimitiveList);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-        onem2mRequest.createUpdateDeleteMonitorSet(crudMonitor);
 
         onem2mRequest.provisionCse(twc, trc, onem2mResponse);
 
         if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE).equals(Onem2m.ResponseStatusCode.OK)) {
             RequestPrimitiveProcessor onem2mRequest1 = new RequestPrimitiveProcessor();
-            onem2mRequest1.createUpdateDeleteMonitorSet(crudMonitor);
             onem2mRequest1.setPrimitivesList(csePrimitiveList);
             onem2mRequest1.createDefaultACP(twc, trc, onem2mResponse);
         }
@@ -733,6 +740,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
      */
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
+
         Onem2mDb.getInstance().cleanupDataStore(twc);
         Onem2mRouterService.cleanRoutingTable();
         Onem2mDb.getInstance().dumpResourceIdLog(trc, null);

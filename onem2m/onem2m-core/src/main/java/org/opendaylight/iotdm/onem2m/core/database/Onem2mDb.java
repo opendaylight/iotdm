@@ -68,7 +68,8 @@ public class Onem2mDb implements TransactionChainListener {
     private static Onem2mDb db;
     //private static DbResourceTree dbResourceTree;
     public static final String NULL_RESOURCE_ID = "0";
-    private AtomicInteger nextId;
+    private static Integer iotdmInstanceId = 0;
+
     /**
      * Allows other parts of the system to access the one and only instance of the "data store" object
      * @return the static instance of the db
@@ -80,7 +81,6 @@ public class Onem2mDb implements TransactionChainListener {
         return db;
     }
     private Onem2mDb() {
-        nextId = new AtomicInteger();
     }
 
     /**
@@ -92,15 +92,11 @@ public class Onem2mDb implements TransactionChainListener {
         //dbResourceTree = new DbResourceTree(dataBroker);
     }
 
-    /* When we turn on persistence, we will need to store this too */
+    private String generateResourceId(ResourceTreeWriter twc,
+                                      String parentResourceId,
+                                      String resourceType) {
 
-    private String generateResourceId() {
-
-        String b36ResourceId;
-        int r = nextId.incrementAndGet();
-        b36ResourceId = Integer.toString(r, 36);
-        //b36ResourceId = Integer.toString(r);
-        return b36ResourceId;
+        return twc.generateResourceId(parentResourceId, resourceType, iotdmInstanceId);
     }
 
 
@@ -126,9 +122,7 @@ public class Onem2mDb implements TransactionChainListener {
      */
     public boolean createCseResource(ResourceTreeWriter twc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        // generate a unique id for this new resource
-        onem2mRequest.setResourceId(generateResourceId());
-
+        onem2mRequest.setResourceId(generateResourceId(twc, NULL_RESOURCE_ID, Onem2m.ResourceType.CSE_BASE));
 
         JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceContent.RESOURCE_ID, onem2mRequest.getResourceId());
         JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceContent.RESOURCE_NAME, onem2mRequest.getResourceName());
@@ -190,11 +184,10 @@ public class Onem2mDb implements TransactionChainListener {
                                           RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
                                           String resourceType) {
 
-        // generate a unique id for this new resource
-        onem2mRequest.setResourceId(generateResourceId());
-
         Onem2mResource parentOnem2mResource = onem2mRequest.getOnem2mResource();
         String parentId = parentOnem2mResource.getResourceId();
+
+        onem2mRequest.setResourceId(generateResourceId(twc, parentId, resourceType));
 
         /**
          * The resource name should be filled in with the resource-id if the name is blank.

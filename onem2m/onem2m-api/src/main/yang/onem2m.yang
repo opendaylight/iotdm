@@ -38,7 +38,7 @@ module onem2m {
     * uses the binding-aware data store based on this model.
     */
     container onem2m-cse-list {
-        config false;
+
         list onem2m-cse {
             key name;
             leaf name {
@@ -63,7 +63,7 @@ module onem2m {
         }
     }
     container onem2m-resource-tree {
-        config false;
+
         list onem2m-resource {
 
             /* tree structure attributes */

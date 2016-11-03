@@ -16,6 +16,7 @@ import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
+import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
@@ -42,23 +43,26 @@ import java.util.List;
 public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     private final Logger LOG = LoggerFactory.getLogger(MDSALResourceTreeReader.class);
     private final DataBroker broker;
+    private LogicalDatastoreType dsType = LogicalDatastoreType.CONFIGURATION;
+    private MDSALDaoResourceTreeFactory factory;
 
-
-    public MDSALResourceTreeReader(DataBroker broker) {
+    public MDSALResourceTreeReader(MDSALDaoResourceTreeFactory factory, DataBroker broker) {
         this.broker = broker;
+        this.factory = factory;
     }
 
     @Override
     public Onem2mCse retrieveCseByName(Onem2mCseKey key) {
         InstanceIdentifier<Onem2mCse> iid = InstanceIdentifier.create(Onem2mCseList.class)
                 .child(Onem2mCse.class, key);
-        return retrieve(iid, LogicalDatastoreType.OPERATIONAL);
+        return retrieve(iid, dsType);
     }
 
     private Onem2mResource retrieveFullResourceById(Onem2mResourceKey key) {
+        int shard = factory.getShardFromResourceId(key.getResourceId());
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mResource.class, key);
-        return retrieve(iid, LogicalDatastoreType.OPERATIONAL);
+        return retrieve(iid, dsType);
 
     }
 
@@ -73,34 +77,38 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
 
     @Override
     public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key) {
+
+        int shard = factory.getShardFromResourceId(key.getParentResourceId());
+
         InstanceIdentifier<Onem2mParentChildList> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, key);
 
-        Onem2mParentChildList list = retrieve(iid, LogicalDatastoreType.OPERATIONAL);;
+        Onem2mParentChildList list = retrieve(iid, dsType);;
 
         return list.getOnem2mParentChild();
     }
 
     @Override
     public Onem2mParentChild retrieveChildByName(String resourceId, String name) {
+        int shard = factory.getShardFromResourceId(resourceId);
         InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(resourceId))
                 .child(Onem2mParentChild.class, new Onem2mParentChildKey(name));
 
-        return retrieve(iid, LogicalDatastoreType.OPERATIONAL);
+        return retrieve(iid, dsType);
     }
 
 
     @Override
     public Onem2mCseList retrieveFullCseList() {
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
-        return retrieve(iidCseList, LogicalDatastoreType.OPERATIONAL);
+        return retrieve(iidCseList, dsType);
     }
 
     @Override
     public Onem2mResourceTree retrieveFullResourceList() {
         InstanceIdentifier<Onem2mResourceTree> iidTree = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
-        return retrieve(iidTree, LogicalDatastoreType.OPERATIONAL);
+        return retrieve(iidTree, dsType);
     }
 
     /**
@@ -114,7 +122,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
                                                                 .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
                                                                 .child(Onem2mRegisteredAeIds.class, new Onem2mRegisteredAeIdsKey(aeId));
 
-        Onem2mRegisteredAeIds aeIds = retrieve(iid, LogicalDatastoreType.OPERATIONAL);
+        Onem2mRegisteredAeIds aeIds = retrieve(iid, dsType);
 
         if (null == aeIds) {
             LOG.trace("Failed to retrieve AE-ID to resourceID mapping for cseBaseName: {}, AE-ID: {}",
@@ -146,7 +154,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
 
         // retrieve list of cseBase resources because the cseBaseCseId is not specified
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
-        Onem2mCseList cseList = retrieve(iidCseList, LogicalDatastoreType.OPERATIONAL);
+        Onem2mCseList cseList = retrieve(iidCseList, dsType);
         if (cseList == null) return null;
         List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();
 

@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.persistence.mdsal.write;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +24,11 @@ public class MDSALTransactionWriter {
     private WriteTransaction writeTransaction = null;
     private DataBroker broker;
     private boolean isClosed = true;
+    private MDSALDaoResourceTreeFactory factory;
 
-    public MDSALTransactionWriter(DataBroker broker) {
+    public MDSALTransactionWriter(MDSALDaoResourceTreeFactory factory, DataBroker broker) {
         this.broker = broker;
+        this.factory = factory;
     }
 
     @Override
