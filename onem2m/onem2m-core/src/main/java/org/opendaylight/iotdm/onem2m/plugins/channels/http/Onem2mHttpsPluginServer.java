@@ -86,4 +86,14 @@ public class Onem2mHttpsPluginServer extends Onem2mHttpBaseChannel<Onem2mHttpsPl
     public String getProtocol() {
         return "https";
     }
+
+    @Override
+    public String getConfigAsString() {
+        StringBuilder builder = this.configuration.getConfigString();
+        if (null == builder) {
+            return null;
+        }
+
+        return builder.toString();
+    }
 }

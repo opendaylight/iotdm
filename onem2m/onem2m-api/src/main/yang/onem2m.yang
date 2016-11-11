@@ -279,4 +279,109 @@ module onem2m {
         uses notification-common;
         /*uses onem2m-primitive-list;*/
     }
+
+
+   /*
+    * Get table of plugins registered in plugin manager
+    */
+    rpc onem2m-plugin-manager-registrations {
+        description
+          "Returns table of registered plugins.";
+
+        input {
+            leaf plugin-loader-name {
+                description "Filter plugins loaded by specific plugin loader";
+                type string;
+            }
+        }
+
+        output {
+            list registered-plugins-table {
+                leaf plugin-name {
+                    description "Name of the plugin";
+                    mandatory true;
+                    type string;
+                }
+
+                leaf plugin-instance-key {
+                    description "Unique instance id assigned to plugin instance by PluginManager";
+                    mandatory true;
+                    type string;
+                }
+
+                leaf plugin-loader {
+                    description
+                        "Name of the PluginLoader instance used to load the plugin. " +
+                        "This item is not set if the plugin is loaded as ODL module without PluginLoader";
+                    type string;
+                }
+
+                leaf plugin-class {
+                    description "Class of the plugin";
+                    mandatory true;
+                    type string;
+                }
+
+                leaf protocol {
+                    description "Registered protocol";
+                    mandatory true;
+                    type string;
+                }
+
+                leaf address {
+                    description
+                        "Meaning depends on communication channel type used. " +
+                        "Value is local interface address in case of server channel or " +
+                        "the value is remote address of destination in case of client channel.";
+                    type string;
+                }
+
+                leaf port {
+                    description "Meaning depends on communication channel type used. " +
+                                "Value is local port registered in case of server channel or " +
+                                "the value is remote port of destination in case of client channel.";
+                    mandatory true;
+                    type uint16;
+                }
+
+                /* TODO make enum for this */
+                leaf transport-protocol {
+                    description "Transport protocol type used.";
+                    mandatory true;
+                    type string;
+                }
+
+                /* TODO make enum for this */
+                leaf channel-type {
+                    description "Type of communication channel used.";
+                    mandatory true;
+                    type string;
+                }
+
+                /* TODO make enum for this */
+                leaf registration-mode {
+                    description "Registration mode used.";
+                    mandatory true;
+                    type string;
+                }
+
+                leaf local-url {
+                    description "Local URL in Onem2m form for which the plugin is registered.";
+                    type string;
+                }
+
+                /* TODO make yang model for this (with choice) */
+                leaf channel-configuration {
+                    description "Current configuration of the channel.";
+                    type string;
+                }
+
+                /* TODO make enum for this */
+                leaf channel-state {
+                    description "Current state of the communication channel.";
+                    type string;
+                }
+            }
+        }
+    }
 }

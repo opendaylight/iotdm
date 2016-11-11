@@ -840,4 +840,18 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public String getOnem2mStats() {
         return stats.getStats().toString();
     }
+
+    /**
+     * RPC collects data about all plugins registered to PluginManager and returns in table as output.
+     * @param input PluginLoader instance name can be specified to filter only
+     *              plugins loaded by the specified PluginLoader instance
+     * @return Table of registered plugins
+     */
+    @Override
+    public Future<RpcResult<Onem2mPluginManagerRegistrationsOutput>> onem2mPluginManagerRegistrations(Onem2mPluginManagerRegistrationsInput input) {
+        Onem2mPluginManagerRegistrationsOutput output =
+                Onem2mPluginManager.getInstance().getRegisteredPluginsTable(
+                        (null == input) ? null : input.getPluginLoaderName());
+        return RpcResultBuilder.success(output).buildFuture();
+    }
 }

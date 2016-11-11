@@ -1,0 +1,20 @@
+module onem2m-bundle-loader-config {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:onem2mbundleloader:config";
+    prefix onem2m-bundle-loader-config;
+
+    import config { prefix config; revision-date 2013-04-05; }
+
+    description "Configuration for Onem2m BundleLoader";
+
+    revision "2016-10-21" {
+        description "Initial revision.";
+    }
+
+    list bundle-loaders-configs {
+        key "loader-instance-name";
+        leaf loader-instance-name {
+            type string;
+        }
+    }
+}

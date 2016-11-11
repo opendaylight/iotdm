@@ -13,8 +13,10 @@ import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * This registry allows sharing of CommunicationChannel. Plugins are registered for
@@ -38,6 +40,11 @@ public class Onem2mSharedExactMatchRegistry extends Onem2mLocalEndpointRegistry 
     @Override
     public IotdmPlugin getPlugin(String onem2mUri) {
         return pluginMap.get(onem2mUri);
+    }
+
+    @Override
+    public Stream<Map.Entry<String, IotdmPlugin>> getPluginStream() {
+        return pluginMap.entrySet().stream();
     }
 
     @Override

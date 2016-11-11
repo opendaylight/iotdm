@@ -13,6 +13,10 @@ import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
+
 /**
  * This class implements registry which registers only one plugin instance
  * for all URIs.
@@ -36,6 +40,13 @@ public class Onem2mExclusiveRegistry extends Onem2mLocalEndpointRegistry {
     @Override
     public IotdmPlugin getPlugin(String onem2mUri) {
         return this.plugin;
+    }
+
+    @Override
+    public Stream<Map.Entry<String, IotdmPlugin>> getPluginStream() {
+        Map<String, IotdmPlugin> map = new HashMap<>();
+        map.put("*", plugin);
+        return map.entrySet().stream();
     }
 
     @Override

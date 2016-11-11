@@ -22,6 +22,10 @@ import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedExactMatchRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedPrefixMatchRegistry;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mPluginManagerRegistrationsOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mPluginManagerRegistrationsOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.plugin.manager.registrations.output.RegisteredPluginsTable;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.plugin.manager.registrations.output.RegisteredPluginsTableBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +44,7 @@ import static java.util.Objects.nonNull;
 public class Onem2mPluginManager implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPluginManager.class);
     private static Onem2mPluginManager _instance;
+    private static Map<String, IotdmPluginLoader> pluginLoaders = new HashMap<>();
 
     /* Specific IP address which means that plugin registers for all
      * local interfaces
@@ -592,6 +597,115 @@ public class Onem2mPluginManager implements AutoCloseable {
                     " Transport: " + transportProtocol +
                     " Mode: " + mode;
         }
+    }
+
+    /**
+     * Registers instance of PluginLoader.
+     * @param pluginLoader The PluginLoader instance
+     * @return True if successful, False otherwise
+     */
+    public boolean registerPluginLoader(IotdmPluginLoader pluginLoader) {
+        if (this.pluginLoaders.containsKey(pluginLoader.getLoaderName())) {
+            LOG.error("PluginLoader {} already registered", pluginLoader.getLoaderName());
+            return false;
+        }
+
+        this.pluginLoaders.put(pluginLoader.getLoaderName(), pluginLoader);
+        LOG.info("Registered PluginLoader: {}", pluginLoader.getLoaderName());
+        return true;
+    }
+
+    /**
+     * Unregisters instance of PluginLoader.
+     * @param pluginLoader The PluginLoader instance
+     * @return True if successful, False otherwise
+     */
+    public boolean unregisterPluginLoader(IotdmPluginLoader pluginLoader) {
+        if (! this.pluginLoaders.containsKey(pluginLoader.getLoaderName())) {
+            LOG.debug("PluginLoader {} not registered", pluginLoader.getLoaderName());
+            return true;
+        }
+
+        if (this.pluginLoaders.get(pluginLoader.getLoaderName()) != pluginLoader) {
+            LOG.error("Different plugin loader registered with the same name {}", pluginLoader.getLoaderName());
+            return false;
+        }
+
+        this.pluginLoaders.remove(pluginLoader.getLoaderName());
+        LOG.info("PluginLoader {} unregistered", pluginLoader.getLoaderName());
+        return true;
+    }
+
+    /**
+     * Walks all registered plugins and collects table of information about plugins.
+     * @param pluginLoader Parameter is optional and can be used to filter
+     *                     plugins loaded by specified PluginLoader instance
+     * @return Table of data about registered plugins
+     */
+    public Onem2mPluginManagerRegistrationsOutput getRegisteredPluginsTable(String pluginLoader) {
+        Onem2mPluginManagerRegistrationsOutputBuilder output = new Onem2mPluginManagerRegistrationsOutputBuilder();
+
+        List<RegisteredPluginsTable> list = new LinkedList<>();
+
+        // PluginLoader name must equal if passed
+        IotdmPluginLoader loader;
+        if ((null != pluginLoader) && (! pluginLoader.isEmpty())) {
+            if (! this.pluginLoaders.containsKey(pluginLoader)) {
+                // There's not such pluginLoader registered, return empty list
+                return output.setRegisteredPluginsTable(list).build();
+            }
+
+            loader = this.pluginLoaders.get(pluginLoader);
+        } else {
+            loader = null;
+        }
+
+        // Walk all registries
+        this.registry.registryStream().forEach( endpointRegistry -> {
+            // Get the stream of plugins from the registry
+            endpointRegistry.getPluginStream()
+                // Filter only plugins loaded by the PluginLoader instance if specified
+                .filter(urlPluginEntry -> (loader == null) ? true : loader.hasLoadedPlugin(urlPluginEntry.getValue()))
+                // Collect information about the plugin instance
+                .forEach(urlPluginEntry -> {
+
+                    IotdmPlugin plugin = urlPluginEntry.getValue();
+                    String loaderName = null;
+                    if (null != loader) {
+                        // PluginLoader instance specified
+                        loaderName = loader.getLoaderName();
+                    } else {
+                        // Must walk all loaders and try to find it
+                        Optional<IotdmPluginLoader> currentLoader =
+                                this.pluginLoaders.values().stream()
+                                    .filter( l -> l.hasLoadedPlugin(urlPluginEntry.getValue())).findFirst();
+                        if (currentLoader.isPresent()) {
+                            loaderName = currentLoader.get().getLoaderName();
+                        }
+                    }
+
+                    // Build the table row
+                    RegisteredPluginsTableBuilder tableBuilder = new RegisteredPluginsTableBuilder();
+                    tableBuilder
+                            .setPluginName(plugin.getPluginName())
+                            .setPluginInstanceKey(String.valueOf(plugin.getInstanceKey()))
+                            .setPluginClass(plugin.getClass().getName())
+                            .setPluginLoader(loaderName)
+                            .setProtocol(endpointRegistry.getProtocol())
+                            .setAddress(endpointRegistry.getIpAddress())
+                            .setPort(endpointRegistry.getPort())
+                            .setTransportProtocol(endpointRegistry.getChannelId().getTransportProtocol().toString())
+                            .setChannelType(endpointRegistry.getChannelId().getChannelType().toString())
+                            .setRegistrationMode(endpointRegistry.getMode().toString())
+                            .setLocalUrl(urlPluginEntry.getKey())
+                            .setChannelConfiguration(endpointRegistry.getAssociatedChannel().getConfigAsString())
+                            .setChannelState(endpointRegistry.getAssociatedChannel().getState().toString());
+
+                    list.add(tableBuilder.build());
+            });
+        });
+
+        return output.setRegisteredPluginsTable(list).build();
     }
 }
 

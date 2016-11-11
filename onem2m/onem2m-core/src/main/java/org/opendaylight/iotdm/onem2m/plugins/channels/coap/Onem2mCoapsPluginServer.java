@@ -100,6 +100,38 @@ public class Onem2mCoapsPluginServer extends Onem2mCoapBaseChannel<Onem2mCoapsPl
                 return super.compareConfig(config);
             }
         }
+
+        @Override
+        public StringBuilder getConfigString() {
+            StringBuilder builder = null;
+            if (this.usesPks) {
+                builder = new StringBuilder()
+                    .append(this.usesDefaultConfig ? "(Default) " : "")
+                    .append("PresharedKeys: [");
+
+                boolean isFirst = true;
+                for (Map.Entry<String, String> entry : this.presharedKeys.entrySet()) {
+                    if (! isFirst) {
+                        builder.append(", ");
+                    } else {
+                        isFirst = false;
+                    }
+
+                    builder
+                            .append(entry.getKey())
+                            .append(":")
+                            .append("-"); // Don't send passwords due to security
+                }
+
+                builder.append("]");
+            } else {
+                builder = super.getConfigString()
+                                  .append(", KeyAlias: ")
+                                  .append(this.keyAlias);
+            }
+
+            return builder;
+        }
     }
 
     public Onem2mCoapsPluginServer(String ipAddress, int port, Onem2mLocalEndpointRegistry registry,
@@ -166,6 +198,15 @@ public class Onem2mCoapsPluginServer extends Onem2mCoapBaseChannel<Onem2mCoapsPl
         } catch (Exception e) {
             LOG.error("Failed to stop CoAPS server: {}", e.toString());
         }
+    }
+
+    @Override
+    public String getConfigAsString() {
+        StringBuilder builder = this.configuration.getConfigString();
+        if (null == builder) {
+            return null;
+        }
+        return builder.toString();
     }
 
     protected class Onem2mCoapsCertificatesHandler extends Onem2mCoapBaseChannel.Onem2mCoapBaseHandler {

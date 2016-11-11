@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 /**
  * This registry allows sharing of associated CommunicationChannel. Received requests are processed
@@ -56,6 +58,11 @@ public class Onem2mSharedPrefixMatchRegistry extends Onem2mLocalEndpointRegistry
     @Override
     public IotdmPlugin getPlugin(String onem2mUri) {
         return this.registryRoot.getPlugin(onem2mUri);
+    }
+
+    @Override
+    public Stream<Map.Entry<String, IotdmPlugin>> getPluginStream() {
+        return this.registryRoot.getPluginMap().entrySet().stream();
     }
 
     @Override
@@ -312,6 +319,23 @@ class RegistryNode {
         }
 
         return this.hasPluginRegisteredAtSubPath(uri.split("/"), 0, plugin);
+    }
+
+    private void getPluginMap(Map<String, IotdmPlugin> map, String currentUrl) {
+        IotdmPlugin plugin = this.plugin.get();
+        if (null != plugin) {
+            map.put(currentUrl, plugin);
+        }
+
+        for (Map.Entry<String, RegistryNode> entry: this.registry.entrySet()) {
+            entry.getValue().getPluginMap(map, currentUrl + entry.getKey() + "/");
+        }
+    }
+
+    public Map<String, IotdmPlugin> getPluginMap() {
+        Map<String, IotdmPlugin> map = new HashMap<>();
+        this.getPluginMap(map, "/");
+        return map;
     }
 
     public boolean isEmpty() {

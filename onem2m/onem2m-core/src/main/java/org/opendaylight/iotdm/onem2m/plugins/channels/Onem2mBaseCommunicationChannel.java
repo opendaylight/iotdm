@@ -115,6 +115,12 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
     }
 
     /**
+     * Returns current configuration of the channel (if exists) as string.
+     * @return Configuration encoded as string
+     */
+    public String getConfigAsString() { return null; }
+
+    /**
      * Returns implemented protocol name.
      * @return The protocol name.
      */

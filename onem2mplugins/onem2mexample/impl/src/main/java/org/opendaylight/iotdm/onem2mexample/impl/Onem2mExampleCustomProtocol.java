@@ -113,7 +113,7 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPlu
 
     @Override
     public String getPluginName() {
-        return "*";
+        return "Onem2mExample";
     }
 
     // handler for the HTTP registered plugin, see Onem2mHttpProvider.java for more info

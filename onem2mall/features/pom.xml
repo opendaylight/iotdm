@@ -32,6 +32,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <onem2mexample.version>0.3.0-SNAPSHOT</onem2mexample.version>
     <onem2mtsdr.version>0.3.0-SNAPSHOT</onem2mtsdr.version>
     <onem2moic.version>0.3.0-SNAPSHOT</onem2moic.version>
+    <onem2mbundleloader.version>0.1.0-SNAPSHOT</onem2mbundleloader.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>

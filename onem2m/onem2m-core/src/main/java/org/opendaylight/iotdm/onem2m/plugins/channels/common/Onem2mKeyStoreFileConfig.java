@@ -55,4 +55,12 @@ public class Onem2mKeyStoreFileConfig {
 
         return true;
     }
+
+    public StringBuilder getConfigString() {
+        StringBuilder builder = new StringBuilder()
+            .append(this.usesDefaultConfig ? "(Default) " : "")
+            .append("KeyStore: ")
+            .append(this.keyStoreFile);
+        return builder;
+    }
 }

@@ -13,7 +13,9 @@ import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 /**
  * Implementation of abstract registry which registers plugins for
@@ -77,6 +79,12 @@ public abstract class Onem2mLocalEndpointRegistry {
      * @return Registered plugin if exists
      */
     public abstract IotdmPlugin getPlugin(String onem2mUri);
+
+    /**
+     * Gets all registered plugins in stream.
+     * @return Stream of LocalURI to Plugin mappings
+     */
+    public abstract Stream<Map.Entry<String, IotdmPlugin>> getPluginStream();
 
     /**
      * Method checks whether the given plugin is registered in this repository.
