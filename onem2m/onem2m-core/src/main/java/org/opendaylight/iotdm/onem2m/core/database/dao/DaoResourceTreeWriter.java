@@ -33,7 +33,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @param resourceId id
      * @return true if successfully created
      */
-    boolean createCseByName(String name, String resourceId);
+    boolean createCseByName(String name, String resourceId) throws IotdmDaoWriteException;
 
     /**
      * Add a resource to the data store
@@ -44,7 +44,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @return this new resource
      */
     boolean createResource(RequestPrimitive onem2mRequest,
-                           String parentResourceId, String resourceType);
+                           String parentResourceId, String resourceType) throws IotdmDaoWriteException;
 
     /**
      * Update the pointers to the oldest and latest children
@@ -58,14 +58,14 @@ public interface DaoResourceTreeWriter extends Closeable {
     boolean updateResourceOldestLatestInfo(String resourceId,
                                            String resourceType,
                                            String oldest,
-                                           String latest);
+                                           String latest) throws IotdmDaoWriteException;
 
     /**
      * @param resourceId          this resource
      * @param jsonResourceContent serailized JSON object
      * @return true if successfully updated
      */
-    boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent);
+    boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) throws IotdmDaoWriteException;
 
     /**
      * Link the parent resource to the child resource in the data store.
@@ -79,7 +79,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      */
     boolean createParentChildLink(String parentResourceId,
                                   String childName, String childResourceId,
-                                  String prevId, String nextId);
+                                  String prevId, String nextId) throws IotdmDaoWriteException;
 
     /**
      * Update the Next pointer
@@ -91,7 +91,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      */
     boolean updateChildSiblingNextInfo(String parentResourceId,
                                        Onem2mParentChild child,
-                                       String nextId);
+                                       String nextId) throws IotdmDaoWriteException;
 
     /**
      * Unlink the child resource from the parent resource
@@ -100,7 +100,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @param childResourceName child name
      * @return true if successfully removed
      */
-    boolean removeParentChildLink(String parentResourceId, String childResourceName);
+    boolean removeParentChildLink(String parentResourceId, String childResourceName) throws IotdmDaoWriteException;
 
     /**
      * Delete the resource using its id
@@ -108,7 +108,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @param resourceId the resource id
      * @return true if successfully deleted
      */
-    boolean deleteResourceById(String resourceId);
+    boolean deleteResourceById(String resourceId) throws IotdmDaoWriteException;
 
     /**
      * Cleanup the data store.
@@ -125,7 +125,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      */
     boolean updateChildSiblingPrevInfo(String parentResourceId,
                                        Onem2mParentChild child,
-                                       String prevId);
+                                       String prevId) throws IotdmDaoWriteException;
 
     /**
      * Add the AE-ID to resourceID mapping into Onem2mCseList.
@@ -135,7 +135,7 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @return True in case of success, False otherwise
      */
     boolean createAeIdToResourceIdMapping(String cseBaseName,
-                                          String aeId, String aeResourceId);
+                                          String aeId, String aeResourceId) throws IotdmDaoWriteException;
 
     /**
      * Delete AE-ID to resourceID mapping for specified cseBase.
@@ -143,5 +143,5 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @param aeId The AE-ID of the AE
      * @return True in case of success, False otherwise
      */
-    boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId);
+    boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) throws IotdmDaoWriteException;
 }

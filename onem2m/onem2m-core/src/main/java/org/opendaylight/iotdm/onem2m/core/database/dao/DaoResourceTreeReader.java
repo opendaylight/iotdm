@@ -30,34 +30,41 @@ public interface DaoResourceTreeReader extends Closeable {
      * @param key name of the CSE element
      * @return Cse element
      */
-    Onem2mCse retrieveCseByName(Onem2mCseKey key);
+    Onem2mCse retrieveCseByName(Onem2mCseKey key) throws IotdmDaoReadException;
 
     /**
      *
      * @param key id of the Resource element
      * @return Resource element
      */
-    Onem2mResourceElem retrieveResourceById(Onem2mResourceKey key);
+    Onem2mResourceElem retrieveResourceById(Onem2mResourceKey key) throws IotdmDaoReadException;
 
     /**
      *
      * @param key id of the Resource element
      * @return childList list of resources
      */
-    List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key);
-    Onem2mParentChild retrieveChildByName(String resourceId, String name);
+    List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key) throws IotdmDaoReadException;
+
+    /**
+     *
+     * @param resourceId Resource ID string
+     * @param name Resource Name
+     * @return
+     */
+    Onem2mParentChild retrieveChildByName(String resourceId, String name) throws IotdmDaoReadException;
 
     /**
      *
      * @return all existing CSE elements
      */
-    Onem2mCseList retrieveFullCseList();
+    Onem2mCseList retrieveFullCseList() throws IotdmDaoReadException;
 
     /**
      *
      * @return all existing Resource elements
      */
-    Onem2mResourceTree retrieveFullResourceList();
+    Onem2mResourceTree retrieveFullResourceList()throws IotdmDaoReadException;
 
     /**
      * Checks whether the entity specified by the entityId is registered at the cseBase.
@@ -67,5 +74,5 @@ public interface DaoResourceTreeReader extends Closeable {
      * @param cseBaseCseId CSE-ID of the cseBase
      * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
      */
-    String isEntityRegistered(String entityId, String cseBaseCseId);
+    String isEntityRegistered(String entityId, String cseBaseCseId) throws IotdmDaoReadException;
 }

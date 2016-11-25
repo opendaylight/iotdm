@@ -8,6 +8,7 @@
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoReadException;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
@@ -70,13 +71,19 @@ public class ResourceTreeReader {
     }
 
     private Onem2mCse retrieveCseById(String cseId) {
-        Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
-        if (cseList != null) {
-            for (Onem2mCse onem2mCse : cseList.getOnem2mCse()) {
-                if (onem2mCse.getResourceId().equals(cseId)) {
-                    return onem2mCse;
+        Onem2mCseList cseList = null;
+        try {
+            cseList = daoResourceTreeReader.retrieveFullCseList();
+            if (cseList != null) {
+                for (Onem2mCse onem2mCse : cseList.getOnem2mCse()) {
+                    if (onem2mCse.getResourceId().equals(cseId)) {
+                        return onem2mCse;
+                    }
                 }
             }
+        } catch (IotdmDaoReadException e) {
+            LOG.error(e.getMessage());
+            return null;
         }
         return null;
     }
@@ -84,12 +91,17 @@ public class ResourceTreeReader {
 
     public List<String> getCseList() {
         List<String> cseStringList = null;
-        Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
-        if (cseList != null) {
-            cseStringList = new ArrayList<>();
-            for (Onem2mCse onem2mCse : cseList.getOnem2mCse()) {
-                cseStringList.add(onem2mCse.getName());
+        try {
+            Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
+            if (cseList != null) {
+                cseStringList = new ArrayList<>();
+                for (Onem2mCse onem2mCse : cseList.getOnem2mCse()) {
+                    cseStringList.add(onem2mCse.getName());
+                }
             }
+        } catch (IotdmDaoReadException e) {
+            LOG.error(e.getMessage());
+            return cseStringList;
         }
         return cseStringList;
     }
@@ -122,7 +134,12 @@ public class ResourceTreeReader {
         }
 
         // TODO implement cache
-        return daoResourceTreeReader.isEntityRegistered(entityId, cseBaseCseId);
+        try {
+            return daoResourceTreeReader.isEntityRegistered(entityId, cseBaseCseId);
+        } catch (IotdmDaoReadException e) {
+            LOG.error(e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -154,7 +171,12 @@ public class ResourceTreeReader {
      * @return the child
      */
     public List<Onem2mParentChild> retrieveParentChildList(String resourceId) {
-        return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+        try {
+            return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+        } catch (IotdmDaoReadException e) {
+            LOG.info("Retrieve parent Child List failed");
+            return null;
+        }
     }
 
     /**
@@ -164,7 +186,7 @@ public class ResourceTreeReader {
      * @param childName  name of child
      * @return the child
      */
-    public Onem2mParentChild retrieveChildByName(String resourceId, String childName) {
+    public Onem2mParentChild retrieveChildByName(String resourceId, String childName) throws IotdmDaoReadException {
         return daoResourceTreeReader.retrieveChildByName(resourceId, childName);
     }
 
@@ -176,19 +198,28 @@ public class ResourceTreeReader {
      * @return the resource
      */
     public Onem2mResource retrieveChildResourceByName(String resourceId, String name) {
-        Onem2mParentChild child = retrieveChildByName(resourceId, name);
-        if (child != null) {
-            return retrieveResourceById(child.getResourceId());
+        try {
+            Onem2mParentChild child = retrieveChildByName(resourceId, name);
+            if (child != null) {
+                return retrieveResourceById(child.getResourceId());
+            }
+        } catch (IotdmDaoReadException e) {
+            LOG.error(e.getMessage());
         }
         return null;
     }
 
 
     public String retrieveChildResourceIDByName(String resourceId, String name) {
-        Onem2mParentChild child = retrieveChildByName(resourceId, name);
-        if (child != null) {
-            return child.getResourceId();
+        try {
+            Onem2mParentChild child = retrieveChildByName(resourceId, name);
+            if (child != null) {
+                return child.getResourceId();
+            }
+        } catch (IotdmDaoReadException e) {
+            LOG.error(e.getMessage());
         }
+
         return null;
     }
 
@@ -242,9 +273,21 @@ public class ResourceTreeReader {
             return;
         }
 
-        Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
+        Onem2mCseList cseList = null;
+        try {
+            cseList = daoResourceTreeReader.retrieveFullCseList();
+        } catch (IotdmDaoReadException e) {
+            LOG.info("Retrive of Full CSE list failed.");
+            return;
+        }
 
-        Onem2mResourceTree tree = daoResourceTreeReader.retrieveFullResourceList();
+        Onem2mResourceTree tree = null;
+        try {
+            tree = daoResourceTreeReader.retrieveFullResourceList();
+        } catch (IotdmDaoReadException e) {
+            LOG.info("Retrieve of Complete Resource List Failed ");
+            return;
+        }
 
         LOG.info("Dumping Resource Tree: Start ...");
         List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();
@@ -255,11 +298,15 @@ public class ResourceTreeReader {
 
         List<Onem2mResource> onem2mResourceList = tree.getOnem2mResource();
         LOG.info("Resource List: count: {}", onem2mResourceList.size());
-        for (Onem2mResource onem2mResource : onem2mResourceList) {
-            if (daoResourceTreeReader.retrieveResourceById(new Onem2mResourceKey(onem2mResource.getResourceId())) == null) {
-                LOG.warn("Could find resource key, but could not find, it's possible that it was removed");
+        try {
+            for (Onem2mResource onem2mResource : onem2mResourceList) {
+                if (daoResourceTreeReader.retrieveResourceById(new Onem2mResourceKey(onem2mResource.getResourceId())) == null) {
+                    LOG.warn("Could find resource key, but could not find, it's possible that it was removed");
+                }
+                dumpResourceToLog(onem2mResource, true);
             }
-            dumpResourceToLog(onem2mResource, true);
+        } catch (IotdmDaoReadException e) {
+            LOG.info("Error on dumping Resource indo");
         }
         LOG.info("Dumping Resource Tree: End ...");
     }
@@ -287,7 +334,14 @@ public class ResourceTreeReader {
             LOG.info("Dumping ResourceId: {}, End", resourceId);
             return;
         }
-        Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
+
+        Onem2mCseList cseList = null;
+        try {
+            cseList = daoResourceTreeReader.retrieveFullCseList();
+        } catch (IotdmDaoReadException e) {
+            LOG.info("Retriev of Full CSE list failed.");
+            return;
+        }
 
         LOG.info("Dumping Hierarchical Resource Tree: Start ...");
         List<Onem2mCse> onem2mCseList = cseList.getOnem2mCse();

@@ -8,6 +8,7 @@
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoReadException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
@@ -17,7 +18,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatestKey;
 import org.opendaylight.yangtools.yang.binding.Augmentation;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
@@ -35,6 +37,7 @@ public class Onem2mResourceElem implements Onem2mResource {
     private Map<OldestLatestKey, OldestLatest> oldestLatestMap = new HashMap<>();
     private String resourceContentJsonString;
     private WeakReference<String> resourceContentJsonStringReference;
+    private final Logger LOG = LoggerFactory.getLogger(Onem2mResourceElem.class);
 
 
     public Onem2mResourceElem(DaoResourceTreeReader daoResourceTreeReader, String resourceId, String parentId, String name,
@@ -103,9 +106,12 @@ public class Onem2mResourceElem implements Onem2mResource {
     public String getResourceContentJsonString() {
         String ret = resourceContentJsonStringReference.get();
         if (ret == null) {
-
-            ret = daoResourceTreeReader.retrieveResourceById(new Onem2mResourceKey(resourceId)).getResourceContentJsonString();
-            setResourceContentJsonString(ret);
+            try {
+                ret = daoResourceTreeReader.retrieveResourceById(new Onem2mResourceKey(resourceId)).getResourceContentJsonString();
+                setResourceContentJsonString(ret);
+            } catch (IotdmDaoReadException e) {
+                LOG.error("Retrieve Resource by ID Failed");
+            }
         }
         return ret;
     }

@@ -10,6 +10,8 @@ package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoReadException;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoWriteException;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
@@ -66,7 +68,7 @@ public class ResourceTreeWriter implements Closeable {
      * @param name       cse name
      * @param resourceId id
      */
-    public boolean createCseByName(String name, String resourceId) {
+    public boolean createCseByName(String name, String resourceId) throws IotdmDaoWriteException {
         if (!daoWriter.createCseByName(name, resourceId)) {
             LOG.error("createCseByName: DataStore could not write name = {}, resourceId = {}", name, resourceId);
             return false;
@@ -87,7 +89,7 @@ public class ResourceTreeWriter implements Closeable {
      * @return this new resource
      */
     public Onem2mResource createResource(RequestPrimitive onem2mRequest,
-                                         String parentResourceId, String resourceType) {
+                                         String parentResourceId, String resourceType) throws IotdmDaoWriteException {
         if (!daoWriter.createResource(onem2mRequest, parentResourceId, resourceType)) {
             LOG.error("createResource: Could not create resource db");
 
@@ -117,7 +119,7 @@ public class ResourceTreeWriter implements Closeable {
     public boolean updateResourceOldestLatestInfo(String resourceId,
                                                    String resourceType,
                                                    String oldest,
-                                                   String latest) {
+                                                   String latest) throws IotdmDaoWriteException {
 
         if (!daoWriter.updateResourceOldestLatestInfo(resourceId, resourceType, oldest, latest)) {
             LOG.error("updateResourceOldestLatestInfo: DB Could not write");
@@ -164,7 +166,7 @@ public class ResourceTreeWriter implements Closeable {
      * @param resourceId          this resource
      * @param jsonResourceContent serailized JSON object
      */
-    public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) {
+    public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) throws IotdmDaoWriteException {
         if (!daoWriter.updateJsonResourceContentString(resourceId, jsonResourceContent)) {
             LOG.error("updateJsonResourceContentString: DB could not write");
             return false;
@@ -186,7 +188,7 @@ public class ResourceTreeWriter implements Closeable {
      */
     public boolean createParentChildLink(String parentResourceId,
                                           String childName, String childResourceId,
-                                          String prevId, String nextId) {
+                                          String prevId, String nextId) throws IotdmDaoWriteException {
         if (!daoWriter.createParentChildLink(parentResourceId, childName, childResourceId, prevId, nextId)) {
             LOG.error("createParentChildLink: DB could not write");
             return false;
@@ -204,7 +206,9 @@ public class ResourceTreeWriter implements Closeable {
      * @return
      */
     public boolean deleteResourceInReferences(String parentResourceId,
-                                              String resourceType, String thisResourceId, String thisResourceName) {
+                                              String resourceType,
+                                              String thisResourceId,
+                                              String thisResourceName) throws IotdmDaoWriteException, IotdmDaoReadException {
         OldestLatest parentOldestLatest = resourceTreeReader.retrieveOldestLatestByResourceType(parentResourceId, resourceType);
 
         if (parentOldestLatest != null) {
@@ -218,7 +222,12 @@ public class ResourceTreeWriter implements Closeable {
             } else if (parentOldestLatest.getLatestId().equals(thisResourceId)) {
 
                 // deleting the latest, go back to prev and set is next to null, re point latest to prev
-                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                Onem2mParentChild curr = null;
+                try {
+                    curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                } catch (IotdmDaoReadException e) {
+                    LOG.error(e.getMessage());
+                }
                 String prevId = curr.getPrevId();
                 Onem2mResource prevOnem2mResource = resourceTreeReader.retrieveResourceById(prevId);
 
@@ -233,7 +242,12 @@ public class ResourceTreeWriter implements Closeable {
             } else if (parentOldestLatest.getOldestId().equals(thisResourceId)) {
 
                 // deleting the oldest, go to next and set its prev to null, re point oldest to next
-                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                Onem2mParentChild curr = null;
+                try {
+                    curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                } catch (IotdmDaoReadException e) {
+                    LOG.error(e.getMessage());
+                }
                 String nextId = curr.getNextId();
                 Onem2mResource nextOnem2mResource = resourceTreeReader.retrieveResourceById(nextId);
 
@@ -247,7 +261,12 @@ public class ResourceTreeWriter implements Closeable {
 
             } else {
 
-                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                Onem2mParentChild curr = null;
+                try {
+                    curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
+                } catch (IotdmDaoReadException e) {
+                    LOG.error(e.getMessage());
+                }
 
                 String nextId = curr.getNextId();
                 Onem2mResource nextOnem2mResource = resourceTreeReader.retrieveResourceById(nextId);
@@ -277,7 +296,9 @@ public class ResourceTreeWriter implements Closeable {
      * @param resourceName resource name in the parent children list
      * @return
      */
-    public boolean initializeElementInParentList(String resourceType, String parentId, String resourceId, String resourceName) {
+    public boolean initializeElementInParentList(String resourceType, String parentId,
+                                                 String resourceId,
+                                                 String resourceName) throws IotdmDaoWriteException, IotdmDaoReadException {
         String prevId = Onem2mDb.NULL_RESOURCE_ID;
         OldestLatest parentOldestLatest =
                 resourceTreeReader.retrieveOldestLatestByResourceType(parentId, resourceType);
@@ -326,7 +347,7 @@ public class ResourceTreeWriter implements Closeable {
      */
     public boolean updateChildSiblingNextInfo(String parentResourceId,
                                               Onem2mParentChild child,
-                                              String nextId) {
+                                              String nextId) throws IotdmDaoWriteException {
         if (!daoWriter.updateChildSiblingNextInfo(parentResourceId, child, nextId)) {
             LOG.error("updateChildSiblingNextInfo: DB could not write");
             return false;
@@ -344,7 +365,7 @@ public class ResourceTreeWriter implements Closeable {
      */
     public boolean updateChildSiblingPrevInfo(String parentResourceId,
                                               Onem2mParentChild child,
-                                              String prevId) {
+                                              String prevId) throws IotdmDaoWriteException {
 
         if (!daoWriter.updateChildSiblingPrevInfo(parentResourceId, child, prevId)) {
             LOG.error("updateChildSiblingPrevInfo: DB could not write");
@@ -360,7 +381,7 @@ public class ResourceTreeWriter implements Closeable {
      * @param parentResourceId  the parent
      * @param childResourceName child name
      */
-    public boolean removeParentChildLink(String parentResourceId, String childResourceName) {
+    public boolean removeParentChildLink(String parentResourceId, String childResourceName) throws IotdmDaoWriteException {
         if (!daoWriter.removeParentChildLink(parentResourceId, childResourceName)) {
             LOG.error("removeParentChildLink: DB could not write");
             return false;
@@ -375,7 +396,7 @@ public class ResourceTreeWriter implements Closeable {
      *
      * @param resourceId the resource id
      */
-    public boolean deleteResourceById(String resourceId) {
+    public boolean deleteResourceById(String resourceId) throws IotdmDaoWriteException {
         if (!daoWriter.deleteResourceById(resourceId)) {
             LOG.error("deleteResourceById: DB could not write");
             return false;
@@ -388,7 +409,7 @@ public class ResourceTreeWriter implements Closeable {
     // TODO: migrate the routing table from Onem2mRouterService into the cache
 
     public boolean createAeUnderCse(String cseBaseName,
-                                    String aeId, String aeResourceId) {
+                                    String aeId, String aeResourceId) throws IotdmDaoWriteException {
         if (!daoWriter.createAeIdToResourceIdMapping(cseBaseName, aeId, aeResourceId)) {
             LOG.error("createAeIdToResourceIdMapping: DB could not write");
             return false;
@@ -398,7 +419,7 @@ public class ResourceTreeWriter implements Closeable {
         return true;
     }
 
-    public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
+    public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) throws IotdmDaoWriteException {
         if (!daoWriter.deleteAeIdToResourceIdMapping(cseBaseName, aeId)) {
             LOG.error("deleteAeIdToResourceIdMapping: DB could not write");
             return false;

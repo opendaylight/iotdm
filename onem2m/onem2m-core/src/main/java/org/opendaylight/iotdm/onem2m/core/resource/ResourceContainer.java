@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.json.JSONArray;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoReadException;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
@@ -171,7 +172,11 @@ public class ResourceContainer {
         if (onem2mRequest.isUpdate) {
             Boolean dt = resourceContent.getInJsonContent().optBoolean(DISABLE_RETRIEVAL);
             if (dt) {
-                Onem2mDb.getInstance().dumpContentInstancesForContainer(twc, trc, onem2mRequest.getPrimitive(RequestPrimitive.TO));
+                try {
+                    Onem2mDb.getInstance().dumpContentInstancesForContainer(twc, trc, onem2mRequest.getPrimitive(RequestPrimitive.TO));
+                } catch (IotdmDaoReadException e) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "dump Content Instance for container Fail!");
+                }
                 JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_INSTANCES, 0);
                 JsonUtils.put(resourceContent.getInJsonContent(), CURR_BYTE_SIZE, 0);
             }
