@@ -15,6 +15,7 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoReadException;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
@@ -52,13 +53,17 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public Onem2mCse retrieveCseByName(Onem2mCseKey key) {
-        InstanceIdentifier<Onem2mCse> iid = InstanceIdentifier.create(Onem2mCseList.class)
-                .child(Onem2mCse.class, key);
-        return retrieve(iid, dsType);
+    public Onem2mCse retrieveCseByName(Onem2mCseKey key) throws IotdmDaoReadException{
+        try {
+            InstanceIdentifier<Onem2mCse> iid = InstanceIdentifier.create(Onem2mCseList.class)
+                    .child(Onem2mCse.class, key);
+            return retrieve(iid, dsType);
+        }catch(Exception e){
+            return null;
+        }
     }
 
-    private Onem2mResource retrieveFullResourceById(Onem2mResourceKey key) {
+    private Onem2mResource retrieveFullResourceById(Onem2mResourceKey key) throws IotdmDaoReadException{
         int shard = factory.getShardFromResourceId(key.getResourceId());
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mResource.class, key);
@@ -67,7 +72,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public Onem2mResourceElem retrieveResourceById(Onem2mResourceKey key) {
+    public Onem2mResourceElem retrieveResourceById(Onem2mResourceKey key) throws IotdmDaoReadException{
         Onem2mResource resource = retrieveFullResourceById(key);
         if (resource == null) return null;
         else
@@ -76,7 +81,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key) {
+    public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key) throws IotdmDaoReadException{
 
         int shard = factory.getShardFromResourceId(key.getParentResourceId());
 
@@ -89,7 +94,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public Onem2mParentChild retrieveChildByName(String resourceId, String name) {
+    public Onem2mParentChild retrieveChildByName(String resourceId, String name){
         int shard = factory.getShardFromResourceId(resourceId);
         InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(resourceId))
@@ -100,13 +105,13 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
 
 
     @Override
-    public Onem2mCseList retrieveFullCseList() {
+    public Onem2mCseList retrieveFullCseList() throws IotdmDaoReadException{
         InstanceIdentifier<Onem2mCseList> iidCseList = InstanceIdentifier.builder(Onem2mCseList.class).build();
         return retrieve(iidCseList, dsType);
     }
 
     @Override
-    public Onem2mResourceTree retrieveFullResourceList() {
+    public Onem2mResourceTree retrieveFullResourceList() throws IotdmDaoReadException{
         InstanceIdentifier<Onem2mResourceTree> iidTree = InstanceIdentifier.builder(Onem2mResourceTree.class).build();
         return retrieve(iidTree, dsType);
     }
@@ -117,7 +122,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
      * @param aeId The AE-ID of the AE.
      * @return resourceID of the AE
      */
-    public String retrieveAeResourceIdByAeId(String cseBaseName, String aeId) {
+    public String retrieveAeResourceIdByAeId(String cseBaseName, String aeId) throws IotdmDaoReadException {
         InstanceIdentifier<Onem2mRegisteredAeIds> iid = InstanceIdentifier.create(Onem2mCseList.class)
                                                                 .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
                                                                 .child(Onem2mRegisteredAeIds.class, new Onem2mRegisteredAeIdsKey(aeId));
@@ -133,7 +138,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         return aeIds.getResourceId();
     }
 
-    private String isEntityRegisteredAtCseBase(final String entityId, final String cseBaseCseId) {
+    private String isEntityRegisteredAtCseBase(final String entityId, final String cseBaseCseId) throws IotdmDaoReadException {
         /* TODO need to implement some CSE-ID to resource ID mapping */
 
         if (null != this.retrieveAeResourceIdByAeId(cseBaseCseId, entityId)) {
@@ -146,7 +151,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public String isEntityRegistered(String entityId, String cseBaseCseId) {
+    public String isEntityRegistered(String entityId, String cseBaseCseId) throws IotdmDaoReadException{
 
         if (null != cseBaseCseId) {
             return isEntityRegisteredAtCseBase(entityId, cseBaseCseId);

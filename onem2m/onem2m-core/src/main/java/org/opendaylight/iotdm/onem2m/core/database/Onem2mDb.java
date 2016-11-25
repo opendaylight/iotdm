@@ -19,6 +19,7 @@ import org.opendaylight.controller.md.sal.common.api.data.AsyncTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChain;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoWriteException;
 import org.opendaylight.iotdm.onem2m.core.database.helper.Consumer;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
@@ -121,18 +122,21 @@ public class Onem2mDb implements TransactionChainListener {
      * @return successful db create
      */
     public boolean createCseResource(ResourceTreeWriter twc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
+        Onem2mResource onem2mResource = null;
         onem2mRequest.setResourceId(generateResourceId(twc, NULL_RESOURCE_ID, Onem2m.ResourceType.CSE_BASE));
 
         JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceContent.RESOURCE_ID, onem2mRequest.getResourceId());
         JsonUtils.put(onem2mRequest.getResourceContent().getInJsonContent(), ResourceContent.RESOURCE_NAME, onem2mRequest.getResourceName());
+        try {
+            twc.createCseByName(onem2mRequest.getResourceName(), onem2mRequest.getResourceId());
 
-        if (!twc.createCseByName(onem2mRequest.getResourceName(), onem2mRequest.getResourceId())) return false;
-
-        // now create the resource with the attributes stored in the onem2mRequest
-        Onem2mResource onem2mResource = twc.createResource(onem2mRequest,
+           // now create the resource with the attributes stored in the onem2mRequest
+            onem2mResource = twc.createResource(onem2mRequest,
                 NULL_RESOURCE_ID, Onem2m.ResourceType.CSE_BASE);
-        if (onem2mResource == null) return false;
+        }catch(IotdmDaoWriteException e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "CSE Create: DB Connectivity Error");
+            return false;
+        }
 
         // cache the resource
         onem2mRequest.setOnem2mResource(onem2mResource);
@@ -142,22 +146,33 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     private boolean updateParentLastModifiedTime(ResourceTreeWriter twc, RequestPrimitive onem2mRequest,
-                                                 String parentResourceId, JSONObject parentJsonContent) {
+                                                 String parentResourceId, JSONObject parentJsonContent,
+                                                 ResponsePrimitive onem2mResponse) {
         JsonUtils.put(parentJsonContent, ResourceContent.LAST_MODIFIED_TIME,
                 onem2mRequest.getResourceContent().getInJsonContent().optString(ResourceContent.CREATION_TIME));
-        return twc.updateJsonResourceContentString(parentResourceId,
-                parentJsonContent.toString());
+        try {
+            return twc.updateJsonResourceContentString(parentResourceId,
+                    parentJsonContent.toString());
+        }catch(IotdmDaoWriteException e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Update Parent LastModifiedTime Error");
+            return false;
+        }
     }
 
     private boolean adjustContainerCurrValues(ResourceTreeWriter twc, RequestPrimitive onem2mRequest,
-                                              String containerResourceId, JSONObject containerJsonContent) {
-
+                                              String containerResourceId, JSONObject containerJsonContent,
+                                              ResponsePrimitive onem2mResponse) {
         JsonUtils.put(containerJsonContent, ResourceContainer.CURR_BYTE_SIZE, onem2mRequest.containerCbs);
         JsonUtils.put(containerJsonContent, ResourceContainer.CURR_NR_INSTANCES, onem2mRequest.containerCni);
         JsonUtils.put(containerJsonContent, ResourceContent.STATE_TAG, onem2mRequest.containerSt);
-        return twc.updateJsonResourceContentString(
-                containerResourceId,
-                containerJsonContent.toString());
+        try {
+            return twc.updateJsonResourceContentString(
+                    containerResourceId,
+                    containerJsonContent.toString());
+        }catch (IotdmDaoWriteException e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "CSE Create: DB Connectivity Error");
+            return false;
+        }
     }
 
 
@@ -196,12 +211,19 @@ public class Onem2mDb implements TransactionChainListener {
             onem2mRequest.setResourceName(onem2mRequest.getResourceId());
         }
 
-        if (!twc.initializeElementInParentList(resourceType, parentId,
-                                               onem2mRequest.getResourceId(), onem2mRequest.getResourceName())) return false;
+        try{
+            if(!twc.initializeElementInParentList(resourceType, parentId,
+                                               onem2mRequest.getResourceId(), onem2mRequest.getResourceName())){
+                return false;
+            };
+        }catch(IotdmDaoWriteException e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "CSE Create: DB Connectivity Error");
+            return false;
+        }
 
         // update the lmt of the parent to be the creation time of the child being created
         if (!parentId.equals(Onem2mDb.NULL_RESOURCE_ID)) {
-            if (!updateParentLastModifiedTime(twc, onem2mRequest, parentId, onem2mRequest.getJsonResourceContent()))
+            if (!updateParentLastModifiedTime(twc, onem2mRequest, parentId, onem2mRequest.getJsonResourceContent(), onem2mResponse))
                 return false;
         }
 
@@ -215,14 +237,21 @@ public class Onem2mDb implements TransactionChainListener {
         // see if a content instance creation caused the container to be updated, note that the parent is the
         // container, and the request has the container's json object representing its resource content
         if (onem2mRequest.mustUpdateContainer) {
-            if (!this.adjustContainerCurrValues(twc, onem2mRequest, parentId, onem2mRequest.getJsonResourceContent()))
+            if (!this.adjustContainerCurrValues(twc, onem2mRequest, parentId, onem2mRequest.getJsonResourceContent(), onem2mResponse))
                 return false;
         }
 
 
         // now create the resource with the attributes stored in the onem2mRequest
-        Onem2mResource onem2mResource = twc.createResource(onem2mRequest, parentId, resourceType);
-        if (onem2mResource == null) return false;
+        Onem2mResource onem2mResource = null;
+        try {
+            onem2mResource = twc.createResource(onem2mRequest, parentId, resourceType);
+            if(onem2mResource ==null) return false;
+        }catch(IotdmDaoWriteException e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Resource Create: DB Connectivity Error");
+            return false;
+        }
+
 
         // now save this newly created resource
         onem2mRequest.setOnem2mResource(onem2mResource);
@@ -276,8 +305,12 @@ public class Onem2mDb implements TransactionChainListener {
             LOG.error("Can't get cseBase name from resource locator");
             return false;
         }
-
-        return twc.createAeUnderCse(cseBaseName, aeId, onem2mRequest.getResourceId());
+        try {
+            return twc.createAeUnderCse(cseBaseName, aeId, onem2mRequest.getResourceId());
+        }catch(Exception e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "AE Create under CSE Error");
+            return false;
+        }
     }
 
     /**
@@ -301,9 +334,14 @@ public class Onem2mDb implements TransactionChainListener {
             }
         }
 
-        if (!twc.updateJsonResourceContentString(
-                onem2mRequest.getResourceId(),
-                onem2mRequest.getJsonResourceContent().toString())) return false;
+        try {
+            if(!twc.updateJsonResourceContentString(
+                    onem2mRequest.getResourceId(),
+                    onem2mRequest.getJsonResourceContent().toString())) return false;
+        }catch (IotdmDaoWriteException e){
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Update Resource Content String Error ");
+            return false;
+        }
 
         Onem2mResource onem2mResource = getResource(trc, onem2mRequest.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
@@ -319,9 +357,12 @@ public class Onem2mDb implements TransactionChainListener {
      * @return true if successfully updated
      */
     public boolean updateSubscriptionResource(ResourceTreeWriter twc, String resourceID, String updatedJsonString) {
-
-        return twc.updateJsonResourceContentString(resourceID,
-                updatedJsonString);
+        try {
+            return twc.updateJsonResourceContentString(resourceID,
+                    updatedJsonString);
+        }catch(IotdmDaoWriteException e){
+            return false;
+        }
     }
 
     /**
@@ -1235,7 +1276,8 @@ public class Onem2mDb implements TransactionChainListener {
 
     private boolean deleteContentInstance(ResourceTreeWriter twc,
                                           RequestPrimitive onem2mRequest,
-                                          Onem2mResource containerResource) {
+                                          Onem2mResource containerResource,
+                                          ResponsePrimitive onem2mResponse) {
 
         String containerResourceId = containerResource.getResourceId();
         try {
@@ -1243,7 +1285,7 @@ public class Onem2mDb implements TransactionChainListener {
             ResourceContainer.setCurrValuesForThisDeletedContentInstance(onem2mRequest,
                     containerResourceContent,
                     onem2mRequest.getJsonResourceContent().optInt(ResourceContentInstance.CONTENT_SIZE));
-            return adjustContainerCurrValues(twc, onem2mRequest, containerResourceId, containerResourceContent);
+            return adjustContainerCurrValues(twc, onem2mRequest, containerResourceId, containerResourceContent, onem2mResponse);
         } catch (JSONException e) {
             LOG.error("Invalid JSON {}", containerResource.getResourceContentJsonString(), e);
             throw new IllegalArgumentException("Invalid JSON", e);
@@ -1283,9 +1325,13 @@ public class Onem2mDb implements TransactionChainListener {
             if (parentOldestLatest.getLatestId().contentEquals(parentOldestLatest.getOldestId())) {
 
                 // only child, set oldest/latest back to NULL
-                twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        Onem2mDb.NULL_RESOURCE_ID,
-                        Onem2mDb.NULL_RESOURCE_ID);
+                try {
+                    twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
+                            Onem2mDb.NULL_RESOURCE_ID,
+                            Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "CSE Create: DB Connectivity Error");
+                }
 
             } else if (parentOldestLatest.getLatestId().contentEquals(thisResourceId)) {
 
@@ -1295,11 +1341,18 @@ public class Onem2mDb implements TransactionChainListener {
                 Onem2mResource prevOnem2mResource = this.getResource(trc, prevId);
 
                 Onem2mParentChild child = trc.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-                twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        parentOldestLatest.getOldestId(),
-                        prevId);
-                twc.updateChildSiblingNextInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+                try {
+                    twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
+                            parentOldestLatest.getOldestId(),
+                            prevId);
+                }catch(IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Resource Oldest Latest Info Error");
+                }
+                try {
+                    twc.updateChildSiblingNextInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Child Sibling Next Info Error");
+                }
 
             } else if (parentOldestLatest.getOldestId().contentEquals(thisResourceId)) {
 
@@ -1309,11 +1362,18 @@ public class Onem2mDb implements TransactionChainListener {
                 Onem2mResource nextOnem2mResource = this.getResource(trc, nextId);
 
                 Onem2mParentChild child = trc.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
-
-                twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        nextId,
-                        parentOldestLatest.getLatestId());
-                twc.updateChildSiblingPrevInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+                try {
+                    twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
+                            nextId,
+                            parentOldestLatest.getLatestId());
+                }catch (IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Resource Oldest Latest Info Error");
+                }
+                try {
+                    twc.updateChildSiblingPrevInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+                }catch (IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Child Sibling Previous Info Error");
+                }
 
             } else {
 
@@ -1328,15 +1388,25 @@ public class Onem2mDb implements TransactionChainListener {
                 Onem2mResource prevOnem2mResource = this.getResource(trc, prevId);
                 Onem2mParentChild nextChild = trc.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
 
-                twc.updateChildSiblingPrevInfo(parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
-                twc.updateChildSiblingNextInfo(parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
+                try {
+                    twc.updateChildSiblingPrevInfo(parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Update Child Sibling Prev Error");
+                }
+
+                try {
+                    twc.updateChildSiblingNextInfo(parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Update Child Sibling Next Error");
+
+                }
             }
         }
 
         switch(resourceType) {
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 // adjust the curr values in the parent container resource
-                if (!deleteContentInstance(twc, onem2mRequest, parentOnem2mResource)) {
+                if (!deleteContentInstance(twc, onem2mRequest, parentOnem2mResource, onem2mResponse)) {
                     return false;
                 }
                 break;
@@ -1357,22 +1427,36 @@ public class Onem2mDb implements TransactionChainListener {
                 }
 
                 // Delete also mapping of AE-ID to resourceID
-                if (!twc.deleteAeIdToResourceIdMapping(cseBaseCseId, aeId)) {
-                    LOG.error("Failed to delete AE-ID to resourceID mapping for: cseBaseCseId: {}, aeId: {}",
-                              cseBaseCseId, aeId);
+                try {
+                    if (!twc.deleteAeIdToResourceIdMapping(cseBaseCseId, aeId)) {
+                        LOG.error("Failed to delete AE-ID to resourceID mapping for: cseBaseCseId: {}, aeId: {}",
+                                cseBaseCseId, aeId);
+                    }
+                }catch(IotdmDaoWriteException e){
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Delete AEId to Resource Mapping Error");
                 }
                 break;
         }
 
         // now in a transaction, smoke all the resources under this ResourceId
         for (String resourceId : resourceIdList) {
-            if (!twc.deleteResourceById(resourceId)) return false;
+            try {
+                if (!twc.deleteResourceById(resourceId)) return false;
+            }catch (IotdmDaoWriteException e){
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Delete Resource By ID Error");
+                return false;
+            }
         }
         onem2mRequest.setOnem2mResource(null);
 
         // now go clean up the parent of this resource as its child link needs to be removed
         if (!parentResourceId.contentEquals(NULL_RESOURCE_ID))
-            if (!twc.removeParentChildLink(parentResourceId, thisResourceName)) return false;
+            try {
+                if (!twc.removeParentChildLink(parentResourceId, thisResourceName)) return false;
+            }catch (IotdmDaoWriteException e){
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Remove Parent Child Link Error");
+                return false;
+            }
 
         return true;
     }
@@ -1385,7 +1469,8 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mResource element
      * @return true if successfully removed
      */
-    public boolean deleteResourceUsingResource(ResourceTreeWriter twc, ResourceTreeReader trc, Onem2mResource onem2mResource) {
+    public boolean deleteResourceUsingResource(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                               Onem2mResource onem2mResource) {
 
         // save the parent
         String parentResourceId = onem2mResource.getParentId();
@@ -1405,9 +1490,13 @@ public class Onem2mDb implements TransactionChainListener {
 
 
                 // only child, set oldest/latest back to NULL
-                twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        Onem2mDb.NULL_RESOURCE_ID,
-                        Onem2mDb.NULL_RESOURCE_ID);
+                try {
+                    twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
+                            Onem2mDb.NULL_RESOURCE_ID,
+                            Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+//               TODO
+                }
 
             } else if (parentOldestLatest.getLatestId().contentEquals(thisResourceId)) {
 
@@ -1416,11 +1505,15 @@ public class Onem2mDb implements TransactionChainListener {
                 String prevId = curr.getPrevId();
                 Onem2mResource prevOnem2mResource = this.getResource(trc, prevId);
                 Onem2mParentChild child = trc.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-                twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
+                try {
+                    twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
                         parentOldestLatest.getOldestId(),
                         prevId);
-                twc.updateChildSiblingNextInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+
+                    twc.updateChildSiblingNextInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+//                  TODO ResponsePrimitive is not available
+                }
 
             } else if (parentOldestLatest.getOldestId().contentEquals(thisResourceId)) {
 
@@ -1430,11 +1523,15 @@ public class Onem2mDb implements TransactionChainListener {
                 Onem2mResource nextOnem2mResource = this.getResource(trc, nextId);
 
                 Onem2mParentChild child = trc.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
-
-                twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
+                try {
+                    twc.updateResourceOldestLatestInfo(parentResourceId, resourceType,
                         nextId,
                         parentOldestLatest.getLatestId());
-                twc.updateChildSiblingPrevInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+
+                    twc.updateChildSiblingPrevInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+//                  TODO ResponsePrimitive is not available
+                }
 
             } else {
 
@@ -1448,9 +1545,16 @@ public class Onem2mDb implements TransactionChainListener {
                 String prevId = curr.getPrevId();
                 Onem2mResource prevOnem2mResource = this.getResource(trc, prevId);
                 Onem2mParentChild nextChild = trc.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-                twc.updateChildSiblingPrevInfo(parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
-                twc.updateChildSiblingNextInfo(parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
+                try {
+                    twc.updateChildSiblingPrevInfo(parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+//                  TODO ResponsePrimitive is not available
+                }
+                try {
+                    twc.updateChildSiblingNextInfo(parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID);
+                }catch(IotdmDaoWriteException e){
+//                  TODO ResponsePrimitive is not available
+                }
             }
         }
 
@@ -1479,7 +1583,10 @@ public class Onem2mDb implements TransactionChainListener {
                         parentResourceId,
                         containerResourceContent.toString());
 
-            } catch (JSONException e) {
+            }catch (IotdmDaoWriteException e){
+//                  ResponsePrimitive is not available
+            }
+            catch (JSONException e) {
                 LOG.error("Invalid JSON {}", parentOnem2mResource.getResourceContentJsonString(), e);
                 throw new IllegalArgumentException("Invalid JSON", e);
             }
@@ -1487,12 +1594,21 @@ public class Onem2mDb implements TransactionChainListener {
 
         // now in a transaction, smoke all the resources under this ResourceId
         for (String resourceId : resourceIdList) {
-            twc.deleteResourceById(resourceId);
+            try {
+                twc.deleteResourceById(resourceId);
+            }catch(IotdmDaoWriteException e){
+//           TODO        ResponsePrimitive is not available
+            }
         }
 
         // now go clean up the parent of this resource as its child link needs to be removed
         if (!parentResourceId.contentEquals(NULL_RESOURCE_ID))
-            if (!twc.removeParentChildLink(parentResourceId, thisResourceName)) return false;
+            try {
+                if (!twc.removeParentChildLink(parentResourceId, thisResourceName)) return false;
+            }catch(IotdmDaoWriteException e){
+                return false;
+//              TODO    ResponsePrimitive is not available
+            }
         return true;
     }
 
