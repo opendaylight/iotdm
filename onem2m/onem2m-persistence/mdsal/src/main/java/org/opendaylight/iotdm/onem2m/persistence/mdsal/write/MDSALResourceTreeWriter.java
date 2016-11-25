@@ -13,6 +13,7 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoWriteException;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
@@ -112,7 +113,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean createCseByName(String name, String resourceId) {
+    public boolean createCseByName(String name, String resourceId) throws IotdmDaoWriteException{
         boolean status = true;
         crudMonitor.get(0).enter();
         try {
@@ -128,10 +129,10 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mCse.class, key);
 
             writer.create(iid, onem2mCse, dsType);
-
         } catch (Exception e) {
             LOG.error("exception : {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(0).leave();
@@ -140,7 +141,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean createResource(RequestPrimitive onem2mRequest, String parentResourceId, String resourceType) {
+    public boolean createResource(RequestPrimitive onem2mRequest, String parentResourceId, String resourceType) throws IotdmDaoWriteException{
         int shard = factory.getShardFromResourceId(onem2mRequest.getResourceId());
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -204,9 +205,11 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
             writer.create(pciid, onem2mParentChildList, dsType);
 
+
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -215,7 +218,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean updateResourceOldestLatestInfo(String resourceId, String resourceType, String oldest, String latest) {
+    public boolean updateResourceOldestLatestInfo(String resourceId, String resourceType, String oldest, String latest) throws IotdmDaoWriteException {
         int shard = factory.getShardFromResourceId(resourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -239,6 +242,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -247,7 +251,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) {
+    public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) throws IotdmDaoWriteException {
         int shard = factory.getShardFromResourceId(resourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -267,6 +271,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -275,7 +280,10 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean createParentChildLink(String parentResourceId, String childName, String childResourceId, String prevId, String nextId) {
+    public boolean createParentChildLink(String parentResourceId, String childName,
+                                         String childResourceId,
+                                         String prevId,
+                                         String nextId) throws IotdmDaoWriteException {
         int shard = factory.getShardFromResourceId(parentResourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -298,6 +306,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -306,8 +315,9 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean updateChildSiblingNextInfo(String parentResourceId, Onem2mParentChild child, String
-            nextId) {
+    public boolean updateChildSiblingNextInfo(String parentResourceId,
+                                              Onem2mParentChild child,
+                                              String nextId) throws IotdmDaoWriteException{
         int shard = factory.getShardFromResourceId(parentResourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -326,6 +336,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -336,7 +347,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     @Override
     public boolean updateChildSiblingPrevInfo(String parentResourceId,
                                               Onem2mParentChild child,
-                                              String prevId) {
+                                              String prevId) throws IotdmDaoWriteException{
         int shard = factory.getShardFromResourceId(parentResourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -355,6 +366,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -363,7 +375,8 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean removeParentChildLink(String parentResourceId, String childResourceName) {
+    public boolean removeParentChildLink(String parentResourceId,
+                                         String childResourceName) throws IotdmDaoWriteException{
         int shard = factory.getShardFromResourceId(parentResourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -379,6 +392,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -387,7 +401,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean deleteResourceById(String resourceId) {
+    public boolean deleteResourceById(String resourceId) throws IotdmDaoWriteException{
         int shard = factory.getShardFromResourceId(resourceId);
         boolean status = true;
         crudMonitor.get(shard).enter();
@@ -411,6 +425,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(shard).leave();
@@ -420,7 +435,8 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
     @Override
     public boolean createAeIdToResourceIdMapping(String cseBaseName,
-                                                 String aeId, String aeResourceId) {
+                                                 String aeId,
+                                                 String aeResourceId) throws IotdmDaoWriteException{
         boolean status = true;
         crudMonitor.get(0).enter();
         try {
@@ -441,6 +457,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(0).leave();
@@ -449,7 +466,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
+    public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) throws IotdmDaoWriteException {
         boolean status = true;
         crudMonitor.get(0).enter();
         try {
@@ -463,6 +480,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
+            throw new IotdmDaoWriteException();
         } finally {
             writer.close();
             crudMonitor.get(0).leave();

@@ -8,6 +8,7 @@
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
+import org.opendaylight.iotdm.onem2m.core.database.dao.IotdmDaoReadException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
@@ -103,9 +104,12 @@ public class Onem2mResourceElem implements Onem2mResource {
     public String getResourceContentJsonString() {
         String ret = resourceContentJsonStringReference.get();
         if (ret == null) {
-
-            ret = daoResourceTreeReader.retrieveResourceById(new Onem2mResourceKey(resourceId)).getResourceContentJsonString();
-            setResourceContentJsonString(ret);
+            try {
+                ret = daoResourceTreeReader.retrieveResourceById(new Onem2mResourceKey(resourceId)).getResourceContentJsonString();
+                setResourceContentJsonString(ret);
+            }catch(IotdmDaoReadException e){
+                // TODO
+            }
         }
         return ret;
     }
