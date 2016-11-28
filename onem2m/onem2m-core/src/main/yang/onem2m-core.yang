@@ -6,6 +6,7 @@ module onem2m-core {
     import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
+    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
 
     description
         "Service definition for onem2m project";
@@ -18,47 +19,6 @@ module onem2m-core {
     identity onem2m-core {
         base config:module-type;
         config:java-name-prefix Onem2mCore;
-    }
-
-    grouping java-key-store-config {
-        leaf key-store-file {
-            description "Path to the Java KeyStore file.";
-            mandatory true;
-            type string;
-        }
-
-        leaf key-store-password {
-            description "Password to access the KeyStore file.";
-            mandatory true;
-            type string;
-        }
-
-        leaf key-manager-password {
-            description "Password for key manager (needed if different from the key-store-password).";
-            mandatory false;
-            type string;
-        }
-    }
-
-    grouping coaps-keystore-config {
-        uses java-key-store-config;
-
-        leaf key-alias {
-            mandatory true;
-            type string;
-        }
-    }
-
-    grouping coaps-psk-config {
-        list cse-psk {
-            key cse-id;
-            leaf cse-id {
-                type string;
-            }
-            leaf psk {
-                type string;
-            }
-        }
     }
 
     augment "/config:modules/config:module/config:configuration" {
@@ -90,13 +50,13 @@ module onem2m-core {
 
             container default-https-config {
                 description "Default configuration of Java KeyStore file which is used for HTTPS connections by default.";
-                uses java-key-store-config;
+                uses onem2m-plugin-manager:java-key-store-config;
             }
 
             container default-coaps-config {
                 description "Default configuration of Java KeyStore file and PresharedKeys used for CoAPS communication by default.";
-                uses coaps-keystore-config;
-                uses coaps-psk-config;
+                uses onem2m-plugin-manager:coaps-keystore-config;
+                uses onem2m-plugin-manager:coaps-psk-config;
             }
         }
     }

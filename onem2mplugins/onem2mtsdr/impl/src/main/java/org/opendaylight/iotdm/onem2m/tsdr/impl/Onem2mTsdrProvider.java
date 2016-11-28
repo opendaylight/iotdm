@@ -20,12 +20,9 @@ import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mDatastoreListener;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.Onem2mTsdrConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.TsdrParmsDesc;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.onem2m.tsdr.config.Onem2mTargetDesc;
@@ -59,8 +56,10 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
         tsdrTargetDataStoreChangeHandler = new TsdrTargetDescDataStoreChangeHandler(dataBroker);
         tsdrConfigDataStoreChangeHandler = new TsdrConfigDataStoreChangeHandler(dataBroker);
 
-        if (!Onem2mPluginsDbApi.getInstance().registerPlugin(this)) {
-            LOG.error("Failed to register as DB API plugin");
+        try {
+            Onem2mPluginManager.getInstance().registerDbClientPlugin(this);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register as DB API plugin: {}", e);
             return;
         }
 
@@ -68,10 +67,9 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
     }
 
     @Override
-    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
         onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(trc, onem2mTsdrSender);
         onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
-        return true;
     }
 
     @Override
@@ -91,6 +89,7 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
 
     @Override
     public void close() throws Exception {
+        Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
         LOG.info("Onem2mTsdrProvider Closed");
         onem2mTsdrPeriodicManager.close();
         onem2mTsdrAsyncManager.close();

@@ -15,6 +15,8 @@ import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeR
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
@@ -37,8 +39,10 @@ public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, Binding
         dataBroker = session.getSALService(DataBroker.class);
         onem2mService = session.getRpcService(Onem2mService.class);
 
-        if (!Onem2mPluginsDbApi.getInstance().registerPlugin(this)) {
-            LOG.error("Failed to register at PluginDbApi");
+        try {
+            Onem2mPluginManager.getInstance().registerDbClientPlugin(this);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register at PluginDbApi: {}", e);
             return;
         }
 
@@ -49,11 +53,11 @@ public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, Binding
     public void close() throws Exception {
         LOG.info("Onem2mSimpleAdapterProvider Closed");
         saMgr.close();
-        Onem2mPluginsDbApi.getInstance().unregisterPlugin(this);
+        Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
     }
 
     @Override
-    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
         saMgr = new Onem2mSimpleAdapterManager(trc, dataBroker, onem2mService);
         saHttpServer = new Onem2mSimpleAdapterHttpServer(saMgr);
         //saMqttClient = new Onem2mSimpleAdapterMqttClient(saMgr);
@@ -61,7 +65,6 @@ public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, Binding
         saMgr.setOnem2mSimpleAdapterHttpServer(saHttpServer);
         //saMgr.setOnem2mSimpleAdapterMqttClient(saMqttClient);
         //saMgr.setOnem2mSimpleAdapterCoapServer(saCoapServer);
-        return true;
     }
 
     @Override

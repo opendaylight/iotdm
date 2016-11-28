@@ -9,7 +9,6 @@
 package org.opendaylight.iotdm.onem2m.core;
 
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.Monitor;
 
 import java.util.List;
 import java.util.Objects;
@@ -130,6 +129,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         db = Onem2mDb.getInstance();
         db.initializeDatastore(dataBroker);
         Onem2mPluginManager.getInstance().handleDefaultConfigUpdate();
+        Onem2mPluginManager.getInstance().startProviders(session, dataBroker);
         LOG.info("Session Initiated");
     }
 
@@ -172,6 +172,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
      */
     @Override
     public void close() throws Exception {
+        Onem2mPluginManager.getInstance().closeProviders();
+
         if (this.rpcReg != null) {
             this.rpcReg.close();
         }
@@ -839,19 +841,5 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     @Override
     public String getOnem2mStats() {
         return stats.getStats().toString();
-    }
-
-    /**
-     * RPC collects data about all plugins registered to PluginManager and returns in table as output.
-     * @param input PluginLoader instance name can be specified to filter only
-     *              plugins loaded by the specified PluginLoader instance
-     * @return Table of registered plugins
-     */
-    @Override
-    public Future<RpcResult<Onem2mPluginManagerRegistrationsOutput>> onem2mPluginManagerRegistrations(Onem2mPluginManagerRegistrationsInput input) {
-        Onem2mPluginManagerRegistrationsOutput output =
-                Onem2mPluginManager.getInstance().getRegisteredPluginsTable(
-                        (null == input) ? null : input.getPluginLoaderName());
-        return RpcResultBuilder.success(output).buildFuture();
     }
 }

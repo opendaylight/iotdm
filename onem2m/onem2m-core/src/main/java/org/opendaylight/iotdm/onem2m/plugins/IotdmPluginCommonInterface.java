@@ -8,10 +8,46 @@
 
 package org.opendaylight.iotdm.onem2m.plugins;
 
-public interface IotdmPluginCommonInterface {
+/**
+ * This interface describes methods used by PluginManager and other
+ * services registering IotDM plugins in order
+ * to make and maintain plugin registrations.
+ */
+public interface IotdmPluginCommonInterface  extends AutoCloseable {
     /**
      * Returns the name of plugin (common for all instances).
-     * @return Plugin name.
+     * @return Plugin name
      */
     String getPluginName();
+
+    /**
+     * Returns the name of plugin instance unique among all instances
+     * of the same plugin.
+     * @return Instance name
+     */
+    default String getInstanceName() {
+        return "default";
+    }
+
+    /**
+     * Compares this instance and given plugin and returns true in case
+     * of match and false otherwise.
+     * @param plugin The second plugin instance.
+     * @return True if the instances are the same, False otherwise.
+     */
+    default boolean isPlugin(IotdmPluginCommonInterface plugin) {
+        if (this.getPluginName().equals(plugin.getPluginName()) &&
+            this.getInstanceName().equals(plugin.getInstanceName())) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns debugging string describing the plugin instance.
+     * @return String with plugin parameters.
+     */
+    default String getDebugString() {
+        return "PluginName: " + this.getPluginName() + " InstanceName: " + this.getInstanceName();
+    }
 }

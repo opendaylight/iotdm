@@ -14,6 +14,8 @@ import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.common.Onem2mKeyStoreFileConfig;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.ChannelConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.channel.configuration.channel.specific.configuration.HttpsChannelConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,12 +90,12 @@ public class Onem2mHttpsPluginServer extends Onem2mHttpBaseChannel<Onem2mHttpsPl
     }
 
     @Override
-    public String getConfigAsString() {
-        StringBuilder builder = this.configuration.getConfigString();
-        if (null == builder) {
-            return null;
-        }
+    public ChannelConfiguration getChannelConfig() {
+        HttpsChannelConfigBuilder builder = new HttpsChannelConfigBuilder()
+                .setKeyManagerPassword(this.configuration.getKeyManagerPassword()) // TODO exposure
+                .setKeyStoreFile(this.configuration.getKeyStoreFile())
+                .setKeyManagerPassword(this.configuration.getKeyManagerPassword()); // TODO exposure
 
-        return builder.toString();
+        return this.getChannelConfigBuilder().setChannelSpecificConfiguration(builder.build()).build();
     }
 }

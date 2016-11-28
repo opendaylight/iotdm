@@ -8,6 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.plugins;
 
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmCoapsConfigBuilder;
@@ -22,10 +24,9 @@ import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mExclusiveRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedExactMatchRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mSharedPrefixMatchRegistry;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mPluginManagerRegistrationsOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mPluginManagerRegistrationsOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.plugin.manager.registrations.output.RegisteredPluginsTable;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.plugin.manager.registrations.output.RegisteredPluginsTableBuilder;
+import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigClient;
+import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.Onem2mPluginsSimpleConfigManager;
+import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.Onem2mPluginsSimpleConfigProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,10 @@ import static java.util.Objects.nonNull;
 public class Onem2mPluginManager implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPluginManager.class);
     private static Onem2mPluginManager _instance;
-    private static Map<String, IotdmPluginLoader> pluginLoaders = new HashMap<>();
+    private static Onem2mPluginManagerProvider serviceProvider = null;
+    private static Onem2mPluginsSimpleConfigProvider simpleConfigProvider = null;
+
+    private final Map<String, IotdmPluginLoader> pluginLoaders = new ConcurrentHashMap<>();
 
     /* Specific IP address which means that plugin registers for all
      * local interfaces
@@ -63,9 +67,6 @@ public class Onem2mPluginManager implements AutoCloseable {
 
     // The main registry of the PluginManager
     private final PluginManagerRegistry registry = new PluginManagerRegistry();
-
-    // Variable used for generating instance keys unique for every IotdmPlugin instance
-    private int pluginInstanceKeyGen = 0;
 
     // Registration modes (specific registry classes are implemented for particular mode)
     public enum Mode {
@@ -110,12 +111,45 @@ public class Onem2mPluginManager implements AutoCloseable {
         return _instance;
     }
 
+    protected Map<String, IotdmPluginLoader> getMgrPluginLoaders() {
+        return this.pluginLoaders;
+    }
+
+    protected PluginManagerRegistry getMgrRegistry() {
+        return this.registry;
+    }
+
     /**
-     * Generates unique instance key for instances of IotdmPlugin.
-     * @return Generated instance key.
+     * Initializes and starts providers implementing services of PluginManager infra.
+     * @param session Provider context.
+     * @param dataBroker Data broker.
      */
-    protected int getNewPluginInstanceKey() {
-        return ++this.pluginInstanceKeyGen;
+    public void startProviders(final BindingAwareBroker.ProviderContext session,
+                               final DataBroker dataBroker) {
+        if (null != this.serviceProvider) {
+            this.serviceProvider.close();
+        }
+        this.serviceProvider = new Onem2mPluginManagerProvider(session);
+
+        if (null != this.simpleConfigProvider) {
+            this.simpleConfigProvider.close();
+        }
+
+        this.simpleConfigProvider = new Onem2mPluginsSimpleConfigProvider(session, dataBroker);
+    }
+
+    /**
+     * Closes providers implementing services of PluginManager infra.
+     */
+    public void closeProviders() {
+        if (null != this.serviceProvider) {
+            this.serviceProvider.close();
+            this.serviceProvider = null;
+        }
+        if (null != this.simpleConfigProvider) {
+            this.simpleConfigProvider.close();
+            this.simpleConfigProvider = null;
+        }
     }
 
     /**
@@ -125,9 +159,12 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param port Local TCP port number of the HTTP server.
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
-     * @return True in case of successful registration, False otherwise.
+     * @return This instance for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginHttp(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+    public Onem2mPluginManager registerPluginHttp(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                  String uri)
+            throws IotdmPluginRegistrationException {
         return registerPlugin(plugin, ProtocolHTTP, AllInterfaces, port, mode, uri, null);
     }
 
@@ -139,9 +176,12 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param port Local TCP port number of the HTTPS server.
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
-     * @return True in case of successful registration, False otherwise.
+     * @return This instance for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+    public Onem2mPluginManager registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                   String uri)
+            throws IotdmPluginRegistrationException {
         IotdmHttpsConfigBuilder builder = new IotdmHttpsConfigBuilder().setUseDefault(true);
         return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, builder);
     }
@@ -155,9 +195,11 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param uri Local URI for which the plugin is registering.
      * @param configurationBuilder Configuration builder for HTTPS server.
      * @return True in case of successful registration, False otherwise.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
-                                       String uri, IotdmHttpsConfigBuilder configurationBuilder) {
+    public Onem2mPluginManager registerPluginHttps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                   String uri, IotdmHttpsConfigBuilder configurationBuilder)
+            throws IotdmPluginRegistrationException {
         return registerPlugin(plugin, ProtocolHTTPS, AllInterfaces, port, mode, uri, configurationBuilder);
     }
 
@@ -168,9 +210,12 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param port Local UDP port number of the COAP server.
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
-     * @return True in case of successful registration, False otherwise.
+     * @return This instance for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginCoap(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+    public Onem2mPluginManager registerPluginCoap(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                  String uri)
+            throws IotdmPluginRegistrationException {
         return registerPlugin(plugin, ProtocolCoAP, AllInterfaces, port, mode, uri, null);
     }
 
@@ -182,10 +227,12 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
      * @param configuratonBuilder Configuration builder for COAPS server.
-     * @return True in case of successful registration, False otherwise.
+     * @return This instance for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri,
-                                       IotdmCoapsConfigBuilder configuratonBuilder) {
+    public Onem2mPluginManager registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                   String uri, IotdmCoapsConfigBuilder configuratonBuilder)
+            throws IotdmPluginRegistrationException {
         return registerPlugin(plugin, ProtocolCoAPS, AllInterfaces, port, mode, uri, configuratonBuilder);
     }
 
@@ -196,9 +243,12 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param port Local UDP port number of the COAPS server.
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
-     * @return True in case of successful registration, False otherwise.
+     * @return This instance for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+    public Onem2mPluginManager registerPluginCoaps(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                   String uri)
+            throws IotdmPluginRegistrationException {
         IotdmCoapsConfigBuilder builder = new IotdmCoapsConfigBuilder().setUseDefault(true);
         return registerPlugin(plugin, ProtocolCoAPS, AllInterfaces, port, mode, uri, builder);
     }
@@ -211,8 +261,11 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
      * @return True in case of successful registration, False otherwise.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginWebsocket(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode, String uri) {
+    public Onem2mPluginManager registerPluginWebsocket(IotdmPlugin plugin, int port, Onem2mPluginManager.Mode mode,
+                                                       String uri)
+            throws IotdmPluginRegistrationException {
         return registerPlugin(plugin, ProtocolWebsocket, AllInterfaces, port, mode, uri, null);
     }
 
@@ -224,26 +277,70 @@ public class Onem2mPluginManager implements AutoCloseable {
      * @param ipAddress destination ip address of MQTT server
      * @param mode Registry sharing mode.
      * @param uri Local URI for which the plugin is registering.
-     * @return True in case of successful registration, False otherwise.
+     * @return This instance for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    public boolean registerPluginMQTT(IotdmPlugin plugin, int port, String ipAddress, Onem2mPluginManager.Mode mode, String uri) {
+    public Onem2mPluginManager registerPluginMQTT(IotdmPlugin plugin, int port, String ipAddress,
+                                                  Onem2mPluginManager.Mode mode, String uri)
+            throws IotdmPluginRegistrationException {
         return registerPlugin(plugin, ProtocolMQTT, ipAddress, port, mode, uri, null);
     }
 
     // TODO add registration methods for other supported protocols
 
 
-    // TODO this is here for backward compatibility purposes
-    public int registerPluginAtPort(String protocol, IotdmPlugin instance, int port, Onem2mPluginManager.Mode mode) {
-        return this.registerPluginAtPort(protocol, instance, port, mode, null);
+    /*
+     * Registration of DB API client plugins
+     */
+
+    /**
+     * Registers plugin instance implementing DB API Client.
+     * @param plugin Plugin instance
+     * @return This instance of PluginManager for chaining purpose.
+     * @throws IotdmPluginRegistrationException
+     */
+    public Onem2mPluginManager registerDbClientPlugin(IotdmPluginDbClient plugin)
+            throws IotdmPluginRegistrationException {
+        Onem2mPluginsDbApi.getInstance().registerDbClientPlugin(plugin);
+        return this;
     }
 
-    public int registerPluginAtPort(String protocol, IotdmPlugin instance, int port, Onem2mPluginManager.Mode mode,
-                                    IotdmPluginConfigurationBuilder configurationBuilder) {
-        this.registerPlugin(instance, protocol, AllInterfaces, port, mode, null, configurationBuilder);
-        return 0;
+    /**
+     * Unregisters plugin instance implementing DB API Client.
+     * @param plugin Plugin instance
+     * @return This instance of PluginManager for chaining purpose.
+     */
+    public Onem2mPluginManager unregisterDbClientPlugin(IotdmPluginDbClient plugin) {
+        Onem2mPluginsDbApi.getInstance().unregisterDbClientPlugin(plugin);
+        return this;
     }
 
+
+    /*
+     * Registration of SimpleConfig client plugins
+     */
+
+    /**
+     * Registers plugin instance implementing SimpleConfig interface.
+     * @param plugin Plugin instance
+     * @return This instance of PluginManager for chaining purpose.
+     * @throws IotdmPluginRegistrationException
+     */
+    public Onem2mPluginManager registerSimpleConfigPlugin(IotdmPluginSimpleConfigClient plugin)
+            throws IotdmPluginRegistrationException {
+        Onem2mPluginsSimpleConfigManager.getInstance().registerSimpleConfigPlugin(plugin);
+        return this;
+    }
+
+    /**
+     * Unregisters plugin instance implementing SimpleConfig interface.
+     * @param plugin Plugin instance
+     * @return This instance of PluginManager for chaining purpose.
+     */
+    public Onem2mPluginManager unregisterSimpleConfigPlugin(IotdmPluginSimpleConfigClient plugin) {
+        Onem2mPluginsSimpleConfigManager.getInstance().unregisterSimpleConfigPlugin(plugin);
+        return this;
+    }
 
     private boolean isIpAll(String ipAdddress) {
         return ipAdddress.equals(AllInterfaces);
@@ -274,6 +371,11 @@ public class Onem2mPluginManager implements AutoCloseable {
         return true;
     }
 
+    private void handleRegistrationError(String format, String... args)
+            throws IotdmPluginRegistrationException {
+        Onem2mPluginManagerUtils.handleRegistrationError(LOG, format, args);
+    }
+
     /**
      * Method implementing the registration logic.
      * @param plugin Plugin to be registered.
@@ -288,17 +390,19 @@ public class Onem2mPluginManager implements AutoCloseable {
      *            Null can be used if plugin registers for all URIs.
      * @param configurationBuilder Configuration builder for CommunicationChannel if needed.
      *                             Null can be passed.
-     * @return True if the registration has been successful, False otherwise.
+     * @return This instance of PluginManager for chaining purpose.
+     * @throws IotdmPluginRegistrationException
      */
-    private boolean registerPlugin(IotdmPlugin plugin, String protocolName,
-                                   String ipAddress, int port,
-                                   Onem2mPluginManager.Mode mode, String uri,
-                                   IotdmPluginConfigurationBuilder configurationBuilder) {
+    private Onem2mPluginManager registerPlugin(IotdmPlugin plugin, String protocolName,
+                                               String ipAddress, int port,
+                                               Onem2mPluginManager.Mode mode, String uri,
+                                               IotdmPluginConfigurationBuilder configurationBuilder)
+            throws IotdmPluginRegistrationException {
 
         // Get channel factory
         if (! pluginChannelFactoryMap.containsKey(protocolName)) {
-            LOG.error("Attempt to register for unsupported protocol: {}", protocolName);
-            return false;
+            handleRegistrationError("Attempt to register for unsupported protocol: {}, plugin: {}",
+                                    protocolName, plugin.getDebugString());
         }
 
         Onem2mPluginChannelFactory channelFactory = pluginChannelFactoryMap.get(protocolName);
@@ -308,8 +412,8 @@ public class Onem2mPluginManager implements AutoCloseable {
             ipAddress = AllInterfaces;
         }
         if (! validateIpAddress(ipAddress)) {
-            LOG.error("Invalid ipAddress passed: {}, plugin: {}", ipAddress, plugin.getDebugString());
-            return false;
+            handleRegistrationError("Invalid ipAddress passed: {}, plugin: {}",
+                                    ipAddress, plugin.getDebugString());
         }
 
         // Prepare channel identifier
@@ -323,7 +427,6 @@ public class Onem2mPluginManager implements AutoCloseable {
             if (nonNull(registryAll)) {
                 LOG.error("Failed to register plugin {} at channel: {}. Resources already used by channel: {}",
                           plugin.getDebugString(), chId.getDebugString(), registryAll);
-                return false;
             }
         }
 
@@ -331,24 +434,24 @@ public class Onem2mPluginManager implements AutoCloseable {
         Onem2mLocalEndpointRegistry endpointReg = this.registry.getPluginRegistry(chId);
         if (nonNull(endpointReg)) {
             if (! endpointReg.getProtocol().equals(chId.getProtocolName())) {
-                LOG.error("Failed to register plugin {} at channel: {}. Resources already used for protocol {}",
-                          plugin.getDebugString(), chId.getDebugString(), endpointReg.getProtocol());
-                return false;
+                handleRegistrationError("Failed to register plugin {} at channel: {}. " +
+                                        "Resources already used for protocol {}",
+                                        plugin.getDebugString(), chId.getDebugString(), endpointReg.getProtocol());
             }
 
             // Verify mode
             if (endpointReg.getMode() != chId.mode) {
-                LOG.error("Failed to register plugin {} at channel: {}. Resources already used with mode: {}",
-                          plugin.getDebugString(), chId.getDebugString(), endpointReg.getMode());
-                return false;
+                handleRegistrationError(
+                        "Failed to register plugin {} at channel: {}. Resources already used with mode: {}",
+                        plugin.getDebugString(), chId.getDebugString(), endpointReg.getMode().toString());
             }
 
             // Configuration must equal if exists
             if (nonNull(configurationBuilder)) {
                 if (! endpointReg.getAssociatedChannel().compareConfig(configurationBuilder)) {
-                    LOG.error("Failed to register plugin {} at channel: {}. Different configuration passed",
-                              plugin.getDebugString(), chId.getDebugString());
-                    return false;
+                    handleRegistrationError(
+                                "Failed to register plugin {} at channel: {}. Different configuration passed",
+                                plugin.getDebugString(), chId.getDebugString());
                 }
             }
 
@@ -359,29 +462,28 @@ public class Onem2mPluginManager implements AutoCloseable {
                 if (regPlugin.isPlugin(plugin)) {
                     LOG.warn("Double registration of plugin: {} at channel: {} or URI: {}",
                              plugin.getDebugString(), chId.getDebugString(), uri);
-                    return true;
+                    return this;
                 }
 
                 // URI already registered by another plugin
-                LOG.error("Failed to register plugin: {} at channel: {}. URI: {} already in use by plugin: {}",
-                          plugin.getDebugString(), chId.getDebugString(), uri, regPlugin.getDebugString());
-                return false;
+                handleRegistrationError(
+                        "Failed to register plugin: {} at channel: {}. URI: {} already in use by plugin: {}",
+                        plugin.getDebugString(), chId.getDebugString(), uri, regPlugin.getDebugString());
             }
 
             // register plugin in the registry
             if (! endpointReg.regPlugin(plugin, uri)) {
-                LOG.error("Failed to register plugin {} at channel: {}",
-                          plugin.getDebugString(), chId.getDebugString());
-                return false;
+                handleRegistrationError("Failed to register plugin {} at channel: {}",
+                                        plugin.getDebugString(), chId.getDebugString());
             }
 
             // registration successful
             LOG.info("Plugin: {} registered at shared channel: {} for URI: {}",
                      plugin.getDebugString(), chId.getDebugString(), uri);
-            return true;
+            return this;
         } else { // IpAddress and port are not in use
             // Instantiate registry according to specified mode
-            Onem2mLocalEndpointRegistry newRegistry;
+            Onem2mLocalEndpointRegistry newRegistry = null;
             switch (chId.getMode()) {
                 case Exclusive:
                     newRegistry = new Onem2mExclusiveRegistry(chId);
@@ -393,15 +495,13 @@ public class Onem2mPluginManager implements AutoCloseable {
                     newRegistry = new Onem2mSharedExactMatchRegistry(chId);
                     break;
                 default:
-                    LOG.error("Registry for mode: {} not implemented", chId.getMode());
-                    return false;
+                    handleRegistrationError("Registration for mode: {} not implemented", chId.getMode().toString());
             }
 
             // register plugin in the new registry
             if (! newRegistry.regPlugin(plugin, uri)) {
-                LOG.error("Failed to register plugin {} at channel: {}",
-                          plugin.getDebugString(), chId.getDebugString());
-                return false;
+                handleRegistrationError("Failed to register plugin {} at channel: {}",
+                                        plugin.getDebugString(), chId.getDebugString());
             }
 
             // create new channel
@@ -409,9 +509,8 @@ public class Onem2mPluginManager implements AutoCloseable {
                     channelFactory.createInstance(chId.getIpAddress(), chId.getPort(), configurationBuilder,
                                                   newRegistry);
             if (null == newChannel) {
-                LOG.error("Failed to instantiate channel: {} for plugin: {}",
-                          chId.getDebugString(), plugin.getDebugString());
-                return false;
+                handleRegistrationError("Failed to instantiate channel: {} for plugin: {}",
+                                        chId.getDebugString(), plugin.getDebugString());
             }
 
             // associate channel and registry also in reverse direction
@@ -419,22 +518,21 @@ public class Onem2mPluginManager implements AutoCloseable {
 
             // store the endpoint registry in the PluginManager registry
             if (! this.registry.setPluginRegistry(chId, newRegistry)) {
-                LOG.error("Failed to register plugin: {} at channel: {}. " +
-                          "Failed to store channel registry in PluginManager registry",
-                          plugin.getDebugString(), chId.getDebugString());
                 // close running channel
                 try {
                     newChannel.close();
                 } catch (Exception e) {
                     LOG.error("Failed to close running channel: {}", chId.getDebugString());
                 }
-                return false;
+                handleRegistrationError("Failed to register plugin: {} at channel: {}. " +
+                                        "Failed to store channel registry in PluginManager registry",
+                                        plugin.getDebugString(), chId.getDebugString());
             }
 
             // registration successful
             LOG.info("Plugin: {} registered at new channel: {} for URI: {}",
                      plugin.getDebugString(), chId.getDebugString(), uri);
-            return true;
+            return this;
         }
     }
 
@@ -451,8 +549,9 @@ public class Onem2mPluginManager implements AutoCloseable {
      * Unregisters already registered plugin. Channels which
      * are not needed anymore are closed.
      * @param plugin The instance of IotdmPlugin to unregister.
+     * @return This instance of PluginManager for chaining purpose.
      */
-    public void unregisterPlugin(IotdmPlugin plugin) {
+    public Onem2mPluginManager unregisterIotdmPlugin(IotdmPlugin plugin) {
         this.registry.registryStream().forEach( endpointRegistry -> {
             if (endpointRegistry.hasPlugin(plugin)) {
                 // remove the plugin
@@ -473,6 +572,8 @@ public class Onem2mPluginManager implements AutoCloseable {
                 }
             }
         });
+
+        return this;
     }
 
     /**
@@ -508,14 +609,19 @@ public class Onem2mPluginManager implements AutoCloseable {
 
     /**
      * Closes all running channels.
-     * @throws Exception closing error
      */
     @Override
-    public void close() throws Exception {
+    public void close() {
         this.registry.registryStream().forEach( endpointRegistry -> {
-            closeRegistryChannel(endpointRegistry);
-            this.registry.removePluginRegistry(endpointRegistry.getChannelId());
+            try {
+                closeRegistryChannel(endpointRegistry);
+                this.registry.removePluginRegistry(endpointRegistry.getChannelId());
+            } catch (Exception e) {
+                LOG.error("Failed to close communication channel: {}", e);
+            }
         });
+
+        this.closeProviders();
     }
 
     /**
@@ -634,78 +740,6 @@ public class Onem2mPluginManager implements AutoCloseable {
         this.pluginLoaders.remove(pluginLoader.getLoaderName());
         LOG.info("PluginLoader {} unregistered", pluginLoader.getLoaderName());
         return true;
-    }
-
-    /**
-     * Walks all registered plugins and collects table of information about plugins.
-     * @param pluginLoader Parameter is optional and can be used to filter
-     *                     plugins loaded by specified PluginLoader instance
-     * @return Table of data about registered plugins
-     */
-    public Onem2mPluginManagerRegistrationsOutput getRegisteredPluginsTable(String pluginLoader) {
-        Onem2mPluginManagerRegistrationsOutputBuilder output = new Onem2mPluginManagerRegistrationsOutputBuilder();
-
-        List<RegisteredPluginsTable> list = new LinkedList<>();
-
-        // PluginLoader name must equal if passed
-        IotdmPluginLoader loader;
-        if ((null != pluginLoader) && (! pluginLoader.isEmpty())) {
-            if (! this.pluginLoaders.containsKey(pluginLoader)) {
-                // There's not such pluginLoader registered, return empty list
-                return output.setRegisteredPluginsTable(list).build();
-            }
-
-            loader = this.pluginLoaders.get(pluginLoader);
-        } else {
-            loader = null;
-        }
-
-        // Walk all registries
-        this.registry.registryStream().forEach( endpointRegistry -> {
-            // Get the stream of plugins from the registry
-            endpointRegistry.getPluginStream()
-                // Filter only plugins loaded by the PluginLoader instance if specified
-                .filter(urlPluginEntry -> (loader == null) ? true : loader.hasLoadedPlugin(urlPluginEntry.getValue()))
-                // Collect information about the plugin instance
-                .forEach(urlPluginEntry -> {
-
-                    IotdmPlugin plugin = urlPluginEntry.getValue();
-                    String loaderName = null;
-                    if (null != loader) {
-                        // PluginLoader instance specified
-                        loaderName = loader.getLoaderName();
-                    } else {
-                        // Must walk all loaders and try to find it
-                        Optional<IotdmPluginLoader> currentLoader =
-                                this.pluginLoaders.values().stream()
-                                    .filter( l -> l.hasLoadedPlugin(urlPluginEntry.getValue())).findFirst();
-                        if (currentLoader.isPresent()) {
-                            loaderName = currentLoader.get().getLoaderName();
-                        }
-                    }
-
-                    // Build the table row
-                    RegisteredPluginsTableBuilder tableBuilder = new RegisteredPluginsTableBuilder();
-                    tableBuilder
-                            .setPluginName(plugin.getPluginName())
-                            .setPluginInstanceKey(String.valueOf(plugin.getInstanceKey()))
-                            .setPluginClass(plugin.getClass().getName())
-                            .setPluginLoader(loaderName)
-                            .setProtocol(endpointRegistry.getProtocol())
-                            .setAddress(endpointRegistry.getIpAddress())
-                            .setPort(endpointRegistry.getPort())
-                            .setTransportProtocol(endpointRegistry.getChannelId().getTransportProtocol().toString())
-                            .setChannelType(endpointRegistry.getChannelId().getChannelType().toString())
-                            .setRegistrationMode(endpointRegistry.getMode().toString())
-                            .setLocalUrl(urlPluginEntry.getKey())
-                            .setChannelConfiguration(endpointRegistry.getAssociatedChannel().getConfigAsString())
-                            .setChannelState(endpointRegistry.getAssociatedChannel().getState().toString());
-
-                    list.add(tableBuilder.build());
-            });
-        });
-
-        return output.setRegisteredPluginsTable(list).build();
     }
 }
 

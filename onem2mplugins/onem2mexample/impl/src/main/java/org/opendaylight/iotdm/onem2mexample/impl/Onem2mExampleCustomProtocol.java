@@ -17,6 +17,9 @@ import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionMa
 import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
+import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigClient;
+import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigException;
+import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmSimpleConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
@@ -24,11 +27,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 /**
  * Created by bjanosik on 9/9/16.
  */
-public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPluginDbClient {
+public class Onem2mExampleCustomProtocol implements IotdmPlugin,
+                                                    IotdmPluginDbClient,
+                                                    IotdmPluginSimpleConfigClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mExampleCustomProtocol.class);
     protected DataBroker dataBroker;
@@ -42,20 +48,25 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPlu
 
 
     public Onem2mExampleCustomProtocol(DataBroker dataBroker, Onem2mService onem2mService) {
-        super(Onem2mPluginManager.getInstance());
         this.onem2mService = onem2mService;
         this.dataBroker = dataBroker;
-        Onem2mPluginsDbApi.getInstance().registerPlugin(this);
+        try {
+            Onem2mPluginManager.getInstance()
+                    .registerDbClientPlugin(this)
+                    .registerSimpleConfigPlugin(this);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register plugin as DB API client: {}", e);
+        }
     }
 
     @Override
-    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception {
         onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
 
         // Now the plugin can be registered at plugin manager and can start to handle requests
 
         //use suitable method for required plugin (https, coap, websocket ...)
-        return Onem2mPluginManager.getInstance()
+        Onem2mPluginManager.getInstance()
                               .registerPluginHttp(this, 8283, Onem2mPluginManager.Mode.Exclusive, null);
     }
 
@@ -63,7 +74,7 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPlu
     public void dbClientStop() {
         onem2mDataStoreChangeHandler = null;
         // Unregister from the plugin manager because the DB is not accessible
-        Onem2mPluginManager.getInstance().unregisterPlugin(this);
+        Onem2mPluginManager.getInstance().unregisterIotdmPlugin(this);
     }
 
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
@@ -107,8 +118,10 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPlu
 
     @Override
     public void close() {
-        Onem2mPluginsDbApi.getInstance().unregisterPlugin(this);
-        Onem2mPluginManager.getInstance().unregisterPlugin(this);
+        Onem2mPluginManager.getInstance()
+                .unregisterIotdmPlugin(this)
+                .unregisterDbClientPlugin(this)
+                .unregisterSimpleConfigPlugin(this);
     }
 
     @Override
@@ -376,4 +389,36 @@ public class Onem2mExampleCustomProtocol extends IotdmPlugin implements IotdmPlu
 
         return true;
     }
+
+    /*
+     * Testing implementation of SimpleConfig client
+     */
+    private IotdmSimpleConfig cfg = null;
+
+    @Override
+    public void configure(IotdmSimpleConfig configuration) throws IotdmPluginSimpleConfigException {
+        if (null == configuration) {
+            cfg = null;
+            LOG.info("Configuration deleted");
+            return;
+        }
+
+        LOG.info("Configured new SimpleConfig: {}", configuration.getDebugString());
+
+        for (Map.Entry<String,String> kv : configuration.getKeyValMap().entrySet()) {
+            LOG.info("Configured KVpair: {}:{}", kv.getKey(), kv.getValue());
+
+            // Testing failure, exception is thrown if the configuration includes key "error"
+            if (kv.getKey().equals("error")) {
+                throw new IotdmPluginSimpleConfigException("Configuration must not include key \"error\"");
+            }
+        }
+        cfg = configuration;
+    }
+
+    @Override
+    public IotdmSimpleConfig getSimpleConfig() {
+        return this.cfg;
+    }
+
 }

@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
-public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpRequest, IotdmPluginHttpResponse>
-                                       implements Onem2mProtocolRxChannel<Onem2mHttpBaseIotdmPluginConfig> {
+public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpRequest, IotdmPluginHttpResponse>,
+                                                  Onem2mProtocolRxChannel<Onem2mHttpBaseIotdmPluginConfig> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpBaseIotdmPlugin.class);
 
@@ -42,7 +42,6 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
                                      @Nonnull final Onem2mRxRequestAbstractFactory<Onem2mHttpRxRequest,IotdmPluginHttpRequest,IotdmPluginHttpResponse> requestFactory,
                                      @Nonnull final Onem2mService onem2mService,
                                      final Onem2mHttpSecureConnectionConfig secConfig) {
-        super(Onem2mPluginManager.getInstance());
         this.requestHandler = requestHandler;
         this.requestFactory = requestFactory;
         this.onem2mService = onem2mService;
@@ -61,7 +60,9 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
             throw new IllegalArgumentException("Starting Http base server without configuration");
         }
 
-        boolean ret = false;
+        this.currentConfig = configuration;
+        this.securityLevel = configuration.getServerSecurityLevel();
+
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
         // Check whether HTTP or HTTPS is used
@@ -80,33 +81,33 @@ public class Onem2mHttpBaseIotdmPlugin extends IotdmPlugin<IotdmPluginHttpReques
             }
 
             cfgBuilder.verify();
-            ret = mgr.registerPluginHttps(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive,
-                                          null, cfgBuilder);
-            if (ret) {
-                LOG.info("Started HTTPS Base IoTDM plugin at port: {}, security level: {}",
-                         configuration.getServerPort(), configuration.getServerSecurityLevel());
-            } else {
-                LOG.error("Failed to start HTTPS Base IoTDM plugin");
+            try {
+                mgr.registerPluginHttps(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive,
+                                        null, cfgBuilder);
+            } catch (IotdmPluginRegistrationException e) {
+                LOG.error("Failed to start HTTPS Base IoTDM plugin: {}", e);
+                return;
             }
+
+            LOG.info("Started HTTPS Base IoTDM plugin at port: {}, security level: {}",
+                     configuration.getServerPort(), configuration.getServerSecurityLevel());
         } else {
-            ret = mgr.registerPluginHttp(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
-
-            if (ret) {
-                LOG.info("Started HTTP Base IoTDM plugin at port: {}, security level: {}",
-                         configuration.getServerPort(), configuration.getServerSecurityLevel());
-            } else {
-                LOG.error("Failed to start HTTP Base IoTDM plugin");
+            try {
+                mgr.registerPluginHttp(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
+            } catch (IotdmPluginRegistrationException e) {
+                LOG.error("Failed to start HTTP Base IoTDM plugin: {}", e);
+                return;
             }
-        }
 
-        this.currentConfig = configuration;
-        this.securityLevel = configuration.getServerSecurityLevel();
+            LOG.info("Started HTTP Base IoTDM plugin at port: {}, security level: {}",
+                     configuration.getServerPort(), configuration.getServerSecurityLevel());
+        }
     }
 
     @Override
     public void close() {
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-        mgr.unregisterPlugin(this);
+        mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed HTTP Base IoTDM plugin at port: {}, security level: {}",
                  currentConfig.getServerPort(), currentConfig.getServerSecurityLevel());

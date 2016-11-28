@@ -16,6 +16,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.iotdm/onem2m-features/${onem2m.version}/xml/features</repository>
+  <!--<repository>mvn:org.apache.karaf.features/standard/${karaf.version}/xml/features</repository>-->
 
   <feature name='odl-onem2mbundleloader-api' version='${project.version}' description='OpenDaylight :: onem2mbundleloader :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
@@ -25,6 +26,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
     <feature version='${project.version}'>odl-onem2mbundleloader-api</feature>
     <feature version='${onem2m.version}'>odl-onem2m-core</feature>
+
+    <bundle>mvn:org.apache.karaf.bundle/org.apache.karaf.bundle.core/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.iotdm/onem2mbundleloader-impl/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-onem2mbundleloader-rest' version='${project.version}' description='OpenDaylight :: onem2mbundleloader :: REST'>

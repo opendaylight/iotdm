@@ -6,7 +6,7 @@ module onem2m-protocol-coap {
     import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
-    import onem2m-core { prefix onem2m-core; revision-date "2014-12-10"; }
+    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
 
     description
         "Service definition for onem2m project";
@@ -34,7 +34,7 @@ module onem2m-protocol-coap {
     grouping coap-security-config {
         container dtls-certificates-config {
             container key-store-config {
-                uses onem2m-core:coaps-keystore-config;
+                uses onem2m-plugin-manager:coaps-keystore-config;
             }
             container trust-store-config {
                 leaf trust-store-file {
@@ -54,11 +54,11 @@ module onem2m-protocol-coap {
         }
 
         container dtls-psk-local-cse-base {
-            uses onem2m-core:coaps-psk-config;
+            uses onem2m-plugin-manager:coaps-psk-config;
         }
 
         container dtls-psk-remote-cse {
-            uses onem2m-core:coaps-psk-config;
+            uses onem2m-plugin-manager:coaps-psk-config;
         }
     }
 

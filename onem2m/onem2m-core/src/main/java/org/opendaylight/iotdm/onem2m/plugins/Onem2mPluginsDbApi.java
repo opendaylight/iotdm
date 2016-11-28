@@ -30,7 +30,53 @@ public class Onem2mPluginsDbApi {
     private ResourceTreeWriter twc;
     private ResourceTreeReader trc;
     private static Onem2mPluginsDbApi api;
-    private final List<IotdmPluginDbClient> plugins = Collections.synchronizedList(new LinkedList<>());
+    private final List<PluginDbClientData> plugins = Collections.synchronizedList(new LinkedList<>());
+
+    /**
+     * States of the registered DB API client
+     */
+    enum IotdmPLuginDbClientState {
+        /**
+         * Initial state
+         */
+        INIT,
+
+        /**
+         * DB API client has been started successfully
+         */
+        STARTED,
+
+        /**
+         * DB API client has been stopped
+         */
+        STOPPED,
+
+        /**
+         * DB API client is in error state
+         */
+        ERROR
+    }
+
+    protected class PluginDbClientData {
+        private final IotdmPluginDbClient client;
+        private IotdmPLuginDbClientState state;
+
+        public PluginDbClientData(IotdmPluginDbClient client) {
+            this.client = client;
+        }
+
+        public IotdmPluginDbClient getClient() {
+            return client;
+        }
+
+        public IotdmPLuginDbClientState getState() {
+            return state;
+        }
+
+        public void setState(IotdmPLuginDbClientState state) {
+            this.state = state;
+        }
+    }
 
     public static Onem2mPluginsDbApi getInstance() {
         if (api == null) {
@@ -50,14 +96,22 @@ public class Onem2mPluginsDbApi {
         this.trc = trc;
         this.twc = twc;
 
-        for (IotdmPluginDbClient dbClient : plugins) {
-            dbClient.dbClientStart(twc, trc);
+        for (PluginDbClientData dbClientData : plugins) {
+            try {
+                dbClientData.getClient().dbClientStart(this.twc, this.trc);
+                dbClientData.setState(IotdmPLuginDbClientState.STARTED);
+            } catch (Exception e) {
+                dbClientData.setState(IotdmPLuginDbClientState.ERROR);
+                LOG.error("Failed to start DB Client plugin: {}, error message: {}",
+                          dbClientData.getClient().getPluginName(), e);
+            }
         }
     }
 
     public void unregisterDbReaderAndWriter() {
-        for (IotdmPluginDbClient dbClient : plugins) {
-            dbClient.dbClientStop();
+        for (PluginDbClientData dbClientData : plugins) {
+            dbClientData.getClient().dbClientStop();
+            dbClientData.setState(IotdmPLuginDbClientState.STOPPED);
         }
         trc = null;
         twc = null;
@@ -99,50 +153,49 @@ public class Onem2mPluginsDbApi {
         return Onem2mDb.getInstance().findCseForTarget(this.trc, targetResourceId);
     }
 
-
-    public boolean registerPlugin(IotdmPluginDbClient plugin) {
-        if (this.plugins.contains(plugin)) {
-            LOG.error("Attempt to multiple registration of DB client plugin: {}", plugin.getPluginName());
-            return false;
-        }
-
-        boolean ret = this.plugins.add(plugin);
-        if (ret) {
-            if (this.isApiReady()) {
-                ret = plugin.dbClientStart(this.twc, this.trc);
-                if (! ret) {
-                    LOG.error("Failed to start DB Client plugin: {}", plugin.getPluginName());
-                }
-            }
-            LOG.info("Registered DB client plugin: {}", plugin.getPluginName());
-        } else {
-            LOG.error("Failed to register DB client plugin: {}", plugin.getPluginName());
-        }
-
-        return ret;
-
-//        int count = 60;
-//        while (--count >= 0) {
-//            if (Onem2mPluginsDbApi.getInstance().isApiReady()) {
-//                return true;
-//            }
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException e) {
-//
-//            }
-//        }
-//
-//        LOG.error("{}: cannot register with Onem2mPluginsDbApi", getPluginName);
-//
-//        return false;
+    private void handleRegistrationError(String format, String... args) throws IotdmPluginRegistrationException {
+        Onem2mPluginManagerUtils.handleRegistrationError(LOG, format, args);
     }
 
-    public void unregisterPlugin(IotdmPluginDbClient plugin) {
-        if (this.plugins.contains(plugin)) {
-            plugin.dbClientStop();
-            this.plugins.remove(plugin);
-            LOG.info("Unregistered DB client plugin: {}", plugin.getPluginName());
+    protected void registerDbClientPlugin(IotdmPluginDbClient plugin) throws IotdmPluginRegistrationException {
+        for (PluginDbClientData data : this.plugins) {
+            if (data.getClient().isPlugin(plugin)) {
+                handleRegistrationError("Attempt to multiple registration of DB client plugin: {}",
+                                        plugin.getPluginName());
+            }
         }
+
+        PluginDbClientData dbClientData = new PluginDbClientData(plugin);
+        boolean ret = this.plugins.add(dbClientData);
+        if (ret) {
+            if (this.isApiReady()) {
+                try {
+                    plugin.dbClientStart(this.twc, this.trc);
+                    dbClientData.setState(IotdmPLuginDbClientState.STARTED);
+                } catch (Exception e) {
+                    dbClientData.setState(IotdmPLuginDbClientState.ERROR);
+                    handleRegistrationError("Failed to start DB Client plugin: {}, error message: {}",
+                                            plugin.getPluginName(), e.toString());
+                }
+            }
+        } else {
+            handleRegistrationError("Failed to register DB client plugin: {}", plugin.getPluginName());
+        }
+
+        LOG.info("Registered DB client plugin: {}", plugin.getPluginName());
+    }
+
+    protected void unregisterDbClientPlugin(IotdmPluginDbClient plugin) {
+        for (PluginDbClientData data : this.plugins) {
+            if (data.getClient().isPlugin(plugin)) {
+                plugin.dbClientStop();
+                this.plugins.remove(data);
+                LOG.info("Unregistered DB client plugin: {}", plugin.getPluginName());
+            }
+        }
+    }
+
+    protected List<PluginDbClientData> getPlugins() {
+        return plugins;
     }
 }

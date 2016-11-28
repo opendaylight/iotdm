@@ -20,9 +20,9 @@ public interface IotdmPluginLoader {
     String getLoaderName();
 
     /**
-     * Checks whether the IotdmPlugin has been loaded by the PluginLoader.
-     * @param plugin IotdmPlugin instance.
+     * Checks whether the IotdmPluginCommonInterface instance has been loaded by the PluginLoader.
+     * @param plugin IotdmPluginCommonInterface instance.
      * @return True if the plugin has been loaded by this PluginLoader, False if not.
      */
-    boolean hasLoadedPlugin(IotdmPlugin plugin);
+    boolean hasLoadedPlugin(IotdmPluginCommonInterface plugin);
 }

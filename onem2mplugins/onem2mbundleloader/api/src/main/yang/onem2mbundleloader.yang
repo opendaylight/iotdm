@@ -158,6 +158,10 @@ module onem2mbundleloader {
                             type string;
                             mandatory true;
                         }
+
+                        leaf bundle-diagnostic-info {
+                            type string;
+                        }
                     }
                 }
             }

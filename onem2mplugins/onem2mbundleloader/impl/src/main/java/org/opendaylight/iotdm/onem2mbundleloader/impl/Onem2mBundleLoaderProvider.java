@@ -7,12 +7,15 @@
  */
 package org.opendaylight.iotdm.onem2mbundleloader.impl;
 
+import org.apache.karaf.bundle.core.BundleInfo;
+import org.apache.karaf.bundle.core.BundleService;
+import org.apache.karaf.bundle.core.BundleState;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginCommonInterface;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginLoader;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mbundleloader.config.rev161021.BundleLoadersConfigs;
@@ -37,6 +40,7 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
@@ -62,6 +66,7 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
     protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     // <FeatureName, TreeSet<LoadedBundleInfo>>
     protected final Map<String, TreeSet<LoadedBundleInfo>> loadedFeatures = new HashMap<>(); // runningConfig
+    protected final BundleService karafService;
 
     /**
      * Stores data about loaded OSGi bundle.
@@ -75,30 +80,6 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
             this.jarFileLocation = jarFileLocation;
             this.priority = priority;
             this.bundle = bundle;
-        }
-    }
-
-    /**
-     * Translates integer value of the OSGi bundle state into human readable string.
-     * @param bundleState OSGi bundle state value
-     * @return String representation
-     */
-    private static final String bundleStateToString(int bundleState) {
-        switch (bundleState) {
-            case 1:
-                return "Uninstalled";
-            case 2:
-                return "Installed";
-            case 4:
-                return "Resolved";
-            case 8:
-                return "Starting";
-            case 16:
-                return "Stopping";
-            case 32:
-                return "Active";
-            default:
-                return "Unknown";
         }
     }
 
@@ -119,6 +100,9 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
         this.providerConfig = providerConfig;
         this.bundleContext = bundleContext;
         this.loaderInstanceName = providerConfig.getLoaderInstanceName();
+
+        ServiceReference<BundleService> ref = bundleContext.getServiceReference(BundleService.class);
+        karafService = bundleContext.getService(ref);
     }
 
     @Override
@@ -127,7 +111,7 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
     }
 
     @Override
-    public boolean hasLoadedPlugin(IotdmPlugin plugin) {
+    public boolean hasLoadedPlugin(IotdmPluginCommonInterface plugin) {
         Bundle bundle = org.osgi.framework.FrameworkUtil.getBundle(plugin.getClass());
         if (null != bundle) {
             this.rwLock.readLock().lock();
@@ -302,13 +286,21 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
 
                 List<RunningFeatureBundles> runningFeatureList = new LinkedList<>();
                 for (LoadedBundleInfo bundleInfo : entry.getValue()) {
+
+                    BundleInfo bInfo = karafService.getInfo(bundleInfo.bundle);
+                    String state = "unknown";
+                    if (null != bInfo) {
+                        state = bInfo.getState().toString();
+                    }
+
                     RunningFeatureBundlesBuilder bundlesBuilder = new RunningFeatureBundlesBuilder()
                             .setPriority(bundleInfo.priority)
                             .setIotdmBundleJarLocation(bundleInfo.jarFileLocation)
                             .setBundleId(String.valueOf(bundleInfo.bundle.getBundleId()))
                             .setBundleName(bundleInfo.bundle.getSymbolicName())
                             .setBundleVersion(bundleInfo.bundle.getVersion().toString())
-                            .setBundleState(bundleStateToString(bundleInfo.bundle.getState()));
+                            .setBundleState(state)
+                            .setBundleDiagnosticInfo(karafService.getDiag(bundleInfo.bundle));
                     runningFeatureList.add(bundlesBuilder.build());
                 }
 
@@ -363,8 +355,65 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
                 return errMsg;
             }
 
+            /*
+             * Install bundle
+             */
             newBundle = bundleContext.installBundle(bundleJarFile);
+
+            if (karafService.getInfo(newBundle).getState() != BundleState.Installed) {
+                StringBuilder builder = new StringBuilder()
+                                                .append("BundleLoader: ")
+                                                .append(loaderInstanceName)
+                                                .append(", Feature: ")
+                                                .append(featureName)
+                                                .append(", Failed to install bundle: ")
+                                                .append(bundleJarFile)
+                                                .append(" (priority: ")
+                                                .append(priority)
+                                                .append("), ")
+                                                .append("State: ")
+                                                .append(karafService.getInfo(newBundle).getState().toString())
+                                                .append(", Diagnostics: ")
+                                                .append(karafService.getDiag(newBundle));
+                String errMsg = builder.toString();
+                LOG.error(errMsg);
+                return errMsg;
+            }
+
+            /*
+             * Start the bundle
+             */
             newBundle.start();
+
+            if (karafService.getInfo(newBundle).getState() != BundleState.Active) {
+                StringBuilder builder = new StringBuilder()
+                                                .append("BundleLoader: ")
+                                                .append(loaderInstanceName)
+                                                .append(", Feature: ")
+                                                .append(featureName)
+                                                .append(", Failed to start bundle: ")
+                                                .append(bundleJarFile)
+                                                .append(" (priority: ")
+                                                .append(priority)
+                                                .append("), ")
+                                                .append("State: ")
+                                                .append(karafService.getInfo(newBundle).getState().toString())
+                                                .append(", Diagnostics: ")
+                                                .append(karafService.getDiag(newBundle));
+                String errMsg = builder.toString();
+                LOG.error(errMsg);
+
+                // Uninstall the bundle
+                LOG.info("BundleLoader: {}, Feature: {}, uninstalling failed bundle: {}, bundleId: {}, " +
+                         "state: {}, toStr: {}",
+                         loaderInstanceName, featureName,
+                         newBundle.getLocation(), newBundle.getBundleId(),
+                         karafService.getInfo(newBundle).getState().toString(),
+                         newBundle.toString());
+                newBundle.uninstall();
+
+                return errMsg;
+            }
 
         } catch (Exception e) {
             StringBuilder builder = new StringBuilder()
@@ -380,8 +429,6 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
                     .append(e.getMessage());
 
             String errMsg = builder.toString();
-
-            // "BundleLoader: {}, Feature: {}, Failed to load bundle {} (priority {}): {}"
             LOG.error(errMsg);
             return errMsg;
         }
@@ -389,7 +436,8 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
         bundleSet.add(new LoadedBundleInfo(bundleJarFile, priority, newBundle));
         LOG.info("BundleLoader: {}, Feature: {}, new bundle loaded: {}, bundleId: {}, state: {}, toStr: {}",
                  loaderInstanceName, featureName,
-                 newBundle.getLocation(), newBundle.getBundleId(), bundleStateToString(newBundle.getState()),
+                 newBundle.getLocation(), newBundle.getBundleId(),
+                 karafService.getInfo(newBundle).getState().toString(),
                  newBundle.toString());
 
         return null;
@@ -557,25 +605,20 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
     private boolean putFeatureStartupConfig(Onem2mBundleLoaderFeaturePutInput input) {
         WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
 
-        List<StartupFeatures> featuresList = new LinkedList<>();
         StartupFeaturesBuilder featuresBuilder = new StartupFeaturesBuilder()
-                .setFeatureName(input.getFeatureName())
-                .setBundlesToLoad(input.getBundlesToLoad());
-        featuresList.add(featuresBuilder.build());
-
-        StartupConfigListBuilder builder = new StartupConfigListBuilder()
-                .setBundleLoaderInstanceName(input.getBundleLoaderInstanceName())
-                .setStartupFeatures(featuresList);
+                                                         .setFeatureName(input.getFeatureName())
+                                                         .setBundlesToLoad(input.getBundlesToLoad());
 
         StartupConfigListKey key = new StartupConfigListKey(input.getBundleLoaderInstanceName());
 
-        InstanceIdentifier<StartupConfigList> iid =
+        InstanceIdentifier<StartupFeatures> iid =
                 InstanceIdentifier.create(BundleLoaderStartupConfig.class)
-                    .child(StartupConfigList.class, key);
+                        .child(StartupConfigList.class, key)
+                        .child(StartupFeatures.class, new StartupFeaturesKey(input.getFeatureName()));
 
-        writeTransaction.merge(LogicalDatastoreType.CONFIGURATION,
-                               iid,
-                               builder.build());
+        writeTransaction.put(LogicalDatastoreType.CONFIGURATION,
+                             iid,
+                             featuresBuilder.build(), true);
         try {
             writeTransaction.submit().checkedGet();
         } catch (Exception e) {

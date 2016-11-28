@@ -15,9 +15,10 @@ import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeW
  * Interface describes methods which must be implemented by
  * plugins using Onem2mPluginDbApi.
  * Every plugin must register to the Onem2mPluginDbApi by
- * registerPlugin() method.
+ * registerDbClientPlugin() method.
  */
 public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
+
     /**
      * This method is called immediately during registration of the plugin
      * if the API is prepared. If the API is not prepared then the registration
@@ -27,9 +28,8 @@ public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
      * method is called between each call of this method.
      * @param twc ResourceTreeWriter instance.
      * @param trc ResourceTreeReader instance.
-     * @return True if successful, False otherwise.
      */
-    boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc);
+    void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception;
 
     /**
      * This method is called by API and it means that plugin must stop

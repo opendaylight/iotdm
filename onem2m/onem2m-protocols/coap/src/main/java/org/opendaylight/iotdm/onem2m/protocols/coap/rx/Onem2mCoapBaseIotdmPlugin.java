@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.protocols.coap.rx;
 
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurationBuilderFactory;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmCoapsConfigBuilder;
 import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapRequest;
@@ -30,8 +31,8 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class Onem2mCoapBaseIotdmPlugin extends IotdmPlugin<IotdmPluginCoapRequest, IotdmPluginCoapResponse>
-                                       implements Onem2mProtocolRxChannel<Onem2mCoapBaseIotdmPluginConfig> {
+public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapRequest, IotdmPluginCoapResponse>,
+                                                  Onem2mProtocolRxChannel<Onem2mCoapBaseIotdmPluginConfig> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapBaseIotdmPlugin.class);
 
@@ -47,7 +48,6 @@ public class Onem2mCoapBaseIotdmPlugin extends IotdmPlugin<IotdmPluginCoapReques
                                      @Nonnull final Onem2mRxRequestAbstractFactory<Onem2mCoapRxRequest, IotdmPluginCoapRequest, IotdmPluginCoapResponse> requestFactory,
                                      @Nonnull final Onem2mService onem2mService,
                                      final Onem2mCoapSecureConnectionConfig secureConnectionConfig) {
-        super(Onem2mPluginManager.getInstance());
         this.requestHandler = requestHandler;
         this.requestFactory = requestFactory;
         this.onem2mService = onem2mService;
@@ -66,10 +66,17 @@ public class Onem2mCoapBaseIotdmPlugin extends IotdmPlugin<IotdmPluginCoapReques
             throw new IllegalArgumentException("Starting Coap base server without configuration");
         }
 
+        this.currentConfig = configuration;
+        this.securityLevel = configuration.getServerSecurityLevel();
+
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
 
         if (null == configuration.getSecureConnection() || false == configuration.getSecureConnection()) {
-            mgr.registerPluginCoap(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
+            try {
+                mgr.registerPluginCoap(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
+            } catch (IotdmPluginRegistrationException e) {
+                LOG.error("Failed to register to PluginManager: {}", e);
+            }
         } else {
             IotdmCoapsConfigBuilder builder = IotdmPluginConfigurationBuilderFactory.getNewCoapsConfigBuilder();
             if (null != this.secureConnectionConfig) {
@@ -108,21 +115,22 @@ public class Onem2mCoapBaseIotdmPlugin extends IotdmPlugin<IotdmPluginCoapReques
                 builder.setUseDefault(true);
             }
 
-            mgr.registerPluginCoaps(this, configuration.getServerPort(),
-                                    Onem2mPluginManager.Mode.Exclusive, null, builder);
+            try {
+                mgr.registerPluginCoaps(this, configuration.getServerPort(),
+                                        Onem2mPluginManager.Mode.Exclusive, null, builder);
+            } catch (IotdmPluginRegistrationException e) {
+                LOG.error("Failed to register at PluginManager: {}", e);
+            }
         }
 
         LOG.info("Started COAP Base IoTDM plugin at port: {}, security level: {}",
                 configuration.getServerPort(), configuration.getServerSecurityLevel());
-
-        this.currentConfig = configuration;
-        this.securityLevel = configuration.getServerSecurityLevel();
     }
 
     @Override
     public void close() {
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-        mgr.unregisterPlugin(this);
+        mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed COAP Base IoTDM plugin at port: {}, security level: {}",
                 currentConfig.getServerPort(), currentConfig.getServerSecurityLevel());

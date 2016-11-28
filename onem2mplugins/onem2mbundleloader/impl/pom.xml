@@ -28,6 +28,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.karaf.bundle</groupId>
+      <artifactId>org.apache.karaf.bundle.core</artifactId>
+      <version>${karaf.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>onem2mbundleloader-api</artifactId>
       <version>${project.version}</version>

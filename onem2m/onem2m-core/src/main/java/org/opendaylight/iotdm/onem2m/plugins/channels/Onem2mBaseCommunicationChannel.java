@@ -9,6 +9,8 @@
 package org.opendaylight.iotdm.onem2m.plugins.channels;
 
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.ChannelConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.ChannelConfigurationBuilder;
 
 import javax.annotation.Nullable;
 
@@ -114,11 +116,18 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
         return null == config;
     }
 
+    protected ChannelConfigurationBuilder getChannelConfigBuilder() {
+        return new ChannelConfigurationBuilder()
+                       .setIsDefault(this.usesDefaultConfiguration);
+    }
+
     /**
-     * Returns current configuration of the channel (if exists) as string.
-     * @return Configuration encoded as string
+     * Returns current configuration of the channel (if exists).
+     * @return Channel configuration or null if the channel is not configurable.
      */
-    public String getConfigAsString() { return null; }
+    public ChannelConfiguration getChannelConfig() {
+        return getChannelConfigBuilder().build();
+    }
 
     /**
      * Returns implemented protocol name.

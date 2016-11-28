@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.util.Objects;
 
-public class Onem2mWebsocketIotdmPlugin extends IotdmPlugin<IotdmPluginOnem2mBaseRequest, IotdmPluginOnem2mBaseResponse>
-        implements Onem2mProtocolRxChannel<Onem2mWebsocketIotdmPluginConfig> {
+public class Onem2mWebsocketIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseRequest, IotdmPluginOnem2mBaseResponse>,
+                                                   Onem2mProtocolRxChannel<Onem2mWebsocketIotdmPluginConfig> {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mWebsocketIotdmPlugin.class);
 
     private final Onem2mProtocolRxHandler requestHandler;
@@ -37,7 +37,6 @@ public class Onem2mWebsocketIotdmPlugin extends IotdmPlugin<IotdmPluginOnem2mBas
     public Onem2mWebsocketIotdmPlugin(@Nonnull final Onem2mProtocolRxHandler requestHandler,
                                       @Nonnull final Onem2mRxRequestAbstractFactory<Onem2mWebsocketRxRequest, IotdmPluginOnem2mBaseRequest, IotdmPluginOnem2mBaseResponse> requestFactory,
                                       @Nonnull final Onem2mService onem2mService) {
-        super(Onem2mPluginManager.getInstance());
         this.requestHandler = requestHandler;
         this.requestFactory = requestFactory;
         this.onem2mService = onem2mService;
@@ -58,8 +57,13 @@ public class Onem2mWebsocketIotdmPlugin extends IotdmPlugin<IotdmPluginOnem2mBas
         this.currentConfig = configuration;
         this.securityLevel = configuration.getServerSecurityLevel();
 
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-        mgr.registerPluginWebsocket(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
+        try {
+            Onem2mPluginManager.getInstance()
+                .registerPluginWebsocket(this, configuration.getServerPort(), Onem2mPluginManager.Mode.Exclusive, null);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register to PluginManager: {}", e);
+            return;
+        }
 
         LOG.info("Started Websocket IoTDM plugin at port: {}",
                  configuration.getServerPort());
@@ -68,7 +72,7 @@ public class Onem2mWebsocketIotdmPlugin extends IotdmPlugin<IotdmPluginOnem2mBas
     @Override
     public void close() {
         Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-        mgr.unregisterPlugin(this);
+        mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed Websocket IoTDM plugin at port: {}",
                 currentConfig.getServerPort());

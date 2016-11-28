@@ -16,6 +16,13 @@ import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
 import org.eclipse.californium.scandium.dtls.pskstore.InMemoryPskStore;
 import org.opendaylight.iotdm.onem2m.plugins.channels.common.Onem2mKeyStoreFileConfig;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.coaps.channel.config.definition.CoapsChannelConfigOptions;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.coaps.channel.config.definition.coaps.channel.config.options.CoapsKeystoreConfigOptionsBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.coaps.channel.config.definition.coaps.channel.config.options.CoapsPskConfigOptionsBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.coaps.psk.config.CsePsk;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.coaps.psk.config.CsePskBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.ChannelConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.channel.configuration.channel.specific.configuration.CoapsChannelConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +31,8 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -201,12 +210,32 @@ public class Onem2mCoapsPluginServer extends Onem2mCoapBaseChannel<Onem2mCoapsPl
     }
 
     @Override
-    public String getConfigAsString() {
-        StringBuilder builder = this.configuration.getConfigString();
-        if (null == builder) {
-            return null;
+    public ChannelConfiguration getChannelConfig() {
+        CoapsChannelConfigBuilder builder = new CoapsChannelConfigBuilder();
+        CoapsChannelConfigOptions options = null;
+
+        if (this.configuration.usesPks) {
+            List<CsePsk> pskList = new LinkedList<>();
+            for (Map.Entry<String, String> entry : this.configuration.getPresharedKeys().entrySet()) {
+                CsePskBuilder pskBuilder = new CsePskBuilder()
+                    .setCseId(entry.getKey())
+                    .setPsk(entry.getValue()); // TODO exposure, think about this
+                pskList.add(pskBuilder.build());
+            }
+            CoapsPskConfigOptionsBuilder optBuilder = new CoapsPskConfigOptionsBuilder()
+                    .setCsePsk(pskList);
+            options = optBuilder.build();
+        } else {
+            CoapsKeystoreConfigOptionsBuilder optBuilder = new CoapsKeystoreConfigOptionsBuilder()
+                    .setKeyAlias(this.configuration.getKeyAlias())
+                    .setKeyManagerPassword(this.configuration.getKeyManagerPassword()) // TODO exposure
+                    .setKeyStoreFile(this.configuration.getKeyStoreFile())
+                    .setKeyStorePassword(this.configuration.getKeyStorePassword()); // TODO exposure
+            options = optBuilder.build();
         }
-        return builder.toString();
+
+        builder.setCoapsChannelConfigOptions(options);
+        return this.getChannelConfigBuilder().setChannelSpecificConfiguration(builder.build()).build();
     }
 
     protected class Onem2mCoapsCertificatesHandler extends Onem2mCoapBaseChannel.Onem2mCoapBaseHandler {

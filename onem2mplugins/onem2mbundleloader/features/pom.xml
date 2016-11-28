@@ -28,6 +28,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
     <dlux.version>0.5.0-SNAPSHOT</dlux.version>
     <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
+    <karaf.version>3.0.8</karaf.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
 
@@ -96,6 +97,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>onem2mbundleloader-impl</artifactId>

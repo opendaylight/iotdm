@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author jkosmel
  */
-class Onem2mEdeviceHandler extends IotdmPlugin implements IotdmPluginDbClient {
+class Onem2mEdeviceHandler implements IotdmPlugin, IotdmPluginDbClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mEdeviceHandler.class);
     protected DataBroker dataBroker;
@@ -36,33 +36,37 @@ class Onem2mEdeviceHandler extends IotdmPlugin implements IotdmPluginDbClient {
     private Onem2mDataStoreChangeHandler onem2mDataStoreChangeHandler = null;
 
     Onem2mEdeviceHandler(DataBroker dataBroker, Onem2mService onem2mService) {
-        super(Onem2mPluginManager.getInstance());
         httpHandler = new Onem2mHttpHandler(onem2mService);
         coapHandler = new Onem2mCoapHandler(onem2mService);
 
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
-        mgr.registerPluginHttp(this, 8284, Onem2mPluginManager.Mode.Exclusive, null);
-        mgr.registerPluginCoap(this, 123, Onem2mPluginManager.Mode.Exclusive, null);
-
-        if (!Onem2mPluginsDbApi.getInstance().registerPlugin(this)) {
-            LOG.error("Failed to register as DB API plugin");
-            return;
+        try {
+            Onem2mPluginManager.getInstance().registerDbClientPlugin(this);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register plugin as DB API client: {}", e);
         }
     }
 
     @Override
-    public boolean dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
+    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
         onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
-        return true;
+        try {
+            Onem2mPluginManager.getInstance()
+                .registerPluginHttp(this, 8284, Onem2mPluginManager.Mode.Exclusive, null)
+                .registerPluginCoap(this, 123, Onem2mPluginManager.Mode.Exclusive, null);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register at PluginManager plugin: {}", e);
+        }
     }
 
     @Override
     public void dbClientStop() {
         onem2mDataStoreChangeHandler = null;
+        Onem2mPluginManager.getInstance().unregisterIotdmPlugin(this);
     }
 
     @Override
     public void close() throws Exception {
+        Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
 
     }
 
