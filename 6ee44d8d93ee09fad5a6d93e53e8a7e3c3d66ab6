@@ -223,6 +223,23 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_283c4f93",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2016-11-29T13:10:16Z",
+      "side": 1,
+      "message": "I think that all public methods accessing data store should throw IotdmDaoReadException as well as in case of ResourceTreeWriter. This way exceptions can be handled by plugins in cas of both, read and write operations.",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_8d12d560",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
         "patchSetId": 1
