@@ -240,6 +240,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_9f41560e",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-11-30T09:07:59Z",
+      "side": 1,
+      "message": "My understanding is that, classes which implement DaoResourceTreeReader/DaoResourceTreeWrite will throw the exception can same can be catched in ResourceTreeReader/Writer. This way, even new DB plugin is added, we need not explicitly add the Exception handling. \n\nCorrect me If I am wrong.",
+      "parentUuid": "1a622d24_283c4f93",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_8d12d560",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
         "patchSetId": 1
@@ -387,6 +405,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "IMO this method should throw IotdmDaoReadException",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_5f37beb0",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-11-30T09:07:59Z",
+      "side": 1,
+      "message": "1. This function is used in this file and the caller of tis function are already throwing exception. Still we need add throw for this function?\n\n2. As this is in-memory storage, do you expect to throw and IotdmDaoReadException? Just try/catch will not help?",
+      "parentUuid": "1a622d24_484d4b72",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
