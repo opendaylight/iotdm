@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_8b2c734c",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_cd016d3b",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_0dfc053e",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "add spaces here and also in all next try-catch blocks:\n } catch (IotdmDaoWriteException e) {",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_6b3117a2",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_0dfc053e",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_ab2b2f2f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_0d9365fb",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_cd24cdc8",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Delete \u0027;\u0027",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_0b206348",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_cd24cdc8",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_eb1c0716",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_0daa4519",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_ed7d49b3",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
         "patchSetId": 1
@@ -98,6 +188,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "OK, seems we have also cases when it\u0027s not possible to reply with error response.\n\nLog at least some error message and the exception message:\nLOG.error(\"Error: {}\", e);\n\nThe same for all next TODOs and empty catch blocks.",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_2b171fef",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 1498,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_ed7d49b3",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_8bd3d337",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/DaoResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_8d3bf5ea",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_ad2191b6",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/IotdmDaoException.java",
         "patchSetId": 1
@@ -132,6 +258,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Add space: Exception {",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_6bd8f753",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/IotdmDaoException.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_ad2191b6",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_cbddcb44",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/IotdmDaoException.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_c8679be9",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_086233d8",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/IotdmDaoReadException.java",
         "patchSetId": 1
@@ -166,6 +328,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Please add constructor which requires error message. You have to opdate also are throw statements instatiating these exceptions.\n\npublic IotdmDaoReadException(String errorMessage) {\n    super(errorMessage);\n}",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_abe20f01",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/IotdmDaoReadException.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_086233d8",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_0be7c313",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/dao/IotdmDaoWriteException.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_e85ed711",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_4d18bd84",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/Onem2mResourceElem.java",
         "patchSetId": 1
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_ebe36703",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/Onem2mResourceElem.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_4d18bd84",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_ed2b8992",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/Onem2mResourceElem.java",
         "patchSetId": 1
@@ -217,6 +433,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Log error with exception messsage",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_4bf1bbcc",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/Onem2mResourceElem.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_ed2b8992",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -276,6 +510,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_6bbf57d1",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "I believe, read needs to be handled separately. if I throw IotdmDaoReadException, it is creating some kind of Domino effect. I believe this can be taken separately.",
+      "parentUuid": "1a622d24_7fbb9a72",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_8d12d560",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
         "patchSetId": 1
@@ -287,6 +539,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "I would add spaces here and also in next catch statements.",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_cbb4abf4",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_8d12d560",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -310,6 +580,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_abb96feb",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_0d06c520",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_28044f14",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
         "patchSetId": 1
@@ -327,6 +615,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_ebca476d",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_28044f14",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_8809232f",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeWriter.java",
         "patchSetId": 1
@@ -338,6 +644,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Add space before {",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_2bc55f5b",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeWriter.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_8809232f",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -378,6 +702,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_6ba637c3",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeWriter.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_c812fb57",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_a80fbf2d",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeWriter.java",
         "patchSetId": 1
@@ -395,6 +737,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_cbab0b88",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/ResourceTreeWriter.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_a80fbf2d",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_e819b77a",
         "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
         "patchSetId": 1
@@ -406,6 +766,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Add space before { here and also in next occurrences.",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_eb91a753",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_e819b77a",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -465,6 +843,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_4b9ffb5f",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_5f37beb0",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_28528f13",
         "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
         "patchSetId": 1
@@ -476,6 +872,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Throw the IotdmDaoReadException.",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_2b9c3f69",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_28528f13",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -499,6 +913,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_8b88f323",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/read/MDSALResourceTreeReader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_a83dffbd",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_8820039d",
         "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/write/MDSALResourceTreeWriter.java",
         "patchSetId": 1
@@ -516,6 +948,24 @@
     },
     {
       "key": {
+        "uuid": "1a622d24_6b8d9731",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/write/MDSALResourceTreeWriter.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_8820039d",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a622d24_6825a7aa",
         "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/write/MDSALResourceTreeWriter.java",
         "patchSetId": 1
@@ -527,6 +977,24 @@
       "writtenOn": "2016-11-29T12:47:19Z",
       "side": 1,
       "message": "Remove the newline.",
+      "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a622d24_cb82ebff",
+        "filename": "onem2m/onem2m-persistence/mdsal/src/main/java/org/opendaylight/iotdm/onem2m/persistence/mdsal/write/MDSALResourceTreeWriter.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 6845
+      },
+      "writtenOn": "2016-12-05T17:26:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a622d24_6825a7aa",
       "revId": "6ee44d8d93ee09fad5a6d93e53e8a7e3c3d66ab6",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
