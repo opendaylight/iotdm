@@ -20,6 +20,28 @@ import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeW
 public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
 
     /**
+     * Helper method which returns current ResourceTreeReader instance.
+     * Returned value should not be stored and used later since the
+     * current ResourceTreeReader instances can be replaced by new instances
+     * during runtime.
+     * @return ResourceTreeReader object, null is returned if doesn't exist.
+     */
+    default ResourceTreeReader getReader() {
+        return Onem2mPluginsDbApi.getInstance().getReader();
+    }
+
+    /**
+     * Helper method which returns current ResourceTreeWriter instance.
+     * Returned value should not be stored and used later since the
+     * current ResourceTreeWriter instances can be replaced by new instances
+     * during runtime.
+     * @return ResourceTreeWriter object, null is returned if doesn't exist.
+     */
+    default ResourceTreeWriter getWriter() {
+        return Onem2mPluginsDbApi.getInstance().getWriter();
+    }
+
+    /**
      * This method is called immediately during registration of the plugin
      * if the API is prepared. If the API is not prepared then the registration
      * pass without calling this method and method is called asynchronously
@@ -29,7 +51,10 @@ public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
      * @param twc ResourceTreeWriter instance.
      * @param trc ResourceTreeReader instance.
      */
-    void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception;
+    default void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception {
+        // Default implementation does nothing
+        return;
+    }
 
     /**
      * This method is called by API and it means that plugin must stop
@@ -41,5 +66,8 @@ public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
      * This method might be called multiple times before the dbClientStart() method
      * is called again.
      */
-    void dbClientStop();
+    default void dbClientStop() {
+        // Default implementation does nothing
+        return;
+    }
 }

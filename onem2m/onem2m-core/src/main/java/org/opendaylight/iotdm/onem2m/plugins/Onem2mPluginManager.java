@@ -545,15 +545,20 @@ public class Onem2mPluginManager implements AutoCloseable {
         }
     }
 
-    /**
-     * Unregisters already registered plugin. Channels which
-     * are not needed anymore are closed.
-     * @param plugin The instance of IotdmPlugin to unregister.
-     * @return This instance of PluginManager for chaining purpose.
-     */
-    public Onem2mPluginManager unregisterIotdmPlugin(IotdmPlugin plugin) {
+    private void unregisterIotdmPluginProtocol(IotdmPlugin plugin, String protocol, Integer port) {
         this.registry.registryStream().forEach( endpointRegistry -> {
             if (endpointRegistry.hasPlugin(plugin)) {
+
+                if (null != protocol && ! endpointRegistry.getProtocol().equals(protocol)) {
+                    // Protocol doesn't match, don't remove this plugin registration
+                    return;
+                }
+
+                if (null != port && endpointRegistry.getPort() != port) {
+                    // Port number doesn't match, don't remove this plugin registration
+                    return;
+                }
+
                 // remove the plugin
                 if (! endpointRegistry.removePlugin(plugin)) {
                     LOG.error("Failed to remove plugin from registry of channel: {}, plugin: {}",
@@ -572,7 +577,42 @@ public class Onem2mPluginManager implements AutoCloseable {
                 }
             }
         });
+    }
 
+    /**
+     * Unregisters already registered plugin. Channels which
+     * are not needed anymore are closed.
+     * @param plugin The instance of IotdmPlugin to unregister
+     * @return This instance of PluginManager for chaining purpose.
+     */
+    public Onem2mPluginManager unregisterIotdmPlugin(IotdmPlugin plugin) {
+        this.unregisterIotdmPluginProtocol(plugin, null, null);
+        return this;
+    }
+
+    /**
+     * Unregisters already registered plugin for specific protocol name. Channels which
+     * are not needed anymore are closed.
+     * @param plugin The instance of IotdmPlugin to unregister
+     * @param protocol The protocol name
+     * @return This instance of PluginManager for chaining purpose.
+     */
+    public Onem2mPluginManager unregisterIotdmPlugin(IotdmPlugin plugin, String protocol) {
+        this.unregisterIotdmPluginProtocol(plugin, protocol, null);
+        return this;
+    }
+
+    /**
+     * Unregisters already registered plugin for specific protocol name and specific
+     * port (TCP or UDP, it depends on the upper layer protocol).
+     * Channels which are not needed anymore are closed.
+     * @param plugin The instance of IotdmPlugin to unregister
+     * @param protocol The protocol name
+     * @param port The port number
+     * @return This instance of PluginManager for chaining purpose.
+     */
+    public Onem2mPluginManager unregisterIotdmPlugin(IotdmPlugin plugin, String protocol, Integer port) {
+        this.unregisterIotdmPluginProtocol(plugin, protocol, port);
         return this;
     }
 
