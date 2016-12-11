@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Thread.sleep;
 import static org.opendaylight.iotdm.onem2moic.impl.Onem2mOicClient.WELL_KNOWN_DEVICE_QUERY;
+import static org.opendaylight.iotdm.onem2moic.impl.Onem2mOicClient.WELL_KNOWN_QUERY;
 
 
 public class Onem2mOicProvider {
@@ -74,7 +75,6 @@ public class Onem2mOicProvider {
      * OIC Device discovery routine by sending /oic/d to "All Coap nodes" multicast group
      */
     public void discoverOicDevices() {
-
         CoapHandler discoverHandler = new CoapHandler() {
             @Override
             public void onLoad(CoapResponse coapResponse) {
@@ -99,6 +99,32 @@ public class Onem2mOicProvider {
 
         /* Write the response handler */
         oicClient.oicDeviceDiscovery(null, 0, WELL_KNOWN_DEVICE_QUERY, discoverHandler);
+
+        /* Lets discover resources */
+        CoapHandler resourceHandler = new CoapHandler() {
+            @Override
+            public void onLoad(CoapResponse coapResponse) {
+                Onem2mOicClient.OicResource oicResource;
+                try {
+                    if (CoAP.ResponseCode.isSuccess(coapResponse.getCode())) {
+                        oicResource = oicClient.oicParseResourcePayload(
+                                coapResponse.advanced().getPayload());
+                        oicIpe.createOicDevResource(oicResource, oicConfigParams.getCseName());
+                    } else {
+                        LOG.error("CoAP Request failure: ", coapResponse.getCode().toString());
+                    }
+                } catch (IOException ioe) {
+                    LOG.error("Cannot parse OIC resource discovery payload: {}", ioe.toString());
+                    ioe.printStackTrace();
+                }
+            }
+            @Override
+            public void onError() {
+            }
+        };
+
+        /* Write the response handler */
+        oicClient.oicDeviceDiscovery(null, 0, WELL_KNOWN_QUERY, resourceHandler);
     }
 
     /**

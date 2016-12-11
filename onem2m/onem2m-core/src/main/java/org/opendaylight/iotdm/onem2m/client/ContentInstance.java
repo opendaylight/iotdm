@@ -12,6 +12,8 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 public class ContentInstance extends Onem2mRequestPrimitiveClientBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ContentInstance.class);
@@ -47,6 +49,12 @@ public class ContentInstance extends Onem2mRequestPrimitiveClientBuilder {
         b.setPrimitiveContent(value);
         return this;
     }
+
+    public ContentInstance setLabels(ArrayList<String> value) {
+        b.setLabels(value);
+        return this;
+    }
+
     public Onem2mRequestPrimitiveClient build() {
         if (!isDelete) {
             String resourceString = b.build();

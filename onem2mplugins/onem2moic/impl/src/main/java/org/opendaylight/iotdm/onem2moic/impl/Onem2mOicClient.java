@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.*;
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapHandler;
@@ -35,6 +36,7 @@ public class Onem2mOicClient {
     public static final int DEFAULT_PRESENCE_TTL = 60;
     public static final String PRESENCE_URI = "/oic/ad";
     public static final int OIC_MULTICAST_PORT = 5683;
+    public static final int OIC_MAX_LINK = 12;
     public static final String OIC_MULTICAST_ADDRESS = "224.0.1.187";
 
     public enum OicClientType {
@@ -50,6 +52,23 @@ public class Onem2mOicClient {
         String icv;
         String dmv;
         String intf[];
+    }
+
+    public class OicResP {
+        String bm;
+        String sec;
+    }
+
+    public class OicLinks {
+        String href;
+        ArrayList<String> rt;
+        ArrayList<String> itr;
+        OicResP p;
+    }
+
+    public class OicResource {
+        String di;
+        ArrayList<OicLinks> links;
     }
 
     private OicClientType oicclienttype;
@@ -300,6 +319,113 @@ public class Onem2mOicClient {
         }
 
         return oicDevice;
+    }
+
+    /**
+     * Parse the payload of GET request of /oic/r
+     * Get all the resources in the network and create content
+     * sharing resources for each of the oic links
+     *
+     * @param payload   Payload of CoapResponse from GET /oic/d
+     */
+    public OicResource oicParseResourcePayload(byte payload[]) throws IOException {
+        CBORFactory factory = new CBORFactory();
+        ObjectMapper m = new ObjectMapper(factory);
+        JsonNode rootNode = m.readTree(payload);
+        OicResource oicResource = new OicResource();
+        OicLinks templinks;
+
+        /*
+         * This would print oic payload in readable format
+         * System.out.println("Payload String:" + rootNode.toString());
+         */
+        JsonFactory jfactory = new JsonFactory();
+        JsonParser jParser = jfactory.createParser(rootNode.toString());
+
+        while ((jParser.nextToken() != JsonToken.END_OBJECT) ||
+                jParser.nextToken() != JsonToken.END_ARRAY) {
+            String fieldname = jParser.getCurrentName();
+
+            switch (fieldname==null ? "" : fieldname) {
+                case "links":
+                    jParser.nextToken();
+
+                    while (jParser.nextToken() != JsonToken.END_ARRAY) {
+                        if (jParser.getCurrentToken() == JsonToken.START_OBJECT) {
+                            // Parse the links
+                            templinks = new OicLinks();
+                            while (jParser.nextToken() != JsonToken.END_OBJECT) {
+                                String resfldname = jParser.getCurrentName();
+                                switch (resfldname==null ? "" : resfldname) {
+                                    case "href":
+                                        jParser.nextToken();
+                                        if(jParser.getValueAsString() != null)
+                                            templinks.href = jParser.getValueAsString();
+                                        break;
+                                    case "rt":
+                                        templinks.rt = new ArrayList<String >();
+
+                                        while (jParser.nextToken() != JsonToken.END_ARRAY) {
+                                            if(jParser.getValueAsString() != null) {
+                                                templinks.rt.add(jParser.getValueAsString());
+                                            }
+                                        }
+                                        break;
+                                    case "if":
+                                        templinks.itr = new ArrayList<String>();
+
+                                        while (jParser.nextToken() != JsonToken.END_ARRAY) {
+                                            if(jParser.getValueAsString() != null) {
+                                                templinks.itr.add(jParser.getValueAsString());
+                                            }
+                                        }
+                                        break;
+                                    case "p":
+                                        templinks.p = new OicResP();
+                                        while (jParser.nextToken() != JsonToken.END_OBJECT) {
+                                            String fld = jParser.getCurrentName();
+                                            switch (fld==null ? "" : fld) {
+                                                case "bm":
+                                                    jParser.nextToken();
+                                                    templinks.p.bm = jParser.getValueAsString();
+                                                    break;
+                                                case "sec":
+                                                    jParser.nextToken();
+                                                    templinks.p.sec = jParser.getValueAsString();
+                                                    break;
+                                                default:
+                                                    //jParser.nextToken();
+                                                    break;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        //Bail out
+                                        break;
+                                }
+                            }
+
+                            if (oicResource.links == null) {
+                                oicResource.links = new ArrayList<OicLinks>();
+                            }
+                            oicResource.links.add(templinks);
+                        }
+                    }
+                    break;
+
+                case "di":
+                    jParser.nextToken();
+                    oicResource.di = jParser.getValueAsString();
+                    break;
+
+                default:
+                    jParser.nextToken();
+                    // Bail out
+                    break;
+            }
+        }
+
+        return oicResource;
     }
 
     /**
