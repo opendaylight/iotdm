@@ -36,6 +36,7 @@ public class ResourceContentInstance  {
     public static final String CONTENT = "con";
     public static final String ONTOLOGY_REF = "or";
     public static final String CREATOR = "cr";
+    public static final String LABELS = "lbl";
 
     private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 

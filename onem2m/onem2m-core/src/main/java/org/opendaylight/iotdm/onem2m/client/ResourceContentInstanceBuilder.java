@@ -14,6 +14,7 @@ import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
 
 public class ResourceContentInstanceBuilder extends ResourceContentBuilder {
 
@@ -34,6 +35,12 @@ public class ResourceContentInstanceBuilder extends ResourceContentBuilder {
         JsonUtils.put(jsonContent, ResourceContentInstance.ONTOLOGY_REF, value);
         return this;
     }
+
+    public ResourceContentInstanceBuilder setLabels(ArrayList<String> value) {
+        JsonUtils.put(jsonContent, ResourceContentInstance.LABELS, value);
+        return this;
+    }
+
     public String build() {
         return JsonUtils.put(new JSONObject(), "m2m:" + Onem2m.ResourceTypeString.CONTENT_INSTANCE,
                 jsonContent).toString();
