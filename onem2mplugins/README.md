@@ -240,7 +240,7 @@ Your file should look something like this:  note this is the sample file for the
       <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
       <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
       <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
-      <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+      <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
       <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
     
       <feature name='odl-onem2mtsdr-api' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: api'>
@@ -262,7 +262,7 @@ Your file should look something like this:  note this is the sample file for the
         <feature version="${project.version}">odl-onem2mtsdr-rest</feature>
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
         <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
-        <feature version="${dlux.version}">odl-dlux-yangui</feature>
+        <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
       </feature>
     
     </features>
