@@ -15,7 +15,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
-    <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.ops4j.pax.web/pax-web-features/{{VERSION}}/xml/features</repository> <!-- jetty -->
 
     <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
@@ -148,7 +148,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version="${restconf.version}">odl-restconf</feature>
         <!-- use http://localhost:8181/apidoc/explorer/index.html to access api docs -->
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-        <feature version="${dlux.version}">odl-dlux-all</feature>
+        <feature version="${dluxapps.version}">odl-dluxapps-applications</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-ui-bundle/{{VERSION}}</bundle>
     </feature>
 
@@ -159,7 +159,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
         <feature version="${project.version}">odl-onem2m-ui</feature>
 
-        <feature version="${dlux.version}">odl-dlux-yangman</feature>
+        <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
         <feature version="${project.version}">odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
 

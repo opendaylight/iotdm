@@ -14,7 +14,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
-  <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.tsdr/features-tsdr/{{VERSION}}/xml/features</repository>
 
@@ -60,7 +60,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <!--<feature version="${project.version}">odl-onem2mtsdr-hbase</feature>-->
 
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${dlux.version}">odl-dlux-yangui</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
   </feature>
 
 </features>

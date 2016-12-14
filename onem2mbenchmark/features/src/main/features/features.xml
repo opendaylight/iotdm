@@ -13,7 +13,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/${yangtools.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.controller/features-mdsal/${mdsal.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
-    <repository>mvn:org.opendaylight.dlux/features-dlux/${dlux.version}/xml/features</repository>
+    <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/${dluxapps.version}/xml/features</repository>
     <repository>mvn:org.opendaylight.iotdm/onem2m-features/${onem2m.version}/xml/features</repository>
 
     <feature name='odl-onem2mbenchmark-api' version='${project.version}' description='OpenDaylight :: onem2mbenchmark :: api'>
@@ -37,6 +37,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature name='odl-onem2mbenchmark-ui' version='${project.version}' description='OpenDaylight :: onem2mbenchmark :: UI'>
         <feature version="${project.version}">odl-onem2mbenchmark-rest</feature>
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-        <feature version="${dlux.version}">odl-dlux-all</feature>
+        <feature version="${dluxapps.version}">odl-dluxapps-applications</feature>
     </feature>
 </features>
