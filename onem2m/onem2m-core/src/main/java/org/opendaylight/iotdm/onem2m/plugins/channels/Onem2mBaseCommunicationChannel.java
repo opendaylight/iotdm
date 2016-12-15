@@ -13,6 +13,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.communication.channel.data.definition.channel.data.ChannelConfigurationBuilder;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Describes implementation of CommunicationChannels in general.
@@ -27,7 +30,9 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
     protected final Onem2mLocalEndpointRegistry pluginRegistry;
     protected final Tconfig configuration;
     private final boolean usesDefaultConfiguration;
-    protected ChannelState state = ChannelState.INIT;
+
+    private ReadWriteLock stateLock = new ReentrantReadWriteLock();
+    private ChannelState state = ChannelState.INIT;
 
     public enum ChannelState {
         /**
@@ -79,11 +84,30 @@ public abstract class Onem2mBaseCommunicationChannel<Tconfig> implements AutoClo
 
 
     public ChannelState getState() {
-        return state;
+        stateLock.readLock().lock();
+        try {
+            return state;
+        } finally {
+            stateLock.readLock().unlock();
+        }
+    }
+
+    public boolean isRunning() {
+        stateLock.readLock().lock();
+        try {
+            return ((state == ChannelState.RUNNING) || (state == ChannelState.RUNNINGDEFAULT));
+        } finally {
+            stateLock.readLock().unlock();
+        }
     }
 
     protected void setState(ChannelState state) {
-        this.state = state;
+        stateLock.writeLock().lock();
+        try {
+            this.state = state;
+        } finally {
+            stateLock.writeLock().unlock();
+        }
     }
 
     /**

@@ -9,7 +9,6 @@
 package org.opendaylight.iotdm.onem2m.plugins.channels.mqtt;
 
 import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
 import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseRequest;
@@ -43,20 +42,25 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
     public boolean init() {
         onem2mMqttClient = new Onem2mMqttAsyncClient();
         try {
-            onem2mMqttClient.connectToMqttServer(mqttBrokerAddress);
-            this.setState(ChannelState.RUNNING);
-            LOG.info("Connected to MQTT Server on: {}", mqttBrokerAddress);
+            if (! onem2mMqttClient.connectToMqttServer()) {
+                LOG.error("Failed to initiate connection to MQTT broker");
+                this.setState(ChannelState.INITFAILED);
+            } else {
+                this.setState(ChannelState.RUNNING);
+                LOG.info("Connected to MQTT broker on: {}", mqttBrokerAddress);
+            }
         } catch (Exception e) {
-            LOG.error("Failed to connect to MQTT server: {}", e);
+            LOG.error("Failed to connect to MQTT broker: {}", e);
             this.setState(ChannelState.INITFAILED);
         }
+
         return true;
     }
 
     @Override
     public void close() throws Exception {
         try {
-            onem2mMqttClient.disconnectFromMqttServer();
+            onem2mMqttClient.close();
         } catch (Exception e) {
             LOG.error("Exception: {}", e);
         }
@@ -65,98 +69,61 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
     /**
      * Onem2m mqtt client - will subscribe to given mqtt server
      */
-    private class Onem2mMqttAsyncClient {
-        MqttAsyncClient client;
+    private class Onem2mMqttAsyncClient extends Onem2mMqttAbstractClient {
 
-        boolean connectToMqttServer(final String mqttBroker) throws MqttException {
+        protected Onem2mMqttAsyncClient() {
+            super(mqttBrokerAddress, LOG);
+        }
 
-            if (mqttBroker == null) {
-                LOG.warn("Broker address not configured, returning without connecting ...");
-                return false;
-            }
+        @Override
+        protected void connectionFailureCallback() {
+            LOG.debug("Connection failed in state: {}", getState());
+            switch (getState()) {
+                case INIT:
+                    setState(ChannelState.INITFAILED);
+                    break;
 
-            try {
-                client = new MqttAsyncClient(
-                        mqttBroker,//Broker Address
-                        MqttClient.generateClientId(), //ClientId
-                        new MemoryPersistence()); //Persistence
-
-                // register a callback for messages that we subscribe to ...
-                client.setCallback(new MqttCallback() {
-                    @Override
-                    public void connectionLost(Throwable cause) {
-                        LOG.error("Onem2mMqttClient: lost connection to server");
-                        try {
-                            Onem2mMqttAsyncClient.this.connectToMqttServer(mqttBroker);
-                        } catch (MqttException e) {
-                            LOG.error("Failed to connect to MQTT server: {}", e);
-                            setState(ChannelState.INITFAILED);
-                        }
-                    }
-
-                    @Override
-                    public void messageArrived(String topic, MqttMessage message) throws Exception {
-                        //check if Qos is not 0
-                        if ((!message.isRetained()) && (message.getQos() == 1)) {
-                            handleMqttMessage(topic, message.toString());
-                        }
-                        if (message.getQos() != 1) {
-                            publishMqttResponse(topic, "QoS must be 1");
-                        }
-                        if (message.isRetained()) {
-                            publishMqttResponse(topic, "Message retained should be false");
-                        }
-                    }
-
-                    @Override
-                    public void deliveryComplete(IMqttDeliveryToken token) {}//Called when a outgoing publish is complete.
-
-                });
-
-                MqttConnectOptions options = new MqttConnectOptions();
-                options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-                options.setUserName("mqtt");
-                options.setPassword("mqtt".toCharArray());
-                options.setCleanSession(false);
-
-                IMqttActionListener connectionListener = new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken arg0) {
-                        LOG.info("Connection successfull with broker : " + mqttBroker);
-                    }
-
-                    @Override
-                    public void onFailure(IMqttToken arg0, Throwable arg1) {
-                        LOG.error("Connection failed ");
-                    }
-                };
-
-                IMqttToken conToken = client.connect(options, "Connect async client to server", connectionListener);
-                conToken.waitForCompletion();
-                //connecting client to server
-                if (!client.isConnected()) {
-                    LOG.error("Onem2mMqttClient: trouble connecting to server");
-                    return false;
-                }
-
-                return registerMqttSubscriber();
-
-            } catch (MqttException e) {
-                LOG.error("Onem2mMqttClient: error occured when connecting to server", e);
-                return false;
+                default:
+                    setState(ChannelState.FAILED);
+                    break;
             }
         }
 
-        void disconnectFromMqttServer() {
-            try {
-                client.disconnect();
-            } catch (MqttException e) {
-                LOG.error("disconnectFromMqttServer: trouble disconnecing {}", e);
+        @Override
+        protected void reconnectionSuccessful() {
+            super.reconnectionSuccessful();
+            if (getUsesDefaultConfiguration()) {
+                setState(ChannelState.RUNNINGDEFAULT);
+            } else {
+                setState(ChannelState.RUNNING);
             }
+        }
+
+        @Override
+        public void messageArrived(String topic, MqttMessage message) throws Exception {
+            //check if Qos is not 0
+            if ((!message.isRetained()) && (message.getQos() == 1)) {
+                handleMqttMessage(topic, message.toString());
+            }
+            if (message.getQos() != 1) {
+                publishMqttResponse(topic, "QoS must be 1");
+            }
+            if (message.isRetained()) {
+                publishMqttResponse(topic, "Message retained should be false");
+            }
+        }
+
+        @Override
+        public boolean connectToMqttServer() throws MqttException {
+            if (! super.connectToMqttServer()) {
+                return false;
+            }
+
+            return registerMqttSubscriber();
         }
 
         //subscribe for all onem2m requests
-        boolean registerMqttSubscriber() {
+        private boolean registerMqttSubscriber() {
             Boolean status = true;
             String topic = "/" + Onem2m.Mqtt.OM2M_TOPIC_LITERAL + "/" + Onem2m.Mqtt.MessageType.REQUEST + "/#";
             try {
@@ -169,7 +136,7 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
         }
 
         // Handler for a request and a response
-        void handleMqttMessage(String topic, String message) {
+        private void handleMqttMessage(String topic, String message) {
             String mqttMessageType = null;
             String hierarchyTopic[] = parseTopicString(topic);
             if (hierarchyTopic[1].contains("req")) {
@@ -204,7 +171,7 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
             }
         }
 
-        void publishMqttResponse(String requestTopic, String message) {
+        private void publishMqttResponse(String requestTopic, String message) {
 
             String topicParts[] = trimTopic(requestTopic).split("/");
             String format_type = topicParts[4];
