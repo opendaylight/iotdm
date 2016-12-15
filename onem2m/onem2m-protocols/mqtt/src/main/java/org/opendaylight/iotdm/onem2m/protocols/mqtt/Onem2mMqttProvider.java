@@ -10,10 +10,17 @@ package org.opendaylight.iotdm.onem2m.protocols.mqtt;
 
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
+import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.mqtt.rx.Onem2mMqttIotdmPlugin;
 import org.opendaylight.iotdm.onem2m.protocols.mqtt.rx.Onem2mMqttIotdmPluginConfig;
 import org.opendaylight.iotdm.onem2m.protocols.mqtt.rx.Onem2mMqttRxRequestFactory;
+import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttNotifierPlugin;
+import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttNotifierRequestAbstractFactory;
+import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttNotifierRequestFactory;
+import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttTxClient;
+import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttTxClientConfiguration;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 
 import org.slf4j.Logger;
@@ -22,8 +29,12 @@ import org.slf4j.LoggerFactory;
 public class Onem2mMqttProvider implements BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mMqttProvider.class);
-    private Onem2mMqttIotdmPlugin onem2MMqttIotdmPlugin = null;
+    private Onem2mMqttIotdmPlugin onem2mMqttIotdmPlugin = null;
     private final Onem2mMqttIotdmPluginConfig serverConfig;
+
+    protected Onem2mMqttTxClient notifierClient = null;
+    protected Onem2mMqttNotifierRequestAbstractFactory notifierReqFactory = null;
+    protected Onem2mMqttNotifierPlugin notifierPlugin = null;
 
     public Onem2mMqttProvider(Onem2mMqttIotdmPluginConfig serverConfig) {
         this.serverConfig = serverConfig;
@@ -33,22 +44,45 @@ public class Onem2mMqttProvider implements BindingAwareProvider, AutoCloseable {
     public void onSessionInitiated(ProviderContext session) {
         Onem2mService onem2mService = session.getRpcService(Onem2mService.class);
         try {
-            onem2MMqttIotdmPlugin = new Onem2mMqttIotdmPlugin(new Onem2mProtocolRxHandler(),
-                    new Onem2mMqttRxRequestFactory(),
-                    onem2mService);
-            onem2MMqttIotdmPlugin.start(this.serverConfig);
+            onem2mMqttIotdmPlugin = new Onem2mMqttIotdmPlugin(new Onem2mProtocolRxHandler(),
+                                                              new Onem2mMqttRxRequestFactory(),
+                                                              onem2mService);
+            onem2mMqttIotdmPlugin.start(this.serverConfig);
         } catch (Exception e) {
             LOG.error("Failed to start mqtt server: {}", e);
         }
+
+        try {
+            Onem2mMqttTxClientConfiguration notifierConfg =
+                    new Onem2mMqttTxClientConfiguration(serverConfig.getMqttBrokerIp(),
+                                                        serverConfig.getMqttBrokerPort());
+
+            this.notifierClient = new Onem2mMqttTxClient();
+            this.notifierClient.start(notifierConfg);
+
+            this.notifierReqFactory =
+                    new Onem2mMqttNotifierRequestFactory(this.notifierClient, serverConfig.getMqttBrokerPort());
+            notifierPlugin = new Onem2mMqttNotifierPlugin(new Onem2mProtocolTxHandler(), this.notifierReqFactory);
+            Onem2mNotifierService.getInstance().pluginRegistration(notifierPlugin);
+        } catch (Exception e) {
+            LOG.error("Failed to start notifier plugin: {}", e);
+        }
+
         LOG.info("Onem2mMqttProvider Session Initiated");
     }
 
     @Override
     public void close() throws Exception {
         try {
-            onem2MMqttIotdmPlugin.close();
+            onem2mMqttIotdmPlugin.close();
         } catch (Exception e) {
             LOG.error("Failed to close mqtt plugin: {}", e);
+        }
+
+        try {
+            notifierClient.close();
+        } catch (Exception e) {
+            LOG.error("Failed to close MQTT notifier client: {}", e);
         }
     }
 
@@ -91,7 +125,7 @@ public class Onem2mMqttProvider implements BindingAwareProvider, AutoCloseable {
 //              If the broker is changed, disconnect from old broker, then store these values and call connectToMqttServer.
 //             */
 //            else if (connectedToBroker && !mqttAddress.equals(input.getMqttBroker()) && validated) {
-//                onem2mMqttClient.disconnectFromMqttServer();
+//                onem2mMqttClient.disconnectFromMqttBroker();
 //                mqttAddress = input.getMqttBroker();
 //                addCSEListandConnect(tempCseList, mqttAddress);
 //            }
@@ -154,7 +188,7 @@ public class Onem2mMqttProvider implements BindingAwareProvider, AutoCloseable {
 //        Onem2mMqttAsyncClient() {
 //        }
 //
-//        public void disconnectFromMqttServer() {
+//        public void disconnectFromMqttBroker() {
 //            try {
 //                client.disconnect();
 //            } catch (MqttException e) {
