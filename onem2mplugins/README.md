@@ -345,4 +345,6 @@ See readme file of [Onem2mBundleLoader](onem2mbundleloader/README.md).
 
 ## Using Onem2mKarafFeatureLoader
 
-    TODO: Not implemented yet.
+Onem2mKarafFeatureLoader allows installation of Karaf archives and specific
+Karaf features included in the archive.
+See readme file of [Onem2mKarafFeatureLoader](onem2mkaraffeatureloader/README.md).

@@ -1,0 +1,308 @@
+module onem2mkaraffeatureloader {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mkaraffeatureloader";
+    prefix "onem2mkaraffeatureloader";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2mkaraffeatureloader model";
+    }
+
+    grouping features-to-install-list {
+        description "List of feature names to be installed from the archive.";
+
+        list features-to-install {
+            key "feature-name";
+            leaf feature-name {
+                description "Unique name of feature.";
+                type string;
+                mandatory true;
+            }
+        }
+    }
+
+    grouping karaf-archive-name-definition {
+        leaf karaf-archive-name {
+            type string;
+            mandatory true;
+        }
+    }
+
+    grouping karaf-feature-loader-name-definition {
+        leaf  karaf-feature-loader-name {
+            type string;
+            mandatory true;
+        }
+    }
+
+
+    /*
+     * Karaf Feature Loader install/uninstall/reload RPCs
+     */
+    rpc archive-install {
+        input {
+            uses karaf-feature-loader-name-definition;
+
+            leaf karaf-archive-url {
+                type string;
+                mandatory true;
+            }
+
+            uses features-to-install-list;
+        }
+
+        output {
+        }
+    }
+
+    rpc archive-uninstall {
+        input {
+            uses karaf-feature-loader-name-definition;
+            uses karaf-archive-name-definition;
+        }
+
+        output {
+        }
+    }
+
+    rpc archive-reload {
+        input {
+            uses karaf-feature-loader-name-definition;
+            uses karaf-archive-name-definition;
+        }
+
+        output {
+        }
+    }
+
+    /*
+     * Karaf Feature Loader running config
+     */
+    rpc archive-list {
+        input {
+            leaf karaf-archive-name {
+                type string;
+                mandatory false;
+            }
+            leaf  karaf-feature-loader-name {
+                type string;
+                mandatory false;
+            }
+        }
+
+        output {
+            list karaf-feature-loaders {
+                key "karaf-feature-loader-name";
+                leaf  karaf-feature-loader-name {
+                    type string;
+                    mandatory true;
+                }
+
+                list karaf-archives {
+                    key "karaf-archive-name";
+                    leaf karaf-archive-name {
+                        type string;
+                        mandatory true;
+                    }
+
+                    leaf karaf-archive-url {
+                        type string;
+                        mandatory true;
+                    }
+
+                    /*
+                    leaf karaf-archive-state {
+                        type enumeration {
+                            enum installed;
+                            enum uninstalled;
+                        }
+                        mandatory true;
+                    }
+                    */
+
+                    leaf repository-name {
+                        type string;
+                        mandatory true;
+                    }
+
+                    leaf repository-url {
+                        type string;
+                        mandatory true;
+                    }
+
+                    leaf repository-state {
+                        type enumeration {
+                            enum added;
+                            enum removed;
+                            enum invalid;
+                        }
+                        mandatory true;
+                    }
+
+                    list karaf-features {
+                        key "feature-name";
+                        leaf feature-name {
+                            description "Unique name of feature.";
+                            type string;
+                            mandatory true;
+                        }
+
+                        leaf feature-state {
+                            type enumeration {
+                                enum installed;
+                                enum uninstalled;
+                            }
+                        }
+
+                        leaf feature-description {
+                            type string;
+                        }
+
+                        leaf feature-details {
+                            type string;
+                        }
+
+                        leaf feature-id {
+                            type string;
+                        }
+
+                        /*
+                        leaf feature-install {
+                            type string;
+                        }
+                        */
+
+                        /*
+                        leaf feature-region {
+                            type string;
+                        }
+                        */
+
+                        /*
+                        leaf feature-resolver {
+                            type string;
+                        }
+                        */
+
+                        /*
+                        leaf feature-start-level {
+                            type int32;
+                        }
+                        */
+
+                        leaf feature-version {
+                            type string;
+                        }
+
+                        list feature-bundles {
+                            key "bundle-name";
+                            leaf bundle-name {
+                                type string;
+                                mandatory true;
+                            }
+
+                            leaf bundle-location {
+                                type string;
+                                mandatory true;
+                            }
+
+                            leaf bundle-version {
+                                type string;
+                                mandatory true;
+                            }
+
+                            leaf bundle-id {
+                                type string;
+                                mandatory true;
+                            }
+
+                            leaf bundle-state {
+                                type string;
+                                mandatory true;
+                            }
+
+                            leaf bundle-diagnostic-info {
+                                type string;
+                            }
+                        }
+
+                        list feature-dependencies {
+                            key "dependency-name";
+                            leaf dependency-name {
+                                type string;
+                                mandatory true;
+                            }
+
+                            leaf dependency-version {
+                                type string;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*
+     * Karaf Feature Loader startup config
+     */
+
+    grouping karaf-feature-loader-startup-config-definition {
+        list startup-karaf-feature-loaders {
+            key "karaf-feature-loader-name";
+            leaf  karaf-feature-loader-name {
+                type string;
+                mandatory true;
+            }
+
+            list startup-karaf-archives {
+                key "karaf-archive-name";
+                leaf karaf-archive-name {
+                    type string;
+                    mandatory true;
+                }
+
+                leaf karaf-archive-url {
+                    type string;
+                    mandatory true;
+                }
+
+                leaf repository-name {
+                    type string;
+                    mandatory true;
+                }
+
+                leaf repository-url {
+                    type string;
+                    mandatory true;
+                }
+
+                list startup-karaf-features {
+                    key "feature-name";
+                    leaf feature-name {
+                        description "Unique name of feature.";
+                        type string;
+                        mandatory true;
+                    }
+                }
+            }
+        }
+    }
+
+    container karaf-feature-loader-startup-config {
+        uses karaf-feature-loader-startup-config-definition;
+    }
+
+    rpc archive-list-startup {
+        input {
+            leaf  karaf-feature-loader-name {
+                type string;
+                mandatory false;
+            }
+        }
+
+        output {
+           uses karaf-feature-loader-startup-config-definition;
+        }
+    }
+}
