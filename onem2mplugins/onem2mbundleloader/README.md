@@ -22,8 +22,8 @@ If the conflict is detected then installation of whole feature fails
 and none bundle is installed and user is notified about it by error
 message in the response of the RPC call.
 
-Example of all provided RPC calls can be found in the Postman collection
-postman collection example: ./IoTDM_BundleLoader.postman_collection.json
+Examples of all provided RPC calls can be found in the example Postman
+collection: ./IoTDM_BundleLoader.postman_collection.json
 
 Although the Onem2mBundleLoader is intended to be used to load mainly
 IoTDM plugins, it can be used for whichever OSGi bundle.
