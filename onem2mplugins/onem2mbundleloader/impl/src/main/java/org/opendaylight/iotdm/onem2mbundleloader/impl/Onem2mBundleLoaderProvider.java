@@ -45,6 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -428,6 +431,17 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
                     .append("): ")
                     .append(e.getMessage());
 
+            if (null != newBundle) {
+                LOG.info("BundleLoader: {}, Feature: {}, uninstalling failed bundle: {}",
+                         loaderInstanceName, featureName, bundleJarFile);
+                try {
+                    newBundle.uninstall();
+                } catch (Exception ee) {
+                    LOG.info("BundleLoader: {}, Feature: {}, JAR: {}, Uninstalling of failed bundle failed: {}",
+                             loaderInstanceName, featureName, bundleJarFile, ee);
+                }
+            }
+
             String errMsg = builder.toString();
             LOG.error(errMsg);
             return errMsg;
@@ -527,7 +541,7 @@ public class Onem2mBundleLoaderProvider implements IotdmPluginLoader, Onem2mbund
             this.rwLock.writeLock().unlock();
         }
 
-        // Register local RPC services
+        // Register local RPC services in the BundleLoader RPC router
         if (! Onem2mBundleLoaderRpcRouter.getInstance().registerBundleLoader(loaderInstanceName, this)) {
             LOG.error("Onem2mBundleLoaderProvider ({}) Failed to register RPC services", loaderInstanceName);
         } else {
