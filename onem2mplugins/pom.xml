@@ -20,7 +20,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>onem2mexample</module>
     <module>onem2moic</module>
     <module>onem2medevice</module>
-    <module>onem2mbundleloader</module>
+    <module>iotdmbundleloader</module>
+    <module>iotdmkaraffeatureloader</module>
   </modules>
 
   <build>

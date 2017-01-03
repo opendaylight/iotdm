@@ -338,11 +338,13 @@ the steps from sections:
     Edit file iotdm/onem2m_plugins/onem2m_<plugin-name>/features/pom.xml
 It is also needed to add your moved plugin module into the iotdm/onem2m_plugins/pom.xml.
 
-## Using Onem2mBundleLoader 
+## Using IoTDM BundleLoader 
 
-Onem2mBundleLoader allows loading of plugins packed as OSGi bundles together with all required dependencies.
-See readme file of [Onem2mBundleLoader](onem2mbundleloader/README.md).
+IoTDM BundleLoader allows loading of plugins packed as OSGi bundles together with all required dependencies.
+See readme file of [IoTDM BundleLoader](iotdmbundleloader/README.md).
 
-## Using Onem2mKarafFeatureLoader
+## Using IoTDM KarafFeatureLoader
 
-    TODO: Not implemented yet.
+IoTDM KarafFeatureLoader allows installation of Karaf archives and specific
+Karaf features included in the archive.
+See readme file of [IoTDM KarafFeatureLoader](iotdmkaraffeatureloader/README.md).

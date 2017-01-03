@@ -1,0 +1,18 @@
+module iotdm-bundle-loader-config {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:iotdmbundleloader:config";
+    prefix iotdm-bundle-loader-config;
+
+    description "Configuration for IoTDM BundleLoader";
+
+    revision "2016-10-21" {
+        description "Initial revision.";
+    }
+
+    list bundle-loaders-configs {
+        key "loader-instance-name";
+        leaf loader-instance-name {
+            type string;
+        }
+    }
+}

@@ -1,0 +1,20 @@
+module iotdm-karaf-feature-loader-config {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:iotdmkaraffeatureloader:config";
+    prefix iotdm-karaf-feature-loader-config;
+
+    import config { prefix config; revision-date 2013-04-05; }
+
+    description "Configuration for IoTDM KarafFeatureLoader";
+
+    revision "2016-12-20" {
+        description "Initial revision.";
+    }
+
+    list karaf-feature-loaders-configs {
+        key "loader-instance-name";
+        leaf loader-instance-name {
+            type string;
+        }
+    }
+}
