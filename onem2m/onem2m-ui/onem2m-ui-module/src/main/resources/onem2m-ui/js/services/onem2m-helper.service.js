@@ -1497,7 +1497,7 @@ define(['iotdm-gui.services.module'], function(app) {
         }
 
         function assignFrom() {
-            return "//localhost";
+            return "onem2m-ui";
         }
 
         function assignRequestIdentifierHelper() {
