@@ -378,6 +378,9 @@ public class ResultContentProcessor {
 
         List<Onem2mParentChild> childList = Onem2mDb.getInstance().getParentChildList(trc, onem2mResource
                 .getResourceId());
+        if (childList.isEmpty()) {
+            return;
+        }
 
         childList = checkChildList(twc, trc, onem2mRequest, onem2mResource, onem2mResponse, childList);
         if (childList.isEmpty())
