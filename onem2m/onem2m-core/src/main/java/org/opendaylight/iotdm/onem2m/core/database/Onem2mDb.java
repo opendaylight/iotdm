@@ -1076,7 +1076,8 @@ public class Onem2mDb implements TransactionChainListener {
      * @return name of the resource in hierarchical format
      */
     public String getHierarchicalNameForResource(ResourceTreeReader trc, Onem2mResource onem2mResource) {
-        StringBuffer hierarchy = new StringBuffer();
+        StringBuilder hierarchy = new StringBuilder();
+        String delimiter = ""; // leading delimiter is empty string because the resulting id is CSE-relative
 
         while (onem2mResource != null) {
             String resourceName;
@@ -1086,13 +1087,19 @@ public class Onem2mDb implements TransactionChainListener {
             } else {
                 resourceName = onem2mResource.getName();
             }
-            hierarchy.insert(0, "/" + resourceName);
+
+            hierarchy.insert(0, delimiter)
+                     .insert(0, resourceName);
+
             String resourceId = onem2mResource.getParentId();
             if (resourceId.equals(NULL_RESOURCE_ID)) {
                 break;
             }
+
             onem2mResource = trc.retrieveResourceById(resourceId);
+            delimiter = "/";
         }
+
         return hierarchy.toString();
     }
 
