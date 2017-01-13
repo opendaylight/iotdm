@@ -90,7 +90,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version="${restconf.version}">odl-restconf</feature>
         <!-- use http://localhost:8181/apidoc/explorer/index.html to access api docs -->
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-        <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
         <feature version="${dlux.version}">odl-dlux-all</feature>
     </feature>
 
