@@ -21,12 +21,18 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of TX channel for MQTT notifications.
  */
-public class Onem2mMqttTxClient implements Onem2mProtocolTxChannel<Onem2mMqttTxClientConfiguration> {
+public class Onem2mMqttTxClient implements Onem2mProtocolTxChannel {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mMqttTxClient.class);
     protected Onem2mMqttTxAsyncClient onem2mMqttClient;
     protected String mqttBrokerAddress = null;
 
     @Override
+    public void start() {
+        // TODO use this when migrated to Blueprint
+        return;
+    }
+
+    //@Override
     public void start(Onem2mMqttTxClientConfiguration configuration) {
         mqttBrokerAddress = "tcp://" + configuration.getIpAddress() + ":" + configuration.getPort();
         onem2mMqttClient = new Onem2mMqttTxAsyncClient();

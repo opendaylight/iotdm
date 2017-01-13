@@ -73,8 +73,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->
     </feature>
 
+
+
     <!-- oneM2M messaging over HTTP protocol base implementation -->
-    <feature name='odl-onem2m-http' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP'>
+    <feature name='odl-onem2m-http-impl' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP :: implementation'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
@@ -82,8 +84,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${pax.web.version}'>pax-http</feature>
 
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-http.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}/xml/config</configfile>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-impl/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-onem2m-http' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version='${project.version}'>odl-onem2m-http-impl</feature>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-provider/{{VERSION}}</bundle>
     </feature>
 
     <!-- oneM2M messaging over Websocket protocol base implementation -->

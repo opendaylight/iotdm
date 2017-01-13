@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 
 public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseRequest, IotdmPluginOnem2mBaseResponse>,
-                                              Onem2mProtocolRxChannel<Onem2mMqttIotdmPluginConfig> {
+                                              Onem2mProtocolRxChannel {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mMqttIotdmPlugin.class);
 
@@ -50,6 +50,12 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
     }
 
     @Override
+    public void start() {
+        // TODO use this when migrated to Blueprint
+        return;
+    }
+
+    //@Override
     public void start(Onem2mMqttIotdmPluginConfig configuration)
             throws IllegalArgumentException {
         if (null == configuration) {

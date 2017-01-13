@@ -25,6 +25,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
     <feature version='${project.version}'>odl-onem2medevice-api</feature>
     <feature version='${onem2m.version}'>odl-onem2m-core</feature>
+    <feature version='${onem2m.version}'>odl-onem2m-http-impl</feature>
     <bundle>mvn:org.opendaylight.iotdm/onem2medevice-impl/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-onem2medevice-rest' version='${project.version}' description='OpenDaylight :: onem2medevice :: REST'>
