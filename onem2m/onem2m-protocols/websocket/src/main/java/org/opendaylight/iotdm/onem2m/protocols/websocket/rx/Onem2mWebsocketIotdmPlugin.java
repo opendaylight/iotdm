@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public class Onem2mWebsocketIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseRequest, IotdmPluginOnem2mBaseResponse>,
-                                                   Onem2mProtocolRxChannel<Onem2mWebsocketIotdmPluginConfig> {
+                                                   Onem2mProtocolRxChannel {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mWebsocketIotdmPlugin.class);
 
     private final Onem2mProtocolRxHandler requestHandler;
@@ -48,6 +48,12 @@ public class Onem2mWebsocketIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2m
     }
 
     @Override
+    public void start() {
+        // TODO use this when migrated to Blueprint
+        return;
+    }
+
+    //@Override
     public void start(Onem2mWebsocketIotdmPluginConfig configuration)
             throws IllegalArgumentException {
         if (Objects.isNull(configuration)) {

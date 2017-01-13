@@ -9,8 +9,8 @@
 package org.opendaylight.iotdm.onem2m.plugins.simpleconfig;
 
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurable;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.PluginConfiguration;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.SimpleConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.SimpleConfigBuilder;
 
 /**
  * Interface describes implementation of SimpleConfig clients.
@@ -48,7 +48,7 @@ public interface IotdmPluginSimpleConfigClient extends IotdmPluginConfigurable {
      * @return Common PluginConfiguration instance
      */
     @Override
-    default PluginConfiguration getRunningConfig() {
+    default PluginSpecificConfiguration getRunningConfig() {
         IotdmSimpleConfig cfg = null;
 
         // Call the getSimpleConfig() of this plugin instance

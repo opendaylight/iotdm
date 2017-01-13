@@ -1,0 +1,104 @@
+module onem2m-protocol-http {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2m:protocol:http";
+    prefix "onem2m-protocol-http";
+
+    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28; }
+    import onem2m { prefix onem2m; revision-date 2015-01-05; }
+    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Service definition for onem2m project";
+
+    revision "2017-01-10" {
+        description
+            "Http module confiugration";
+    }
+
+    grouping http-protocol-server-config {
+        leaf server-port {
+            mandatory true;
+            type uint16;
+        }
+
+        leaf server-security-level {
+            mandatory true;
+            type onem2m:security-level;
+        }
+
+        leaf secure-connection {
+            mandatory true;
+            type boolean;
+        }
+    }
+
+    grouping http-protocol-sender-config {
+        leaf secure-connection {
+            mandatory true;
+            type boolean;
+        }
+    }
+
+    grouping http-secure-connection-config {
+        container key-store-config {
+            description "Configuration of the Java KeyStore.";
+
+            uses onem2m-plugin-manager:java-key-store-config;
+        }
+
+        container trust-store-config {
+            description "Configuration of the Java TrustStore (required by notifier plugin and router plugin).";
+
+            leaf trust-store-file {
+                description "Path to the Java TrustStore file.";
+                mandatory true;
+                type string;
+            }
+
+            leaf trust-store-password {
+                description "Password to access the TrustStore file.";
+                mandatory true;
+                type string;
+            }
+        }
+    }
+
+    grouping http-protocol-provider-config {
+        container server-config {
+            uses http-protocol-server-config;
+        }
+
+        container https-config {
+            presence "Required if the secure connection is set to true.";
+            uses http-secure-connection-config;
+        }
+
+        container notifier-plugin-config {
+            uses http-protocol-sender-config;
+        }
+
+        container router-plugin-config {
+            uses http-protocol-sender-config;
+        }
+    }
+
+    augment "/onem2m-plugin-manager:onem2m-plugin-manager-plugin-data
+             /onem2m-plugin-manager:output
+             /onem2m-plugin-manager:onem2m-plugin-manager-plugins-table
+             /onem2m-plugin-manager:onem2m-plugin-manager-plugin-instances
+             /onem2m-plugin-manager:plugin-configuration
+             /onem2m-plugin-manager:plugin-specific-configuration" {
+        case http-https-config {
+            uses http-protocol-provider-config;
+        }
+    }
+
+    list onem2m-protocol-http-providers {
+        key "http-provider-instance-name";
+        leaf http-provider-instance-name {
+            type string;
+        }
+
+        uses http-protocol-provider-config;
+    }
+}

@@ -11,20 +11,14 @@ package org.opendaylight.iotdm.onem2m.protocols.common;
 /**
  * This interfaces describes generic methods which should be
  * implemented by the sending part of the protocol implementation.
- * The TxChannel can be configured by the configuration data of type T
- * which are passed as parameter of the start() method.
- * @param <T> Type of configuration of the TxChannel
  */
-public interface Onem2mProtocolTxChannel<T> extends AutoCloseable {
+public interface Onem2mProtocolTxChannel extends AutoCloseable {
 
     /**
      * Configures and starts the TxChannel.
-     * @param configuration The configuration of the TxChannel
-     * @throws IllegalArgumentException in case of invalid configuration
      * @throws RuntimeException in case of internal error during the start
      */
-    void start(T configuration)
-            throws IllegalArgumentException, RuntimeException;
+    void start() throws RuntimeException;
 
     /**
      * Implements the AutoCloseable interface.

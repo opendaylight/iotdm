@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapRequest, IotdmPluginCoapResponse>,
-                                                  Onem2mProtocolRxChannel<Onem2mCoapBaseIotdmPluginConfig> {
+                                                  Onem2mProtocolRxChannel {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapBaseIotdmPlugin.class);
 
@@ -60,6 +60,12 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
     }
 
     @Override
+    public void start() {
+        // TODO use this when migrated to Blueprint
+        return;
+    }
+
+//    @Override
     public void start(Onem2mCoapBaseIotdmPluginConfig configuration)
             throws RuntimeException {
         if (Objects.isNull(configuration)) {
