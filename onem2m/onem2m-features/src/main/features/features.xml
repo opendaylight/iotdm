@@ -57,7 +57,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-core</feature>
 
         <bundle>mvn:org.opendaylight.iotdm/onem2m-notifier/{{VERSION}}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-notifier.xml">mvn:org.opendaylight.iotdm/onem2m-notifier/{{VERSION}}/xml/config</configfile>
     </feature>
 
     <!-- OneM2M Messaging over CoAP protocol -->
