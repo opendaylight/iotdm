@@ -8,7 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.plugins;
 
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.PluginConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
 
 /**
  * This interface describes implementation of plugins which are configurable
@@ -20,5 +20,5 @@ public interface IotdmPluginConfigurable extends IotdmPluginCommonInterface {
      * Method returns current running configuration of the plugin instance.
      * @return Running config.
      */
-    PluginConfiguration getRunningConfig();
+    PluginSpecificConfiguration getRunningConfig();
 }

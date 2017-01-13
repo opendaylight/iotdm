@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * Common COAP(S) client base class for COAP(S) notifier and routing plugins.
  */
-public abstract class Onem2mCoapClient implements Onem2mProtocolTxChannel<Onem2mCoapClientConfiguration> {
+public abstract class Onem2mCoapClient implements Onem2mProtocolTxChannel {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoapClient.class);
 
     protected String pluginName = "coap";
@@ -43,6 +43,12 @@ public abstract class Onem2mCoapClient implements Onem2mProtocolTxChannel<Onem2m
     protected Onem2mCoapClientConfiguration configuration = null;
 
     @Override
+    public void start() {
+        // TODO use this when migrated to Blueprint
+        return;
+    }
+
+//    @Override
     public void start(Onem2mCoapClientConfiguration configuration)
             throws RuntimeException {
         if (null != configuration && configuration.isSecureConnection()) {

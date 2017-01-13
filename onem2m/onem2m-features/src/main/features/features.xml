@@ -82,8 +82,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${pax.web.version}'>pax-http</feature>
 
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-http.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-http/{{VERSION}}/xml/config</configfile>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-impl/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-provider/{{VERSION}}</bundle>
     </feature>
 
     <!-- oneM2M messaging over Websocket protocol base implementation -->
