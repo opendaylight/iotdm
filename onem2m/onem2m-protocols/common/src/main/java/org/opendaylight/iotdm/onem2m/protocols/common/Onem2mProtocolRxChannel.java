@@ -11,20 +11,14 @@ package org.opendaylight.iotdm.onem2m.protocols.common;
 /**
  * This interfaces describes generic methods which should be
  * implemented by the receiving part of the protocol implementation.
- * The RxChannel can be configured by the configuration data of type T
- * which are passed as parameter of the start() method.
- * @param <T> Type of configuration of the RxChannel
  */
-public interface Onem2mProtocolRxChannel<T> extends AutoCloseable {
+public interface Onem2mProtocolRxChannel extends AutoCloseable {
 
     /**
      * Configures and starts the RxChannel.
-     * @param configuration The configuration of the RxChannel
-     * @throws IllegalArgumentException in case of invalid configuration
      * @throws RuntimeException in case of internal error during the start
      */
-    void start(T configuration)
-            throws IllegalArgumentException, RuntimeException;
+    void start() throws RuntimeException;
 
     /**
      * Implements the AutoCloseable interface.

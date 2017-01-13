@@ -469,10 +469,12 @@ module onem2m-plugin-manager {
                     }
 
                     /* Plugin configuration */
-                    choice plugin-configuration {
-                        description "Configuration of the plugin instance.";
-                        case simple-config {
-                            uses onem2m-simple-config:plugin-simple-config-definition;
+                    container plugin-configuration {
+                        choice plugin-specific-configuration {
+                            description "Configuration of the plugin instance.";
+                            case simple-config {
+                                uses onem2m-simple-config:plugin-simple-config-definition;
+                            }
                         }
                     }
 

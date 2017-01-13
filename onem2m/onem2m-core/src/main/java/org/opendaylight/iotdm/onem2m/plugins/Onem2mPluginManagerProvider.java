@@ -42,7 +42,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.Onem2mPluginManagerPluginInstancesBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.DbApiClientDataBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.ImplementedInterfacesBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.SimpleConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.PluginConfigurationBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.SimpleConfigBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.simple.config.client.registrations.output.RegisteredSimpleConfigClientPluginsTable;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.simple.config.client.registrations.output.RegisteredSimpleConfigClientPluginsTableBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.simple.config.client.registrations.output.registered.simple.config.client.plugins.table.RegisteredSimpleConfigClientPluginInstances;
@@ -494,7 +495,8 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                                             .setIotdmInterface(IotdmPluginConfigurable.class.getSimpleName())
                                             .build());
                             builder.setPluginConfiguration(
-                                    ((IotdmPluginConfigurable) pluginInstance.get()).getRunningConfig());
+                                    new PluginConfigurationBuilder().setPluginSpecificConfiguration(
+                                        ((IotdmPluginConfigurable) pluginInstance.get()).getRunningConfig()).build());
                         }
                     }
                 }
@@ -565,7 +567,9 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                                                     .setIotdmInterface(IotdmPluginConfigurable.class.getSimpleName())
                                                     .build());
                                         builder.setPluginConfiguration(
-                                            ((IotdmPluginConfigurable) pluginInstance.getClient()).getRunningConfig());
+                                            new PluginConfigurationBuilder().setPluginSpecificConfiguration(
+                                                ((IotdmPluginConfigurable) pluginInstance.getClient())
+                                                    .getRunningConfig()).build());
                                     }
 
                                     break;
@@ -625,8 +629,11 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
                         // Set also configuration if exists and if not set
                         if (null == builder.getPluginConfiguration()) {
-                            builder.setPluginConfiguration(new SimpleConfigBuilder().setPluginSimpleConfig(
-                                    instance.getPluginSimpleConfig()).build());
+                            builder.setPluginConfiguration(
+                                new PluginConfigurationBuilder().setPluginSpecificConfiguration(
+                                        new SimpleConfigBuilder().setPluginSimpleConfig(
+                                            instance.getPluginSimpleConfig()).build())
+                                    .build());
                         }
                     }
                 }
