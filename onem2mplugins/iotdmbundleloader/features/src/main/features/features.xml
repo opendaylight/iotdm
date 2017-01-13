@@ -37,7 +37,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <feature name='odl-iotdmbundleloader-ui' version='${project.version}' description='OpenDaylight :: IoTDM : BundleLoader :: UI'>
     <feature version="${project.version}">odl-iotdmbundleloader-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
     <feature version="${dlux.version}">odl-dlux-yangui</feature>
   </feature>
   <feature name='odl-iotdmbundleloader-cli' version='${project.version}' description='OpenDaylight :: IoTDM : BundleLoader :: CLI'>
