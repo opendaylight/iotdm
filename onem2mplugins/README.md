@@ -261,7 +261,6 @@ Your file should look something like this:  note this is the sample file for the
       <feature name='odl-onem2mtsdr-ui' version='${project.version}' description='OpenDaylight :: onem2mtsdr :: UI'>
         <feature version="${project.version}">odl-onem2mtsdr-rest</feature>
         <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-        <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
         <feature version="${dlux.version}">odl-dlux-yangui</feature>
       </feature>
     
