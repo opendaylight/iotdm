@@ -34,7 +34,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <feature name='odl-onem2medevice-ui' version='${project.version}' description='OpenDaylight :: onem2medevice :: UI'>
     <feature version="${project.version}">odl-onem2medevice-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
     <feature version="${dlux.version}">odl-dlux-yangui</feature>
   </feature>
   <feature name='odl-onem2medevice-cli' version='${project.version}' description='OpenDaylight :: onem2medevice :: CLI'>

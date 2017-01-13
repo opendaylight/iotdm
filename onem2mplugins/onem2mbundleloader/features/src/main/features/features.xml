@@ -37,7 +37,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <feature name='odl-onem2mbundleloader-ui' version='${project.version}' description='OpenDaylight :: onem2mbundleloader :: UI'>
     <feature version="${project.version}">odl-onem2mbundleloader-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
     <feature version="${dlux.version}">odl-dlux-yangui</feature>
   </feature>
   <feature name='odl-onem2mbundleloader-cli' version='${project.version}' description='OpenDaylight :: onem2mbundleloader :: CLI'>
