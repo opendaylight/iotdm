@@ -43,6 +43,16 @@ public interface Onem2mProtocolConfigValidator {
     }
 
     /**
+     * Throws exception if the port number is invalid.
+     * @param port TCP or UDP port number
+     * @throws Onem2mProtocolConfigException
+     */
+    default void checkPortNumber(final int port) throws Onem2mProtocolConfigException {
+        checkCondition((port > 0 && port < 0xFFFF),
+                       "Invalid port number " + port);
+    }
+
+    /**
      * Validation method which validates complete configuration and
      * throws exception at the first configuration item which is invalid.
      * @throws Onem2mProtocolConfigException

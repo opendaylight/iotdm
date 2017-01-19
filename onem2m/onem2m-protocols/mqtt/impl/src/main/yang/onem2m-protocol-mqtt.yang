@@ -1,0 +1,61 @@
+module onem2m-protocol-mqtt {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2m:protocol:mqtt";
+    prefix "onem2m-protocol-mqtt";
+
+    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import onem2m { prefix onem2m; revision-date 2015-01-05; }
+    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Service definition for onem2m project";
+
+    revision "2017-01-18" {
+        description
+            "MQTT module configuration";
+    }
+
+    grouping mqtt-client-config-definition {
+        leaf security-level {
+            mandatory true;
+            type onem2m:security-level;
+        }
+        leaf mqtt-broker-ip {
+            description "tcp:<ipaddr> of the internal or external mqtt broker";
+            mandatory true;
+            type string;
+        }
+        leaf mqtt-broker-port {
+            description "Port of the internal or external mqtt broker";
+            mandatory true;
+            type uint16;
+        }
+    }
+
+    grouping mqtt-protocol-provider-config {
+        container mqtt-client-config {
+            presence "Mqtt client will not connect to broker if this configuration is not provided";
+            uses mqtt-client-config-definition;
+        }
+    }
+
+    augment "/onem2m-plugin-manager:onem2m-plugin-manager-plugin-data
+             /onem2m-plugin-manager:output
+             /onem2m-plugin-manager:onem2m-plugin-manager-plugins-table
+             /onem2m-plugin-manager:onem2m-plugin-manager-plugin-instances
+             /onem2m-plugin-manager:plugin-configuration
+             /onem2m-plugin-manager:plugin-specific-configuration" {
+        case mqtt-config {
+            uses mqtt-protocol-provider-config;
+        }
+    }
+
+    list onem2m-protocol-mqtt-providers {
+        key "mqtt-provider-instance-name";
+        leaf mqtt-provider-instance-name {
+            type string;
+        }
+
+        uses mqtt-protocol-provider-config;
+    }
+}

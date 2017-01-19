@@ -16,6 +16,12 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.p
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev170110.http.protocol.provider.config.RouterPluginConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev170110.http.protocol.provider.config.ServerConfig;
 
+/*
+ * NOTE: Although this validator is used by the Onem2mHttpProvider class only
+ * we want to keep it in the impl module (bundle) because this way it can be
+ * re-used in another implementation extending the base OneM2M HTTP implementation
+ */
+
 /**
  * Implements validation logic for Onem2mHttp protocol provider
  */
@@ -39,8 +45,7 @@ public class Onem2mHttpConfigurationValidator implements Onem2mProtocolConfigVal
         checkNotNull(serverConfig, "Server configuration not provided");
 
         // validate port number
-        checkCondition((serverConfig.getServerPort() > 0 && serverConfig.getServerPort() < 0xFFFF),
-                       "Invalid port number " + serverConfig.getServerPort());
+        checkPortNumber(serverConfig.getServerPort());
     }
 
     public void validateSecurityLevel() throws Onem2mProtocolConfigException {

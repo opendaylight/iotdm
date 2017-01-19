@@ -11,7 +11,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opendaylight.iotdm</groupId>
-    <artifactId>onem2m-protocol-http-provider</artifactId>
+    <artifactId>onem2m-protocol-mqtt-provider</artifactId>
     <version>0.3.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -23,17 +23,17 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>onem2m-notifier</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-protocols-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>onem2m-protocol-http-impl</artifactId>
+            <artifactId>onem2m-notifier</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-protocol-mqtt-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

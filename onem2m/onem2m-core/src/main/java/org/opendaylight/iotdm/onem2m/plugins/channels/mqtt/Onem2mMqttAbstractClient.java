@@ -76,12 +76,12 @@ public abstract class Onem2mMqttAbstractClient implements AutoCloseable {
 
                 try {
                     if (!connectToMqttServer()) {
-                        LOG.error("Failed to re-connect to MQTT broker");
+                        LOG.debug("Failed to re-connect to MQTT broker");
                         reconnect();
                         return;
                     }
                 } catch (MqttException e) {
-                    LOG.error("Failed to re-connect to MQTT broker: {}", e);
+                    LOG.debug("Failed to re-connect to MQTT broker: {}", e);
                     reconnect();
                     return;
                 }
@@ -111,7 +111,7 @@ public abstract class Onem2mMqttAbstractClient implements AutoCloseable {
         LOG.error("Onem2mMqttClient: lost connection to broker");
         this.connectionFailureCallback();
 
-        LOG.info("Reconnecting to broker: {}", mqttBroker);
+        LOG.debug("Reconnecting to broker: {}", mqttBroker);
         reconnect();
     }
 
@@ -179,7 +179,7 @@ public abstract class Onem2mMqttAbstractClient implements AutoCloseable {
                 public void onFailure(IMqttToken arg0, Throwable arg1) {
                     connectionFailureCallback();
 
-                    LOG.info("Reconnecting to broker: {}", mqttBroker);
+                    LOG.debug("Reconnecting to broker: {}", mqttBroker);
                     reconnect();
                 }
             };
@@ -203,10 +203,13 @@ public abstract class Onem2mMqttAbstractClient implements AutoCloseable {
      * Method closes connection to MQTT broker
      */
     protected void disconnectFromMqttBroker() {
-        try {
-            client.disconnect();
-        } catch (MqttException e) {
-            LOG.error("disconnectFromMqttBroker: trouble disconnecing {}", e);
+        if (client.isConnected()) {
+            try {
+                client.disconnect();
+            }
+            catch (MqttException e) {
+                LOG.error("Onem2mMqttClient: Disconnection from MQTT broker failed: {}", e);
+            }
         }
     }
 

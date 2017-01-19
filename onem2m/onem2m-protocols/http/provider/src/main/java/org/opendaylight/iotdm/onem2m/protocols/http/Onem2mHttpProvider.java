@@ -34,7 +34,7 @@ public class Onem2mHttpProvider implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpProvider.class);
 
-    protected Onem2mService onem2mService;
+    protected final Onem2mService onem2mService;
 
     protected Onem2mHttpBaseIotdmPlugin onem2mHttpBaseIotdmPlugin = null;
     protected Onem2mHttpRouterPlugin routerPlugin = null;
@@ -59,7 +59,7 @@ public class Onem2mHttpProvider implements AutoCloseable {
             throw e;
         }
 
-        onem2mService = rpcRegistry.getRpcService(Onem2mService.class);
+        this.onem2mService = rpcRegistry.getRpcService(Onem2mService.class);
         this.serverConfig = config.getServerConfig();
         this.notifierConfig = config.getNotifierPluginConfig();
         this.routerConfig = config.getRouterPluginConfig();
@@ -110,7 +110,7 @@ public class Onem2mHttpProvider implements AutoCloseable {
         } catch (Exception e) {
             LOG.error("Failed to start notifier plugin: {}", e);
         }
-        LOG.info("Onem2mHttpProvider Session Initiated");
+        LOG.info("Onem2mHttpProvider instance {}: Initialized", this.configuration.getHttpProviderInstanceName());
     }
 
     @Override
@@ -133,6 +133,6 @@ public class Onem2mHttpProvider implements AutoCloseable {
             LOG.error("Failed to close router plugin {}", e);
         }
         Onem2mRouterService.getInstance().unregister(this.routerPlugin);
-        LOG.info("Onem2mHttpProvider Closed");
+        LOG.info("Onem2mHttpProvider instance {}: Closed", this.configuration.getHttpProviderInstanceName());
     }
 }
