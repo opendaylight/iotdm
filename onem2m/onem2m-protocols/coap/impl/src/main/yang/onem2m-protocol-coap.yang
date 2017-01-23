@@ -1,0 +1,96 @@
+module onem2m-protocol-coap {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2m:protocol:coap";
+    prefix "onem2m-protocol-coap";
+
+    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import onem2m { prefix onem2m; revision-date 2015-01-05; }
+    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Service definition for onem2m project";
+
+    revision "2017-01-16" {
+        description
+            "Coap Module Configuration";
+    }
+
+    grouping coap-channel-common-config {
+        leaf secure-connection {
+            mandatory true;
+            type boolean;
+        }
+        leaf use-preshared-keys {
+            type boolean;
+        }
+    }
+
+    grouping coap-security-config {
+        container dtls-certificates-config {
+            container key-store-config {
+                uses onem2m-plugin-manager:coaps-keystore-config;
+            }
+            container trust-store-config {
+                leaf trust-store-file {
+                    mandatory true;
+                    type string;
+                }
+                leaf trust-store-password {
+                    mandatory true;
+                    type string;
+                }
+                list trusted-certificates {
+                    leaf certificate-name {
+                        type string;
+                    }
+                }
+            }
+        }
+
+        container dtls-psk-local-cse-base {
+            uses onem2m-plugin-manager:coaps-psk-config;
+        }
+
+        container dtls-psk-remote-cse {
+            uses onem2m-plugin-manager:coaps-psk-config;
+        }
+    }
+
+    grouping coap-protocol-provider-config {
+
+        container server-config {
+            leaf server-port {
+                mandatory true;
+                type uint16;
+            }
+            leaf server-security-level {
+                mandatory true;
+                type onem2m:security-level;
+            }
+
+            uses coap-channel-common-config;
+        }
+
+        container coaps-config {
+            presence "Required if the secure-connection is set true.";
+            uses coap-security-config;
+        }
+
+        container notifier-plugin-config {
+            uses coap-channel-common-config;
+        }
+
+        container router-plugin-config {
+            uses coap-channel-common-config;
+        }
+    }
+
+
+    list onem2m-protocol-coap-providers {
+        key "coap-provider-instance-name";
+        leaf coap-provider-instance-name {
+            type string;
+        }
+        uses coap-protocol-provider-config;
+    }
+}
