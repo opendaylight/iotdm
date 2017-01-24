@@ -61,16 +61,24 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </feature>
 
     <!-- OneM2M Messaging over CoAP protocol -->
-    <feature name='odl-onem2m-coap' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP'>
+    <feature name='odl-onem2m-coap-impl' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP :: implementation'>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
         <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap/{{VERSION}}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-coap.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-coap/{{VERSION}}/xml/config</configfile>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-impl/{{VERSION}}</bundle>
         <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->
+    </feature>
+
+    <feature name='odl-onem2m-coap' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version='${project.version}'>odl-onem2m-coap-impl</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-provider/{{VERSION}}</bundle>
     </feature>
 
     <!-- oneM2M messaging over HTTP protocol base implementation -->
