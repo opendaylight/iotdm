@@ -41,9 +41,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>onem2m-notifier</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>onem2m-protocol-coap</artifactId>
+                <artifactId>onem2m-protocol-coap-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>onem2m-protocol-coap-provider</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
