@@ -165,15 +165,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>onem2m-protocol-coap</artifactId>
+            <artifactId>onem2m-protocol-coap-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>onem2m-protocol-coap</artifactId>
+            <artifactId>onem2m-protocol-coap-provider</artifactId>
             <version>${project.version}</version>
-            <classifier>config</classifier>
-            <type>xml</type>
         </dependency>
 
         <dependency>
