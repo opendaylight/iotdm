@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafc7978_d6dd5b44",
+        "filename": "onem2m/onem2m-notifier/src/main/resources/org/opendaylight/blueprint/impl-blueprint.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-01-27T05:34:44Z",
+      "side": 1,
+      "message": "You can delete this line.",
+      "revId": "54d86d484c18b5eacc08d3c026112f3d048548b5",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
