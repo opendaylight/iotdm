@@ -1,0 +1,9 @@
+module itplugininvalid1 {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:testing:itplugininvalid1";
+    prefix "itplugininvalid1";
+
+    revision "2017-02-06" {
+        description "Initial revision of itplugininvalid1 model";
+    }
+}
