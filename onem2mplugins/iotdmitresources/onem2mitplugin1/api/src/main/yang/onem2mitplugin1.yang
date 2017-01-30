@@ -1,0 +1,9 @@
+module onem2mitplugin1 {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2mitplugin1";
+    prefix "onem2mitplugin1";
+
+    revision "2015-01-05" {
+        description "Initial revision of onem2mitplugin1 model";
+    }
+}
