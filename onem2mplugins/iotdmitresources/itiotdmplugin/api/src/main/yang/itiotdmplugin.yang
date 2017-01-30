@@ -1,0 +1,9 @@
+module itiotdmplugin {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:testing:itiotdmplugin";
+    prefix "itiotdmplugin";
+
+    revision "2017-02-06" {
+        description "Initial revision of itiotdmplugin model";
+    }
+}
