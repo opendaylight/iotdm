@@ -1,0 +1,9 @@
+module itplugin1 {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:itplugin1";
+    prefix "itplugin1";
+
+    revision "2015-01-05" {
+        description "Initial revision of itplugin1 model";
+    }
+}
