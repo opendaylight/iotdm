@@ -16,8 +16,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -659,11 +662,12 @@ public class IotdmKarafFeatureLoaderProvider implements IotdmPluginLoader, Iotdm
                     }
 
                     // Set feature state
-                    if (karafFeaturesService.isInstalled(feature)) {
+                    if (null != feature && karafFeaturesService.isInstalled(feature)) {
                         featureBuilder.setFeatureState(KarafFeatures.FeatureState.Installed);
                     }
                     else {
                         featureBuilder.setFeatureState(KarafFeatures.FeatureState.Uninstalled);
+                        continue;
                     }
 
                     // Set other feature attributes
