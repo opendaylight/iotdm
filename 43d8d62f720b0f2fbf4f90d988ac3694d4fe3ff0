@@ -1,0 +1,9 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+1: Robert Varga <nite@hq.sk>
+Code-Review+1: Giorgi Guliashvili <vinmesmiti@gmail.com>
+Code-Review+2: Lionel Florit <lflorit@cisco.com>
+Submitted-by: Lionel Florit <lflorit@cisco.com>
+Submitted-at: Fri, 03 Feb 2017 19:23:04 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/50866
+Project: iotdm
+Branch: refs/heads/master
