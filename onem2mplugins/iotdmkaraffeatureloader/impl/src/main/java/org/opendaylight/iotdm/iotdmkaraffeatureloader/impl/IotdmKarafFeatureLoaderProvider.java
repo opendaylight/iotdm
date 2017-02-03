@@ -10,8 +10,10 @@ package org.opendaylight.iotdm.iotdmkaraffeatureloader.impl;
 import com.google.common.base.Optional;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -396,19 +398,37 @@ public class IotdmKarafFeatureLoaderProvider implements IotdmPluginLoader, Iotdm
         //            return handleRpcError("KAR archive installation error: {}", e.toString());
         //        }
 
+        // prepare data to copy the archvie from URL and extract content
         String dataDirPath = this.karafDataDir + archiveName;
         Path system = Paths.get(this.karafSystemDir);
 
+        String tempDir = System.getProperty("java.io.tmpdir");
+        String[] urlSplit = archiveUrl.split("/");
+        if (null == urlSplit || 0 == urlSplit.length) {
+            return handleRpcError("Invalid archive URL passed: {}", archiveUrl);
+        }
+        String archiveFileName =  urlSplit[urlSplit.length - 1];
+        if (null == archiveFileName || archiveFileName.isEmpty()) {
+            return handleRpcError("Invalid archive URL ending with slash passed: {}", archiveUrl);
+        }
+        String archiveFilePath = tempDir + File.separator + archiveFileName;
+
+        // Copy archive from URL and extract data
         try {
-            ZipFile archive = new ZipFile(Paths.get(new URI(archiveUrl))
-                                               .toFile());
+            FileUtils.copyURLToFile(new URL(archiveUrl), Paths.get(archiveFilePath).toFile());
+            ZipFile archive = new ZipFile(Paths.get(archiveFilePath).toFile());
             archive.extractAll(dataDirPath);
         }
-        catch (URISyntaxException e) {
+        catch (MalformedURLException e) {
             return handleRpcError("Invalid archive URL: {}: {}", archiveUrl, e.toString());
         }
+        catch(IOException e) {
+            return handleRpcError("Failed to copy archive file from URL: {} to temporary directory: {}, {}",
+                                  archiveUrl, archiveFilePath,
+                                  e.toString());
+        }
         catch (ZipException e) {
-            return handleRpcError("Failed to unzip the archive: {}", e.toString());
+            return handleRpcError("Failed to unzip the archive: {}, {}", archiveFilePath, e.toString());
         }
 
         // Find features.xml file in the root of unzipped archive and add it as feature repository
@@ -736,23 +756,39 @@ public class IotdmKarafFeatureLoaderProvider implements IotdmPluginLoader, Iotdm
 
         KarafArchiveInfo info = this.archives.get(archiveName);
 
-        // uninstall all features
-        for (String featureName : info.getFeatureNames()) {
-            try {
-                this.karafFeaturesService.uninstallFeature(featureName);
-            } catch (Exception e) {
-                LOG.error("Failed to uninstall feature {} of archive {}, {}",
-                          featureName, info.getArchiveName(), e);
-                // just continue with next feature
+        Repository repo =  this.karafFeaturesService.getRepository(info.getRepositoryName());
+        if (null == repo || ! repo.isValid()) {
+            return handleRpcError("Repository of archive {} is not valid, repository name: {}",
+                                  archiveName, info.getRepositoryName());
+        }
+
+        // uninstall all features of the repository
+        try {
+            for (Feature feature : repo.getFeatures()) {
+                try {
+                    if (! this.karafFeaturesService.isInstalled(feature)) {
+                        // skip non-installed features
+                        continue;
+                    }
+                    this.karafFeaturesService.uninstallFeature(feature.getName());
+                }
+                catch (Exception e) {
+                    LOG.error("Failed to uninstall feature {} of archive {}, {}",
+                              feature.getName(), info.getArchiveName(), e);
+                    // just continue with next feature
+                }
+                LOG.info("KarafFeatureLoader {}: Archive: {}, uninstalled feature: {}",
+                         this.karafFeatureLoaderName, archiveName, feature.getName());
             }
+        } catch (Exception e) {
+            LOG.error("Failed to uninstall all features of the archive: {}, {}", archiveName, e);
         }
 
         // remove repository
         try {
-            this.karafFeaturesService.removeRepository(new URI(info.getRepositoryUrl()));
+            this.karafFeaturesService.removeRepository(repo.getURI());
         } catch (Exception e) {
             LOG.error("Failed to remove repository of archive {}, {}", info.getArchiveName(), e);
-            // just continue with features
         }
 
         // remove from the running config
