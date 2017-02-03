@@ -36,7 +36,7 @@ public abstract class Onem2mDatastoreListener implements ClusteredDataTreeChange
     public Onem2mDatastoreListener(ResourceTreeReader trc, DataBroker dataBroker) {
         this.trc = trc;
         this.dataBroker = dataBroker;
-        dcReg = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.OPERATIONAL,
+        dcReg = dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<>(LogicalDatastoreType.CONFIGURATION,
                 RESOURCE_IID), this);
     }
 
