@@ -222,7 +222,8 @@ where is an example of augmentation of the plugin-configuration:
              /onem2m-plugin-manager:output
              /onem2m-plugin-manager:onem2m-plugin-manager-plugins-table
              /onem2m-plugin-manager:onem2m-plugin-manager-plugin-instances
-             /onem2m-plugin-manager:plugin-configuration" {
+             /onem2m-plugin-manager:plugin-configuration
+             /onem2m-plugin-manager:plugin-specific-configuration" {
         case http-https-config {
             uses http-protocol-provider-config;
         }
@@ -238,13 +239,6 @@ persistently store their configuration in order to make it available
 after the restart of IoTDM. Services provided by ODL and BluePrint
 can be used, see ODL documentation for more information and checkout
 protocol providers implementations as examples.
-
-TODO: Onem2mHttpProvider does not implement the IotdmPluginConfigurable
-interface, this is TBD, i.e. the RPC call output does not show current
-configuration of the HTTP provider even its yang model augments the
-plugin-configuration. TODO NOTE: But we should probably migrate from
-config subsystem to BluePrint before.
-
 
 ## 1.5 IotdmPluginSimpleConfigClient
 

@@ -168,6 +168,10 @@ public class Onem2mPluginsSimpleConfigManager {
         return null;
     }
 
+    public boolean isRegistered(final String pluginName, final String instanceId) {
+        return null != findInstanceReg(pluginName, instanceId);
+    }
+
     // Reads configuration from plugin
     protected IotdmSimpleConfig getConfig(final String pluginName, final String instanceId)
             throws IotdmPluginSimpleConfigException {
@@ -243,8 +247,7 @@ public class Onem2mPluginsSimpleConfigManager {
         try {
             this.checkDataBroker();
 
-            // Configure the plugin instance if registered, just store the new config
-            // if the instance doesn't exist
+            // Configure the plugin instance if registered
             PluginRegCfg regCfg = findInstanceReg(pluginName, instanceId);
             if (null != regCfg && null != regCfg.getPlugin()) {
                 // Configure the new configuration to plugin
@@ -256,6 +259,9 @@ public class Onem2mPluginsSimpleConfigManager {
                               "PluginName: {}, Instance: {}: {}", pluginName, instanceId, e);
                     throw e;
                 }
+            } else {
+                throw new IotdmPluginSimpleConfigException(
+                    "No such plugin instance: pluginName: "  + pluginName + " instanceId: " +  instanceId);
             }
 
             // Store the new configuration in startup config
