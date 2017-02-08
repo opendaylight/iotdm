@@ -69,9 +69,9 @@ public class Onem2mMqttProvider implements AutoCloseable {
                 Onem2mMqttTxClientConfiguration notifierConfig =
                     new Onem2mMqttTxClientConfiguration(
                         mqttConfig.getMqttClientConfig()
-                                  .getMqttBrokerIp(),
+                                  .getMqttBrokerIp().getValue(),
                         mqttConfig.getMqttClientConfig()
-                                  .getMqttBrokerPort());
+                                  .getMqttBrokerPort().getValue());
 
                 this.notifierClient = new Onem2mMqttTxClient(notifierConfig);
                 this.notifierClient.start();

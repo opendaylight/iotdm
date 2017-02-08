@@ -38,10 +38,6 @@ public class Onem2mCoapConfigurationValidator implements Onem2mProtocolConfigVal
 
     public void validateServerConfig() throws Onem2mProtocolConfigException {
         checkNotNull(serverConfig, "Server configuration not provided");
-
-        // validate port number
-        checkCondition((serverConfig.getServerPort() > 0 && serverConfig.getServerPort() < 0xFFFF),
-                "Invalid port number " + serverConfig.getServerPort());
     }
 
     public void validateSecurityLevel() throws Onem2mProtocolConfigException {

@@ -44,13 +44,6 @@ public class Onem2mMqttConfigurationValidator implements Onem2mProtocolConfigVal
             return;
         }
 
-        // validate port
-        checkPortNumber(this.clientConfig.getMqttBrokerPort());
-
-        // validate ip address
-        checkCondition(validateBrokerAddress(this.clientConfig.getMqttBrokerIp()),
-                       "Invalid MQTT broker address: " + this.clientConfig.getMqttBrokerIp());
-
         // validate security level
         checkCondition(clientConfig.getSecurityLevel() != SecurityLevel.L2,
                        "Security level L2 is not supported by this module");
