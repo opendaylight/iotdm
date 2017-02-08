@@ -76,18 +76,34 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
         return null;
     }
 
+    private <Terr, Tinput> Future<RpcResult<Terr>> checkInput(final Tinput input,
+                                                              final String pluginName, final String instanceName) {
+        if (null == input) {
+            return this.handleRpcError("Mandatory input not provided");
+        }
+
+        if (! Onem2mPluginsSimpleConfigManager.getInstance().isRegistered(pluginName,
+                                                                          instanceName)) {
+            return this.handleRpcError("No such plugin registered: pluginName: {}, instanceId: {}",
+                                       pluginName, instanceName);
+        }
+
+        return null;
+    }
+
     /*
      * Configuration RPCs
      */
     @Override
     public Future<RpcResult<IpluginCfgPutOutput>> ipluginCfgPut(IpluginCfgPutInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgPutOutput>> errOut = checkInput(input,
+                                                                   input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         IotdmSimpleConfig cfg = new IotdmSimpleConfig(input.getPluginSimpleConfig());
-        Future<RpcResult<IpluginCfgPutOutput>> errOut = configureNewCfg(input.getPluginName(), input.getInstanceName(),
-                                                                        cfg);
+        errOut = configureNewCfg(input.getPluginName(), input.getInstanceName(), cfg);
         if (null != errOut) {
             return errOut;
         }
@@ -104,12 +120,13 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
 
     @Override
     public Future<RpcResult<IpluginCfgDelOutput>> ipluginCfgDel(IpluginCfgDelInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgDelOutput>> errOut = checkInput(input,
+                                                                   input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
-        Future<RpcResult<IpluginCfgDelOutput>> errOut = configureNewCfg(input.getPluginName(), input.getInstanceName(),
-                                                                        null);
+        errOut = configureNewCfg(input.getPluginName(), input.getInstanceName(),null);
         if (null != errOut) {
             return errOut;
         }
@@ -122,8 +139,10 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
 
     @Override
     public Future<RpcResult<IpluginCfgGetStartupOutput>> ipluginCfgGetStartup(IpluginCfgGetStartupInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgGetStartupOutput>> errOut =
+            checkInput(input, input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         PluginSimpleConfig instanceConfig = null;
@@ -164,8 +183,10 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
 
     @Override
     public Future<RpcResult<IpluginCfgGetOutput>> ipluginCfgGet(IpluginCfgGetInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgGetOutput>> errOut = checkInput(input,
+                                                                   input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         IotdmSimpleConfig cfg = null;
@@ -216,8 +237,10 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
 
     @Override
     public Future<RpcResult<IpluginCfgKeyPutOutput>> ipluginCfgKeyPut(IpluginCfgKeyPutInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgKeyPutOutput>> errOut = checkInput(input,
+                                                                   input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         IotdmSimpleConfig currentCfg = null;
@@ -232,8 +255,7 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
         newCfgBuilder.setVal(input.getCfgKey(), input.getCfgVal());
         IotdmSimpleConfig newCfg = newCfgBuilder.build();
 
-        Future<RpcResult<IpluginCfgKeyPutOutput>> errOut =
-            this.configureNewCfg(input.getPluginName(), input.getInstanceName(), newCfg);
+         errOut = this.configureNewCfg(input.getPluginName(), input.getInstanceName(), newCfg);
         if (null != errOut) {
             return errOut;
         }
@@ -250,8 +272,10 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
     @Override
     public Future<RpcResult<IpluginCfgKeyGetStartupOutput>> ipluginCfgKeyGetStartup(
                                                                             IpluginCfgKeyGetStartupInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgKeyGetStartupOutput>> errOut =
+            checkInput(input, input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         PluginSimpleConfig instanceConfig = null;
@@ -290,8 +314,10 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
 
     @Override
     public Future<RpcResult<IpluginCfgKeyDelOutput>> ipluginCfgKeyDel(IpluginCfgKeyDelInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgKeyDelOutput>> errOut = checkInput(input,
+                                                                      input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         AtomicReference<Future<RpcResult<IpluginCfgKeyDelOutput>>> errReference = new AtomicReference<>();
@@ -301,11 +327,16 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
             return errReference.get();
         }
 
+        String currVal = newCfgBuilder.getVal(input.getCfgKey());
+        if (null == currVal || currVal.isEmpty()) {
+            return this.handleRpcError("No such key found: PluginName: {}, InstanceName: {}, Key: {}",
+                                       input.getPluginName(), input.getInstanceName(), input.getCfgKey());
+        }
+
         newCfgBuilder.delVal(input.getCfgKey());
         IotdmSimpleConfig newCfg = newCfgBuilder.build();
 
-        Future<RpcResult<IpluginCfgKeyDelOutput>> errOut =
-                this.configureNewCfg(input.getPluginName(), input.getInstanceName(), newCfg);
+        errOut = this.configureNewCfg(input.getPluginName(), input.getInstanceName(), newCfg);
         if (null != errOut) {
             return errOut;
         }
@@ -318,8 +349,10 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
 
     @Override
     public Future<RpcResult<IpluginCfgKeyGetOutput>> ipluginCfgKeyGet(IpluginCfgKeyGetInput input) {
-        if (null == input) {
-            return this.handleRpcError("Mandatory input not provided");
+        Future<RpcResult<IpluginCfgKeyGetOutput>> errOut = checkInput(input,
+                                                                   input.getPluginName(), input.getInstanceName());
+        if (null != errOut) {
+            return errOut;
         }
 
         AtomicReference<Future<RpcResult<IpluginCfgKeyGetOutput>>> errReference = new AtomicReference<>();
@@ -334,9 +367,14 @@ public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigServ
                 .setInstanceName(input.getInstanceName());
 
         if (optCfg.isPresent()) {
+            String value = optCfg.get().getVal(input.getCfgKey());
+            if (null == value || value.isEmpty()) {
+                return this.handleRpcError("No such key found: PluginName: {}, InstanceName: {}, Key: {}",
+                                           input.getPluginName(), input.getInstanceName(), input.getCfgKey());
+            }
             output
                 .setCfgKey(input.getCfgKey())
-                .setCfgVal(optCfg.get().getVal(input.getCfgKey()));
+                .setCfgVal(value);
         }
 
         return RpcResultBuilder
