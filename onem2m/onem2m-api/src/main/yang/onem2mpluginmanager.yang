@@ -102,6 +102,22 @@ module onem2m-plugin-manager {
          }
      }
 
+    grouping iotdm-plugin-filters {
+        leaf plugin-name {
+            description "Name of the plugin implementation.";
+            type string;
+        }
+
+        leaf plugin-instance-name {
+            description "Unique name of plugin instance.";
+            type string;
+        }
+
+        leaf plugin-loader-name {
+            description "Filter plugins loaded by specific plugin loader.";
+            type string;
+        }
+    }
 
     /*
      * Get table of plugins registered in plugin manager
@@ -164,10 +180,7 @@ module onem2m-plugin-manager {
           "Returns table of registered plugin instances implementing IotdmPlugin.";
 
         input {
-            leaf plugin-loader-name {
-                description "Filter plugins loaded by specific plugin loader.";
-                type string;
-            }
+            uses iotdm-plugin-filters;
         }
 
         output {
@@ -290,6 +303,16 @@ module onem2m-plugin-manager {
                             "implementing specific protocol.";
                 type string;
             }
+
+            leaf plugin-name {
+                description "Name of the plugin implementation.";
+                type string;
+            }
+
+            leaf plugin-instance-name {
+                description "Unique name of plugin instance.";
+                type string;
+            }
         }
 
         output {
@@ -347,7 +370,7 @@ module onem2m-plugin-manager {
         description "Returns table of registered plugin instances implementing DB API Client interface.";
 
         input {
-
+            uses iotdm-plugin-filters;
         }
 
         output {
@@ -383,7 +406,7 @@ module onem2m-plugin-manager {
         description "Returns table of registered plugin instances implementing SimpleConfig client interface.";
 
         input {
-
+            uses iotdm-plugin-filters;
         }
 
         output {
@@ -419,15 +442,7 @@ module onem2m-plugin-manager {
         description "Returns all PluginManager data about plugin instances matching input filters.";
 
         input {
-            leaf plugin-name {
-                description "Name of the plugin implementation.";
-                type string;
-            }
-
-            leaf plugin-instance-name {
-                description "Unique name of plugin instance.";
-                type string;
-            }
+            uses iotdm-plugin-filters;
         }
 
         output {

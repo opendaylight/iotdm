@@ -9,6 +9,7 @@
 package org.opendaylight.iotdm.onem2m.plugins;
 
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
+import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigClient;
 import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.Onem2mPluginsSimpleConfigManager;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.*;
@@ -78,10 +79,11 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         this.rpcReg.close();
     }
 
-    private static IotdmCommonPluginData createIotdmPluginData(IotdmPluginCommonInterface plugin, String loaderName) {
+    private static IotdmCommonPluginData createIotdmPluginData(final IotdmPluginCommonInterface plugin,
+                                                               String loaderName) {
         Map<String, IotdmPluginLoader> pluginLoaders = Onem2mPluginManager.getInstance().getMgrPluginLoaders();
 
-        if (null == loaderName) {
+        if (null == loaderName || loaderName.isEmpty()) {
             // Must walk all loaders and try to find it
             Optional<IotdmPluginLoader> currentLoader =
                     pluginLoaders.values().stream()
@@ -111,39 +113,27 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
     @Override
     public Future<RpcResult<Onem2mPluginManagerIotdmPluginRegistrationsOutput>>
-                                                    onem2mPluginManagerIotdmPluginRegistrations(
-                                                            Onem2mPluginManagerIotdmPluginRegistrationsInput input) {
-        String pluginLoader = (null == input) ? null : input.getPluginLoaderName();
-        Map<String, IotdmPluginLoader> pluginLoaders = Onem2mPluginManager.getInstance().getMgrPluginLoaders();
+                onem2mPluginManagerIotdmPluginRegistrations(Onem2mPluginManagerIotdmPluginRegistrationsInput input) {
+        return onem2mPluginManagerIotdmPluginRegistrationsImpl(input);
+    }
+
+    private Future<RpcResult<Onem2mPluginManagerIotdmPluginRegistrationsOutput>>
+                onem2mPluginManagerIotdmPluginRegistrationsImpl(IotdmPluginFilters input) {
+
         PluginManagerRegistry registry = Onem2mPluginManager.getInstance().getMgrRegistry();
 
         Onem2mPluginManagerIotdmPluginRegistrationsOutputBuilder output =
                 new Onem2mPluginManagerIotdmPluginRegistrationsOutputBuilder();
 
         List<RegisteredIotdmPluginsTable> list = new LinkedList<>();
-
-        // PluginLoader name must equal if passed
-        IotdmPluginLoader loader;
-        if ((null != pluginLoader) && (! pluginLoader.isEmpty())) {
-            if (! pluginLoaders.containsKey(pluginLoader)) {
-                // There's not such pluginLoader registered, return empty list
-                return RpcResultBuilder.success(output.setRegisteredIotdmPluginsTable(list).build()).buildFuture();
-            }
-
-            loader = pluginLoaders.get(pluginLoader);
-        } else {
-            loader = null;
-        }
-
-        // PluginName : InstanceName : Registered
         Map<String, HashMap<String, RegisteredIotdmPluginInstancesBuilder>> regs = new HashMap<>();
 
         // Walk all registries and prepare data in the map
         registry.registryStream().forEach( endpointRegistry -> {
             // Get the stream of plugins from the registry
             endpointRegistry.getPluginStream()
-                // Filter only plugins loaded by the PluginLoader instance if specified
-                .filter(urlPluginEntry -> (loader == null) ? true : loader.hasLoadedPlugin(urlPluginEntry.getValue()))
+                // Filter plugins
+                .filter(urlPluginEntry -> Onem2mPluginManagerUtils.applyPluginFilters(input, urlPluginEntry.getValue()))
                 // Collect information about the plugin instance
                 .forEach(urlPluginEntry -> {
                     IotdmPlugin plugin = urlPluginEntry.getValue();
@@ -166,7 +156,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                         // instances builder in the map of registrations so it can be used in next iteration
                         instancesBuilder = new RegisteredIotdmPluginInstancesBuilder()
                             .setIotdmCommonPluginData(
-                                createIotdmPluginData(plugin, (loader == null) ? null : loader.getLoaderName()))
+                                createIotdmPluginData(plugin, (null == input) ? null : input.getPluginLoaderName()))
                             .setPluginInstanceName(plugin.getInstanceName())
                             .setIotdmPluginRegistrations(new LinkedList<>());
 
@@ -212,6 +202,41 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         return RpcResultBuilder.success(output.setRegisteredIotdmPluginsTable(list).build()).buildFuture();
     }
 
+    private boolean filterCommunicationChannels(final Onem2mLocalEndpointRegistry registry,
+                                                final Onem2mPluginManagerCommunicationChannelsInput input) {
+        if (null == input) {
+            return true;
+        }
+
+        String protocolFilter = input.getProtocolName();
+        String pluginName = input.getPluginName();
+        String pluginInstanceId = input.getPluginInstanceName();
+
+        if (null != protocolFilter && ! protocolFilter.equals(registry.getProtocol())) {
+            return false;
+        }
+
+        if (null != pluginName) {
+            Optional<Map.Entry<String, IotdmPlugin>> entry =
+                registry.getPluginStream()
+                        .filter(plugin -> plugin.getValue().getPluginName().equals(pluginName)).findFirst();
+            if (null == entry || ! entry.isPresent()) {
+                return false;
+            }
+        }
+
+        if (null != pluginInstanceId) {
+            Optional<Map.Entry<String, IotdmPlugin>> entry =
+                registry.getPluginStream()
+                        .filter(plugin -> plugin.getValue().getInstanceName().equals(pluginInstanceId)).findFirst();
+            if (null == entry || ! entry.isPresent()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     @Override
     public Future<RpcResult<Onem2mPluginManagerCommunicationChannelsOutput>> onem2mPluginManagerCommunicationChannels(
                                                             Onem2mPluginManagerCommunicationChannelsInput input) {
@@ -225,9 +250,8 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
         // Walk all registries and collect data of associated channels
         registry.registryStream()
-            .filter(register -> (null == protocolFilter) ? true : protocolFilter.equals(register.getProtocol()))
+            .filter(register -> filterCommunicationChannels(register, input))
             .forEach( endpointRegistry -> {
-
                 Onem2mCommunicationChannelProtocols channelProtocolList = null;
                 List<Onem2mCommunicationChannelAddresses> addressesList = null;
                 Onem2mCommunicationChannelAddresses addressesListItem = null;
@@ -329,8 +353,12 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
     @Override
     public Future<RpcResult<Onem2mPluginManagerDbApiClientRegistrationsOutput>>
-                                                    onem2mPluginManagerDbApiClientRegistrations(
-                                                               Onem2mPluginManagerDbApiClientRegistrationsInput input) {
+                onem2mPluginManagerDbApiClientRegistrations(Onem2mPluginManagerDbApiClientRegistrationsInput input) {
+        return this.onem2mPluginManagerDbApiClientRegistrationsImpl(input);
+    }
+
+    private Future<RpcResult<Onem2mPluginManagerDbApiClientRegistrationsOutput>>
+                onem2mPluginManagerDbApiClientRegistrationsImpl(IotdmPluginFilters input) {
 
         Onem2mPluginManagerDbApiClientRegistrationsOutputBuilder output =
                 new Onem2mPluginManagerDbApiClientRegistrationsOutputBuilder();
@@ -339,6 +367,11 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         Map<String, List<RegisteredDbApiClientPluginInstances>> regs = new HashMap<>();
 
         for (Onem2mPluginsDbApi.PluginDbClientData plugin : Onem2mPluginsDbApi.getInstance().getPlugins()) {
+            // filter only plugins matching the filters
+            if (! Onem2mPluginManagerUtils.applyPluginFilters(input, plugin.getClient())) {
+                continue;
+            }
+
             // Registered Instances of the plugin
             RegisteredDbApiClientPluginInstancesBuilder instancesBuilder = null;
 
@@ -375,14 +408,19 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
     @Override
     public Future<RpcResult<Onem2mPluginManagerSimpleConfigClientRegistrationsOutput>>
-                                            onem2mPluginManagerSimpleConfigClientRegistrations(
-                                                        Onem2mPluginManagerSimpleConfigClientRegistrationsInput input) {
+                            onem2mPluginManagerSimpleConfigClientRegistrations(
+                                                Onem2mPluginManagerSimpleConfigClientRegistrationsInput input) {
+        return this.onem2mPluginManagerSimpleConfigClientRegistrationsImpl(input);
+    }
+
+    public Future<RpcResult<Onem2mPluginManagerSimpleConfigClientRegistrationsOutput>>
+                                    onem2mPluginManagerSimpleConfigClientRegistrationsImpl(IotdmPluginFilters input) {
         Onem2mPluginManagerSimpleConfigClientRegistrationsOutputBuilder output =
                 new Onem2mPluginManagerSimpleConfigClientRegistrationsOutputBuilder();
 
         // PluginName : InstanceName : Registered
         Map<String, List<RegisteredSimpleConfigClientPluginInstances>>regs =
-                        Onem2mPluginsSimpleConfigManager.getInstance().getRegistrationsMap();
+                        Onem2mPluginsSimpleConfigManager.getInstance().getRegistrationsMap(input);
 
         List<RegisteredSimpleConfigClientPluginsTable> pluginsTable = new LinkedList<>();
         for (Map.Entry<String, List<RegisteredSimpleConfigClientPluginInstances>> entry : regs.entrySet()) {
@@ -443,27 +481,14 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         try {
             Onem2mPluginManagerIotdmPluginRegistrationsOutput iotdmPluginRegistrations = null;
             RpcResult<Onem2mPluginManagerIotdmPluginRegistrationsOutput> rpcResult =
-                                                        onem2mPluginManagerIotdmPluginRegistrations(null).get();
+                                                        onem2mPluginManagerIotdmPluginRegistrationsImpl(input).get();
             if (rpcResult.isSuccessful()) {
                 iotdmPluginRegistrations = rpcResult.getResult();
             }
 
             if (null != rpcResult) {
                 for (RegisteredIotdmPluginsTable plugin : iotdmPluginRegistrations.getRegisteredIotdmPluginsTable()) {
-
-                    if (null != input && null != input.getPluginName() &&
-                        (!plugin.getPluginName().equals(input.getPluginName()))) {
-                        continue;
-                    }
-
                     for (RegisteredIotdmPluginInstances instance : plugin.getRegisteredIotdmPluginInstances()) {
-
-                        if (null != input && null != input.getPluginInstanceName()) {
-                            if (!input.getPluginName().equals(instance.getPluginInstanceName())) {
-                                continue;
-                            }
-                        }
-
                         Onem2mPluginManagerPluginInstancesBuilder builder =
                                                     getInstanceBuilder(instancesMap, plugin.getPluginName(),
                                                                        instance.getPluginInstanceName());
@@ -509,7 +534,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         try {
             Onem2mPluginManagerDbApiClientRegistrationsOutput dbApiClientRegistrations = null;
             RpcResult<Onem2mPluginManagerDbApiClientRegistrationsOutput> rpcResult =
-                    onem2mPluginManagerDbApiClientRegistrations(null).get();
+                    onem2mPluginManagerDbApiClientRegistrationsImpl(input).get();
             if (rpcResult.isSuccessful()) {
                 dbApiClientRegistrations = rpcResult.getResult();
             }
@@ -518,17 +543,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                 for (RegisteredDbApiClientPluginsTable plugin :
                         dbApiClientRegistrations.getRegisteredDbApiClientPluginsTable()) {
 
-                    if (null != input && null != input.getPluginName() &&
-                        (!input.getPluginName().equals(plugin.getPluginName()))) {
-                        continue;
-                    }
-
                     for (RegisteredDbApiClientPluginInstances instance : plugin.getRegisteredDbApiClientPluginInstances()) {
-                        if (null != input && null != input.getPluginInstanceName() &&
-                            (!input.getPluginInstanceName().equals(instance.getPluginInstanceName()))) {
-                            continue;
-                        }
-
                         if (null == instance.getDbApiClientPluginData()) {
                             LOG.debug("DB API plugin data not set for pluginName: {}, instanceName: {}",
                                       plugin.getPluginName(), instance.getPluginInstanceName());
@@ -587,7 +602,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         try {
             Onem2mPluginManagerSimpleConfigClientRegistrationsOutput simpleConfigRegData = null;
             RpcResult<Onem2mPluginManagerSimpleConfigClientRegistrationsOutput> rpcResult =
-                    onem2mPluginManagerSimpleConfigClientRegistrations(null).get();
+                    onem2mPluginManagerSimpleConfigClientRegistrationsImpl(input).get();
             if (rpcResult.isSuccessful()) {
                 simpleConfigRegData = rpcResult.getResult();
             }
@@ -596,17 +611,8 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                 for (RegisteredSimpleConfigClientPluginsTable plugin :
                         simpleConfigRegData.getRegisteredSimpleConfigClientPluginsTable()) {
 
-                    if (null != input && null != input.getPluginName() &&
-                        (!input.getPluginName().equals(plugin.getPluginName()))) {
-                        continue;
-                    }
-
                     for (RegisteredSimpleConfigClientPluginInstances instance :
                             plugin.getRegisteredSimpleConfigClientPluginInstances()) {
-                        if (null != input && null != input.getPluginInstanceName() &&
-                            (!input.getPluginInstanceName().equals(instance.getPluginInstanceName()))) {
-                            continue;
-                        }
 
                         Onem2mPluginManagerPluginInstancesBuilder builder =
                                                 getInstanceBuilder(instancesMap, plugin.getPluginName(),

@@ -17,6 +17,7 @@ import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManagerProvider;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManagerUtils;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.IotdmPluginFilters;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.iotdm.plugin.data.definition.IotdmCommonPluginData;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.simple.config.client.registrations.output.registered.simple.config.client.plugins.table.RegisteredSimpleConfigClientPluginInstances;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.simple.config.client.registrations.output.registered.simple.config.client.plugins.table.RegisteredSimpleConfigClientPluginInstancesBuilder;
@@ -555,7 +556,8 @@ public class Onem2mPluginsSimpleConfigManager {
      * Returns map of all registrations.
      * @return Map of all registrations
      */
-    public Map<String, List<RegisteredSimpleConfigClientPluginInstances>> getRegistrationsMap() {
+    public Map<String, List<RegisteredSimpleConfigClientPluginInstances>> getRegistrationsMap(
+                                                                                final IotdmPluginFilters filters) {
 
         // HashMap mapping PluginNames to List of data about plugin instance and it's registration
         Map<String, List<RegisteredSimpleConfigClientPluginInstances>> regs = new HashMap<>();
@@ -574,6 +576,13 @@ public class Onem2mPluginsSimpleConfigManager {
                 try {
                     // Builder constructor will create a copy of the configuration
                     IotdmPluginSimpleConfigClient plugin = instanceReg.getValue().getPlugin();
+
+                    // check if the instance matches filters
+                    if (! Onem2mPluginManagerUtils.applyPluginFilters(filters, plugin)) {
+                        // instances doesn't match filters, continue with next instance
+                        continue;
+                    }
+
                     IotdmSimpleConfig cfg = plugin.getSimpleConfig();
                     if (null != cfg) {
                         cfgBuilder = new IotdmSimpleConfigBuilder(cfg.getConfiguration());
