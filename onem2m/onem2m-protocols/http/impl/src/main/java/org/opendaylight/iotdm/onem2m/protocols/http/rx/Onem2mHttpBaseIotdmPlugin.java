@@ -95,7 +95,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
 
             cfgBuilder.verify();
             try {
-                mgr.registerPluginHttps(this, pluginConfig.getServerConfig().getServerPort(),
+                mgr.registerPluginHttps(this, pluginConfig.getServerConfig().getServerPort().getValue(),
                                         Onem2mPluginManager.Mode.Exclusive,
                                         null, cfgBuilder);
             } catch (IotdmPluginRegistrationException e) {
@@ -104,11 +104,11 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
             }
 
             LOG.info("Started HTTPS Base IoTDM plugin at port: {}, security level: {}",
-                     pluginConfig.getServerConfig().getServerPort(),
+                     pluginConfig.getServerConfig().getServerPort().getValue(),
                      pluginConfig.getServerConfig().getServerSecurityLevel());
         } else {
             try {
-                mgr.registerPluginHttp(this, pluginConfig.getServerConfig().getServerPort(),
+                mgr.registerPluginHttp(this, pluginConfig.getServerConfig().getServerPort().getValue(),
                                        Onem2mPluginManager.Mode.Exclusive, null);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to start HTTP Base IoTDM plugin: {}", e);
@@ -116,7 +116,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
             }
 
             LOG.info("Started HTTP Base IoTDM plugin at port: {}, security level: {}",
-                     pluginConfig.getServerConfig().getServerPort(),
+                     pluginConfig.getServerConfig().getServerPort().getValue(),
                      pluginConfig.getServerConfig().getServerSecurityLevel());
         }
     }
@@ -127,7 +127,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
         mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed HTTP Base IoTDM plugin at port: {}, security level: {}",
-                 pluginConfig.getServerConfig().getServerPort(),
+                 pluginConfig.getServerConfig().getServerPort().getValue(),
                  pluginConfig.getServerConfig().getServerSecurityLevel());
     }
 

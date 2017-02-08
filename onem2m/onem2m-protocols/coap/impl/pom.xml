@@ -41,5 +41,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
           <artifactId>onem2m-protocols-common</artifactId>
           <version>0.3.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+          <groupId>org.opendaylight.mdsal.model</groupId>
+          <artifactId>ietf-inet-types-2013-07-15</artifactId>
+      </dependency>
   </dependencies>
 </project>

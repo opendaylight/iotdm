@@ -78,7 +78,7 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
         if ((null == pluginConfig.getServerConfig().isSecureConnection()) ||
             (false == pluginConfig.getServerConfig().isSecureConnection())) {
             try {
-                mgr.registerPluginCoap(this, pluginConfig.getServerConfig().getServerPort(),
+                mgr.registerPluginCoap(this, pluginConfig.getServerConfig().getServerPort().getValue(),
                                        Onem2mPluginManager.Mode.Exclusive, null);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to register to PluginManager: {}", e);
@@ -122,7 +122,7 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
             }
 
             try {
-                mgr.registerPluginCoaps(this, pluginConfig.getServerConfig().getServerPort(),
+                mgr.registerPluginCoaps(this, pluginConfig.getServerConfig().getServerPort().getValue(),
                                         Onem2mPluginManager.Mode.Exclusive, null, builder);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to register at PluginManager: {}", e);
@@ -130,7 +130,8 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
         }
 
         LOG.info("Started COAP Base IoTDM plugin at port: {}, security level: {}",
-                pluginConfig.getServerConfig().getServerPort(), pluginConfig.getServerConfig().getServerSecurityLevel());
+                 pluginConfig.getServerConfig().getServerPort().getValue(),
+                 pluginConfig.getServerConfig().getServerSecurityLevel());
     }
 
     @Override
@@ -139,7 +140,7 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
         mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed COAP Base IoTDM plugin at port: {}, security level: {}",
-                pluginConfig.getServerConfig().getServerPort(),
+                pluginConfig.getServerConfig().getServerPort().getValue(),
                 pluginConfig.getServerConfig().getServerSecurityLevel());
     }
 
