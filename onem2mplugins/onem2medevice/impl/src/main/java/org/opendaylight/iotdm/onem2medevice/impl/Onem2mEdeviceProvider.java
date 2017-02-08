@@ -44,6 +44,12 @@ public class Onem2mEdeviceProvider {
      * Method called when the blueprint container is destroyed.
      */
     public void close() {
+        try {
+            onem2mEdeviceHandler.close();
+        } catch (Exception e ) {
+            LOG.error("Failed to close Edevice handler: {}", e);
+        }
+
         LOG.info("Onem2mEdeviceProvider Closed");
     }
 }
