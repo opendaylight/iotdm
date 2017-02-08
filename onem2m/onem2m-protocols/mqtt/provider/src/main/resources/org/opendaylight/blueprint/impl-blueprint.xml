@@ -13,7 +13,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   <odl:clustered-app-config id="listConfigDefault"
                             binding-class="org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.mqtt.rev170118.Onem2mProtocolMqttProviders"
-                            list-key-value="MqttProviderDefault">
+                            list-key-value="MqttProviderDefault" >
     <odl:default-config><![CDATA[
       <onem2m-protocol-mqtt-providers xmlns="urn:opendaylight:params:xml:ns:yang:onem2m:protocol:mqtt">
           <mqtt-provider-instance-name>MqttProviderDefault</mqtt-provider-instance-name>
@@ -33,7 +33,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   <bean id="mqttProviderDefault"
         class="org.opendaylight.iotdm.onem2m.protocols.mqtt.Onem2mMqttProvider"
-        init-method="init" destroy-method="close">
+        init-method="init" destroy-method="close" >
     <argument ref="rpcRegistry" />
     <argument ref="listConfigDefault" />
   </bean>

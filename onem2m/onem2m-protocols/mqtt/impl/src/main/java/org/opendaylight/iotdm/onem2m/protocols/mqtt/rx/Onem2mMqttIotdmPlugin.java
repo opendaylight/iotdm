@@ -70,8 +70,8 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
         if (null != clientCfg) {
             try {
                 Onem2mPluginManager.getInstance()
-                                   .registerPluginMQTT(this, clientCfg.getMqttBrokerPort(),
-                                                       clientCfg.getMqttBrokerIp(),
+                                   .registerPluginMQTT(this, clientCfg.getMqttBrokerPort().getValue(),
+                                                       clientCfg.getMqttBrokerIp().getValue(),
                                                        Onem2mPluginManager.Mode.Exclusive, null);
             }
             catch (IotdmPluginRegistrationException e) {
@@ -80,7 +80,7 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
             }
 
             LOG.info("Started MQTT Base IoTDM plugin for broker port: {}, ip: {}, security level: {}",
-                     clientCfg.getMqttBrokerPort(), clientCfg.getMqttBrokerIp(),
+                     clientCfg.getMqttBrokerPort().getValue(), clientCfg.getMqttBrokerIp().getValue(),
                      clientCfg.getSecurityLevel());
         } else {
             LOG.info("MQTT Base IoTDM plugin started without configuration, connection to MQTT broker not established");
@@ -96,7 +96,7 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
                                .unregisterIotdmPlugin(this);
 
             LOG.info("Closed MQTT Base IoTDM plugin for broker port: {}, ip: {}, security level: {}",
-                     clientCfg.getMqttBrokerPort(), clientCfg.getMqttBrokerIp(),
+                     clientCfg.getMqttBrokerPort().getValue(), clientCfg.getMqttBrokerIp().getValue(),
                      clientCfg.getSecurityLevel());
         } else {
             LOG.info("Close MQTT Base IoTDM plugin without connection to MQTT broker configured");
