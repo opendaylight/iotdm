@@ -22,6 +22,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>onem2medevice</module>
     <module>iotdmbundleloader</module>
     <module>iotdmkaraffeatureloader</module>
+    <module>iotdmitresources</module>
   </modules>
 
   <build>
