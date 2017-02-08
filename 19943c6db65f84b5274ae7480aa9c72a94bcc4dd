@@ -1,0 +1,8 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+1: Tomas Janciga <tjanciga@cisco.com>
+Code-Review+2: John Burns <johnburn@cisco.com>
+Submitted-by: John Burns <johnburn@cisco.com>
+Submitted-at: Wed, 08 Feb 2017 16:42:23 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/51306
+Project: iotdm
+Branch: refs/heads/master
