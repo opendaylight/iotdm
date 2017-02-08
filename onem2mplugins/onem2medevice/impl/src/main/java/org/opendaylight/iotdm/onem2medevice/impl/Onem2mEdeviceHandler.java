@@ -30,12 +30,13 @@ import javax.servlet.http.HttpServletRequest;
 class Onem2mEdeviceHandler implements IotdmPlugin, IotdmPluginDbClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mEdeviceHandler.class);
-    protected DataBroker dataBroker;
+    protected final DataBroker dataBroker;
     private Onem2mHttpHandler httpHandler;
     private Onem2mCoapHandler coapHandler;
     private Onem2mDataStoreChangeHandler onem2mDataStoreChangeHandler = null;
 
     Onem2mEdeviceHandler(DataBroker dataBroker, Onem2mService onem2mService) {
+        this.dataBroker = dataBroker;
         httpHandler = new Onem2mHttpHandler(onem2mService);
         coapHandler = new Onem2mCoapHandler(onem2mService);
 
@@ -66,8 +67,8 @@ class Onem2mEdeviceHandler implements IotdmPlugin, IotdmPluginDbClient {
 
     @Override
     public void close() throws Exception {
+        this.dbClientStop();
         Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
-
     }
 
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
