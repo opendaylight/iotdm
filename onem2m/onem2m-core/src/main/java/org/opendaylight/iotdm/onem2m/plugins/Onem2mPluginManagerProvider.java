@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.plugins;
 
+import java.util.concurrent.ConcurrentHashMap;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigClient;
@@ -53,7 +54,6 @@ import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +126,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                 new Onem2mPluginManagerIotdmPluginRegistrationsOutputBuilder();
 
         List<RegisteredIotdmPluginsTable> list = new LinkedList<>();
-        Map<String, HashMap<String, RegisteredIotdmPluginInstancesBuilder>> regs = new HashMap<>();
+        Map<String, ConcurrentHashMap<String, RegisteredIotdmPluginInstancesBuilder>> regs = new ConcurrentHashMap<>();
 
         // Walk all registries and prepare data in the map
         registry.registryStream().forEach( endpointRegistry -> {
@@ -148,7 +148,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                         }
                     } else {
                         // This is the first plugin instance of such name
-                        regs.put(plugin.getPluginName(), new HashMap<>());
+                        regs.put(plugin.getPluginName(), new ConcurrentHashMap<>());
                     }
 
                     if (null == instancesBuilder) {
@@ -181,14 +181,16 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
         // Registered Plugins
 
-        for (Map.Entry<String, HashMap<String, RegisteredIotdmPluginInstancesBuilder>> pluginReg : regs.entrySet()) {
+        for (Map.Entry<String,
+                       ConcurrentHashMap<String, RegisteredIotdmPluginInstancesBuilder>> pluginReg : regs.entrySet()) {
             // Create new row of the table of registered plugins
             RegisteredIotdmPluginsTableBuilder pluginTableBuilder = new RegisteredIotdmPluginsTableBuilder()
                 .setPluginName(pluginReg.getKey());
 
             // Walk all instances create a list
             List<RegisteredIotdmPluginInstances> instancesList = new LinkedList<>();
-            for (Map.Entry<String, RegisteredIotdmPluginInstancesBuilder> instanceReg : pluginReg.getValue().entrySet()) {
+            for (Map.Entry<String,
+                           RegisteredIotdmPluginInstancesBuilder> instanceReg : pluginReg.getValue().entrySet()) {
                 instancesList.add(instanceReg.getValue().build());
             }
 
@@ -246,7 +248,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                 new Onem2mPluginManagerCommunicationChannelsOutputBuilder();
         String protocolFilter = ((null == input) ? null : input.getProtocolName());
 
-        Map<String, Onem2mCommunicationChannelProtocols> protocolsMap = new HashMap<>();
+        Map<String, Onem2mCommunicationChannelProtocols> protocolsMap = new ConcurrentHashMap<>();
 
         // Walk all registries and collect data of associated channels
         registry.registryStream()
@@ -300,7 +302,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
 
                 // Collect plugin names and instances in map
-                Map<String, List<String>> plugins = new HashMap<>();
+                Map<String, List<String>> plugins = new ConcurrentHashMap<>();
                 endpointRegistry.getPluginStream().forEach(urlPlugin -> {
                     String pluginName = urlPlugin.getValue().getPluginName();
                     String instanceId = urlPlugin.getValue().getInstanceName();
@@ -364,7 +366,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
                 new Onem2mPluginManagerDbApiClientRegistrationsOutputBuilder();
 
         // PluginName : InstanceName : Registered
-        Map<String, List<RegisteredDbApiClientPluginInstances>> regs = new HashMap<>();
+        Map<String, List<RegisteredDbApiClientPluginInstances>> regs = new ConcurrentHashMap<>();
 
         for (Onem2mPluginsDbApi.PluginDbClientData plugin : Onem2mPluginsDbApi.getInstance().getPlugins()) {
             // filter only plugins matching the filters
@@ -438,18 +440,18 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
     /**
      * Returns already existing builder from passed map or creates new one.
-     * @param instancesMap Map of HashMaps of builders per plugin instance
+     * @param instancesMap Map of ConcurrentHashMaps of builders per plugin instance
      * @param pluginName Name of the plugin implementation
      * @param instanceName Name of the plugin instance
      * @return The builder
      */
     private Onem2mPluginManagerPluginInstancesBuilder getInstanceBuilder(
-                                Map<String, HashMap<String, Onem2mPluginManagerPluginInstancesBuilder>> instancesMap,
-                                String pluginName, String instanceName) {
+                        Map<String, ConcurrentHashMap<String, Onem2mPluginManagerPluginInstancesBuilder>> instancesMap,
+                        String pluginName, String instanceName) {
 
-        HashMap<String, Onem2mPluginManagerPluginInstancesBuilder> instances = null;
+        ConcurrentHashMap<String, Onem2mPluginManagerPluginInstancesBuilder> instances = null;
         if (! instancesMap.containsKey(pluginName)) {
-            instances = new HashMap<>();
+            instances = new ConcurrentHashMap<>();
             instancesMap.put(pluginName, instances);
         } else {
             instances = instancesMap.get(pluginName);
@@ -475,7 +477,8 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
         // This RPC call uses other RPC calls and collects all data per plugin instance
 
         Onem2mPluginManagerPluginDataOutputBuilder output = new Onem2mPluginManagerPluginDataOutputBuilder();
-        Map<String, HashMap<String, Onem2mPluginManagerPluginInstancesBuilder>> instancesMap = new HashMap<>();
+        Map<String, ConcurrentHashMap<String, Onem2mPluginManagerPluginInstancesBuilder>> instancesMap =
+                                                                                        new ConcurrentHashMap<>();
 
         // Get IotdmPlugin registrations data
         try {
@@ -650,7 +653,7 @@ public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, 
 
         // Walk all instance builders and collect data in table
         List<Onem2mPluginManagerPluginsTable> pluginsTable = new LinkedList<>();
-        for (Map.Entry<String, HashMap<String, Onem2mPluginManagerPluginInstancesBuilder>> tableRow :
+        for (Map.Entry<String, ConcurrentHashMap<String, Onem2mPluginManagerPluginInstancesBuilder>> tableRow :
                 instancesMap.entrySet()) {
             List<Onem2mPluginManagerPluginInstances> instancesList = new LinkedList<>();
             for (Onem2mPluginManagerPluginInstancesBuilder instancesBuilder : tableRow.getValue().values()) {

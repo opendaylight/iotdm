@@ -83,7 +83,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         InstanceIdentifier<Onem2mParentChildList> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, key);
 
-        Onem2mParentChildList list = retrieve(iid, dsType);;
+        Onem2mParentChildList list = retrieve(iid, dsType);
 
         return list.getOnem2mParentChild();
     }

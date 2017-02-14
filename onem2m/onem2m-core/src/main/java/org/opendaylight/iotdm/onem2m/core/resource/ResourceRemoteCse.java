@@ -138,8 +138,11 @@ public class ResourceRemoteCse {
         }
     }
 
-    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                                      RequestPrimitive onem2mRequest,
+                                                      ResponsePrimitive onem2mResponse) {
 
+        String cseBaseName = null;
         // ensure resource can be created under the target resource
         if (onem2mRequest.isCreate) {
             String parentResourceType = onem2mRequest.getOnem2mResource().getResourceType();
@@ -148,6 +151,7 @@ public class ResourceRemoteCse {
                         "Cannot create remoteCSE under this resource type: " + parentResourceType);
                 return;
            }
+           cseBaseName = onem2mRequest.getOnem2mResource().getName();
         }
 
         ResourceContent resourceContent = onem2mRequest.getResourceContent();
@@ -184,11 +188,14 @@ public class ResourceRemoteCse {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+
+            if (!Onem2mDb.getInstance().createResourceRemoteCse(twc, trc, onem2mRequest, onem2mResponse,
+                                                                cseBaseName, csi)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
+
         } else {
             if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");

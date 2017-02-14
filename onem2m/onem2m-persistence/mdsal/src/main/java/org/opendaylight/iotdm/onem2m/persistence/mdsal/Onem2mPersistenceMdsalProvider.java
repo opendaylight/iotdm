@@ -19,20 +19,22 @@ import org.slf4j.LoggerFactory;
 public class Onem2mPersistenceMdsalProvider implements BindingAwareProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPersistenceMdsalProvider.class);
-
+    private MDSALDaoResourceTreeFactory factory;
     public Onem2mPersistenceMdsalProvider() {
     }
 
     @Override
     public void onSessionInitiated(ProviderContext session) {
         DataBroker dataBroker = session.getSALService(DataBroker.class);
-        Onem2mCoreProvider.getInstance().registerDaoPlugin(new MDSALDaoResourceTreeFactory(dataBroker));
+        this.factory = new MDSALDaoResourceTreeFactory(dataBroker);
+        Onem2mCoreProvider.getInstance().registerDaoPlugin(factory);
         LOG.info("Onem2mPersistenceMdsalProvider Session Initiated");
     }
 
     @Override
     public void close() throws Exception {
         Onem2mCoreProvider.getInstance().unregisterDaoPlugin();
+        this.factory.close();
         LOG.info("Onem2mPersistenceMdsalProvider Closed");
     }
 

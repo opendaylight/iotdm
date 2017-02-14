@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Futures;
 
 import java.util.List;
@@ -17,6 +18,9 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
+import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
@@ -40,6 +44,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.c
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.SecurityConfig;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
@@ -180,6 +185,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         if (db != null) {
             db.close();
         }
+
+        this.unregisterDaoPlugin();
         LOG.info("Session Closed");
     }
 

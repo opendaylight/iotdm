@@ -101,7 +101,7 @@ public class Onem2mDb implements TransactionChainListener {
 
 
     public List<String> getCseList(ResourceTreeReader trc) {
-        return trc.getCseList();
+        return trc.getCseBaseNamesList();
     }
 
     /**
@@ -278,6 +278,39 @@ public class Onem2mDb implements TransactionChainListener {
         }
 
         return twc.createAeUnderCse(cseBaseName, aeId, onem2mRequest.getResourceId());
+    }
+
+    /**
+     * Creates resource of remoteCSE type
+     * @param twc Resource tree writer
+     * @param trc Resource tree reader
+     * @param onem2mRequest Received create request
+     * @param onem2mResponse Resulting response to be filled
+     * @param cseBaseName  Name of the parent cseBase resource
+     * @param remoteCseCseId CSE-ID of the remoteCSE resource
+     * @return True if passed false otherwise
+     */
+    public boolean createResourceRemoteCse(ResourceTreeWriter twc, ResourceTreeReader trc,
+                                           RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse,
+                                           final String cseBaseName, final String remoteCseCseId) {
+        if (null == cseBaseName) {
+            LOG.error("Can't get cseBase name from resource locator");
+            return false;
+        }
+
+        if (null == remoteCseCseId) {
+            LOG.error("Can't get CSE-ID of the remoteCSE resource");
+            return false;
+        }
+
+        boolean ret = false;
+        ret = performResourceCreate(twc, trc, onem2mRequest, onem2mResponse, Onem2m.ResourceType.REMOTE_CSE);
+        if (!ret) {
+            LOG.error("Resource create operation failed");
+            return false;
+        }
+
+        return twc.createRemoteCseUnderCse(cseBaseName, remoteCseCseId, onem2mRequest.getResourceId());
     }
 
     /**
@@ -1340,6 +1373,7 @@ public class Onem2mDb implements TransactionChainListener {
             }
         }
 
+        String cseBaseCseId = null;
         switch(resourceType) {
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 // adjust the curr values in the parent container resource
@@ -1350,7 +1384,7 @@ public class Onem2mDb implements TransactionChainListener {
 
             case Onem2m.ResourceType.AE:
                 // Parent of AE resource can be the cseBase resource only
-                String cseBaseCseId = getCseIdFromResource(parentOnem2mResource);
+                cseBaseCseId = getCseIdFromResource(parentOnem2mResource);
                 if (null == cseBaseCseId) {
                     LOG.error("Failed to get cseBase CSE-ID of the AE parrent");
                     break;
@@ -1367,6 +1401,28 @@ public class Onem2mDb implements TransactionChainListener {
                 if (!twc.deleteAeIdToResourceIdMapping(cseBaseCseId, aeId)) {
                     LOG.error("Failed to delete AE-ID to resourceID mapping for: cseBaseCseId: {}, aeId: {}",
                               cseBaseCseId, aeId);
+                }
+                break;
+
+            case Onem2m.ResourceType.REMOTE_CSE:
+                // Parent of AE resource can be the cseBase resource only
+                cseBaseCseId = getCseIdFromResource(parentOnem2mResource);
+                if (null == cseBaseCseId) {
+                    LOG.error("Failed to get cseBase CSE-ID of the AE parrent");
+                    break;
+                }
+
+                String remoteCseCseId = getCseIdFromResource(onem2mRequest.getOnem2mResource());
+                if (null == remoteCseCseId) {
+                    LOG.error("Failed to get CSE-ID of remoteCSE resource: resourceID {}, name {}",
+                              onem2mRequest.getResourceId(), onem2mRequest.getResourceName());
+                    break;
+                }
+
+                // Delete also mapping of CSE-ID to resourceID
+                if (!twc.deleteRemoteCseIdToResourceIdMapping(cseBaseCseId, remoteCseCseId)) {
+                    LOG.error("Failed to delete CSE-ID to resourceID mapping for: cseBaseCseId: {}, remoteCseCseId: {}",
+                              cseBaseCseId, remoteCseCseId);
                 }
                 break;
         }

@@ -408,6 +408,26 @@ public class ResourceTreeWriter implements Closeable {
         return true;
     }
 
+    public boolean createRemoteCseUnderCse(String cseBaseName, String remoteCseCseId, String remoteCseResourceId) {
+        if (!daoWriter.createRemoteCseIdToResourceIdMapping(cseBaseName, remoteCseCseId, remoteCseResourceId)) {
+            LOG.error("createRemoteCseIdToResourceIdMapping: DB could not write");
+            return false;
+        }
+
+        // TODO: add caching
+        return true;
+    }
+
+    public boolean deleteRemoteCseIdToResourceIdMapping(String cseBaseName, String remoteCseCseId) {
+        if (!daoWriter.deleteRemoteCseIdToResourceIdMapping(cseBaseName, remoteCseCseId)) {
+            LOG.error("deleteRemoteCseIdToResourceIdMapping: DB could not write");
+            return false;
+        }
+
+        // TODO: add caching
+        return true;
+    }
+
     /**
      * Cleanup the data store.
      */

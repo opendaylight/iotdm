@@ -22,6 +22,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCseKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredRemoteCses;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredRemoteCsesBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredRemoteCsesKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
@@ -458,6 +461,58 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     InstanceIdentifier.create(Onem2mCseList.class)
                         .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
                         .child(Onem2mRegisteredAeIds.class, new Onem2mRegisteredAeIdsKey(aeId));
+
+            writer.delete(iid, dsType);
+        } catch (Exception e) {
+            LOG.error("Exception {}", e.getMessage());
+            status = false;
+        } finally {
+            writer.close();
+            crudMonitor.get(0).leave();
+            return status;
+        }
+    }
+
+    @Override
+    public boolean createRemoteCseIdToResourceIdMapping(String cseBaseName,
+                                                        String remoteCseCseId, String remoteCseResourceId) {
+        boolean status = true;
+        crudMonitor.get(0).enter();
+        try {
+            writer.reload();
+
+            Onem2mRegisteredRemoteCses registeredCse = new Onem2mRegisteredRemoteCsesBuilder()
+                .setRegisteredCseId(remoteCseCseId)
+                .setResourceId(remoteCseResourceId)
+                .build();
+
+            InstanceIdentifier<Onem2mRegisteredRemoteCses> iid =
+                InstanceIdentifier.create(Onem2mCseList.class)
+                                  .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
+                                  .child(Onem2mRegisteredRemoteCses.class, registeredCse.getKey());
+
+            writer.create(iid, registeredCse, dsType);
+        } catch (Exception e) {
+            LOG.error("Exception {}", e.getMessage());
+            status = false;
+        } finally {
+            writer.close();
+            crudMonitor.get(0).leave();
+            return status;
+        }
+    }
+
+    @Override
+    public boolean deleteRemoteCseIdToResourceIdMapping(String cseBaseName, String remoteCseCseId) {
+        boolean status = true;
+        crudMonitor.get(0).enter();
+        try {
+            writer.reload();
+
+            InstanceIdentifier<Onem2mRegisteredRemoteCses> iid =
+                InstanceIdentifier.create(Onem2mCseList.class)
+                          .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
+                          .child(Onem2mRegisteredRemoteCses.class, new Onem2mRegisteredRemoteCsesKey(remoteCseCseId));
 
             writer.delete(iid, dsType);
         } catch (Exception e) {

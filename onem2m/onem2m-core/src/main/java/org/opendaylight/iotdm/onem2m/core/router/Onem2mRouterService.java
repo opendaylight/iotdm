@@ -8,14 +8,27 @@
 
 package org.opendaylight.iotdm.onem2m.core.router;
 
-
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceRemoteCse;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
+import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
+import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredRemoteCses;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,21 +42,28 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-
 /**
  * Class implements the Router service for Onem2m CSE
  */
-public class Onem2mRouterService {
+public class Onem2mRouterService implements IotdmPluginDbClient {
     private static final String defaultPluginName = "http";
-    private static Onem2mRouterService routerService = new Onem2mRouterService();
+    private static final Onem2mRouterService routerService = new Onem2mRouterService();
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mRouterService.class);
     private final Map<String, Onem2mRouterPlugin> routerServicePluginMap = new ConcurrentHashMap<>();
-
+    private final AtomicBoolean cleanTable = new AtomicBoolean(false);
     private final ExecutorService executor;
     private static final Onem2mRoutingTable routingTable = new Onem2mRoutingTable();
 
     private Onem2mRouterService() {
         executor = Executors.newFixedThreadPool(32);
+
+        // Register this instance
+        try {
+            Onem2mPluginManager.getInstance()
+                               .registerDbClientPlugin(this);
+        } catch (IotdmPluginRegistrationException e) {
+            LOG.error("Failed to register Onem2mRouterService as DB API client: {}", e);
+        }
     }
 
     public static Onem2mRouterService getInstance() {
@@ -56,6 +76,159 @@ public class Onem2mRouterService {
     public static void cleanRoutingTable() {
         LOG.debug("Cleaning routing table");
         routingTable.cleanRoutingTable();
+    }
+
+
+    @Override
+    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception {
+
+        if (this.cleanTable.get()) {
+            this.cleanRoutingTable();
+        }
+
+        List<Onem2mCse> cseBaseList = trc.retrieveCseBaseList();
+        if (null == cseBaseList || cseBaseList.isEmpty()) {
+            return;
+        }
+
+        for (Onem2mCse cseBase : cseBaseList) {
+            // add cseBase into routing table
+            Onem2mResourceElem cseBaseResource = trc.retrieveResourceById(cseBase.getResourceId());
+            if (null == cseBaseResource) {
+                LOG.error("Failed to get cseBaseResource of cseBase: resourceName: {}, resourceId: {}",
+                          cseBase.getName(), cseBase.getResourceId());
+                continue;
+            }
+
+            // retrieve CSE-ID and CSE-Type of the cseBase resource
+            Optional<JSONObject> attributes =
+                JsonUtils.stringToJsonObject(cseBaseResource.getResourceContentJsonString());
+            if (! attributes.isPresent()) {
+                LOG.error("Failed to get attributes of cseBase resource: resourceName: {}, resourceId: {}",
+                          cseBase.getName(), cseBase.getResourceId());
+                continue;
+            }
+
+            final String cseBaseCseId = attributes.get().optString(ResourceCse.CSE_ID, null);
+            final String cseType = attributes.get().optString(ResourceCse.CSE_TYPE, null);
+            if (null == cseBaseCseId || null == cseType) {
+                LOG.error("Failed to get CSE-ID or CSE-Type attribute of cseBase resource: " +
+                          "resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}",
+                          cseBase.getName(), cseBase.getResourceId(), cseBaseCseId, cseType);
+                continue;
+            }
+
+            // add the record about cseBase into routing table
+            CseRoutingDataBase result = null;
+            result = this.addCseBase(cseBase.getName(), cseBase.getResourceId(), cseBaseCseId, cseType);
+            if (null == result) {
+                LOG.error("Failed to add cseBase into routing table: " +
+                          "resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}",
+                          cseBase.getName(), cseBase.getResourceId(), cseBaseCseId, cseType);
+                continue;
+            }
+
+            // add remoteCSEs into routing table
+            List<Onem2mRegisteredRemoteCses> remoteCsesList = cseBase.getOnem2mRegisteredRemoteCses();
+            if (null == remoteCsesList || remoteCsesList.isEmpty()) {
+                LOG.info("Added cseBase into routing table: resourceName: {}, resourceId: {}, CSE-ID: {}, " +
+                         "CSE-Type: {}, no remoteCSE resources",
+                         cseBase.getName(), cseBase.getResourceId(), cseBaseCseId, cseType);
+                continue;
+            }
+
+            for (Onem2mRegisteredRemoteCses remoteCse : remoteCsesList) {
+
+                Onem2mResourceElem remoteCseResource = trc.retrieveResourceById(remoteCse.getResourceId());
+                if (null == remoteCseResource) {
+                    LOG.error("Failed to retrieve resource of remoteCse type: resourceId: {}, CSE-ID: {}, " +
+                              "cseBaseCseId: {}",
+                              remoteCse.getResourceId(), remoteCse.getRegisteredCseId(), cseBaseCseId);
+                    continue;
+                }
+
+                // retrieve remoteCse attributes
+                Optional<JSONObject> attributesRemoteCse =
+                    JsonUtils.stringToJsonObject(remoteCseResource.getResourceContentJsonString());
+                if (! attributesRemoteCse.isPresent()) {
+                    LOG.error("Failed to get attributes of remoteCse resource: resourceId: {}, CSE-ID: {}, " +
+                              "cseBaseCseId: {}",
+                              remoteCse.getResourceId(), remoteCse.getRegisteredCseId(), cseBaseCseId);
+                    continue;
+                }
+
+                String remoteCseResourceName = remoteCseResource.getName();
+                String remoteCseCseType = attributesRemoteCse.get().optString(ResourceRemoteCse.CSE_TYPE, null);
+                Boolean remoteCseRequestReachable =
+                    attributesRemoteCse.get().optBoolean(ResourceRemoteCse.REQUEST_REACHABILITY);
+                if (null == remoteCseResourceName || null == remoteCseCseType || null == remoteCseRequestReachable) {
+                    LOG.error("Failed to get mandatory attributes of remoteCse resource: " +
+                              "resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}, RequestReachability: {}, " +
+                              "cseBaseCseId: {}",
+                              remoteCseResourceName, remoteCse.getResourceId(), remoteCse.getRegisteredCseId(),
+                              remoteCseCseType, remoteCseRequestReachable, cseBaseCseId);
+                    continue;
+                }
+
+                // retrieve PoA if request unreachable
+                String[] remoteCsePointOfAccess = null;
+                if (! remoteCseRequestReachable) {
+                    JSONArray array = attributesRemoteCse.get().optJSONArray(ResourceRemoteCse.POINT_OF_ACCESS);
+
+                    if (null == array) {
+                        LOG.error("Failed to get PoA of remoteCse resource: " +
+                                  "resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}, " +
+                                  "RequestReachability: {}, cseBaseCseId: {}",
+                                  remoteCseResourceName, remoteCse.getResourceId(), remoteCse.getRegisteredCseId(),
+                                  remoteCseCseType, remoteCseRequestReachable, cseBaseCseId);
+                        // continue with next remoteCSE of the same cseBase
+                        continue;
+                    }
+
+                    List<String> poaList = new LinkedList<>();
+                    for(int i=0; i < array.length(); i++) {
+                        poaList.add(array.getString(i));
+                    }
+                    remoteCsePointOfAccess = poaList.toArray(remoteCsePointOfAccess);
+                }
+
+                CseRoutingDataRemote resultRemoteCse =
+                    this.addRemoteCse(remoteCseResourceName, remoteCse.getResourceId(), remoteCse.getRegisteredCseId(),
+                                      remoteCseCseType, cseBase.getName(), cseBaseCseId, remoteCseRequestReachable,
+                                      remoteCsePointOfAccess);
+                if (null == resultRemoteCse) {
+                    LOG.error("Failed to add new remoteCSE record into routing table: " +
+                              "resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}, " +
+                              "RequestReachability: {}, cseBaseCseId: {}",
+                              remoteCseResourceName, remoteCse.getResourceId(), remoteCse.getRegisteredCseId(),
+                              remoteCseCseType, remoteCseRequestReachable, cseBaseCseId);
+                    continue;
+                }
+
+                LOG.info("Added new remoteCSE record into routing table: " +
+                         "resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}, " +
+                         "RequestReachability: {}, cseBaseCseId: {}",
+                         remoteCseResourceName, remoteCse.getResourceId(), remoteCse.getRegisteredCseId(),
+                         remoteCseCseType, remoteCseRequestReachable, cseBaseCseId);
+            }
+
+            LOG.info("Added cseBase into routing table: resourceName: {}, resourceId: {}, CSE-ID: {}, CSE-Type: {}",
+                     cseBase.getName(), cseBase.getResourceId(), cseBaseCseId, cseType);
+        }
+    }
+
+    @Override
+    public void dbClientStop() {
+        this.cleanTable.set(true);
+        return;
+    }
+
+    @Override
+    public String getPluginName() { return "Onem2mRouterService"; }
+
+    @Override
+    public void close() {
+        Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
     }
 
     public void pluginRegistration(Onem2mRouterPlugin plugin) {
@@ -438,6 +611,23 @@ public class Onem2mRouterService {
                   request.getOnem2mResource().getResourceType());
     }
 
+    private CseRoutingDataBase addCseBase(String resourceName, String resourceId, String cseId, String cseType) {
+        // this is create, so get create builder for cseBase routing data
+        CseRoutingDataBase newRoutingData = routingTable.getCseBaseAddBuilder()
+                                                        .setName(resourceName)
+                                                        .setResourceId(resourceId)
+                                                        .setCseId(cseId)
+                                                        .setCseType(cseType)
+                                                        .build();
+
+        if (null == newRoutingData) {
+            LOG.error("Failed to create CSEBase routing data from request");
+            return null;
+        }
+
+        return routingTable.addCseBase(newRoutingData);
+    }
+
     /**
      * Updates routing table by data from request primitive including some CUD
      * operation with cseBase resource.
@@ -461,20 +651,7 @@ public class Onem2mRouterService {
 
         switch(operation) {
             case Onem2m.Operation.CREATE:
-                // this is create, so get create builder for cseBase routing data
-                CseRoutingDataBase newRoutingData = routingTable.getCseBaseAddBuilder()
-                    .setName(name)
-                    .setResourceId(request.getResourceId())
-                    .setCseId(request.getPrimitive(baseCseIDAttribute))
-                    .setCseType(request.getPrimitive(baseCseTypeAttribute))
-                    .build();
-
-                if (null == newRoutingData) {
-                    LOG.error("Failed to create CSEBase routing data from request");
-                    break;
-                }
-
-                result = routingTable.addCseBase(newRoutingData);
+                result = addCseBase(name, request.getResourceId(), baseCseIDAttribute, baseCseTypeAttribute);
                 break;
 
             //case Onem2m.Operation.UPDATE:
@@ -496,6 +673,40 @@ public class Onem2mRouterService {
         } else {
             routingTable.dumpDebug("RoutingTable Changed: CSEBase: " + name);
         }
+    }
+
+    private CseRoutingDataRemote addRemoteCse(String resourceName, String resourceId, String cseId, String cseType,
+                                              String cseBaseName, String cseBaseCseId,
+                                              boolean requestReachable, String[] pointOfAccess) {
+        CseRoutingDataRemote result = null;
+        CseRoutingDataRemote newRoutingData = null;
+
+        // get builder for create
+        newRoutingData = routingTable.getCseRemoteAddBuilder()
+                                     .setName(resourceName)
+                                     .setResourceId(resourceId)
+                                     .setCseId(cseId)
+                                     .setCseType(cseType)
+                                     .setParentCseBaseName(cseBaseName)
+                                     .setCseBaseCseId(cseBaseCseId)
+                                     .setRequestReachable(requestReachable)
+                                     .setPointOfAccess(pointOfAccess)
+                                     .build();
+        if (null == newRoutingData) {
+            LOG.error("Failed to create remoteCSE routing table data from request");
+            return result;
+        }
+
+        result = routingTable.addRemoteCse(newRoutingData);
+
+        /*
+         * If this is IN-CSE, then this is considered to be a registrar CSE of the cseBase (parent)
+         */
+        if (null != result && cseType.equals(Onem2m.CseType.INCSE)) {
+            updateRoutingDataCseBaseRegistrarCse(cseBaseName, cseId);
+        }
+
+        return result;
     }
 
     /**
@@ -534,32 +745,10 @@ public class Onem2mRouterService {
 
         switch (operation) {
             case Onem2m.Operation.CREATE:
-                // get builder for create
-                newRoutingData = routingTable.getCseRemoteAddBuilder()
-                        .setName(request.getResourceName())
-                        .setResourceId(request.getResourceId())
-                        .setCseId(remoteCseId)
-                        .setCseType(cseType)
-                        .setParentCseBaseName(cseBaseName)
-                        .setCseBaseCseId(base.cseId)
-                        .setRequestReachable(
-                                request.getContentAttributeBoolean(ResourceRemoteCse.REQUEST_REACHABILITY))
-                        .setPointOfAccess(
-                                request.getContentAttributeArray(ResourceRemoteCse.POINT_OF_ACCESS))
-                        .build();
-                if (null == newRoutingData) {
-                    LOG.error("Failed to create remoteCSE routing table data from request");
-                    break;
-                }
-
-                result = routingTable.addRemoteCse(newRoutingData);
-
-                /*
-                 * If this is IN-CSE, then this is considered to be a registrar CSE of the cseBase (parent)
-                 */
-                if (null != result && cseType.equals(Onem2m.CseType.INCSE)) {
-                    updateRoutingDataCseBaseRegistrarCse(cseBaseName, remoteCseId);
-                }
+                result = addRemoteCse(request.getResourceName(), request.getResourceId(), remoteCseId, cseType,
+                                      cseBaseName, base.cseId,
+                                      request.getContentAttributeBoolean(ResourceRemoteCse.REQUEST_REACHABILITY),
+                                      request.getContentAttributeArray(ResourceRemoteCse.POINT_OF_ACCESS));
                 break;
 
             case Onem2m.Operation.UPDATE:

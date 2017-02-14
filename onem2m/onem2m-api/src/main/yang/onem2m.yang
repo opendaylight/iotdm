@@ -55,9 +55,26 @@ module onem2m {
                 key registered-ae-id;
                 leaf registered-ae-id {
                     type string;
+                    mandatory true;
                 }
                 leaf resource-id {
                     type string;
+                    mandatory true;
+                }
+            }
+
+            /*
+             * Defines mapping of CSE-ID to resourceID per cseBase
+             */
+            list onem2m-registered-remote-cses {
+                key registered-cse-id;
+                leaf registered-cse-id {
+                    type string;
+                    mandatory true;
+                }
+                leaf resource-id {
+                    type string;
+                    mandatory true;
                 }
             }
         }
@@ -278,5 +295,12 @@ module onem2m {
     notification subscriptionDeleted{
         uses notification-common;
         /*uses onem2m-primitive-list;*/
+    }
+
+    /* IoTDM implementation specific operational data */
+    container iotdm-specific-operational-data {
+        leaf last-resource-id {
+            type int64;
+        }
     }
 }

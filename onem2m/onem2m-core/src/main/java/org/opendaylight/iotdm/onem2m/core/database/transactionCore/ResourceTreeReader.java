@@ -82,7 +82,7 @@ public class ResourceTreeReader {
     }
 
 
-    public List<String> getCseList() {
+    public List<String> getCseBaseNamesList() {
         List<String> cseStringList = null;
         Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
         if (cseList != null) {
@@ -155,6 +155,19 @@ public class ResourceTreeReader {
      */
     public List<Onem2mParentChild> retrieveParentChildList(String resourceId) {
         return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+    }
+
+    /**
+     * Retrieves list of all cseBase resources in system
+     * @return
+     */
+    public List<Onem2mCse> retrieveCseBaseList() {
+        Onem2mCseList list = daoResourceTreeReader.retrieveFullCseList();
+        if (null == list) {
+            return null;
+        }
+
+        return list.getOnem2mCse();
     }
 
     /**
