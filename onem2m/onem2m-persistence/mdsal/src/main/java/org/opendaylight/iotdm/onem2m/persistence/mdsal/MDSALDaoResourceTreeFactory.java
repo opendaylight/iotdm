@@ -10,16 +10,13 @@ package org.opendaylight.iotdm.onem2m.persistence.mdsal;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactory;
-import org.opendaylight.iotdm.onem2m.core.utils.IotdmOperationalData;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.read.MDSALResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.write.MDSALResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.write.MDSALTransactionWriter;
 
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +33,7 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
 
     public MDSALDaoResourceTreeFactory(DataBroker dataBroker) {
         this.dataBroker = dataBroker;
-        nextId = new AtomicInteger(IotdmOperationalData.getLastResourceId(dataBroker));
+        nextId = new AtomicInteger(this.getDaoResourceTreeReader().retrieveLastUsedResourceId());
     }
 
     @Override
@@ -54,7 +51,7 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
 
     @Override
     public void close() {
-        IotdmOperationalData.storeLastResourceId(nextId.get(), this.dataBroker);
+        this.getDaoResourceTreeWriter().writeLastUsedResourceId(nextId.get());
     }
 
     public String generateResourceId(String parentResourceId,

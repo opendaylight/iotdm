@@ -15,6 +15,8 @@ import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.IotdmSpecificOperationalData;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.IotdmSpecificOperationalDataBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseListBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
@@ -543,6 +545,30 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         writer.create(iidTreeList, tree, LogicalDatastoreType.OPERATIONAL);
         writer.close();
 
+    }
+
+    @Override
+    public boolean writeLastUsedResourceId(int resourceId) {
+        boolean status = true;
+        crudMonitor.get(0).enter();
+        try {
+            writer.reload();
+
+            IotdmSpecificOperationalDataBuilder builder = new IotdmSpecificOperationalDataBuilder()
+                .setLastResourceId((long) resourceId);
+
+            InstanceIdentifier<IotdmSpecificOperationalData> iid =
+                InstanceIdentifier.builder(IotdmSpecificOperationalData.class).build();
+
+            writer.create(iid, builder.build(), dsType);
+        } catch (Exception e) {
+            LOG.error("Exception {}", e.getMessage());
+            status = false;
+        } finally {
+            writer.close();
+            crudMonitor.get(0).leave();
+            return status;
+        }
     }
 
     @Override

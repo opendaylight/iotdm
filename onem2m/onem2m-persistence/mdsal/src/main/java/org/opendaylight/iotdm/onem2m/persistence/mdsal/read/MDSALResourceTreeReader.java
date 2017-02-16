@@ -17,6 +17,7 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.IotdmSpecificOperationalData;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mResourceTree;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
@@ -173,6 +174,20 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         }
 
         return null;
+    }
+
+    @Override
+    public int retrieveLastUsedResourceId() {
+        InstanceIdentifier<IotdmSpecificOperationalData> iid =
+            InstanceIdentifier.builder(IotdmSpecificOperationalData.class).build();
+
+        IotdmSpecificOperationalData operData = retrieve(iid, dsType);
+
+        if (null == operData || null == operData.getLastResourceId()) {
+            return 0;
+        }
+
+        return operData.getLastResourceId().intValue();
     }
 
     /**

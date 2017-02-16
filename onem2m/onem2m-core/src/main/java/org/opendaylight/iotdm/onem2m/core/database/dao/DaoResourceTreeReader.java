@@ -68,4 +68,10 @@ public interface DaoResourceTreeReader extends Closeable {
      * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
      */
     String isEntityRegistered(String entityId, String cseBaseCseId);
+
+    /**
+     * Returns the last used resourceId stored in data store.
+     * @return The last used resourceId
+     */
+    int retrieveLastUsedResourceId();
 }

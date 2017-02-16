@@ -24,7 +24,7 @@ public interface DaoResourceTreeWriter extends Closeable {
 
     void close();
 
-    public String generateResourceId(String parentResourceId, String resourceType, Integer iotdmInstance);
+    String generateResourceId(String parentResourceId, String resourceType, Integer iotdmInstance);
 
     /**
      * Add the cse to the db store using its name/resourceId
@@ -162,4 +162,10 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @return True in case of success, False otherwise
      */
     boolean deleteRemoteCseIdToResourceIdMapping(String cseBaseName, String remoteCseCseId);
+
+    /**
+     * Stores the last used resourceId in data store.
+     * @param resourceId The last assigned resourceId
+     */
+    boolean writeLastUsedResourceId(int resourceId);
 }
