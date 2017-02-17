@@ -545,17 +545,19 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
         writer.create(iidTreeList, tree, LogicalDatastoreType.OPERATIONAL);
         writer.close();
 
+        factory.initSystemStartIds();
+
     }
 
     @Override
-    public boolean writeLastUsedResourceId(int resourceId) {
+    public boolean writeSystemStartId(int systemStartId) {
         boolean status = true;
         crudMonitor.get(0).enter();
         try {
             writer.reload();
 
             IotdmSpecificOperationalDataBuilder builder = new IotdmSpecificOperationalDataBuilder()
-                .setLastResourceId((long) resourceId);
+                .setSystemStartId((long) systemStartId);
 
             InstanceIdentifier<IotdmSpecificOperationalData> iid =
                 InstanceIdentifier.builder(IotdmSpecificOperationalData.class).build();

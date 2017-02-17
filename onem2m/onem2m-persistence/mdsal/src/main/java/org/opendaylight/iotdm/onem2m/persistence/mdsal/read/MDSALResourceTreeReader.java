@@ -177,17 +177,17 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public int retrieveLastUsedResourceId() {
+    public int retrieveSystemStartId() {
         InstanceIdentifier<IotdmSpecificOperationalData> iid =
             InstanceIdentifier.builder(IotdmSpecificOperationalData.class).build();
 
         IotdmSpecificOperationalData operData = retrieve(iid, dsType);
 
-        if (null == operData || null == operData.getLastResourceId()) {
+        if (null == operData || null == operData.getSystemStartId()) {
             return 0;
         }
 
-        return operData.getLastResourceId().intValue();
+        return operData.getSystemStartId().intValue();
     }
 
     /**

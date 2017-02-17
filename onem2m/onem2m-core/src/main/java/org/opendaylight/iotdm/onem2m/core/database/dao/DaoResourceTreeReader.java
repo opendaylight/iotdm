@@ -73,5 +73,5 @@ public interface DaoResourceTreeReader extends Closeable {
      * Returns the last used resourceId stored in data store.
      * @return The last used resourceId
      */
-    int retrieveLastUsedResourceId();
+    int retrieveSystemStartId();
 }

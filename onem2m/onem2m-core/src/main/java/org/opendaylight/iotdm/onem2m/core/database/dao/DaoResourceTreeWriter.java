@@ -167,5 +167,5 @@ public interface DaoResourceTreeWriter extends Closeable {
      * Stores the last used resourceId in data store.
      * @param resourceId The last assigned resourceId
      */
-    boolean writeLastUsedResourceId(int resourceId);
+    boolean writeSystemStartId(int resourceId);
 }

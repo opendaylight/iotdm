@@ -299,7 +299,7 @@ module onem2m {
 
     /* IoTDM implementation specific operational data */
     container iotdm-specific-operational-data {
-        leaf last-resource-id {
+        leaf system-start-id {
             type int64;
         }
     }

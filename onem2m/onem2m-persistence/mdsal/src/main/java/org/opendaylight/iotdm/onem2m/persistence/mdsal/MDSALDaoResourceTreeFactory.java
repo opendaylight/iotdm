@@ -26,14 +26,15 @@ import org.slf4j.LoggerFactory;
  */
 public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     private final Logger LOG = LoggerFactory.getLogger(MDSALDaoResourceTreeFactory.class);
-    private final AtomicInteger nextId;
+    private AtomicInteger nextId;
+    private Integer systemStartId = 0;
 
     private DataBroker dataBroker;
     private int numShards = 1;
 
     public MDSALDaoResourceTreeFactory(DataBroker dataBroker) {
         this.dataBroker = dataBroker;
-        nextId = new AtomicInteger(this.getDaoResourceTreeReader().retrieveLastUsedResourceId());
+        initSystemStartIds();
     }
 
     @Override
@@ -51,7 +52,12 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
 
     @Override
     public void close() {
-        this.getDaoResourceTreeWriter().writeLastUsedResourceId(nextId.get());
+    }
+
+    public void initSystemStartIds() {
+        nextId = new AtomicInteger();
+        systemStartId = this.getDaoResourceTreeReader().retrieveSystemStartId();
+        this.getDaoResourceTreeWriter().writeSystemStartId(++systemStartId);
     }
 
     public String generateResourceId(String parentResourceId,
@@ -60,11 +66,15 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
 
         int baseResourceId = nextId.incrementAndGet();
 
-        if (resourceType.equals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+        String resourceIdSuffix = Integer.toString(baseResourceId, 36) +
+                Integer.toString(systemStartId, 36) +
+                Integer.toString(iotdmInstance, 36);
+
+        if (resourceType.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
             // take the shard of the parent as all content instances for a container goto the same shard
-            return parentResourceId.charAt(0) + Integer.toString(baseResourceId, 36);
-        } else if (resourceType.equals(Onem2m.ResourceType.CSE_BASE)) {
-            return "0" + Integer.toString(baseResourceId, 36);
+            return parentResourceId.charAt(0) + resourceIdSuffix;
+        } else if (resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
+            return "0" + resourceIdSuffix;
         }
 
         int shard = baseResourceId % numShards;
@@ -73,7 +83,7 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
             LOG.error("generateResourceId: max shards exceeded");
             return "0";
         }
-        return b36ShardId + Integer.toString(baseResourceId, 36);
+        return b36ShardId + resourceIdSuffix;
     }
 
     public int getShardFromResourceId(String resourceId) {
