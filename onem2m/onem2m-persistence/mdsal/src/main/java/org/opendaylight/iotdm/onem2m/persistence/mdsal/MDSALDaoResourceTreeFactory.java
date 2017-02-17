@@ -29,6 +29,10 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     private AtomicInteger nextId;
     private Integer systemStartId = 0;
 
+    private static final String IDDELIMITER = ":";
+    private static final int IDRADIX = 36;
+    private static final int IDSHARDPOSITION = 0;
+
     private DataBroker dataBroker;
     private int numShards = 1;
 
@@ -65,28 +69,45 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
                                      Integer iotdmInstance) {
 
         int baseResourceId = nextId.incrementAndGet();
+        StringBuilder builder = new StringBuilder();
 
-        String resourceIdSuffix = Integer.toString(baseResourceId, 36) +
-                Integer.toString(systemStartId, 36) +
-                Integer.toString(iotdmInstance, 36);
+        switch(resourceType) {
+            case Onem2m.ResourceType.CONTENT_INSTANCE:
+                // take the shard of the parent as all content instances for a container goto the same shard
+                builder
+                    .append(getShardFromResourceId(parentResourceId))
+                    .append(IDDELIMITER);
+                break;
 
-        if (resourceType.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
-            // take the shard of the parent as all content instances for a container goto the same shard
-            return parentResourceId.charAt(0) + resourceIdSuffix;
-        } else if (resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-            return "0" + resourceIdSuffix;
+            case Onem2m.ResourceType.CSE_BASE:
+                // just use + with string constants
+                builder.append("0" + IDDELIMITER);
+                break;
+
+            default:
+                int shard = baseResourceId % numShards;
+                String b36ShardId = Integer.toString(shard, IDRADIX);
+                if (b36ShardId.length() != 1) {
+                    LOG.error("generateResourceId: max shards exceeded");
+                    return "0";
+                }
+
+                builder
+                    .append(b36ShardId)
+                    .append(IDDELIMITER);
         }
 
-        int shard = baseResourceId % numShards;
-        String b36ShardId = Integer.toString(shard, 36);
-        if (b36ShardId.length() != 1) {
-            LOG.error("generateResourceId: max shards exceeded");
-            return "0";
-        }
-        return b36ShardId + resourceIdSuffix;
+        builder
+            .append(Integer.toString(baseResourceId, IDRADIX))
+            .append(IDDELIMITER)
+            .append(Integer.toString(systemStartId, IDRADIX))
+            .append(IDDELIMITER)
+            .append(Integer.toString(iotdmInstance, IDRADIX));
+
+        return builder.toString();
     }
 
     public int getShardFromResourceId(String resourceId) {
-        return (int) Integer.valueOf(resourceId.substring(0,1), 36);
+        return (int) Integer.valueOf(resourceId.split(IDDELIMITER)[IDSHARDPOSITION], IDRADIX);
     }
 }
