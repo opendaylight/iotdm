@@ -10,6 +10,7 @@ package org.opendaylight.iotdm.onem2m.core;
 
 import java.util.*;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.security.authentication.Onem2mRequestAuthenticationToken;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
@@ -471,7 +472,8 @@ public class Onem2m {
         } catch (Exception e) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(ResponseStatusCode.INTERNAL_SERVER_ERROR, "RPC exception:" + e.toString());
-            LOG.error("processOnem2mRequestInput: RPC exception: msg: {}, cause: {}", e.getMessage(), e.getCause());
+            LOG.error("processOnem2mRequestInput: RPC exception: msg: {}, cause: {}, trace: {}",
+                      e.getMessage(), e.getCause(), ExceptionUtils.getStackTrace(e));
         }
 
         return onem2mResponse;
