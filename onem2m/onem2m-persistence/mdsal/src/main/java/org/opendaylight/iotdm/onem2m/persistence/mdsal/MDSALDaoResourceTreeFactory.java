@@ -29,7 +29,7 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     private AtomicInteger nextId;
     private Integer systemStartId = 0;
 
-    private static final String IDDELIMITER = ":";
+    private static final String IDDELIMITER = "-";
     private static final int IDRADIX = 36;
     private static final int IDSHARDPOSITION = 0;
 
