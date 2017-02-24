@@ -222,7 +222,7 @@ public class CheckAccessControlProcessor {
             JSONArray acorArray = acri.optJSONArray(ResourceAccessControlPolicy.ACCESS_CONTROL_ORIGINATORS);
             BigInteger allowedOperation = BigInteger.valueOf(acri.optInt(ResourceAccessControlPolicy.ACCESS_CONTROL_OPERATIONS));
             // first: check whether this operation is allowed
-            if (acorArray.toString().contains(from)) {
+            if (acorArray.toString().contains(from) || acorArray.toString().contains("*")) {
                 // second : check whether the "From" IP is allowed
                 orininator_is_allowed = true;
                 if (ResourceAccessControlPolicy.isAllowedThisOperation(opCode, allowedOperation)) {
