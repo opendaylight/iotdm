@@ -54,8 +54,8 @@ public class CheckAccessControlProcessor {
             else if (onem2mRequest.getOnem2mResource().getResourceType().contentEquals(Onem2m.ResourceType.CSE_BASE)){
                 AccessControlPolicyIDList = getDefaultACPList(trc, targetURI);
             } else {
-                // if target is not CSE, check whether the parent(onem2mresource) conatains acpid
-                Onem2mResource parentresource = Onem2mDb.getInstance().getResource(trc, onem2mRequest.getOnem2mResource().getParentId());
+                // if target is not CSE, check whether the parent (onem2mresource) contains acpid
+                Onem2mResource parentresource = onem2mRequest.getOnem2mResource();
                 try {
                     JSONObject jsonContent = new JSONObject(parentresource.getResourceContentJsonString());
                     while (jsonContent.optString(ResourceContent.ACCESS_CONTROL_POLICY_IDS, null) == null) {
