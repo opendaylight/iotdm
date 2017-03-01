@@ -83,16 +83,23 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
         }
 
         // Process all options
-        boolean resourceTypePresent;
+        boolean resourceTypePresent = false;
+        boolean requestIdPresent = false;
+        boolean originatorPresent = false;
         String resourceTypeOption = null;
         String resourceTypeQuery;
+
         for (Option opt : request.getOptions().asSortedList()) {
             switch (opt.getNumber()) {
                 case Onem2m.CoapOption.ONEM2M_FR:
                     clientBuilder.setFrom(opt.getStringValue());
+                    originatorPresent = true;
                     break;
                 case Onem2m.CoapOption.ONEM2M_RQI:
                     clientBuilder.setRequestIdentifier(opt.getStringValue());
+                    // Set request ID so it will be set also in case of error
+                    response.setRequestId(opt.getStringValue());
+                    requestIdPresent = true;
                     break;
                 case Onem2m.CoapOption.ONEM2M_NM:
                     clientBuilder.setName(opt.getStringValue());
@@ -124,6 +131,19 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
             }
         }
 
+        // Originator and RequestID are mandatory parameters
+        if (!requestIdPresent) {
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,"Request ID is missing.");
+            Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
+            return false;
+        }
+
+        if (!originatorPresent) {
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,"Request originator is missing.");
+            Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
+            return false;
+        }
+
         // according to the spec, the uri query string can contain in short form, the
         // resourceType, responseType, result persistence,  Delivery Aggregation, Result Content,
         // M3 Boolean
@@ -135,8 +155,8 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
             if (!resourceTypeOption.equals(resourceTypeQuery)) {
                 LOG.error("Invalid request received, resource type set in option ({}) and query ({}) mismatch",
                         resourceTypeOption, resourceTypeQuery);
-                response.prepareErrorResponse(CoAP.ResponseCode.BAD_REQUEST,
-                        "Resource type in option and query string mismatch");
+                response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                              "Resource type in option and query string mismatch");
                 Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                 return false;
             }
@@ -147,7 +167,8 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
         }
 
         if (resourceTypePresent && code != CoAP.Code.POST) {
-            response.prepareErrorResponse(CoAP.ResponseCode.BAD_REQUEST, "Specifying resource type not permitted.");
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                          "Specifying resource type not permitted.");
             Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
             return false;
         }
@@ -185,7 +206,7 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
                 break;
 
             default:
-                response.prepareErrorResponse(CoAP.ResponseCode.BAD_REQUEST, "Unknown code: " + code);
+                response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, "Unknown code: " + code);
                 Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                 return false;
         }

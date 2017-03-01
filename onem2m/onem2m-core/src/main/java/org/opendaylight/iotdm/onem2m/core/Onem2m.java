@@ -247,6 +247,7 @@ public class Onem2m {
         public static final String ALREADY_EXISTS = "5106";
         public static final String TARGET_NOT_SUBSCRIBABLE = "5203";
         public static final String NON_BLOCKING_REQUEST_NOT_SUPPORTED = "5206";
+        public static final String NOT_ACCEPTABLE = "5207";
 
         public static final String INVALID_ARGUMENTS = "6023";
         public static final String INSUFFICIENT_ARGUMENTS = "6024";

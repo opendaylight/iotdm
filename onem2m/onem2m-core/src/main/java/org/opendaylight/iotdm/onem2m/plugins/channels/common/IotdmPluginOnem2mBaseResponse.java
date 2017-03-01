@@ -93,11 +93,15 @@ public class IotdmPluginOnem2mBaseResponse implements IotdmPluginResponse {
      * @param returnCode onem2m return code
      * @param message error message
      */
-    public void prepareErrorResponse(@Nonnull String returnCode, @Nonnull String message) {
+    public void prepareErrorResponse(@Nonnull String returnCode, @Nonnull String message,
+                                     String requestId) {
         initResponse();
         response.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, returnCode);
         response.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
         response.setPrimitive(ResponsePrimitive.CONTENT, JsonUtils.put(new JSONObject(), "error", message).toString());
+        if (null != requestId && ! requestId.isEmpty()) {
+            response.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER, requestId);
+        }
     }
 
     /**

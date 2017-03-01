@@ -11,6 +11,7 @@ package org.opendaylight.iotdm.onem2m.protocols.websocket.rx;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseResponse;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
@@ -60,7 +61,8 @@ class Onem2mWebsocketRxRequest extends Onem2mProtocolRxRequest {
         Optional<String> contentFormat = Onem2m.resolveContentFormat(contentType);
 
         if(!contentFormat.isPresent() || contentFormat.get().equals(Onem2m.ContentFormat.XML)) {
-           response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, "Not supported content format");
+           response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, "Not supported content format",
+                                         null);
            return false;
         }
         rxPayloadPrimitive = Onem2m.getRqpJsonPrimitive(request.getOriginalRequest());
@@ -71,8 +73,23 @@ class Onem2mWebsocketRxRequest extends Onem2mProtocolRxRequest {
     protected boolean translateRequestToOnem2m() {
         onem2mRxBuilder = new Onem2mRequestPrimitiveClientBuilder();
         onem2mRxBuilder.setProtocol(Onem2mPluginManager.ProtocolWebsocket);
-        String operation = Onem2mProtocolUtils.processRequestPrimitiveFromJson(rxPayloadPrimitive, onem2mRxBuilder);
-        return nonNull(operation);
+        if (! Onem2mProtocolUtils.processRequestPrimitiveFromJson(rxPayloadPrimitive, onem2mRxBuilder)) {
+            LOG.error("Failed to process request JSON content");
+            String rqi = onem2mRxBuilder.getPrimitiveValue(RequestPrimitive.REQUEST_IDENTIFIER);
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                          "Failed to process the JSON content",
+                                          rqi);
+            return false;
+        }
+
+        String error = Onem2mProtocolUtils.verifyRequestPrimitive(onem2mRxBuilder);
+        if (null != error) {
+            LOG.error("Request verification failed: {}", error);
+            String rqi = onem2mRxBuilder.getPrimitiveValue(RequestPrimitive.REQUEST_IDENTIFIER);
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, error, rqi);
+            return false;
+        }
+        return true;
     }
 
     @Override

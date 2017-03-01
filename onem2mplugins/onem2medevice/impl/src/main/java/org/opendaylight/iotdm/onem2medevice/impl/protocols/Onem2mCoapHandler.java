@@ -106,7 +106,7 @@ public class Onem2mCoapHandler {
             if (!resourceTypeOption.equals(resourceTypeQuerry)) {
                 LOG.error("Invalid request received, resource type set in option ({}) and query ({}) mismatch",
                         resourceTypeOption, resourceTypeQuerry);
-                ((IotdmPluginCoapResponse)response).prepareErrorResponse(CoAP.ResponseCode.BAD_REQUEST,
+                ((IotdmPluginCoapResponse)response).prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "Resource type in option and query string mismatch");
                 Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                 return;
@@ -118,7 +118,8 @@ public class Onem2mCoapHandler {
         }
 
         if (resourceTypePresent && code != CoAP.Code.POST) {
-            ((IotdmPluginCoapResponse)response).prepareErrorResponse(CoAP.ResponseCode.BAD_REQUEST, "Specifying resource type not permitted.");
+            ((IotdmPluginCoapResponse)response).prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                                                     "Specifying resource type not permitted.");
             Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
             return;
         }
@@ -156,7 +157,8 @@ public class Onem2mCoapHandler {
                 break;
 
             default:
-                ((IotdmPluginCoapResponse)response).prepareErrorResponse(CoAP.ResponseCode.BAD_REQUEST, "Unknown code: " + code);
+                ((IotdmPluginCoapResponse)response).prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                                                         "Unknown code: " + code);
                 Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                 return;
         }

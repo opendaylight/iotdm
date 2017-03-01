@@ -11,8 +11,10 @@ import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.Option;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Response;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,10 +70,15 @@ public class IotdmPluginCoapResponse implements IotdmPluginResponse {
         this.options = options;
     }
 
-    public void prepareErrorResponse(CoAP.ResponseCode code, @Nonnull String message) {
-        this.coapRSC = code;
-        this.payload = message;
-        this.options.setContentFormat(0);
+    public void prepareErrorResponse(String onem2mRsc, @Nonnull String message) {
+        this.coapRSC = mapCoreResponseToCoapResponse(onem2mRsc);
+        this.payload = JsonUtils.put(new JSONObject(), "error", message).toString();
+        this.options.setContentFormat(Onem2m.CoapContentFormat.APPLICATION_JSON);
+        this.options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RSC, Integer.parseInt(onem2mRsc)));
+    }
+
+    public void setRequestId(String id) {
+        options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RQI, id));
     }
 
     private void fromOnem2mResponseToCoap(ResponsePrimitive onem2mResponse) {
@@ -82,7 +89,7 @@ public class IotdmPluginCoapResponse implements IotdmPluginResponse {
         // return the request id in the return option
         String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
         if (nonNull(rqi)) {
-            options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RQI, rqi));
+            this.setRequestId(rqi);
         }
         // put the onem2m response code into the RSC option and return it too
         options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RSC, Integer.parseInt(rscString)));
@@ -161,6 +168,8 @@ public class IotdmPluginCoapResponse implements IotdmPluginResponse {
                 return CoAP.ResponseCode.BAD_REQUEST;
             case Onem2m.ResponseStatusCode.INSUFFICIENT_ARGUMENTS:
                 return CoAP.ResponseCode.BAD_REQUEST;
+            case Onem2m.ResponseStatusCode.NOT_ACCEPTABLE:
+                return CoAP.ResponseCode.NOT_ACCEPTABLE;
         }
         return CoAP.ResponseCode.BAD_REQUEST;
     }

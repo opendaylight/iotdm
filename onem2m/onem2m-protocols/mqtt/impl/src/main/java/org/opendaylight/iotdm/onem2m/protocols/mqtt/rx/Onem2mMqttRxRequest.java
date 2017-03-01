@@ -12,6 +12,7 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseRequest;
 import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseResponse;
@@ -22,6 +23,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.nonNull;
 
@@ -31,6 +34,8 @@ import static java.util.Objects.nonNull;
  * RxRequest class.
  */
 public class Onem2mMqttRxRequest extends Onem2mProtocolRxRequest {
+    private static final Logger LOG = LoggerFactory.getLogger(Onem2mMqttRxRequest.class);
+
     /* Let's keep this data protected so they can be accessed by
      * Child classes
      */
@@ -60,7 +65,8 @@ public class Onem2mMqttRxRequest extends Onem2mProtocolRxRequest {
 
         Optional<String> contentFormat = Onem2m.resolveContentFormat(request.getContentType());
         if(!contentFormat.isPresent() || contentFormat.get().equals(Onem2m.ContentFormat.XML)) {
-            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, "Not supported content format");
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, "Not supported content format",
+                                          null);
             return false;
         }
 
@@ -72,8 +78,22 @@ public class Onem2mMqttRxRequest extends Onem2mProtocolRxRequest {
     protected boolean translateRequestToOnem2m() {
         clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
         clientBuilder.setProtocol(Onem2m.Protocol.MQTT);
-        String operation = Onem2mProtocolUtils.processRequestPrimitiveFromJson(rxPayloadPrimitive, clientBuilder);
-        return nonNull(operation);
+        if (! Onem2mProtocolUtils.processRequestPrimitiveFromJson(rxPayloadPrimitive, clientBuilder)) {
+            LOG.error("Failed to process request JSON content");
+            String rqi = clientBuilder.getPrimitiveValue(RequestPrimitive.REQUEST_IDENTIFIER);
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                          "Failed to process the JSON content", rqi);
+            return false;
+        }
+
+        String error = Onem2mProtocolUtils.verifyRequestPrimitive(clientBuilder);
+        if (null != error) {
+            LOG.error("Request verification failed: {}", error);
+            String rqi = clientBuilder.getPrimitiveValue(RequestPrimitive.REQUEST_IDENTIFIER);
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST, error, rqi);
+            return false;
+        }
+        return true;
     }
 
     @Override

@@ -82,6 +82,17 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
 
         Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS);
 
+        // Check the request id first so it can be set in response even in case of error
+        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RI);
+        if (headerValue != null) {
+            response.setRequestId(headerValue);
+            clientBuilder.setRequestIdentifier(headerValue);
+        } else {
+            IotdmPluginHttpResponse.prepareErrorResponse(
+                httpResponse, "Request identifier is missing.", Onem2m.ResponseStatusCode.BAD_REQUEST);
+            return false;
+        }
+
         String contentType = httpRequest.getContentType();
         if (contentType == null) contentType = "json";
         contentType = contentType.toLowerCase();
@@ -91,7 +102,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
             clientBuilder.setContentFormat(contentFormat.get());
         } else {
             IotdmPluginHttpResponse.prepareErrorResponse(
-                    httpResponse, "Unsupported media type: " + contentType, HttpServletResponse.SC_NOT_ACCEPTABLE);
+                    httpResponse, "Unsupported media type: " + contentType, Onem2m.ResponseStatusCode.NOT_ACCEPTABLE);
             return false;
         }
 
@@ -102,10 +113,10 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN);
         if (headerValue != null) {
             clientBuilder.setFrom(headerValue);
-        }
-        headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_RI);
-        if (headerValue != null) {
-            clientBuilder.setRequestIdentifier(headerValue);
+        } else {
+            IotdmPluginHttpResponse.prepareErrorResponse(
+                httpResponse, "Request originator is missing.", Onem2m.ResponseStatusCode.BAD_REQUEST);
+            return false;
         }
         headerValue = httpRequest.getHeader(Onem2m.HttpHeaders.X_M2M_NM);
         if (headerValue != null) {
@@ -131,15 +142,16 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
             resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(contentTypeResourceString);
         }
         String method = httpRequest.getMethod().toLowerCase();
-        // look in query string if didnt find it in contentType header
+        // look in query string if didn't find it in contentType header
         if (!resourceTypePresent) {
             resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
         } else {
             clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
         }
+
         if (resourceTypePresent && !method.contentEquals("post")) {
             IotdmPluginHttpResponse.prepareErrorResponse(
-                    httpResponse, "Specifying resource type not permitted.", HttpServletResponse.SC_BAD_REQUEST);
+                    httpResponse, "Specifying resource type not permitted.", Onem2m.ResponseStatusCode.BAD_REQUEST);
             return false;
         }
 
@@ -173,7 +185,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
                 break;
             default:
                 IotdmPluginHttpResponse.prepareErrorResponse(
-                        httpResponse, "Unsupported method type: " + method, HttpServletResponse.SC_NOT_IMPLEMENTED);
+                        httpResponse, "Unsupported method type: " + method, Onem2m.ResponseStatusCode.NOT_IMPLEMENTED);
                 return false;
         }
         return true;
@@ -205,7 +217,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
 //            httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, rqi);
 //        }
 //
-//        int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
+//        int httpRSC = setOnem2mHttpStatusCode(httpResponse, rscString);
 //        if (content != null) {
 //            httpResponse.setStatus(httpRSC);
 //

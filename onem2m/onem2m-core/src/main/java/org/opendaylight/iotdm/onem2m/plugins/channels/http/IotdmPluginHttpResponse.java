@@ -7,9 +7,11 @@
  */
 package org.opendaylight.iotdm.onem2m.plugins.channels.http;
 
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,62 +73,89 @@ public class IotdmPluginHttpResponse implements IotdmPluginResponse {
         }
     }
 
-    protected static int mapCoreResponseToHttpResponse(HttpServletResponse httpResponse, String rscString) {
+    public void setRequestId(String id) {
+        if (null != id && ! id.isEmpty()) {
+            this.httpResponse.addHeader(Onem2m.HttpHeaders.X_M2M_RI, id);
+        }
+    }
+
+    protected static void setOnem2mHttpStatusCode(HttpServletResponse httpResponse, String rscString) {
 
         httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RSC, rscString);
+        int httpRsc = HttpServletResponse.SC_BAD_REQUEST;
+
         switch (rscString) {
             case Onem2m.ResponseStatusCode.OK:
-                return HttpServletResponse.SC_OK;
+                httpRsc = HttpServletResponse.SC_OK;
+                break;
             case Onem2m.ResponseStatusCode.CREATED:
-                return HttpServletResponse.SC_CREATED;
+                httpRsc = HttpServletResponse.SC_CREATED;
+                break;
             case Onem2m.ResponseStatusCode.CHANGED:
-                return HttpServletResponse.SC_OK;
+                httpRsc = HttpServletResponse.SC_OK;
+                break;
             case Onem2m.ResponseStatusCode.DELETED:
-                return HttpServletResponse.SC_OK;
-
+                httpRsc = HttpServletResponse.SC_OK;
+                break;
             case Onem2m.ResponseStatusCode.NOT_FOUND:
-                return HttpServletResponse.SC_NOT_FOUND;
+                httpRsc = HttpServletResponse.SC_NOT_FOUND;
+                break;
             case Onem2m.ResponseStatusCode.ACCESS_DENIED:
-                return HttpServletResponse.SC_FORBIDDEN;
+                httpRsc = HttpServletResponse.SC_FORBIDDEN;
+                break;
             case Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED:
-                return HttpServletResponse.SC_METHOD_NOT_ALLOWED;
+                httpRsc = HttpServletResponse.SC_METHOD_NOT_ALLOWED;
+                break;
             case Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE:
-                return HttpServletResponse.SC_BAD_REQUEST;
+                httpRsc = HttpServletResponse.SC_BAD_REQUEST;
+                break;
             case Onem2m.ResponseStatusCode.CONFLICT:
-                return HttpServletResponse.SC_CONFLICT;
-
+                httpRsc = HttpServletResponse.SC_CONFLICT;
+                break;
             case Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR:
-                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                httpRsc = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                break;
             case Onem2m.ResponseStatusCode.NOT_IMPLEMENTED:
-                return HttpServletResponse.SC_NOT_IMPLEMENTED;
+                httpRsc = HttpServletResponse.SC_NOT_IMPLEMENTED;
+                break;
             case Onem2m.ResponseStatusCode.TARGET_NOT_REACHABLE:
-                return HttpServletResponse.SC_NOT_FOUND;
+                httpRsc = HttpServletResponse.SC_NOT_FOUND;
+                break;
             case Onem2m.ResponseStatusCode.ALREADY_EXISTS:
-                return HttpServletResponse.SC_FORBIDDEN;
+                httpRsc = HttpServletResponse.SC_FORBIDDEN;
+                break;
             case Onem2m.ResponseStatusCode.TARGET_NOT_SUBSCRIBABLE:
-                return HttpServletResponse.SC_FORBIDDEN;
+                httpRsc = HttpServletResponse.SC_FORBIDDEN;
+                break;
             case Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED:
-                return HttpServletResponse.SC_NOT_IMPLEMENTED;
-
+                httpRsc = HttpServletResponse.SC_NOT_IMPLEMENTED;
+                break;
             case Onem2m.ResponseStatusCode.INVALID_ARGUMENTS:
-                return HttpServletResponse.SC_BAD_REQUEST;
+                httpRsc = HttpServletResponse.SC_BAD_REQUEST;
+                break;
             case Onem2m.ResponseStatusCode.INSUFFICIENT_ARGUMENTS:
-                return HttpServletResponse.SC_BAD_REQUEST;
+                httpRsc = HttpServletResponse.SC_BAD_REQUEST;
+                break;
+            case Onem2m.ResponseStatusCode.NOT_ACCEPTABLE:
+                httpRsc = HttpServletResponse.SC_NOT_ACCEPTABLE;
+                break;
         }
-        return HttpServletResponse.SC_BAD_REQUEST;
+
+        httpResponse.setStatus(httpRsc);
     }
 
     /**
      * Sets response parameters describing error.
      * @param httpResponse The original HTTP response
      * @param message Error message string
-     * @param statusCode Response status code
+     * @param onem2mRsc Response status code
      */
     public static void prepareErrorResponse(HttpServletResponse httpResponse,
-                                            String message, int statusCode) {
-        httpResponse.setStatus(statusCode);
+                                            String message, String onem2mRsc) {
+
+        setOnem2mHttpStatusCode(httpResponse, onem2mRsc);
         try {
-            httpResponse.getWriter().println(message);
+            httpResponse.getWriter().println(JsonUtils.put(new JSONObject(), "error", message).toString());
             httpResponse.setContentType("text/json;charset=utf-8");
         } catch (IOException e) {
             LOG.error("Failed to write error message: {}", message);
@@ -150,10 +179,8 @@ public class IotdmPluginHttpResponse implements IotdmPluginResponse {
             httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, rqi);
         }
 
-        int httpRSC = mapCoreResponseToHttpResponse(httpResponse, rscString);
+        setOnem2mHttpStatusCode(httpResponse, rscString);
         if (content != null) {
-            httpResponse.setStatus(httpRSC);
-
             String ct = onem2mResponse.getPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE);
             if (ct != null) {
                 httpResponse.setContentType(ct);
@@ -163,12 +190,11 @@ public class IotdmPluginHttpResponse implements IotdmPluginResponse {
                 httpResponse.getWriter().println(content);
             } catch (IOException e) {
                 prepareErrorResponse(httpResponse,
-                                     "Failed to write response content", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                                     "Failed to write response content", Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR);
                 return false;
             }
-        } else {
-            httpResponse.setStatus(httpRSC);
         }
+
         String cl = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT_LOCATION);
         if (cl != null) {
             httpResponse.setHeader("Content-Location", Onem2m.translateUriFromOnem2m(cl));

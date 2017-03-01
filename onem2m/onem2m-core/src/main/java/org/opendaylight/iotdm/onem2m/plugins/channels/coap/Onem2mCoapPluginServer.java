@@ -164,8 +164,8 @@ abstract class Onem2mCoapBaseChannel<Tconfig> extends Onem2mBaseCommunicationCha
                         case Onem2m.CoapContentFormat.APP_VND_RES_XML:
                             break;
                         default:
-                            response.prepareErrorResponse(CoAP.ResponseCode.NOT_ACCEPTABLE, "Unknown media type: " +
-                                    options.getContentFormat());
+                            response.prepareErrorResponse(Onem2m.ResponseStatusCode.NOT_ACCEPTABLE,
+                                                          "Unknown media type: " + options.getContentFormat());
                             coapExchange.respond(response.buildCoapResponse());
                             return;
                     }

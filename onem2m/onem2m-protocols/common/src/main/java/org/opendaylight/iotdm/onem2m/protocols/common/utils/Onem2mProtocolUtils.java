@@ -30,34 +30,64 @@ public class Onem2mProtocolUtils {
      * @param clientBuilder - request primitive builder
      * @return request operation
      */
-    public static String processRequestPrimitiveFromJson(String jsonMessage,
-                                                         Onem2mRequestPrimitiveClientBuilder clientBuilder) {
-        String operation = null;
-
+    public static boolean processRequestPrimitiveFromJson(String jsonMessage,
+                                                          Onem2mRequestPrimitiveClientBuilder clientBuilder) {
         Optional<JSONObject> jsonContent = JsonUtils.stringToJsonObject(jsonMessage);
 
-        if(jsonContent.isPresent()) {
-            Iterator<?> keys = jsonContent.get().keys();
-            while (keys.hasNext()) {
-                String key = (String) keys.next();
-                Object o = jsonContent.get().opt(key);
-                if (o != null) {
-                    clientBuilder.setPrimitiveNameValue(key, o.toString());
-                    if (key.contentEquals(RequestPrimitive.OPERATION)) {
-                        operation = o.toString();
-                    }
-                }
-            }
+        if(! jsonContent.isPresent()) {
+            LOG.error("Given string is not acceptable as json");
+            return false;
+        }
 
-            clientBuilder.setContentFormat(Onem2m.ContentFormat.JSON);
-            if (Objects.isNull(operation))
-                LOG.warn("Operation not specified");
-            return operation;
+        Iterator<?> keys = jsonContent.get().keys();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
+            Object o = jsonContent.get().opt(key);
+            if (o != null) {
+                clientBuilder.setPrimitiveNameValue(key, o.toString());
+            }
         }
-        else {
-            LOG.warn("Given string is not acceptable as json");
-            return null;
-        }
+
+        clientBuilder.setContentFormat(Onem2m.ContentFormat.JSON);
+        return true;
     }
 
+    public static String verifyRequestPrimitive(Onem2mRequestPrimitiveClientBuilder clientBuilder) {
+        String operation = clientBuilder.getPrimitiveValue(RequestPrimitive.OPERATION);
+        if (null == operation) {
+            return "Operation not specified.";
+        }
+
+        String originator = clientBuilder.getPrimitiveValue(RequestPrimitive.FROM);
+        if (null == originator || originator.isEmpty()) {
+            return "Originator ID not specified.";
+        }
+
+        String requestId = clientBuilder.getPrimitiveValue(RequestPrimitive.REQUEST_IDENTIFIER);
+        if (null == requestId || requestId.isEmpty()) {
+            return "Request ID not specified.";
+        }
+
+        String resourceType = clientBuilder.getPrimitiveValue(RequestPrimitive.RESOURCE_TYPE);
+        switch(operation) {
+            case Onem2m.Operation.CREATE:
+                if (null == resourceType || resourceType.isEmpty()) {
+                    return "Resource type is missing.";
+                }
+                break;
+
+            case Onem2m.Operation.RETRIEVE:
+            case Onem2m.Operation.UPDATE:
+            case Onem2m.Operation.DELETE:
+            case Onem2m.Operation.NOTIFY:
+                if (null != resourceType) {
+                    return "Resource type parameter not supported for operation: " + operation;
+                }
+                break;
+            default:
+                return "Invalid operation: " + operation;
+        }
+
+        return null;
+    }
 }
