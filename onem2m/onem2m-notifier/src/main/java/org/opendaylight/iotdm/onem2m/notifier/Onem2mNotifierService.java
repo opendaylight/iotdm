@@ -28,7 +28,6 @@ public class Onem2mNotifierService implements Onem2mListener, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mNotifierService.class);
     private static Onem2mNotifierService notifierService;
     Map<String, Onem2mNotifierPlugin> onem2mNotifierPluginMap = new HashMap<>();
-    private static final String DEFAULT_PLUGIN_NAME = "http";
     private final ExecutorService executor;
 
     private Onem2mNotifierService() {
@@ -54,8 +53,32 @@ public class Onem2mNotifierService implements Onem2mListener, AutoCloseable {
         onem2mNotifierPluginMap.put(plugin.getNotifierPluginName().toLowerCase(), plugin);
     }
 
-    private void executorOnResourceChanged(ResourceChanged notification) {
+    private void processNotification(final String uri, final String payload, final String senderId) {
+        String pluginName = null;
+        URI link = null;
+        try {
+            link = new URI(uri);
+        } catch (URISyntaxException e) {
+            LOG.error("Dropping notification: bad URI: {}", uri);
+            return;
+        }
 
+        if (null == link.getScheme()) {
+            LOG.error("Dropping notification: protocol not specified by URL: {}", uri);
+            return;
+        }
+
+        pluginName = link.getScheme().toLowerCase();
+
+        if (onem2mNotifierPluginMap.containsKey(pluginName)) {
+            Onem2mNotifierPlugin onem2mNotifierPlugin = onem2mNotifierPluginMap.get(pluginName);
+            onem2mNotifierPlugin.sendNotification(uri, payload, senderId);
+        } else {
+            LOG.error("Unable to send notification, no such plugin: {}, URL: {}", pluginName, uri);
+        }
+    }
+
+    private void executorOnResourceChanged(ResourceChanged notification) {
         NotificationPrimitive onem2mNotification = new NotificationPrimitive();
 
         onem2mNotification.setPrimitivesList(notification.getOnem2mPrimitive());
@@ -65,23 +88,8 @@ public class Onem2mNotifierService implements Onem2mListener, AutoCloseable {
 
         List<String> uriList = onem2mNotification.getPrimitiveMany(NotificationPrimitive.URI);
         for (String uri : uriList) {
-
             LOG.info("ResourceChanged: uri: {}", uri);
-            String pluginName = null;
-            try {
-                URI link = new URI(uri);
-                pluginName = link.getScheme() == null ? DEFAULT_PLUGIN_NAME : link.getScheme().toLowerCase();
-            } catch (URISyntaxException e) {
-                LOG.error("Dropping notification: bad URI: {}", uri);
-                return;
-            }
-
-            if (onem2mNotifierPluginMap.containsKey(pluginName)) {
-                Onem2mNotifierPlugin onem2mNotifierPlugin = onem2mNotifierPluginMap.get(pluginName);
-                onem2mNotifierPlugin.sendNotification(uri, payload, notification.getSenderCseId());
-            } else {
-                LOG.warn("Unable to send notification, no such plugin: {}", pluginName);
-            }
+            this.processNotification(uri, payload, notification.getSenderCseId());
         }
     }
 
@@ -102,27 +110,12 @@ public class Onem2mNotifierService implements Onem2mListener, AutoCloseable {
         onem2mNotification.setPrimitivesList(notification.getOnem2mPrimitive());
 
         String payload = onem2mNotification.getPrimitive(NotificationPrimitive.CONTENT);
-        LOG.info("ResourceChanged: content: {}", payload);
+        LOG.info("SubscriptionDeleted: content: {}", payload);
 
         List<String> uriList = onem2mNotification.getPrimitiveMany(NotificationPrimitive.URI);
         for (String uri : uriList) {
-
-            LOG.info("ResourceChanged: uri: {}", uri);
-            String pluginName = null;
-            try {
-                URI link = new URI(uri);
-                pluginName = link.getScheme() == null ? DEFAULT_PLUGIN_NAME : link.getScheme().toLowerCase();
-            } catch (URISyntaxException e) {
-                LOG.error("Dropping notification: bad URI: {}", uri);
-                return;
-            }
-
-            if (onem2mNotifierPluginMap.containsKey(pluginName)) {
-                Onem2mNotifierPlugin onem2mNotifierPlugin = onem2mNotifierPluginMap.get(pluginName);
-                onem2mNotifierPlugin.sendNotification(uri, payload, notification.getSenderCseId());
-            } else {
-                LOG.warn("Unable to send notification, no such plugin: {}", pluginName);
-            }
+            LOG.info("SubscriptionDeleted: uri: {}", uri);
+            this.processNotification(uri, payload, notification.getSenderCseId());
         }
     }
 

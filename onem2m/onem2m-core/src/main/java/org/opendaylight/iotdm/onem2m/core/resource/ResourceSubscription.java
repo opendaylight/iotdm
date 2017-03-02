@@ -209,9 +209,29 @@ public class ResourceSubscription {
                                 return;
                             }
                             String uri = (String) array.opt(i);
+
                             if (!validateUri(uri)) {
+                                LOG.error("Not valid URI: {}", uri);
                                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                                        "NOTIFICATION_URI(s) not valid URI: " + uri);
+                                                      "NOTIFICATION_URI(s) not valid URI: " + uri);
+                                return;
+                            }
+
+                            // Check as URL because schema must be specified in order to identify
+                            // protocol
+                            try {
+                                URI link = new URI(uri);
+                                String scheme = link.getScheme();
+                                if (null == scheme || scheme.isEmpty()) {
+                                    LOG.error("URL without scheme specified: {}", uri);
+                                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                                          "NOTIFICATION_URI(s) protocol not specified: " + uri);
+                                    return;
+                                }
+                            } catch (URISyntaxException e) {
+                                LOG.error("URI Syntax exception catched, URL: {}, {}", uri, e);
+                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                                      "NOTIFICATION_URI(s) invalid syntax: " + uri);
                                 return;
                             }
                         }
