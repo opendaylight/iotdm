@@ -20,6 +20,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>onem2m-core</artifactId>
     <version>0.3.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+    <!-- <name> formatting is used by autorelease to parse and notify projects on
+         build failure. Please do not modify this unless you have a good reason. -->
+    <name>ODL :: iotdm :: ${project.artifactId}</name>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
