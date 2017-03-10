@@ -11,7 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
@@ -135,6 +135,7 @@ public class PerfCrudRpc {
     }
 
     private void runCreateTests(Integer q) {
+        Thread.currentThread().setName("om2m-bm-crt-" + q);
         ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
         for (Integer resourceId : resourceIdArray) {
             if (createOneTest(resourceId)) {
@@ -145,6 +146,7 @@ public class PerfCrudRpc {
     }
 
     private void runRetrieveTests(Integer q) {
+        Thread.currentThread().setName("om2m-bm-rtv-" + q);
         ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
         for (Integer resourceId : resourceIdArray) {
             if (retrieveOneTest(resourceId)) {
@@ -155,6 +157,7 @@ public class PerfCrudRpc {
     }
 
     private void runDeleteTests(Integer q) {
+        Thread.currentThread().setName("om2m-bm-del-" + q);
         ArrayList<Integer> resourceIdArray = resourceIdQueues.get(q);
         for (Integer resourceId : resourceIdArray) {
             if (deleteOneTest(resourceId)) {

@@ -11,7 +11,7 @@ package org.opendaylight.iotdm.onem2m.client;
 import java.util.Iterator;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,39 +29,39 @@ public class ResourceContentBuilder {
     }
 
     public ResourceContentBuilder setResourceType(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.RESOURCE_TYPE, value);
+        JsonUtils.put(jsonContent, BaseResource.RESOURCE_TYPE, value);
         return this;
     }
     public ResourceContentBuilder setResourceId(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.RESOURCE_ID, value);
+        JsonUtils.put(jsonContent, BaseResource.RESOURCE_ID, value);
         return this;
     }
     public ResourceContentBuilder setResourceName(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.RESOURCE_NAME, value);
+        JsonUtils.put(jsonContent, BaseResource.RESOURCE_NAME, value);
         return this;
     }
     public ResourceContentBuilder setParentId(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.PARENT_ID, value);
+        JsonUtils.put(jsonContent, BaseResource.PARENT_ID, value);
         return this;
     }
     public ResourceContentBuilder setCreationTime(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.CREATION_TIME, value);
+        JsonUtils.put(jsonContent, BaseResource.CREATION_TIME, value);
         return this;
     }
     public ResourceContentBuilder setExpirationTime(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.EXPIRATION_TIME, value);
+        JsonUtils.put(jsonContent, BaseResource.EXPIRATION_TIME, value);
         return this;
     }
     public ResourceContentBuilder setLastModifiedTime(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.LAST_MODIFIED_TIME, value);
+        JsonUtils.put(jsonContent, BaseResource.LAST_MODIFIED_TIME, value);
         return this;
     }
     public ResourceContentBuilder setLabels(String[] value) {
-        JsonUtils.put(jsonContent, ResourceContent.LABELS, value);
+        JsonUtils.put(jsonContent, BaseResource.LABELS, value);
         return this;
     }
     public ResourceContentBuilder setStateTag(String value) {
-        JsonUtils.put(jsonContent, ResourceContent.STATE_TAG, value);
+        JsonUtils.put(jsonContent, BaseResource.STATE_TAG, value);
         return this;
     }
     public ResourceContentBuilder setPrimitiveContent(String value) {

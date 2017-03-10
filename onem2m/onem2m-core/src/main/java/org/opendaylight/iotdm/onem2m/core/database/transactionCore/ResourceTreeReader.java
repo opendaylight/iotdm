@@ -19,10 +19,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResourceKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
         .onem2m.parent.child.list.Onem2mParentChild;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
-        .onem2m.parent.child.list.Onem2mParentChildKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatestKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,16 +35,16 @@ public class ResourceTreeReader {
 
     private ReadOnlyCache cache;
     private DaoResourceTreeReader daoResourceTreeReader;
-    private TTLGarbageCollector ttlGarbageCollector;
+    private BGDeleteProcessor BGDeleteProcessor;
 
-    public ResourceTreeReader(Cache cache, DaoResourceTreeReader daoResourceTreeReader, TTLGarbageCollector ttlGarbageCollector) {
+    public ResourceTreeReader(Cache cache, DaoResourceTreeReader daoResourceTreeReader, BGDeleteProcessor BGDeleteProcessor) {
         this.cache = cache;
         this.daoResourceTreeReader = daoResourceTreeReader;
-        this.ttlGarbageCollector = ttlGarbageCollector;
+        this.BGDeleteProcessor = BGDeleteProcessor;
     }
 
-    public TTLGarbageCollector getTTLGC() {
-        return ttlGarbageCollector;
+    public BGDeleteProcessor getBgDp() {
+        return BGDeleteProcessor;
     }
 
     /**
@@ -81,8 +77,7 @@ public class ResourceTreeReader {
         return null;
     }
 
-
-    public List<String> getCseBaseNamesList() {
+    public List<String> getCseList() {
         List<String> cseStringList = null;
         Onem2mCseList cseList = daoResourceTreeReader.retrieveFullCseList();
         if (cseList != null) {
@@ -107,7 +102,7 @@ public class ResourceTreeReader {
      * @param cseBaseCseId CSE-ID of the cseBase
      * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
      */
-    public String isEntityRegistered(String entityId, String cseBaseCseId) {
+    public Integer isEntityRegistered(String entityId, String cseBaseCseId) {
         // TODO Temporary caching solution for CSE-IDs
         if (null != cseBaseCseId) {
             if (Onem2mRouterService.getInstance().hasRemoteCse(cseBaseCseId, entityId)) {
@@ -123,18 +118,6 @@ public class ResourceTreeReader {
 
         // TODO implement cache
         return daoResourceTreeReader.isEntityRegistered(entityId, cseBaseCseId);
-    }
-
-    /**
-     * Retrieve the OldestLatest structure using its resource type
-     *
-     * @param resourceId   this id
-     * @param resourceType name of child
-     * @return the child
-     */
-    public OldestLatest retrieveOldestLatestByResourceType(String resourceId, String resourceType) {
-        return cache.retrieveOldestLatestByResourceType(new Onem2mResourceKey(resourceId),
-                new OldestLatestKey(resourceType));
     }
 
     /**
@@ -155,6 +138,10 @@ public class ResourceTreeReader {
      */
     public List<Onem2mParentChild> retrieveParentChildList(String resourceId) {
         return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+    }
+
+    public List<Onem2mParentChild> retrieveParentChildListLimitN(String resourceId, int limit) {
+        return daoResourceTreeReader.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
     }
 
     /**
@@ -216,19 +203,12 @@ public class ResourceTreeReader {
     public void dumpResourceToLog(Onem2mResource onem2mResource, boolean dumpChildList) {
         LOG.info("    Resource: id: {}, name: {}, parentId: {}",
                 onem2mResource.getResourceId(), onem2mResource.getName(), onem2mResource.getParentId());
-        List<OldestLatest> oldestLatestList = onem2mResource.getOldestLatest();
-        LOG.info("    OldestLatest List: count: {}", oldestLatestList.size());
-        for (OldestLatest oldestLatest : oldestLatestList) {
-            LOG.info("        oldestLatest: resource type: {}, oldest: {}, latest: {}",
-                    oldestLatest.getResourceType(), oldestLatest.getOldestId(), oldestLatest.getLatestId());
-        }
         List<Onem2mParentChild> childList = retrieveParentChildList(onem2mResource.getResourceId());
         LOG.info("    Child List: count: {}", childList.size());
         if (dumpChildList) {
             for (Onem2mParentChild child : childList) {
-                LOG.info("        Child: name: {}, id: {}, prev: {}, next: {}",
-                        child.getName(), child.getResourceId(),
-                        child.getPrevId(), child.getNextId());
+                LOG.info("        Child: name: {}, id: {}",
+                        child.getName(), child.getResourceId());
             }
         }
         LOG.info("    Resource Content: {}", onem2mResource.getResourceContentJsonString());

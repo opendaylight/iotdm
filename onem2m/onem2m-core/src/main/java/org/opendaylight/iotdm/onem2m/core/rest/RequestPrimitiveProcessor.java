@@ -8,9 +8,9 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
-import com.google.common.util.concurrent.Monitor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -28,8 +28,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-
 /**
  * This the service side handler for the RequestPrimitives.  When the RPC is called, this class is used to
  * processes the primitives in the request.
@@ -40,29 +38,333 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
     public RequestPrimitiveProcessor() {
         super();
-        resourceContent = new ResourceContent();
     }
 
-    /**
-     *
-     * @param onem2mResponse
-     * @return
-     */
-    private boolean validatePrimitiveAttributes(ResponsePrimitive onem2mResponse)  {
-        for (Onem2mPrimitive onem2mResource : this.onem2mPrimitivesList) {
-            if (!RequestPrimitive.primitiveAttributes.contains(onem2mResource.getName())) {
-                String shortName = RequestPrimitive.longToShortAttributes.get(onem2mResource.getName());
-                if (shortName != null) {
-                    // replace the primitive with the short name
-                    // for now fall thru and error
-                }
+    public void processPrimitivesList(List<Onem2mPrimitive> onem2mPrimitivesList, ResponsePrimitive onem2mResponse) {
 
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "REQUEST_PRIMITIVES(" + onem2mResource.getName() + ") not valid/supported");
-                return false;
+        /**
+         * Loop thru each input parameter, do some basic validation and put into a class variable so code can direct
+         * access them.
+         */
+        Integer i;
+
+        for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
+
+            String v = onem2mPrimitive.getValue();
+
+            switch (onem2mPrimitive.getName()) {
+
+                case OPERATION:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveOperation = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Invalid operation: " + v);
+                        return;
+                    }
+                    break;
+
+                case TO:
+                    if (validateUri(v)) {
+                        primitiveTo = v;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "targetURI (to) not valid URI: " + v);
+                        return;
+                    }
+                    break;
+
+                case FROM:
+                    if (validateUri(v)) {
+                        primitiveFrom = v;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Origin/From not valid URI: " + v);
+                        return;
+                    }
+                    break;
+
+                case REQUEST_IDENTIFIER:
+                    primitiveRequestIdentifier = v;
+                    break;
+
+                case CONTENT_FORMAT:
+                    primitiveContentFormat = v;
+                    if (!v.equals(Onem2m.ContentFormat.JSON)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Unsupported content format: " + v);
+                        return;
+                    }
+                    break;
+
+                case RESOURCE_TYPE:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveResourceType = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Invalid resource: " + v);
+                        return;
+                    }
+                    break;
+
+                case NAME:
+                    primitiveName = v;
+                    break;
+
+                case CONTENT:
+                    primitiveContent = v;
+                    break;
+
+                case RESPONSE_TYPE:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveResponseType = i;
+                        // this is an optional parameter but we will reject unsupported values
+                        // only support blocking requests at this time, if not provided we default to blocking anyway
+                        if (i != Onem2m.ResponseType.BLOCKING_REQUEST) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED,
+                                    "Invalid response type: " + v);
+                            return;
+                        }
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Invalid response type: " + v);
+                        return;
+                    }
+                    break;
+
+                case RESULT_CONTENT:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveResultContent = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "Invalid result content: " + v);
+                        return;
+                    }
+                    break;
+
+                case EVENT_CATEGORY:
+                    break;
+
+                case DELIVERY_AGGREGATION:
+                    break;
+
+                case FILTER_CRITERIA_CREATED_BEFORE:
+                    primitiveFilterCriteriaCreatedBefore = v;
+                    if (!Onem2mDateTime.isValidDateTime(v)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_CREATED_BEFORE(" + RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_CREATED_AFTER:
+                    primitiveFilterCriteriaCreatedAfter = v;
+                    if (!Onem2mDateTime.isValidDateTime(v)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_CREATED_AFTER(" + RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_MODIFIED_SINCE:
+                    primitiveFilterCriteriaModifiedSince = v;
+                    if (!Onem2mDateTime.isValidDateTime(v)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_MODIFIED_SINCE(" + RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_UNMODIFIED_SINCE:
+                    primitiveFilterCriteriaUnModifiedSince = v;
+                    if (!Onem2mDateTime.isValidDateTime(v)) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_UNMODIFIED_SINCE(" + RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_STATE_TAG_SMALLER:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaStateTagSmaller = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_STATE_TAG_SMALLER(" + RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_STATE_TAG_BIGGER:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaStateTagBigger = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_STATE_TAG_BIGGER(" + RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_SIZE_ABOVE:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaSizeAbove = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_SIZE_ABOVE(" + RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_SIZE_BELOW:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaSizeBelow = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_SIZE_BELOW(" + RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_LABELS:
+                    List<String> labels = getPrimitiveFilterCriteriaLabels();
+                    if (labels == null) {
+                        primitiveFilterCriteriaLabels = new ArrayList<>();
+                    }
+                    primitiveFilterCriteriaLabels.add(v);
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_RESOURCE_TYPE:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        List<Integer> resourceTypes = getPrimitiveFilterCriteriaResourceTypes();
+                        if (resourceTypes == null) {
+                            primitiveFilterCriteriaResourceTypes = new ArrayList<>();
+                        }
+                        primitiveFilterCriteriaResourceTypes.add(i);
+                        found_filter_criteria = true;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_RESOURCE_TYPE(" + RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    break;
+
+                case FILTER_CRITERIA_OFFSET:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaOffset = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_OFFSET(" + RequestPrimitive.FILTER_CRITERIA_OFFSET +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_LIMIT:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaLimit = i;
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_LIMIT(" + RequestPrimitive.FILTER_CRITERIA_LIMIT +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    found_filter_criteria = true;
+                    break;
+
+                case FILTER_CRITERIA_FILTER_USAGE:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveFilterCriteriaFilterUsage = i;
+                        if (i != Onem2m.FilterUsageType.DISCOVERY && i != Onem2m.FilterUsageType.CONDITIONAL_RETRIEVAL) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                    "FILTER_CRITERIA_FILTER_USAGE(" + RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE +
+                                            ") not valid value: " + v);
+                            return;
+                        }
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA_FILTER_USAGE(" + RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    if (primitiveFilterCriteriaFilterUsage == Onem2m.FilterUsageType.DISCOVERY) {
+                        setFUDiscovery(true);
+                    }
+                    break;
+
+                case DISCOVERY_RESULT_TYPE:
+                    i = convertToUInt(v);
+                    if (i != -1) {
+                        primitiveDiscoveryResultType = i;
+                        if (!(i == Onem2m.DiscoveryResultType.NON_HIERARCHICAL ||
+                                i == Onem2m.DiscoveryResultType.HIERARCHICAL)) {
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                    "DISCOVERY_RESULT_TYPE(" + RequestPrimitive.DISCOVERY_RESULT_TYPE +
+                                            ") invalid option: " + v);
+                            return;
+                        }
+                    } else {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "DISCOVERY_RESULT_TYPE(" + RequestPrimitive.DISCOVERY_RESULT_TYPE +
+                                        ") not valid format: " + v);
+                        return;
+                    }
+                    break;
+
+                case PROTOCOL:
+                    primitiveProtocol = v;
+                    switch (v) {
+                        case Onem2m.Protocol.COAP:
+                        case Onem2m.Protocol.HTTP:
+                        case Onem2m.Protocol.MQTT:
+                        case Onem2m.Protocol.NATIVEAPP:
+                            break;
+                        default:
+                            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED,
+                                    "Invalid protocol: " + v);
+                            return;
+                    }
+                    break;
+
+                case NATIVEAPP_NAME:
+                    this.primitiveNativeAppName = v;
+                    break;
+
+                case ROLE:
+                    break;
+
+                case "CSE_ID":
+                case "CSE_TYPE":
+                    break;
+
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                            "REQUEST_PRIMITIVE(" + onem2mPrimitive.getName() + ") not valid/supported: value: " + v);
+                    return;
             }
         }
-        return true;
     }
 
     /**
@@ -98,156 +400,15 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         return true;
     }
 
-    private boolean validateUInt(String intString)  {
+    private Integer convertToUInt(String intString)  {
+        Integer foo;
         try {
-            Integer foo = Integer.parseInt(intString);
-            if (foo < 0) return false;
+            foo = Integer.parseInt(intString);
+            if (foo < 0) return -1;
         } catch (NumberFormatException e) {
-            return false;
+            return -1;
         }
-        return true;
-    }
-
-    private boolean validateFilterCriteria(ResponsePrimitive onem2mResponse)  {
-
-        boolean found_filter_criteria = false;
-
-        String crb = getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE);
-        if (crb != null) {
-            if (!Onem2mDateTime.isValidDateTime(crb)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_CREATED_BEFORE(" + RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE +
-                                ") not valid format: " + crb);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String cra = getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER);
-        if (cra != null) {
-            if (!Onem2mDateTime.isValidDateTime(cra)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_CREATED_AFTER(" + RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER +
-                                ") not valid format: " + cra);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String ms = getPrimitive(RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE);
-        if (ms != null) {
-            if (!Onem2mDateTime.isValidDateTime(ms)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_MODIFIED_SINCE(" + RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE +
-                                ") not valid format: " + ms);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String ums = getPrimitive(RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE);
-        if (ums != null) {
-            if (!Onem2mDateTime.isValidDateTime(ums)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_UNMODIFIED_SINCE(" + RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE +
-                                ") not valid format: " + ums);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String sts = getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER);
-        if (sts != null) {
-            if (!validateUInt(sts)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_STATE_TAG_SMALLER(" + RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER +
-                                ") not valid format: " + sts);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String stb = getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER);
-        if (stb != null) {
-            if (!validateUInt(stb)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_STATE_TAG_BIGGER(" + RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER +
-                                ") not valid format: " + stb);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String sza = getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE);
-        if (sza != null) {
-            if (!validateUInt(sza)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_SIZE_ABOVE(" + RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE +
-                                ") not valid format: " + sza);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String szb = getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW);
-        if (szb != null) {
-            if (!validateUInt(szb)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_SIZE_BELOW(" + RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW +
-                                ") not valid format: " + szb);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String lim = getPrimitive(RequestPrimitive.FILTER_CRITERIA_LIMIT);
-        if (lim != null) {
-            if (!validateUInt(lim)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_LIMIT(" + RequestPrimitive.FILTER_CRITERIA_LIMIT +
-                                ") not valid format: " + lim);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String off = getPrimitive(RequestPrimitive.FILTER_CRITERIA_OFFSET);
-        if (off != null) {
-            if (!validateUInt(off)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_OFFSET(" + RequestPrimitive.FILTER_CRITERIA_OFFSET +
-                                ") not valid format: " + off);
-                return true;
-            }
-            found_filter_criteria = true;
-        }
-
-        String fu = getPrimitive(RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE);
-        if (fu != null) {
-            if (!fu.contentEquals(Onem2m.FilterUsageType.DISCOVERY) &&
-                    !fu.contentEquals(Onem2m.FilterUsageType.CONDITIONAL_RETRIEVAL)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "FILTER_CRITERIA_FILTER_USAGE(" + RequestPrimitive.FILTER_CRITERIA_FILTER_USAGE +
-                                ") not valid value: " + fu);
-                return true;
-            }
-            found_filter_criteria = true;
-            if (fu.contentEquals(Onem2m.FilterUsageType.DISCOVERY)) {
-                setFUDiscovery(true);
-            }
-        }
-
-        List<String> tempList = getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
-        if (tempList != null && tempList.size() > 0) {
-            found_filter_criteria = true;
-        }
-
-        tempList = getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_LABELS);
-        if (tempList != null && tempList.size() > 0) {
-            found_filter_criteria = true;
-        }
-
-        return found_filter_criteria;
+        return foo;
     }
 
     /**
@@ -263,70 +424,42 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * As soon as an error has occurred at any level, the response.setRSC is called and we return.
      *
      * TODO: should I be using throw new Onem2mRequestError() so the code is more java-esque?
-     * @param twc database writer interface
-     * @param trc database reader interface
      * @param onem2mResponse response
      */
-    public void handleOperation(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void handleOperation(ResponsePrimitive onem2mResponse) {
 
         // if the request had a REQUEST_IDENTIFIER, return it in the response so client can correlate
         // this must be the first statement as the rqi must be in the error response
-        String rqi = getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER);
+        String rqi = getPrimitiveRequestIdentifier();
         if (rqi != null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
+            onem2mResponse.setPrimitiveRequestIdentifier(rqi);
         } else {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "REQUEST_IDENTIFIER(" + RequestPrimitive.REQUEST_IDENTIFIER + ") not specified");
-        }
-
-        // make sure the attributes exist
-        if (!validatePrimitiveAttributes(onem2mResponse)) {
             return;
         }
 
-        onem2mResponse.setUseM2MPrefix(Onem2m.USE_M2M_PREFIX);
-
         // Use table TS0004: 7.1.1.1-1 to validate mandatory parameters
 
-        // is there a protocol?  This is an internal option that CoAP, MQTT, HTTP, (RESTconf), and any internal
-        // app MUST set.  Why ... I do not know yet :-)
-        String protocol = this.getPrimitive(RequestPrimitive.PROTOCOL);
+        String protocol = getPrimitiveProtocol();
         if (protocol == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "PROTOCOL(" + RequestPrimitive.PROTOCOL + ") not specified");
             return;
         }
 
-        // is there an operation?
-        String operation = this.getPrimitive(RequestPrimitive.OPERATION);
-        if (operation == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "OPERATION(" + RequestPrimitive.OPERATION + ") not specified");
-            return;
-        }
-
-        // TODO: RFC 3986 ... reserved characters in a URI
-        String to = getPrimitive(RequestPrimitive.TO);
-        if (to == null) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "TO(" + RequestPrimitive.TO + ") not specified");
-            return;
-        } else if (!validateUri(to)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "TO(" + RequestPrimitive.TO + ") not value URI: " + to);
-            return;
-        }
-
         // ensure resource type is present only in CREATE requests
-        String resourceType = getPrimitive(RequestPrimitive.RESOURCE_TYPE);
-        if (resourceType == null) {
-            if (operation.contentEquals(Onem2m.Operation.CREATE)) {
+        Integer resourceType = getPrimitiveResourceType();
+        Integer operation = getPrimitiveOperation();
+
+        if (resourceType == -1) {
+            if (operation == Onem2m.Operation.CREATE) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not specified for CREATE");
                 return;
             }
-        } else { // a response type was specified, then only CREATE can have one
-            if (!operation.contentEquals(Onem2m.Operation.CREATE)) {
+        } else { // a resource type was specified, then only CREATE can have one
+            if (operation != Onem2m.Operation.CREATE) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "RESOURCE_TYPE(" + RequestPrimitive.RESOURCE_TYPE + ") not permitted for operation: " + operation);
                 return;
@@ -334,76 +467,53 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
             // resource type value will be verified later
         }
 
-        String from = getPrimitive(RequestPrimitive.FROM);
-        if (from == null && !resourceType.contentEquals(Onem2m.ResourceType.AE)) {
+        String from = getPrimitiveFrom();
+        if (from == null && resourceType != Onem2m.ResourceType.AE) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "FROM(" + RequestPrimitive.FROM + ") not specified");
             return;
-        } else if (from != null && !validateUri(from)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "FROM(" + RequestPrimitive.FROM + ") not valid URI: " + from);
-            return;
-        }
-
-
-        // this is an optional parameter but we will reject unsupported values
-        // only support blocking requests at this time, if not provided we default to blocking anyway
-        String rt = getPrimitive(RequestPrimitive.RESPONSE_TYPE);
-        if (rt != null && !rt.contentEquals(Onem2m.ResponseType.BLOCKING_REQUEST)) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NON_BLOCKING_REQUEST_NOT_SUPPORTED,
-                    "Invalid response type: " + rt);
-            return;
-        }
-
-        if (operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
-            setHasFilterCriteria(validateFilterCriteria(onem2mResponse));
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-                return;
-            }
         }
 
         // discovery_result_type only valid for RETRIEVE
-        String drt = getPrimitive(RequestPrimitive.DISCOVERY_RESULT_TYPE);
-        if (drt != null) {
-            if (!operation.contentEquals(Onem2m.Operation.RETRIEVE)) {
+        Integer drt = getPrimitiveDiscoveryResultType();
+        if (drt != -1) {
+            if (operation != Onem2m.Operation.RETRIEVE) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "DISCOVERY_RESULT_TYPE(" + RequestPrimitive.DISCOVERY_RESULT_TYPE +
                                 ") not permitted for operation: " + operation);
-                return;
-            } else if (!(drt.contentEquals(Onem2m.DiscoveryResultType.NON_HIERARCHICAL) ||
-                    drt.contentEquals(Onem2m.DiscoveryResultType.HIERARCHICAL))) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "DISCOVERY_RESULT_TYPE(" + RequestPrimitive.DISCOVERY_RESULT_TYPE +
-                                ") invalid option: " + drt);
                 return;
             }
         }
 
         switch (operation) {
             case Onem2m.Operation.CREATE:
+                setWriterTransaction(Onem2mDb.getInstance().startWriteTransaction());
                 try {
-                    if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
-                            protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
-                        handleOperationCreate(twc, trc, onem2mResponse);
+                    if (resourceType != Onem2m.ResourceType.CSE_BASE || protocol.equals(Onem2m.Protocol.NATIVEAPP)) {
+                        handleOperationCreate(onem2mResponse);
                     } else {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                                 "Cannot create a CSE Base, it must be provisioned separately!");
                     }
                 } finally {
+                    if (!Onem2mDb.getInstance().endWriteTransaction(getWriterTransaction())) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+                                "Database transaction failed!");
+                    }
                 }
                 break;
             case Onem2m.Operation.RETRIEVE:
-                handleOperationRetrieve(twc, trc, onem2mResponse);
+                handleOperationRetrieve(onem2mResponse);
                 break;
             case Onem2m.Operation.UPDATE:
                 try {
-                    handleOperationUpdate(twc, trc, onem2mResponse);
+                    handleOperationUpdate(onem2mResponse);
                 } finally {
                 }
                 break;
             case Onem2m.Operation.DELETE:
                 try {
-                    handleOperationDelete(twc, trc, onem2mResponse);
+                    handleOperationDelete(onem2mResponse);
                 } finally {
                 }
                 break;
@@ -412,7 +522,7 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_IMPLEMENTED,
                         "OPERATION(" + RequestPrimitive.OPERATION + ") NOTIFY not implemented");
                 LOG.warn("Received NOTIFY operation but handling is not implemented, from: {}.",
-                         this.getPrimitive(RequestPrimitive.FROM));
+                         getPrimitiveFrom());
                 break;
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
@@ -428,199 +538,201 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
      * @param onem2mResponse response
      */
-    public void handleOperationCreate(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void handleOperationCreate(ResponsePrimitive onem2mResponse) {
 
         // Use table TS0004: 7.1.1.1-1 to validate CREATE specific parameters that were not handled in the
         // handleOperation
 
         // ensure the create has content ...
-        String cf = getPrimitive(RequestPrimitive.CONTENT_FORMAT);
+        String cf = getPrimitiveContentFormat();
         if (cf == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "CONTENT_FORMAT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
             return;
-        } else if (!cf.contentEquals(Onem2m.ContentFormat.JSON) && !cf.contentEquals(Onem2m.ContentFormat.XML)) {
+        }
+
+        String cn = getPrimitiveContent();
+        if (cn == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                    "CONTENT_FORMAT(" + RequestPrimitive.CONTENT_FORMAT + ") not accepted (" + cf + ")");
+                        "CONTENT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
             return;
         }
 
-        String cn = getPrimitive(RequestPrimitive.CONTENT);
-        if (cn == null) {
-            if (cf.contentEquals(Onem2m.ContentFormat.JSON)) {
-                this.setPrimitive(RequestPrimitive.CONTENT, "{}");
-            } else {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "CONTENT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
-                return;
-            }
-        }
-
         // validate result content options for create
-        String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
-        if (rc != null) {
-            if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
-                    rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
-                    rc.contentEquals(Onem2m.ResultContent.HIERARCHICAL_ADDRESS) ||
-                    rc.contentEquals(Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES))) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
-                return;
+        Integer rc = getPrimitiveResultContent();
+        if (rc != -1) {
+            switch (rc) {
+                case Onem2m.ResultContent.ATTRIBUTES:
+                case Onem2m.ResultContent.NOTHING:
+                case Onem2m.ResultContent.HIERARCHICAL_ADDRESS:
+                case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
+                    break;
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
+                    return;
+
             }
         }
 
         // lookup the resource ... this will be the parent where the new resource will be created
-        String resourceType = getPrimitive(RequestPrimitive.RESOURCE_TYPE);
-        if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE)) {
-            String to = getPrimitive(RequestPrimitive.TO);
-            if (!Onem2mDb.getInstance().findResourceUsingURI(trc, to, this, onem2mResponse)) {
+        Integer resourceType = getPrimitiveResourceType();
+        this.setResourceType(resourceType);
+
+        if (resourceType != Onem2m.ResourceType.CSE_BASE) {
+
+            String to = getPrimitiveTo();
+
+            Onem2mResource onem2mParentResource = Onem2mDb.getInstance().findResourceUsingURI(to);
+            if (onem2mParentResource == null) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                         "Resource target URI not found: " + to);
                 return;
             }
 
-            // the Onem2mResource is now stored in the onem2mRequest ... as it has been read in from the data store
+            // cache some important information from the parent resource as it has been read from the database
+            this.setParentResourceId(onem2mParentResource.getResourceId());
+            this.setParentOnem2mResource(onem2mParentResource);
+            this.setParentJsonResourceContent(onem2mParentResource.getResourceContentJsonString());
+            this.setParentResourceType(onem2mParentResource.getResourceType());
 
-            // special case for AE resources ... where resource name is derived from FROM parameter
-            String resourceName = this.getPrimitive((RequestPrimitive.NAME));
-//            if (resourceName == null && resourceType.contentEquals(Onem2m.ResourceType.AE)) {
-//                String from = this.getPrimitive(RequestPrimitive.FROM);
-//                if (from != null) {
-//                    resourceName = from;
-//                }
-//            }
+            // set the new hierarchical parent for this new resource based on the parent
+            this.setParentTargetUri(onem2mParentResource.getParentTargetUri() + "/" + onem2mParentResource.getName());
+
+            String resourceName = this.getPrimitiveName();
 
             // if the a name is provided, ensure it is valid and unique at this hierarchical level
             if (resourceName != null) {
                 // using the parent, see if this new resource name already exists under this parent resource
-                if (Onem2mDb.getInstance().findResourceUsingIdAndName(trc,
-                                                                      this.getOnem2mResource().getResourceId(),
-                                                                      resourceName)) {
+                if (Onem2mDb.getInstance().findChildFromParentAndChildName(
+                        onem2mParentResource.getResourceId(), resourceName) != null) {
                     // TS0004: 7.2.3.2
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
-                            "Resource already exists: " + this.getPrimitive(RequestPrimitive.TO) + "/" + resourceName);
+                            "Resource already exists: " + getPrimitiveTo() + "/" + resourceName);
                     return;
                 }
                 this.setResourceName(resourceName);
             }
         } else {
-            String resourceName = this.getPrimitive((RequestPrimitive.NAME));
+            String resourceName = this.getPrimitiveName();
             if (resourceName == null) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE name not specified");
                 return;
             }
-            if (Onem2mDb.getInstance().findCseByName(trc, resourceName)) {
+            if (Onem2mDb.getInstance().findCseByName(resourceName)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT, "CSE name already exists: " + resourceName);
                 return;
             }
             this.setResourceName(resourceName);
         }
 
-        // process the resource specific attributes
-        ResourceContentProcessor.handleCreate(twc, trc, this, onem2mResponse, this.getTargetResourceLocator());
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-            return;
+        // prevent multiple writers to the parent, as state will be updated
+        RequestLocker.getInstance().LockResource(this.getParentResourceId());
+        try {
+            ResourceContentProcessor.handleCreate(this, onem2mResponse, this.getTargetResourceLocator());
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
+                return;
+            }
+        } finally {
+            RequestLocker.getInstance().UnlockResource(this.getParentResourceId());
         }
 
         // now format a response based on result content desired
-        ResultContentProcessor.handleCreate(twc, trc, this, onem2mResponse);
+        ResultContentProcessor.handleCreate(this, onem2mResponse);
 
         // now process common notifications type F
-        NotificationProcessor.handleCreate(twc, trc, this);
+        NotificationProcessor.getInstance().enqueueNotifierOperation(NotificationProcessor.Operation.CREATE, this);
 
         // TODO: see TS0004 6.8
         // if the create was successful, ie no error has already happened, set CREATED for status code here
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CREATED);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() == null) {
+            onem2mResponse.setPrimitiveResponseStatusCode(Onem2m.ResponseStatusCode.CREATED);
         }
     }
 
     /**
      * Handle the request primitive retrieve ...
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
-     * @param twc database writer interface
-     * @param trc database reader interface
      * @param onem2mResponse response
      */
-    public void handleOperationRetrieve(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void handleOperationRetrieve(ResponsePrimitive onem2mResponse) {
 
         // Use table TS0004: 7.1.1.1-1 to validate RETRIEVE specific parameters that were not handled in the calling routine
 
-        // if the content format is provided then it must be supported
-        String cf = getPrimitive(RequestPrimitive.CONTENT_FORMAT);
-        if (cf != null) {
-            if (!cf.contentEquals(Onem2m.ContentFormat.JSON) && !cf.contentEquals(Onem2m.ContentFormat.XML)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "CONTENT_FORMAT(" + RequestPrimitive.CONTENT_FORMAT + ") not accepted (" + cf + ")");
-                return;
-            }
-        }
-
         // validate result content options for retrieve
-        String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
-        if (rc != null) {
-            if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
-                    rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES) ||
-                    rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
-                    rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
-                return;
+        Integer rc = getPrimitiveResultContent();
+        if (rc != -1) {
+            switch (rc) {
+                case Onem2m.ResultContent.ATTRIBUTES:
+                case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES:
+                case Onem2m.ResultContent.CHILD_RESOURCE_REFS:
+                case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
+                    break;
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
+                    return;
+
             }
         }
 
         // return hierarchical address by default if not specified
-        String drt = getPrimitive(RequestPrimitive.DISCOVERY_RESULT_TYPE);
-        if (drt == null) {
-            setPrimitive(RequestPrimitive.DISCOVERY_RESULT_TYPE, Onem2m.DiscoveryResultType.HIERARCHICAL);
+        Integer drt = getPrimitiveDiscoveryResultType();
+        if (drt == -1) {
+            setPrimitiveDiscoveryResultType(Onem2m.DiscoveryResultType.HIERARCHICAL);
         }
 
         // find the resource using the TO URI ...
-        String to = this.getPrimitive(RequestPrimitive.TO);
-        if (!Onem2mDb.getInstance().findResourceUsingURI(trc, to, this, onem2mResponse)) {
+        String to = getPrimitiveTo();
+        Onem2mResource onem2mResource = Onem2mDb.getInstance().findResourceUsingURI(to);
+        if (onem2mResource == null) {
 
-            // check to see if an resource/attribute was specified
-            if (!Onem2mDb.getInstance().findResourceUsingURIAndAttribute(to, this, onem2mResponse)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
-                        "Resource target URI not found: " + to);
-                return;
-            }
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
+                    "Resource target URI not found: " + to);
             return;
         }
 
+        this.setResourceId(onem2mResource.getResourceId());
+        this.setOnem2mResource(onem2mResource);
+        this.setJsonResourceContent(onem2mResource.getResourceContentJsonString());
+        this.setResourceType(onem2mResource.getResourceType());
+
+        this.setParentTargetUri(onem2mResource.getParentTargetUri());
+        this.setResourceName(onem2mResource.getName());
+
         // check parent Container disableRetrieval attribute
-        String rt = this.getOnem2mResource().getResourceType();
-        if ( rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+        Integer rt = this.getResourceType();
+        if (rt == Onem2m.ResourceType.CONTENT_INSTANCE) {
             String parentID = this.getOnem2mResource().getParentId();
-            Onem2mResource parentResource = Onem2mDb.getInstance().getResource(trc, parentID);
+            Onem2mResource parentResource = Onem2mDb.getInstance().getResource(parentID);
             JSONObject parentJsonObject = new JSONObject(parentResource.getResourceContentJsonString());
             if (parentJsonObject.optBoolean(ResourceContainer.DISABLE_RETRIEVAL)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Parent Container's disableRetrieval is set to true, cannot delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
+                        "Parent Container's disableRetrieval is set to true, cannot delete this resource: " + getPrimitiveTo());
                 return;
             }
         }
 
 
-        CheckAccessControlProcessor.handleRetrieve(trc, this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        //CheckAccessControlProcessor.handleRetrieve(this, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
         // process the resource specific attributes, for stats only
         ResourceContentProcessor.handleRetrieve(this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
 
         // return the data according to result content and filter criteria
-        ResultContentProcessor.handleRetrieve(twc, trc, this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        ResultContentProcessor.handleRetrieve(this, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back OK
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.OK);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() == null) {
+            onem2mResponse.setPrimitiveResponseStatusCode(Onem2m.ResponseStatusCode.OK);
         }
     }
 
@@ -629,94 +741,109 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * TODO: Strategy for error handling ... TS0004 7.1.1.2
      * @param onem2mResponse response
      */
-    public void handleOperationDelete(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void handleOperationDelete(ResponsePrimitive onem2mResponse) {
 
         // Use table TS0004: 7.1.1.1-1 to validate DELETE specific parameters that were not handled in the calling routine
 
-        String cf = getPrimitive(RequestPrimitive.CONTENT);
+        String cf = getPrimitiveContent();
         if (cf != null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INVALID_ARGUMENTS,
                     "CONTENT(" + RequestPrimitive.CONTENT + ") not permitted");
             return;
         }
 
-        // validate result content options for delete
-        String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
-        if (rc != null) {
-            if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
-                    rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
-                    rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
-                    rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
-                return;
+        Integer rc = getPrimitiveResultContent();
+        if (rc != -1) {
+            switch (rc) {
+                case Onem2m.ResultContent.ATTRIBUTES:
+                case Onem2m.ResultContent.NOTHING:
+                case Onem2m.ResultContent.CHILD_RESOURCE_REFS:
+                case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
+                    break;
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
+                    return;
+
             }
         }
-
         /**
          * Find the resource, fill in the response based on result content
          */
-        String to = this.getPrimitive(RequestPrimitive.TO);
-        if (Onem2mDb.getInstance().findResourceUsingURI(trc, to, this, onem2mResponse) == false) {
+        String to = this.getPrimitiveTo();
+        Onem2mResource onem2mResource = Onem2mDb.getInstance().findResourceUsingURI(to);
+        if (onem2mResource == null) {
             // TODO: is it idempotent or not ... fail or succeed???
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                     "Resource target URI not found: " + to);
             return;
         }
 
-        String protocol = getPrimitive(RequestPrimitive.PROTOCOL);
-        String rt = this.getOnem2mResource().getResourceType();
-        if (rt != null && rt.contentEquals(Onem2m.ResourceType.CSE_BASE) &&
-                !protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
+        this.setResourceId(onem2mResource.getResourceId());
+        this.setOnem2mResource(onem2mResource);
+        this.setJsonResourceContent(onem2mResource.getResourceContentJsonString());
+        this.setResourceType(onem2mResource.getResourceType());
+
+        this.setParentTargetUri(onem2mResource.getParentTargetUri());
+        this.setResourceName(onem2mResource.getName());
+
+        String protocol = getPrimitiveProtocol();
+        Integer rt = this.getResourceType();
+        if (rt == Onem2m.ResourceType.CSE_BASE && !protocol.equals(Onem2m.Protocol.NATIVEAPP)) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                    "Not permitted to delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
+                    "Not permitted to delete this resource: " + this.getPrimitiveTo());
             return;
         }
 
-
         // check parent Container disableRetrieval attribute
-        if (rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+        if (rt == Onem2m.ResourceType.CONTENT_INSTANCE) {
             String parentID = this.getOnem2mResource().getParentId();
-            Onem2mResource parentResource = Onem2mDb.getInstance().getResource(trc, parentID);
+            Onem2mResource parentResource = Onem2mDb.getInstance().getResource(parentID);
             JSONObject parentJsonObject = new JSONObject(parentResource.getResourceContentJsonString());
             if (parentJsonObject.optBoolean(ResourceContainer.DISABLE_RETRIEVAL)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Parent Container's disableRetrieval is set to true, cannot delete this resource: " + this.getPrimitive(RequestPrimitive.TO));
+                        "Parent Container's disableRetrieval is set to true, cannot delete this resource: " + this.getPrimitiveTo());
                 return;
             }
         }
 
-        CheckAccessControlProcessor.handleDelete(trc, this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        //CheckAccessControlProcessor.handleDelete(this, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
 
-        // just used fot stats
+        // just used for stats
         ResourceContentProcessor.handleDelete(this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
 
-        ResultContentProcessor.handleDelete(twc, trc, this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        ResultContentProcessor.handleDelete(this, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
 
-        NotificationProcessor.handleDelete(twc, trc, this);
-        Onem2mRouterService.getInstance().updateRoutingTable(trc, this);
+        NotificationProcessor.getInstance().enqueueNotifierOperation(NotificationProcessor.Operation.DELETE, this);
+
+        Onem2mRouterService.getInstance().updateRoutingTable(this);
 
         // now delete the resource from the database
-        // TODO: idempotent so who cares if cannot find the resource ... is this true?
-        if (Onem2mDb.getInstance().deleteResourceUsingURI(twc, trc, this, onem2mResponse) == false) {
-            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
-                    "Resource target URI data store delete error: " + this.getPrimitive(RequestPrimitive.TO));
-            return;
+        RequestLocker.getInstance().LockResource(this.getResourceId());
+        try {
+            // TODO: idempotent so who cares if cannot find the resource ... is this true?
+            if (Onem2mDb.getInstance().pseudoDeleteOnem2mResource(onem2mResource) == false) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+                        "Resource target URI data store delete error: " + this.getPrimitiveTo());
+                return;
+            }
+        } finally {
+            RequestLocker.getInstance().UnlockResource(this.getResourceId());
         }
 
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back OK
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.DELETED);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() == null) {
+            onem2mResponse.setPrimitiveResponseStatusCode(Onem2m.ResponseStatusCode.DELETED);
         }
     }
 
@@ -724,70 +851,87 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
      * Handle update
      * @param onem2mResponse response
      */
-    public void handleOperationUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void handleOperationUpdate(ResponsePrimitive onem2mResponse) {
 
         // Use table TS0004: 7.1.1.1-1 to validate UPDATE specific parameters that were not handled in the calling routine
 
         // ensure the update has content ...
-        String cf = getPrimitive(RequestPrimitive.CONTENT_FORMAT);
+        String cf = getPrimitiveContentFormat();
         if (cf == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INSUFFICIENT_ARGUMENTS, "CONTENT_FORMAT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
             return;
-        } else if (!cf.contentEquals(Onem2m.ContentFormat.JSON) && !cf.contentEquals(Onem2m.ContentFormat.XML)) {
+        } else if (cf != Onem2m.ContentFormat.JSON && cf != Onem2m.ContentFormat.XML) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT_FORMAT(" + RequestPrimitive.CONTENT_FORMAT + ") not accepted (" + cf + ")");
             return;
         }
-        String cn = getPrimitive(RequestPrimitive.CONTENT);
+        String cn = getPrimitiveContent();
         if (cn == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INSUFFICIENT_ARGUMENTS, "CONTENT(" + RequestPrimitive.CONTENT_FORMAT + ") not specified");
             return;
         }
 
         // validate result content options for Update
-        String rc = getPrimitive(RequestPrimitive.RESULT_CONTENT);
-        if (rc != null) {
-            if (!(rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES) ||
-                    rc.contentEquals(Onem2m.ResultContent.NOTHING) ||
-                    rc.contentEquals(Onem2m.ResultContent.CHILD_RESOURCE_REFS) ||
-                    rc.contentEquals(Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS))) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
-                return;
+        Integer rc = getPrimitiveResultContent();
+        if (rc != -1) {
+            switch (rc) {
+                case Onem2m.ResultContent.ATTRIBUTES:
+                case Onem2m.ResultContent.NOTHING:
+                case Onem2m.ResultContent.CHILD_RESOURCE_REFS:
+                case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
+                    break;
+                default:
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
+                            "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") not accepted (" + rc + ")");
+                    return;
             }
         }
 
-        // now find the resource from the database
-        String to = this.getPrimitive(RequestPrimitive.TO);
-        if (Onem2mDb.getInstance().findResourceUsingURI(trc, to, this, onem2mResponse) == false) {
+        String to = this.getPrimitiveTo();
+        Onem2mResource onem2mResource = Onem2mDb.getInstance().findResourceUsingURI(to);
+        if (onem2mResource == null) {
+            // TODO: is it idempotent or not ... fail or succeed???
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                     "Resource target URI not found: " + to);
             return;
         }
 
+        this.setResourceId(onem2mResource.getResourceId());
+        this.setOnem2mResource(onem2mResource);
+        this.setJsonResourceContent(onem2mResource.getResourceContentJsonString());
+        this.setResourceType(onem2mResource.getResourceType());
+
+        this.setParentTargetUri(onem2mResource.getParentTargetUri());
+        this.setResourceName(onem2mResource.getName());
+
         // cannot update contentInstance resources so check resource type
-        String rt = this.getOnem2mResource().getResourceType();
-        if (rt != null && rt.contentEquals(Onem2m.ResourceType.CONTENT_INSTANCE)) {
+        Integer rt = this.getResourceType();
+        if (rt == Onem2m.ResourceType.CONTENT_INSTANCE) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                    "Not permitted to update content instance: " + this.getPrimitive(RequestPrimitive.TO));
+                    "Not permitted to update content instance: " + this.getPrimitiveTo());
             return;
         }
 
-        ResourceContentProcessor.handleUpdate(twc, trc, this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+        RequestLocker.getInstance().LockResource(resourceId);
+        try {
+            ResourceContentProcessor.handleUpdate(this, onem2mResponse);
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
+                return;
+            }
+        } finally {
+            RequestLocker.getInstance().UnlockResource(resourceId);
+        }
+
+        ResultContentProcessor.handleUpdate(this, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
             return;
         }
 
-        ResultContentProcessor.handleUpdate(twc, trc, this, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
-            return;
-        }
-
-        NotificationProcessor.handleUpdate(twc, trc, this);
+        NotificationProcessor.getInstance().enqueueNotifierOperation(NotificationProcessor.Operation.UPDATE, this);
 
         // TODO: see TS0004 6.8
         // if FOUND, and all went well, send back CHANGED
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
-            onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.CHANGED);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() == null) {
+            onem2mResponse.setPrimitiveResponseStatusCode(Onem2m.ResponseStatusCode.CHANGED);
         }
     }
 
@@ -802,11 +946,9 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
     /**
      * Internally create a cse base based on the restconf call which is designed to be called from a provisioning
      * server or management app.
-     * @param twc database writer interface
-     * @param trc database reader interface
      * @param onem2mResponse response
      */
-    public void provisionCse(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void provisionCse(ResponsePrimitive onem2mResponse) {
 
         try {
             String cseId = this.getPrimitive("CSE_ID");
@@ -821,11 +963,19 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "IN-CSE is the only one supported :-(");
                 return;
             }
-            // todo: POA of CSEBase does not work
-            List<String> poa = this.getPrimitiveMany("POINT_OF_ACCESS");
-
-            this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.CSE_BASE);
-            this.setPrimitive(RequestPrimitive.NAME, cseId);
+            String iotdmInstanceIdString = this.getPrimitive("CSE_INSTANCE_ID");
+            if (iotdmInstanceIdString != null) {
+                Integer iotdmInstanceId;
+                try {
+                    iotdmInstanceId = Integer.valueOf(iotdmInstanceIdString);
+                } catch (NumberFormatException e) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID not specified!");
+                    return;
+                }
+                Onem2mDb.getInstance().setIotdmInstanceId(iotdmInstanceId);
+            }
+            this.setPrimitiveResourceType(Onem2m.ResourceType.CSE_BASE);
+            this.setPrimitiveName(cseId);
             /* NOTE: The cseID is used as resourceName for the CSE_BASE. These attributes are used as part of
              * SP-relative and absolute structured URIs.
              * Processing of URIs expects that these attributes are equal so the change needs to be reflected also
@@ -833,59 +983,84 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
              */
             this.setResourceName(cseId);
 
-            if (Onem2mDb.getInstance().findCseByName(trc, cseId)) {
+            if (Onem2mDb.getInstance().findCseByName(cseId)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ALREADY_EXISTS, "CSE name already exists: " + cseId);
                 return;
             }
 
-            this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+            this.setPrimitiveContentFormat(Onem2m.ContentFormat.JSON);
+            this.setResourceType(Onem2m.ResourceType.CSE_BASE);
+
             JSONObject jCse = new JSONObject();
             JsonUtils.put(jCse, ResourceCse.CSE_ID, cseId);
             JsonUtils.put(jCse, ResourceCse.CSE_TYPE, cseType);
-            if (poa != null)
-                JsonUtils.put(jCse, ResourceCse.POINT_OF_ACCESS, poa);
             JSONObject j = new JSONObject();
-            JsonUtils.put(j, Onem2m.ResourceTypeString.CSE_BASE, jCse);
-            this.setPrimitive(RequestPrimitive.CONTENT, j.toString());
+            JsonUtils.put(j, "m2m:" + Onem2m.ResourceTypeString.CSE_BASE, jCse);
+            this.setPrimitiveContent(j.toString());
+            this.setParentTargetUri("");
 
             // process the resource specific attributes
-            ResourceContentProcessor.handleCreate(twc, trc, this, onem2mResponse, null);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null) {
+            ResourceContentProcessor.handleCreate(this, onem2mResponse, null);
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
                 return;
             }
 
-            ResultContentProcessor.handleCreate(twc, trc, this, onem2mResponse);
+            ResultContentProcessor.handleCreate(this, onem2mResponse);
 
             // TODO: see TS0004 6.8
             // if the create was successful, ie no error has already happened, set CREATED for status code here
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) == null) {
+            if (onem2mResponse.getPrimitiveResponseStatusCode() == null) {
 //                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE,
 //                        "Provisioned cseBase: " + cseId + " type: " + cseType);
-                onem2mResponse.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, Onem2m.ResponseStatusCode.OK);
+                onem2mResponse.setPrimitiveResponseStatusCode(Onem2m.ResponseStatusCode.OK);
             }
         } finally {
         }
     }
 
-    public void createDefaultACP(ResourceTreeWriter twc, ResourceTreeReader trc, ResponsePrimitive onem2mResponse) {
+    public void createDefaultACP(List<Onem2mPrimitive> csePrimitiveList,
+                                 ResponsePrimitive onem2mResponse) {
 
         try {
-            String cseId = this.getPrimitive("CSE_ID");
+            String cseId = null;
+
+            for (Onem2mPrimitive csePrimitive : csePrimitiveList) {
+                String k = csePrimitive.getName();
+                String v = csePrimitive.getValue();
+
+                switch (k) {
+                    case "CSE_ID":
+                        cseId = v;
+                        break;
+                }
+            }
+
             String cseURI = cseId; // without any slash means CSE-relative
 
-            this.setPrimitive(RequestPrimitive.RESOURCE_TYPE, Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
-            //this.setPrimitive(RequestPrimitive.NAME, "_defaultACP");
             this.setResourceName("_defaultACP");
-            this.setPrimitive("to", cseURI);
-            this.setPrimitive(RequestPrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
+            this.setPrimitiveResourceType(Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
+            this.setResourceType(Onem2m.ResourceType.ACCESS_CONTROL_POLICY);
+            this.setPrimitiveTo(cseURI);
+            this.setPrimitiveContentFormat(Onem2m.ContentFormat.JSON);
             this.isCreate = true;
+
             // store the parent resource into onem2mresource.
-            if (!Onem2mDb.getInstance().findResourceUsingURI(trc, cseURI, this, onem2mResponse)) {
+            Onem2mResource onem2mParentResource = Onem2mDb.getInstance().findResourceUsingURI(cseURI);
+            if (onem2mParentResource == null) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.NOT_FOUND,
                         "Resource target URI not found: " + cseURI);
                 return;
             }
-            this.setPrimitive(RequestPrimitive.CONTENT, "{\n" +
+
+            this.setParentResourceId(onem2mParentResource.getResourceId());
+            this.setParentOnem2mResource(onem2mParentResource);
+            this.setParentJsonResourceContent(onem2mParentResource.getResourceContentJsonString());
+            this.setParentResourceType(onem2mParentResource.getResourceType());
+
+            // set the new hierarchical parent for this new resource based on the parent
+            this.setParentTargetUri(onem2mParentResource.getParentTargetUri() + "/" + onem2mParentResource.getName());
+
+            this.setPrimitiveContent("{\n" +
                     "\n" +
                     "    \"m2m:acp\":{\n" +
 //                    "      \"et\": \"" + exptime +"\",\n" +
@@ -912,12 +1087,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
 
 
 
-            ResourceAccessControlPolicy.handleDefaultCreate(twc, trc, this, onem2mResponse);
+            ResourceAccessControlPolicy.handleDefaultCreate(this, onem2mResponse);
 
             // if the create was successful, ie no error has already happened, set CREATED for status code here
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT) == null) {
-                onem2mResponse.setPrimitive(ResponsePrimitive.CONTENT,
-                        "Provisioned default ACP for " + cseId + ", name: " + "_deaultACP");
+            if (onem2mResponse.getPrimitiveContent() == null) {
+                onem2mResponse.setPrimitiveContent("Provisioned default ACP for " + cseId + ", name: " + "_deaultACP");
             }
 
         } finally {

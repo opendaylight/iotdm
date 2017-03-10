@@ -38,7 +38,7 @@ public class IotdmPluginHttpRequest implements IotdmPluginRequest<HttpServletReq
     }
 
     @Override
-    public String getOnem2mOperation() {
+    public Integer getOnem2mOperation() {
         switch(this.httpRequest.getMethod().toLowerCase()) {
             case "get":
                 return Onem2m.Operation.RETRIEVE;

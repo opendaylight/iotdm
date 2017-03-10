@@ -20,43 +20,31 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 
-public class ResourceNode {
+public class ResourceNode extends BaseResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceNode.class);
-    private ResourceNode() {}
-
+    public ResourceNode(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        super(onem2mRequest, onem2mResponse);
+    }
     /**
      * These attributes are "specific" attributes only belong to ResourceNode.
      * Some other common attributes can be found in file "ResourceContent" at the same folder.
      */
     public static final String NODE_ID = "ni";
     public static final String HOSTED_CSEID = "hci";
-
-
-    /**
-     * Parse the Json input, the Restful json payload
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
+    
+    private void parseJsonCreateUpdateContent() {
+        
+        Iterator<?> keys = jsonPrimitiveContent.keys();
         while( keys.hasNext() ) {
             String key = (String)keys.next();
-
-            resourceContent.jsonCreateKeys.add(key);  // this line is new
-
-            Object o = resourceContent.getInJsonContent().opt(key);
+            
+            Object o = jsonPrimitiveContent.opt(key);
 
             switch (key) {
 
                 case NODE_ID:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -65,7 +53,7 @@ public class ResourceNode {
                     }
                     break;
                 case HOSTED_CSEID:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -73,12 +61,10 @@ public class ResourceNode {
                         }
                     }
                     break;
-                case ResourceContent.LABELS:
-                case ResourceContent.EXPIRATION_TIME:
-                case ResourceContent.RESOURCE_NAME:
-                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
-                            resourceContent,
-                            onem2mResponse)) {
+                case BaseResource.LABELS:
+                case BaseResource.EXPIRATION_TIME:
+                case BaseResource.RESOURCE_NAME:
+                    if (!parseJsonCommonCreateUpdateContent(key)) {
                         return;
                     }
                     break;
@@ -93,30 +79,20 @@ public class ResourceNode {
         }
     }
 
-
-    /**
-     * Ensure the create/update parameters follow the rules
-     * Check the logic in this step. After the json check, code goes here, if other attributes in the "ResourceContent"
-     * or other resources are affected, add logic codes here
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void processCreateUpdateAttributes() {
 
 
         // verify this resource can be created under the target resource
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+        BaseResource baseResource = onem2mRequest.getBaseResource();
         /**
          * see other resources example to see how to check more complicated case
          */
         if (onem2mRequest.isCreate) {
             // target resourceType
-            String rt = onem2mRequest.getOnem2mResource().getResourceType();
-            if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) )) {
+            Integer prt = onem2mRequest.getParentResourceType();
+            if (prt != Onem2m.ResourceType.CSE_BASE) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create Container under this resource type: " + rt);
+                        "Cannot create Node under this resource type: " + prt);
                 return;
             }
         }
@@ -124,7 +100,7 @@ public class ResourceNode {
         /**
          * Check the mandotory attribtue's value
          */
-        String ni = resourceContent.getInJsonContent().optString(NODE_ID, null);
+        String ni = jsonPrimitiveContent.optString(NODE_ID, null);
         if (ni == null && onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "NODE_ID missing parameter");
             return;
@@ -134,13 +110,13 @@ public class ResourceNode {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -148,36 +124,24 @@ public class ResourceNode {
         }
     }
 
-    /**
-     * Parse the CONTENT resource representation.
-     * This is the entrance of this resource
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void handleCreateUpdate() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-        /**
-         * Need to add a new resource in the "Onem2m.ResourceTypeString";
-         */
-        resourceContent.parse(Onem2m.ResourceTypeString.NODE, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        parse(Onem2m.ResourceTypeString.NODE);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (isJson()) {
+            parseJsonCreateUpdateContent();
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        //CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        processCommonCreateUpdateAttributes();
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        ResourceNode.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        processCreateUpdateAttributes();
 
     }
 }

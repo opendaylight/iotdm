@@ -25,7 +25,6 @@ public class Onem2mResponsePrimitiveClient {
 
     public Onem2mResponsePrimitiveClient(ResponsePrimitive onem2mResponse) {
 
-
         requestIdentifier = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
         responseStatusCode = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
         success = responseStatusCode.charAt(0) == '2' ? true : false;

@@ -52,6 +52,14 @@ public class ItIotdmPluginCustomProtocol implements IotdmPlugin, IotdmPluginDbCl
     }
 
     @Override
+    public void dbClientStart() throws Exception {
+    }
+
+    @Override
+    public void dbClientStop() {
+    }
+
+    @Override
     public void close() {
         Onem2mPluginManager.getInstance()
                 .unregisterIotdmPlugin(this)

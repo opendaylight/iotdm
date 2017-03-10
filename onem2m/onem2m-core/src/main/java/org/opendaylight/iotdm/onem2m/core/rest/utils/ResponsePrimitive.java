@@ -11,7 +11,7 @@ package org.opendaylight.iotdm.onem2m.core.rest.utils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,23 +34,59 @@ public class ResponsePrimitive extends BasePrimitive {
     public static final String CONTENT = "pc";
     public static final String TO = "to";
     public static final String FROM = "fr";
-    public static final String ORIGINATING_TIMESTAMP = "ot";
-    public static final String RESULT_EXPIRATION_TIMESTAMP = "rset";
-    public static final String EVENT_CATEGORY = "ec";
     public static final String CONTENT_FORMAT = "content_format";
     public static final String HTTP_CONTENT_TYPE = "http_content_type";
     public static final String CONTENT_LOCATION = "onem2m_content_location";
+
+    private String primitiveResponseStatusCode;
+    public String getPrimitiveResponseStatusCode() { return primitiveResponseStatusCode; }
+    public void setPrimitiveResponseStatusCode(String primitiveResponseStatusCode) {
+        this.primitiveResponseStatusCode = primitiveResponseStatusCode;
+        setPrimitive(RESPONSE_STATUS_CODE, primitiveResponseStatusCode);
+    }
+    private String primitiveContent;
+    public String getPrimitiveContent() { return primitiveContent; }
+    public void setPrimitiveContent(String primitiveContent) {
+        this.primitiveContent = primitiveContent;
+        setPrimitive(CONTENT, primitiveContent);
+    }
+
+    protected String primitiveContentFormat;
+    public String getPrimitiveContentFormat() { return primitiveContentFormat; }
+    public void setPrimitiveContentFormat(String primitiveContentFormat) {
+        this.primitiveContentFormat = primitiveContentFormat;
+        setPrimitive(CONTENT_FORMAT, primitiveContentFormat);
+    }
+
+    private String primitiveHttpContentType;
+    public String getPrimitiveHttpContentType() { return primitiveHttpContentType; }
+    public void setPrimitiveHttpContentType(String primitiveHttpContentType) {
+        this.primitiveHttpContentType = primitiveHttpContentType;
+        setPrimitive(HTTP_CONTENT_TYPE, primitiveHttpContentType);
+    }
+
+    private String primitiveContentLocation;
+    public String getPrimitiveContentLocation() { return primitiveContentLocation; }
+    public void setPrimitiveContentLocation(String primitiveContentLocation) {
+        this.primitiveContentLocation = primitiveContentLocation;
+        setPrimitive(CONTENT_LOCATION, primitiveContentLocation);
+    }
+
+    private String primitiveRequestIdentifier;
+    public String getPrimitiveRequestIdentifier() { return primitiveRequestIdentifier; }
+    public void setPrimitiveRequestIdentifier(String primitiveRequestIdentifier) {
+        this.primitiveRequestIdentifier = primitiveRequestIdentifier;
+    }
 
     public ResponsePrimitive() {
         super();
     }
 
-    public void setRSC(String rsc, String content) { //throws Onem2mRSCException {
-        this.setPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE, rsc);
-        this.setPrimitive(ResponsePrimitive.CONTENT_FORMAT, Onem2m.ContentFormat.JSON);
-        this.setPrimitive(ResponsePrimitive.HTTP_CONTENT_TYPE, Onem2m.ContentType.APP_VND_RES_JSON);
-        this.setPrimitive(ResponsePrimitive.CONTENT, JsonUtils.put(new JSONObject(), "error", content).toString());
-        //throw new Onem2mRSCException();
+    public void setRSC(String rsc, String content) {
+        setPrimitiveResponseStatusCode(rsc);
+        setPrimitiveContent(JsonUtils.put(new JSONObject(), "error", content).toString());
+        setPrimitiveHttpContentType(Onem2m.ContentType.APP_VND_RES_JSON);
+        setPrimitiveContentFormat(Onem2m.ContentFormat.JSON);
     }
 
     private boolean useHierarchicalAddressing;
@@ -62,21 +98,12 @@ public class ResponsePrimitive extends BasePrimitive {
     }
 
     // the original resourceContent used to return content based on result content requested
-    protected ResourceContent resourceContent;
-    public void setResourceContent(ResourceContent rc) {
-        this.resourceContent = rc;
+    protected BaseResource baseResource;
+    public void setBaseResource(BaseResource rc) {
+        this.baseResource = rc;
     }
-    public ResourceContent getResourceContent() {
-        return this.resourceContent;
-    }
-
-    // the original resourceContent used to return content based on result content requested
-    protected boolean useM2MPrefix;
-    public void setUseM2MPrefix(boolean useM2MPrefix) {
-        this.useM2MPrefix = useM2MPrefix;
-    }
-    public boolean useM2MPrefix() {
-        return this.useM2MPrefix;
+    public BaseResource getBaseResource() {
+        return this.baseResource;
     }
 
     private JSONObject jsonResourceContent;
@@ -102,13 +129,13 @@ public class ResponsePrimitive extends BasePrimitive {
         JSONObject responseJson = new JSONObject();
         JsonUtils.put(
                 responseJson, ResponsePrimitive.CONTENT,
-                this.getPrimitive(ResponsePrimitive.CONTENT));
+                this.getPrimitiveContent());
         JsonUtils.put(
                 responseJson, ResponsePrimitive.RESPONSE_STATUS_CODE,
-                this.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE));
+                this.getPrimitiveResponseStatusCode());
         JsonUtils.put(
                 responseJson, ResponsePrimitive.REQUEST_IDENTIFIER,
-                this.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
+                this.getPrimitiveRequestIdentifier());
         return responseJson;
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -38,53 +38,54 @@ public class FilterCriteria {
             return true;
         }
 
-        String resourceType = onem2mResource.getResourceType();
+        Integer resourceType = Integer.valueOf(onem2mResource.getResourceType());
+
         JSONObject jsonResourceContent = onem2mResponse.getJsonResourceContent();
 
-        String crb = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_BEFORE);
+        String crb = onem2mRequest.getPrimitiveFilterCriteriaCreatedBefore();
         if (crb != null) {
-            String ct = jsonResourceContent.optString(ResourceContent.CREATION_TIME);
+            String ct = jsonResourceContent.optString(BaseResource.CREATION_TIME);
             if (ct != null && Onem2mDateTime.dateCompare(ct, crb) >= 0) {
                 return false;
             }
         }
 
-        String cra = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_CREATED_AFTER);
+        String cra = onem2mRequest.getPrimitiveFilterCriteriaCreatedAfter();
         if (cra != null) {
-            String ct = jsonResourceContent.optString(ResourceContent.CREATION_TIME);
+            String ct = jsonResourceContent.optString(BaseResource.CREATION_TIME);
             if (ct != null && Onem2mDateTime.dateCompare(ct, cra) <= 0) {
                 return false;
             }
         }
 
-        String ms = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_MODIFIED_SINCE);
+        String ms = onem2mRequest.getPrimitiveFilterCriteriaModifiedSince();
         if (ms != null) {
-            String mt = jsonResourceContent.optString(ResourceContent.LAST_MODIFIED_TIME);
+            String mt = jsonResourceContent.optString(BaseResource.LAST_MODIFIED_TIME);
             if (mt != null && Onem2mDateTime.dateCompare(mt, ms) <= 0) {
                 return false;
             }
         }
 
-        String ums = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_UNMODIFIED_SINCE);
+        String ums = onem2mRequest.getPrimitiveFilterCriteriaUnModifiedSince();
         if (ums != null) {
-            String mt = jsonResourceContent.optString(ResourceContent.LAST_MODIFIED_TIME);
+            String mt = jsonResourceContent.optString(BaseResource.LAST_MODIFIED_TIME);
             if (mt != null && Onem2mDateTime.dateCompare(mt, ums) >= 0) {
                 return false;
             }
         }
 
-        String sts = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_SMALLER);
-        if (sts != null) {
-            Integer st = jsonResourceContent.optInt(ResourceContent.STATE_TAG, -1);
+        Integer sts = onem2mRequest.getPrimitiveFilterCriteriaStateTagSmaller();
+        if (sts != -1) {
+            Integer st = jsonResourceContent.optInt(BaseResource.STATE_TAG, -1);
             if (st != -1) {
                 if (st >= Integer.valueOf(sts))
                 return false;
             }
         }
 
-        String stb = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_STATE_TAG_BIGGER);
-        if (stb != null) {
-            Integer st = jsonResourceContent.optInt(ResourceContent.STATE_TAG, -1);
+        Integer stb = onem2mRequest.getPrimitiveFilterCriteriaStateTagBigger();
+        if (stb != -1) {
+            Integer st = jsonResourceContent.optInt(BaseResource.STATE_TAG, -1);
             if (st != -1) {
                 if (st <= Integer.valueOf(stb))
                     return false;
@@ -92,7 +93,7 @@ public class FilterCriteria {
         }
 
         // hack, see if resource has a cbs or cs attr
-        String sza = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_ABOVE);
+        Integer sza = onem2mRequest.getPrimitiveFilterCriteriaSizeAbove();
         if (sza != null) {
             Integer cbs = jsonResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE, -1);
             if (cbs != -1) {
@@ -108,7 +109,7 @@ public class FilterCriteria {
         }
 
         // hack, see if resource has a cbs or cs attr
-        String szb = onem2mRequest.getPrimitive(RequestPrimitive.FILTER_CRITERIA_SIZE_BELOW);
+        Integer szb = onem2mRequest.getPrimitiveFilterCriteriaSizeBelow();
         if (szb != null) {
             Integer cbs = jsonResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE, -1);
             if (cbs != -1) {
@@ -124,11 +125,11 @@ public class FilterCriteria {
         }
 
         // for each resource in the filter criteria array, see if it matches our resource rtype
-        List<String> filterResourceTypes = onem2mRequest.getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE);
+        List<Integer> filterResourceTypes = onem2mRequest.getPrimitiveFilterCriteriaResourceTypes();
         if (filterResourceTypes != null) {
             boolean foundResource = false;
-            for (String filterResource : filterResourceTypes) {
-                if (resourceType.contentEquals(filterResource)) {
+            for (Integer filterResource : filterResourceTypes) {
+                if (resourceType == filterResource) {
                     foundResource = true;
                     break;
                 }
@@ -139,10 +140,10 @@ public class FilterCriteria {
         }
 
         // for each label in the filter criteria array, see if it is in the labels array
-        List<String> filterLabels = onem2mRequest.getPrimitiveMany(RequestPrimitive.FILTER_CRITERIA_LABELS);
+        List<String> filterLabels = onem2mRequest.getPrimitiveFilterCriteriaLabels();
         if (filterLabels != null) {
             // if no labels in data store, then it does not pass the filter
-            JSONArray dbLabels = jsonResourceContent.optJSONArray(ResourceContent.LABELS);
+            JSONArray dbLabels = jsonResourceContent.optJSONArray(BaseResource.LABELS);
             if (dbLabels == null) {
                 return false;
             }

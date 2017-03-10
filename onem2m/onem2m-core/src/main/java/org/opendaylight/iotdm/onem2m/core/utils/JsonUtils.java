@@ -55,6 +55,36 @@ public class JsonUtils {
         return jsonObject;
     }
 
+    public static JSONObject inc(JSONObject jsonObject, String key) {
+        Preconditions.checkNotNull(key);
+        try {
+            jsonObject.increment(key);
+        } catch (JSONException e) {
+            // This only happens if the key is null
+        }
+        return jsonObject;
+    }
+
+    public static JSONObject dec(JSONObject jsonObject, String key) {
+        return incN(jsonObject, key, -1);
+    }
+
+    public static JSONObject incN(JSONObject jsonObject, String key, int value) {
+        Preconditions.checkNotNull(key);
+        try {
+            Integer i = jsonObject.optInt(key);
+            i += value;
+            jsonObject.put(key, i);
+        } catch (JSONException e) {
+            // This only happens if the key is null
+        }
+        return jsonObject;
+    }
+
+    public static JSONObject decN(JSONObject jsonObject, String key, int value) {
+        return incN(jsonObject, key, -value);
+    }
+
     /**
      * @param jsonString - string containing json
      * @return - parsed JsonObject or empty option if given string is not parsable or empty

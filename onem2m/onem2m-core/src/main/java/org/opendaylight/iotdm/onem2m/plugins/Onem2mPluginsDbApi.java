@@ -105,7 +105,7 @@ public class Onem2mPluginsDbApi {
 
             for (PluginDbClientData dbClientData : plugins) {
                 try {
-                    dbClientData.getClient().dbClientStart(twc, trc);
+                    dbClientData.getClient().dbClientStart();
                     dbClientData.setState(IotdmPLuginDbClientState.STARTED);
                 } catch (Exception e) {
                     dbClientData.setState(IotdmPLuginDbClientState.ERROR);
@@ -144,39 +144,39 @@ public class Onem2mPluginsDbApi {
     public ResourceTreeWriter getWriter() { return this.twc.get(); }
 
     public List<String> getCseList() {
-        return Onem2mDb.getInstance().getCseList(this.trc.get());
+        return Onem2mDb.getInstance().getCseList();
     }
 
     public String findResourceIdUsingURI(String uri) {
-        return Onem2mDb.getInstance().findResourceIdUsingURI(this.trc.get(), Onem2m.translateUriToOnem2m(uri));
+        return Onem2mDb.getInstance().findResourceIdUsingURI(Onem2m.translateUriToOnem2m(uri));
     }
 
     public String getHierarchicalNameForResource(Onem2mResource onem2mResource) {
-        return Onem2mDb.getInstance().getHierarchicalNameForResource(this.trc.get(), onem2mResource);
+        return Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource);
     }
 
     public List<String> getHierarchicalResourceList(String startResourceId, int limit) {
-        return Onem2mDb.getInstance().getHierarchicalResourceList(this.trc.get(), startResourceId, limit);
+        return Onem2mDb.getInstance().getHierarchicalResourceList(startResourceId, limit);
     }
 
     public Onem2mResource getResource(String resourceId) {
-        return Onem2mDb.getInstance().getResource(this.trc.get(), resourceId);
+        return Onem2mDb.getInstance().getResource(resourceId);
     }
 
     public Onem2mResource getResourceUsingURI(String targetURI) {
-        return Onem2mDb.getInstance().getResourceUsingURI(this.trc.get(), targetURI);
+        return Onem2mDb.getInstance().getResourceUsingURI(targetURI);
     }
 
     public boolean isLatestCI(Onem2mResource onem2mResource) {
-        return Onem2mDb.getInstance().isLatestCI(this.trc.get(), onem2mResource);
+        return Onem2mDb.getInstance().isLatestCI(onem2mResource);
     }
 
     public boolean isResourceIdUnderTargetId(String targetResourceId, String onem2mResourceId) {
-        return Onem2mDb.getInstance().isResourceIdUnderTargetId(this.trc.get(), targetResourceId, onem2mResourceId);
+        return Onem2mDb.getInstance().isResourceIdUnderTargetId(targetResourceId, onem2mResourceId);
     }
 
     public String findCseForTarget(String targetResourceId) {
-        return Onem2mDb.getInstance().findCseForTarget(this.trc.get(), targetResourceId);
+        return Onem2mDb.getInstance().findCseForTarget(targetResourceId);
     }
 
     private void handleRegistrationError(String format, String... args) throws IotdmPluginRegistrationException {
@@ -196,7 +196,7 @@ public class Onem2mPluginsDbApi {
         if (ret) {
             if (this.isApiReady()) {
                 try {
-                    plugin.dbClientStart(this.getWriter(), this.getReader());
+                    plugin.dbClientStart();
                     dbClientData.setState(IotdmPLuginDbClientState.STARTED);
                 } catch (Exception e) {
                     dbClientData.setState(IotdmPLuginDbClientState.ERROR);
