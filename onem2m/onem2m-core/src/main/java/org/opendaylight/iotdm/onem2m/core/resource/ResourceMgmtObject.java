@@ -19,10 +19,11 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceMgmtObject {
+public class ResourceMgmtObject extends BaseResource {
     private static final Logger LOG = LoggerFactory.getLogger(ResourceMgmtObject.class);
 
-    private ResourceMgmtObject() {
+    public ResourceMgmtObject(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        super(onem2mRequest, onem2mResponse);
     }
 
     public static final String MGMT_DEFINITION = "mgd";
@@ -31,22 +32,18 @@ public class ResourceMgmtObject {
     public static final String MGMT_LINK = "cmlk";
     public static final String DESCRIPTION = "dc";
 
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
+    private void parseJsonCreateUpdateContent() {
+        
+        Iterator<?> keys = jsonPrimitiveContent.keys();
         while (keys.hasNext()) {
             String key = (String) keys.next();
-
-            resourceContent.jsonCreateKeys.add(key); // this line is new
-
-            Object o = resourceContent.getInJsonContent().get(key);
+            
+            Object o = jsonPrimitiveContent.get(key);
 
             switch (key) {
 
             case MGMT_DEFINITION:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -55,7 +52,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case OBJECT_ID:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -64,7 +61,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case OBJECT_PATH:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -73,7 +70,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case MGMT_LINK:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -82,7 +79,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case DESCRIPTION:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -92,7 +89,7 @@ public class ResourceMgmtObject {
                 break;
 
             case Onem2m.Firmware.FIRMWARE_NAME:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -101,7 +98,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case Onem2m.Firmware.VERSION:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -110,7 +107,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case Onem2m.Firmware.URL:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -119,7 +116,7 @@ public class ResourceMgmtObject {
                 }
                 break;
             case Onem2m.Firmware.UPDATE:
-                if (!resourceContent.getInJsonContent().isNull(key)) {
+                if (!jsonPrimitiveContent.isNull(key)) {
                     if (!(o instanceof String)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE, "CONTENT("
                                 + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -128,9 +125,9 @@ public class ResourceMgmtObject {
                 }
                 break;
 
-            case ResourceContent.LABELS:
-            case ResourceContent.EXPIRATION_TIME:
-                if (!ResourceContent.parseJsonCommonCreateUpdateContent(key, resourceContent, onem2mResponse)) {
+            case BaseResource.LABELS:
+            case BaseResource.EXPIRATION_TIME:
+                if (!parseJsonCommonCreateUpdateContent(key)) {
                     return;
                 }
                 break;
@@ -146,33 +143,31 @@ public class ResourceMgmtObject {
         }
     }
 
-    public static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void processCreateUpdateAttributes() {
 
         if (onem2mRequest.isCreate) {
-            String parentResourceType = onem2mRequest.getOnem2mResource().getResourceType();
-            if (parentResourceType == null || !parentResourceType.contentEquals(Onem2m.ResourceType.NODE)) {
+            Integer prt = onem2mRequest.getParentResourceType();
+            if (prt != Onem2m.ResourceType.NODE) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create MGMT OBJECT under this resource type: " + parentResourceType);
+                        "Cannot create MGMT OBJECT under this resource type: " + prt);
                 return;
             }
         }
-        // verify this resource can be created under the target resource
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
 
         /**
          * Check the mandotory attribtue's value
          */
-        String mgd = resourceContent.getInJsonContent().optString(MGMT_DEFINITION, null);
+        String mgd = jsonPrimitiveContent.optString(MGMT_DEFINITION, null);
 
         /**
          * Check the mandatory attribute's value
          */
 
-        String fwr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.FIRMWARE_NAME, null);
+        String fwr = jsonPrimitiveContent.optString(Onem2m.Firmware.FIRMWARE_NAME, null);
 
-        String vr = resourceContent.getInJsonContent().optString(Onem2m.Firmware.VERSION, null);
-        String ud = resourceContent.getInJsonContent().optString(Onem2m.Firmware.UPDATE, null);
-        String url = resourceContent.getInJsonContent().optString(Onem2m.Firmware.URL, null);
+        String vr = jsonPrimitiveContent.optString(Onem2m.Firmware.VERSION, null);
+        String ud = jsonPrimitiveContent.optString(Onem2m.Firmware.UPDATE, null);
+        String url = jsonPrimitiveContent.optString(Onem2m.Firmware.URL, null);
 
         switch (mgd) {
         case Onem2m.SpecializedResource.FIRMWARE:
@@ -195,13 +190,13 @@ public class ResourceMgmtObject {
          */
 
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -210,26 +205,25 @@ public class ResourceMgmtObject {
         }
     }
 
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void handleCreateUpdate() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
         /**
          * Need to add a new resource in the "Onem2m.ResourceTypeString";
          */
-        resourceContent.parse(Onem2m.ResourceTypeString.MGMT_OBJECT, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        parse(Onem2m.ResourceTypeString.MGMT_OBJECT);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (isJson()) {
+            parseJsonCreateUpdateContent();
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
 
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        processCommonCreateUpdateAttributes();
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        ResourceMgmtObject.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        processCreateUpdateAttributes();
 
     }
 }

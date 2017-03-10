@@ -13,7 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
@@ -127,7 +127,7 @@ public class BasicSanityRpc {
         try {
             Onem2mResponse or = new Onem2mResponse(responseContent);
             JSONObject j = or.getJSONObject();
-            String resourceId = j.getString(ResourceContent.RESOURCE_ID);
+            String resourceId = j.getString(BaseResource.RESOURCE_ID);
             if (resourceId == null) {
                 LOG.error("Create cannot parse resourceId for AE create");
                 success = false;
@@ -297,9 +297,9 @@ public class BasicSanityRpc {
             try {
                 Onem2mResponse or = new Onem2mResponse(responseContent);
                 JSONObject j = or.getJSONObject();
-                if (!resourceId.contentEquals(j.getString(ResourceContent.RESOURCE_ID))) {
+                if (!resourceId.contentEquals(j.getString(BaseResource.RESOURCE_ID))) {
                     LOG.error("Retrieve resourceId: {} NOT FOUND id: {} expected: {}",
-                            resourceId, resourceName, j.getString(ResourceContent.RESOURCE_ID));
+                            resourceId, resourceName, j.getString(BaseResource.RESOURCE_ID));
                     success = false;
                     break;
                 }
@@ -342,9 +342,9 @@ public class BasicSanityRpc {
             try {
                 Onem2mResponse or = new Onem2mResponse(responseContent);
                 JSONObject j = or.getJSONObject();
-                if (!resourceId.contentEquals(j.getString(ResourceContent.RESOURCE_ID))) {
+                if (!resourceId.contentEquals(j.getString(BaseResource.RESOURCE_ID))) {
                     LOG.error("Retrieve resourceId: {} NOT FOUND id: {} expected: {}",
-                            resourceId, resourceName, j.getString(ResourceContent.RESOURCE_ID));
+                            resourceId, resourceName, j.getString(BaseResource.RESOURCE_ID));
                     success = false;
                     break;
                 }
@@ -418,7 +418,7 @@ public class BasicSanityRpc {
             try {
                 Onem2mResponse or = new Onem2mResponse(responseContent);
                 JSONObject j = or.getJSONObject();
-                String resourceId = j.getString(ResourceContent.RESOURCE_ID);
+                String resourceId = j.getString(BaseResource.RESOURCE_ID);
                 if (resourceId == null) {
                     LOG.error("Create cannot parse resourceId for cin create");
                     success = false;

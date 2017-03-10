@@ -8,15 +8,11 @@
 
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.db.transactions.DbTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
-        .onem2m.parent.child.list.Onem2mParentChild;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
-        .onem2m.parent.child.list.Onem2mParentChildKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.OldestLatest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +29,13 @@ public class ResourceTreeWriter implements Closeable {
     private WriteOnlyCache cache;
     private ResourceTreeReader resourceTreeReader;
     private DaoResourceTreeWriter daoWriter;
+    private DbNotifier dbNotifier;
 
-    public ResourceTreeWriter(WriteOnlyCache cache, DaoResourceTreeWriter daoWriter, ResourceTreeReader resourceTreeReader) {
+    public ResourceTreeWriter(WriteOnlyCache cache, DaoResourceTreeWriter daoWriter, ResourceTreeReader resourceTreeReader, DbNotifier dbNotifier) {
         this.cache = cache;
         this.resourceTreeReader = resourceTreeReader;
         this.daoWriter = daoWriter;
+        this.dbNotifier = dbNotifier;
     }
 
     @Override
@@ -54,7 +52,7 @@ public class ResourceTreeWriter implements Closeable {
         }
     }
 
-    public String generateResourceId(String parentResourceId, String resourceType, Integer
+    public String generateResourceId(String parentResourceId, Integer resourceType, Integer
             iotdmInstance) {
         return daoWriter.generateResourceId(parentResourceId, resourceType, iotdmInstance);
     }
@@ -78,6 +76,14 @@ public class ResourceTreeWriter implements Closeable {
         return true;
     }
 
+    public Object startWriteTransaction() {
+        return daoWriter.startTransaction();
+    }
+
+    public boolean endWriteTransaction(Object transaction) {
+        return daoWriter.endTransaction(transaction);
+    }
+
     /**
      * Add a resource to the data store
      *
@@ -86,298 +92,72 @@ public class ResourceTreeWriter implements Closeable {
      * @param resourceType     resourceType of the resource
      * @return this new resource
      */
-    public Onem2mResource createResource(RequestPrimitive onem2mRequest,
-                                         String parentResourceId, String resourceType) {
-        if (!daoWriter.createResource(onem2mRequest, parentResourceId, resourceType)) {
+    public Onem2mResource createResource(Object transaction, RequestPrimitive onem2mRequest,
+                                         String parentResourceId, Integer resourceType) {
+        if (!daoWriter.createResource(transaction, onem2mRequest, parentResourceId, resourceType)) {
             LOG.error("createResource: Could not create resource db");
 
             return null;
         }
 
-        Onem2mResource ret = cache.createResource(onem2mRequest.getResourceId(), onem2mRequest.getResourceName(),
-                onem2mRequest.getResourceContent().getInJsonContent().toString(),
-                parentResourceId, resourceType);
+        Onem2mResource ret = cache.createResource(
+                onem2mRequest.getResourceId(),
+                onem2mRequest.getResourceName(),
+                onem2mRequest.getJsonResourceContentString(),
+                parentResourceId,
+                resourceType,
+                onem2mRequest.getParentTargetUri());
         if (ret == null) {
             LOG.error("createResource: Could not create resource inRam");
             return null;
         }
 
+        dbNotifier.enqueueDbOperation(DbTransaction.Operation.CREATE, onem2mRequest.getResourceId());
 
         return ret;
     }
 
     /**
-     * Update the pointers to the oldest and latest children
-     *
-     * @param resourceId the resource id
-     * @param oldest     pointer to the tail
-     * @param latest     pointer to the head
-     * @return the resource
-     */
-    public boolean updateResourceOldestLatestInfo(String resourceId,
-                                                   String resourceType,
-                                                   String oldest,
-                                                   String latest) {
-
-        if (!daoWriter.updateResourceOldestLatestInfo(resourceId, resourceType, oldest, latest)) {
-            LOG.error("updateResourceOldestLatestInfo: DB Could not write");
-            return false;
-        }
-
-        cache.updateResourceOldestLatestInfo(resourceId, resourceType, oldest, latest);
-
-        return true;
-    }
-
-//    /**
-//     * Retrieve the attr by name from the data store
-//     * @param resourceId resource id of the attr
-//     * @param attrName name of attr
-//     * @return Attr
-//     */
-//    public Attr retrieveAttrByName(String resourceId, String attrName) {
-//
-//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(Attr.class, new AttrKey(attrName));
-//
-//        return DbTransaction.retrieve(dataBroker, iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
-//    /**
-//     * Delete the attr by name from the data store
-//     * @param dbTxn transaction id
-//     * @param resourceId this resource
-//     * @param attrName name
-//     */
-//    public void deleteAttr(DbTransaction dbTxn, String resourceId, String attrName) {
-//
-//        InstanceIdentifier<Attr> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-//                .child(Onem2mResource.class, new Onem2mResourceKey(resourceId))
-//                .child(Attr.class, new AttrKey(attrName));
-//
-//        dbTxn.delete(iid, LogicalDatastoreType.OPERATIONAL);
-//    }
-//
-
-    /**
      * @param resourceId          this resource
      * @param jsonResourceContent serailized JSON object
      */
-    public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) {
-        if (!daoWriter.updateJsonResourceContentString(resourceId, jsonResourceContent)) {
+    public boolean updateJsonResourceContentString(Object transaction, String resourceId, String jsonResourceContent) {
+        if (!daoWriter.updateJsonResourceContentString(transaction, resourceId, jsonResourceContent)) {
             LOG.error("updateJsonResourceContentString: DB could not write");
             return false;
         }
 
         cache.updateJsonResourceContentString(resourceId, jsonResourceContent);
 
+        dbNotifier.enqueueDbOperation(DbTransaction.Operation.UPDATE, resourceId);
+
         return true;
     }
 
     /**
-     * Link the parent resource to the child resource in the data store.
+     * Move from old parent to parent id 1 (the delete parent)
      *
-     * @param parentResourceId parent
-     * @param childName        name of child
-     * @param childResourceId  child res id
-     * @param prevId           pointer to prev sibling
-     * @param nextId           pointer to next sibling
      */
-    public boolean createParentChildLink(String parentResourceId,
-                                          String childName, String childResourceId,
-                                          String prevId, String nextId) {
-        if (!daoWriter.createParentChildLink(parentResourceId, childName, childResourceId, prevId, nextId)) {
-            LOG.error("createParentChildLink: DB could not write");
+    public boolean moveParentChildLinkToDeleteParent(String oldParentResourceId, String childResourceName, String childResourceId) {
+
+        if (!daoWriter.moveParentChildLinkToDeleteParent(childResourceId, oldParentResourceId, childResourceName,
+                Onem2m.SYS_DELETE_RESOURCE_ID)) {
+            LOG.error("moveParentChildLinkToDeleteParent: DB could not perform operation: resourceId:{}", childResourceId);
             return false;
         }
 
-        return true;
-    }
-
-    /**
-     * Removes resource in the list of children of the parent resource id
-     * @param parentResourceId parent resource id
-     * @param resourceType resource type
-     * @param thisResourceId resource id to be removed
-     * @param thisResourceName resource name to be removed in parent resource child list
-     * @return
-     */
-    public boolean deleteResourceInReferences(String parentResourceId,
-                                              String resourceType, String thisResourceId, String thisResourceName) {
-        OldestLatest parentOldestLatest = resourceTreeReader.retrieveOldestLatestByResourceType(parentResourceId, resourceType);
-
-        if (parentOldestLatest != null) {
-            if (parentOldestLatest.getLatestId().equals(parentOldestLatest.getOldestId())) {
-
-                // only child, set oldest/latest back to NULL
-                updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        Onem2mDb.NULL_RESOURCE_ID,
-                        Onem2mDb.NULL_RESOURCE_ID);
-
-            } else if (parentOldestLatest.getLatestId().equals(thisResourceId)) {
-
-                // deleting the latest, go back to prev and set is next to null, re point latest to prev
-                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
-                String prevId = curr.getPrevId();
-                Onem2mResource prevOnem2mResource = resourceTreeReader.retrieveResourceById(prevId);
-
-                Onem2mParentChild child = resourceTreeReader.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-                if (!updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        parentOldestLatest.getOldestId(),
-                        prevId))
-                    return false;
-                if (!updateChildSiblingNextInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID)) return false;
-
-            } else if (parentOldestLatest.getOldestId().equals(thisResourceId)) {
-
-                // deleting the oldest, go to next and set its prev to null, re point oldest to next
-                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
-                String nextId = curr.getNextId();
-                Onem2mResource nextOnem2mResource = resourceTreeReader.retrieveResourceById(nextId);
-
-                Onem2mParentChild child = resourceTreeReader.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
-
-                if (!updateResourceOldestLatestInfo(parentResourceId, resourceType,
-                        nextId,
-                        parentOldestLatest.getLatestId()))
-                    return false;
-                if (!updateChildSiblingPrevInfo(parentResourceId, child, Onem2mDb.NULL_RESOURCE_ID)) return false;
-
-            } else {
-
-                Onem2mParentChild curr = resourceTreeReader.retrieveChildByName(parentResourceId, thisResourceName);
-
-                String nextId = curr.getNextId();
-                Onem2mResource nextOnem2mResource = resourceTreeReader.retrieveResourceById(nextId);
-                Onem2mParentChild prevChild = resourceTreeReader.retrieveChildByName(parentResourceId, nextOnem2mResource.getName());
-
-
-                String prevId = curr.getPrevId();
-                Onem2mResource prevOnem2mResource = resourceTreeReader.retrieveResourceById(prevId);
-                Onem2mParentChild nextChild = resourceTreeReader.retrieveChildByName(parentResourceId, prevOnem2mResource.getName());
-
-
-                if (!updateChildSiblingPrevInfo(parentResourceId, nextChild, Onem2mDb.NULL_RESOURCE_ID))
-                    return false;
-                if (!updateChildSiblingNextInfo(parentResourceId, prevChild, Onem2mDb.NULL_RESOURCE_ID))
-                    return false;
-            }
-        }
 
         return true;
     }
-
-    /**
-     * Adds resource in the parent resource children list
-     * @param resourceType resource type
-     * @param parentId parent resource id
-     * @param resourceId resource id
-     * @param resourceName resource name in the parent children list
-     * @return
-     */
-    public boolean initializeElementInParentList(String resourceType, String parentId, String resourceId, String resourceName) {
-        String prevId = Onem2mDb.NULL_RESOURCE_ID;
-        OldestLatest parentOldestLatest =
-                resourceTreeReader.retrieveOldestLatestByResourceType(parentId, resourceType);
-        if (parentOldestLatest != null) {
-            String oldestId = parentOldestLatest.getOldestId();
-            String latestId = parentOldestLatest.getLatestId();
-
-            // need to maintain the oldest and latest, and next-prev children too
-            if (latestId.equals(Onem2mDb.NULL_RESOURCE_ID)) {
-
-                latestId = oldestId = resourceId;
-
-                if (!updateResourceOldestLatestInfo(parentId, resourceType, oldestId, latestId))
-                    return false;
-
-
-            } else {
-
-                prevId = latestId;
-                Onem2mResource prevOnem2mResource = resourceTreeReader.retrieveResourceById(prevId);
-
-                latestId = resourceId;
-
-                Onem2mParentChild child = resourceTreeReader.retrieveChildByName(parentId, prevOnem2mResource.getName());
-
-                if (!updateResourceOldestLatestInfo(parentId, resourceType, oldestId, latestId)) return false;
-                if (!updateChildSiblingNextInfo(parentId, child, latestId)) return false;
-            }
-        }
-        // create a childEntry on the parent resourceId, <child-name, child-resourceId>
-        if (!createParentChildLink(parentId, // parent
-                resourceName, // childName
-                resourceId, // chileResourceId
-                prevId, Onem2mDb.NULL_RESOURCE_ID)) // siblings
-            return false;
-
-        return true;
-    }
-
-    /**
-     * Update the Next pointer
-     *
-     * @param parentResourceId the parent
-     * @param child            the child
-     * @param nextId           its next pointer
-     */
-    public boolean updateChildSiblingNextInfo(String parentResourceId,
-                                              Onem2mParentChild child,
-                                              String nextId) {
-        if (!daoWriter.updateChildSiblingNextInfo(parentResourceId, child, nextId)) {
-            LOG.error("updateChildSiblingNextInfo: DB could not write");
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Update the prev pointer
-     *
-     * @param parentResourceId the parent
-     * @param child            the child
-     * @param prevId           prev pointer
-     */
-    public boolean updateChildSiblingPrevInfo(String parentResourceId,
-                                              Onem2mParentChild child,
-                                              String prevId) {
-
-        if (!daoWriter.updateChildSiblingPrevInfo(parentResourceId, child, prevId)) {
-            LOG.error("updateChildSiblingPrevInfo: DB could not write");
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Unlink the child resource from the parent resource
-     *
-     * @param parentResourceId  the parent
-     * @param childResourceName child name
-     */
-    public boolean removeParentChildLink(String parentResourceId, String childResourceName) {
-        if (!daoWriter.removeParentChildLink(parentResourceId, childResourceName)) {
-            LOG.error("removeParentChildLink: DB could not write");
-            return false;
-        }
-
-        return true;
-    }
-
 
     /**
      * Delete the resource using its id
      *
      * @param resourceId the resource id
      */
-    public boolean deleteResourceById(String resourceId) {
-        if (!daoWriter.deleteResourceById(resourceId)) {
-            LOG.error("deleteResourceById: DB could not write");
+    public boolean deleteResource(Object transaction, String resourceId, String parentResourceId, String resourceName) {
+        if (!daoWriter.deleteResource(transaction, resourceId, parentResourceId, resourceName)) {
+            LOG.error("deleteResource: DB could not delete");
             return false;
         }
         cache.deleteResourceById(resourceId);
@@ -436,6 +216,4 @@ public class ResourceTreeWriter implements Closeable {
         daoWriter.reInitializeDatastore();
         cache.reInitializeDatastore();
     }
-
-
 }

@@ -37,20 +37,6 @@ public interface WriteOnlyCache {
     void updateJsonResourceContentString(String resourceId, String jsonResourceContent);
 
     /**
-     * Cache is notified about the update of OldestLatest with resourceType.
-     * If Resource with resourceId is not in Cache has no effect.
-     *
-     * @param resourceId   of the resource.
-     * @param resourceType of the OldestLatest.
-     * @param oldest       should not be null.
-     * @param latest       should not be null.
-     */
-    void updateResourceOldestLatestInfo(String resourceId,
-                                        String resourceType,
-                                        String oldest,
-                                        String latest);
-
-    /**
      * Cache is notified about creation of new Resource element. Saves Resource in cache.
      *
      * @param resourceId       of the resource. Should not be null.
@@ -61,7 +47,7 @@ public interface WriteOnlyCache {
      * @return Onem2mResource interface of the created resource.
      */
     Onem2mResource createResource(String resourceId, String resourceName, String jsonContent,
-                                  String parentResourceId, String resourceType);
+                                  String parentResourceId, Integer resourceType, String parentTargetUri);
 
     /**
      * Cache is notified about creation of new Cse element. Saves Cse in cache.

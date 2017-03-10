@@ -11,9 +11,6 @@ package org.opendaylight.iotdm.onem2m.simpleadapter.impl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
@@ -26,7 +23,6 @@ public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, Binding
 
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mSimpleAdapterProvider.class);
-    private TransactionManager transactionManager = null;
     private DataBroker dataBroker = null;
     private Onem2mService onem2mService = null;
     private Onem2mSimpleAdapterManager saMgr = null;
@@ -57,8 +53,8 @@ public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, Binding
     }
 
     @Override
-    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
-        saMgr = new Onem2mSimpleAdapterManager(trc, dataBroker, onem2mService);
+    public void dbClientStart() {
+        saMgr = new Onem2mSimpleAdapterManager(dataBroker, onem2mService);
         saHttpServer = new Onem2mSimpleAdapterHttpServer(saMgr);
         //saMqttClient = new Onem2mSimpleAdapterMqttClient(saMgr);
         //saCoapServer = new Onem2mSimpleAdapterCoapServer(saMgr);

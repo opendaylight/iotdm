@@ -17,9 +17,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
 import org.opendaylight.iotdm.onem2m.plugins.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -42,7 +39,6 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
     private Onem2mTsdrAsyncManager onem2mTsdrAsyncManager;
 
     private HashMap<String,Onem2mTargetDesc> tsdrMap;
-    private TransactionManager transactionManager;
     private DataBroker dataBroker;
 
     @Override
@@ -67,9 +63,9 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
     }
 
     @Override
-    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
-        onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(trc, onem2mTsdrSender);
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
+    public void dbClientStart() {
+        onem2mTsdrPeriodicManager = new Onem2mTsdrPeriodicManager(onem2mTsdrSender);
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(dataBroker);
     }
 
     @Override
@@ -93,14 +89,13 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
         LOG.info("Onem2mTsdrProvider Closed");
         onem2mTsdrPeriodicManager.close();
         onem2mTsdrAsyncManager.close();
-        transactionManager.close();
     }
 
     // listen for changes to the onem2m resource tree, only the async manager needs to be informed
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
 
-        public Onem2mDataStoreChangeHandler(ResourceTreeReader trc, DataBroker dataBroker) {
-            super(trc, dataBroker);
+        public Onem2mDataStoreChangeHandler(DataBroker dataBroker) {
+            super(dataBroker);
         }
 
         @Override
@@ -110,7 +105,7 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
                     onem2mResource.getResourceId(),
                     onem2mResource.getResourceType());
             // only async cares about onem2m data tree changes
-            onem2mTsdrAsyncManager.onem2mResourceUpdate(this.getTransactionReader(), hierarchicalResourceName, onem2mResource);
+            onem2mTsdrAsyncManager.onem2mResourceUpdate(hierarchicalResourceName, onem2mResource);
 
         }
 
@@ -120,7 +115,7 @@ public class Onem2mTsdrProvider implements IotdmPluginDbClient, BindingAwareProv
                     hierarchicalResourceName,
                     onem2mResource.getResourceId(),
                     onem2mResource.getResourceType());
-            onem2mTsdrAsyncManager.onem2mResourceUpdate(this.getTransactionReader(), hierarchicalResourceName, onem2mResource);
+            onem2mTsdrAsyncManager.onem2mResourceUpdate(hierarchicalResourceName, onem2mResource);
         }
 
         @Override

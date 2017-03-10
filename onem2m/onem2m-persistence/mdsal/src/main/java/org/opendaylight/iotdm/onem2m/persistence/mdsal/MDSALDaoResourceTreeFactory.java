@@ -65,7 +65,7 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     }
 
     public String generateResourceId(String parentResourceId,
-                                     String resourceType,
+                                     Integer resourceType,
                                      Integer iotdmInstance) {
 
         int baseResourceId = nextId.incrementAndGet();
