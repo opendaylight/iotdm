@@ -8,14 +8,9 @@
 
 package org.opendaylight.iotdm.onem2m.tsdr.impl;
 
-import static java.lang.Thread.sleep;
-
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 import java.util.Map;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.onem2m.tsdr.config.Onem2mTargetDesc;
@@ -56,13 +51,13 @@ public class Onem2mTsdrAsyncManager {
     /*
     ** When a database update occurs, see if falls under an async onem2mTargetDesc, then send the data to the TSDR
      */
-    public void onem2mResourceUpdate(ResourceTreeReader trc, String h, Onem2mResource onem2mResource) {
+    public void onem2mResourceUpdate(String h, Onem2mResource onem2mResource) {
         for (Map.Entry<String, Onem2mTargetDesc> entry : tsdrMap.entrySet()) {
             Onem2mTargetDesc targetDesc = entry.getValue();
             // ... see if there are any target's in the tsdrMap that contain this resource
             String targetResourceId = Onem2mPluginsDbApi.getInstance().findResourceIdUsingURI(targetDesc.getOnem2mTargetUri());
             if (Onem2mPluginsDbApi.getInstance().isResourceIdUnderTargetId(targetResourceId, onem2mResource.getResourceId())) {
-                onem2mTsdrSender.sendDataToTsdr(trc, targetDesc, h, onem2mResource);
+                onem2mTsdrSender.sendDataToTsdr(targetDesc, h, onem2mResource);
                 break;
             }
         }

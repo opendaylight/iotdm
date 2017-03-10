@@ -31,7 +31,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
     <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
     <onem2msimpleadapter.version>0.3.0-SNAPSHOT</onem2msimpleadapter.version>
-    <onem2mexample.version>0.3.0-SNAPSHOT</onem2mexample.version>
+    <!--<onem2mexample.version>0.3.0-SNAPSHOT</onem2mexample.version>-->
     <onem2mtsdr.version>0.3.0-SNAPSHOT</onem2mtsdr.version>
     <onem2moic.version>0.3.0-SNAPSHOT</onem2moic.version>
     <iotdmbundleloader.version>0.1.0-SNAPSHOT</iotdmbundleloader.version>
@@ -119,6 +119,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2mexample-features</artifactId>
@@ -127,6 +128,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
+    -->
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2mtsdr-features</artifactId>

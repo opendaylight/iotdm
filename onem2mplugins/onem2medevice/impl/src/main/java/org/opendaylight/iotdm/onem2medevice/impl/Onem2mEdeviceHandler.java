@@ -48,8 +48,8 @@ class Onem2mEdeviceHandler implements IotdmPlugin, IotdmPluginDbClient {
     }
 
     @Override
-    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) {
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
+    public void dbClientStart() {
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(dataBroker);
         try {
             Onem2mPluginManager.getInstance()
                 .registerPluginHttp(this, 8284, Onem2mPluginManager.Mode.Exclusive, null)
@@ -73,8 +73,8 @@ class Onem2mEdeviceHandler implements IotdmPlugin, IotdmPluginDbClient {
 
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
 
-        Onem2mDataStoreChangeHandler(ResourceTreeReader trc, DataBroker dataBroker) {
-            super(trc, dataBroker);
+        Onem2mDataStoreChangeHandler(DataBroker dataBroker) {
+            super(dataBroker);
         }
 
         @Override

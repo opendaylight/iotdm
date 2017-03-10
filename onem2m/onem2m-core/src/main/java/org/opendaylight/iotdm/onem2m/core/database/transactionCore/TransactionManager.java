@@ -7,14 +7,13 @@
  */
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactory;
-import org.opendaylight.iotdm.onem2m.core.database.lock.Locker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 /**
  * Created by gguliash on 4/19/16.
@@ -25,23 +24,19 @@ public class TransactionManager implements Closeable{
     private final Cache cache;
     private final ResourceTreeReader resourceTreeReader;
     private final DaoResourceTreeReader daoResourceTreeReader;
-    private final Locker locker;
     private final DaoResourceTreeFactory daoResourceTreeFactory;
+    private final DbNotifier dbNotifier;
+    private final BGDeleteProcessor bgDeleteProcessor;
+    private final DataBroker dataBroker;
 
-    public TransactionManager(DaoResourceTreeFactory daoResourceTreeFactory, Locker locker) {
-        this.locker = locker;
+    public TransactionManager(DataBroker dataBroker, DaoResourceTreeFactory daoResourceTreeFactory) {
         this.daoResourceTreeFactory = daoResourceTreeFactory;
         this.daoResourceTreeReader = daoResourceTreeFactory.getDaoResourceTreeReader();
         this.cache = new Cache(daoResourceTreeReader);
-        this.resourceTreeReader = new ResourceTreeReader(cache, daoResourceTreeReader, new TTLGarbageCollector(this, locker));
-    }
-
-    /**
-     *
-     * @return locker which should be notified before any change in the database
-     */
-    public Locker getLocker() {
-        return locker;
+        this.bgDeleteProcessor = new BGDeleteProcessor();
+        this.resourceTreeReader = new ResourceTreeReader(cache, daoResourceTreeReader, bgDeleteProcessor);
+        this.dataBroker = dataBroker;
+        this.dbNotifier = new DbNotifier(dataBroker);
     }
 
     /**
@@ -49,7 +44,7 @@ public class TransactionManager implements Closeable{
      * @return database writer interface which also updated cache
      */
     public ResourceTreeWriter getDbResourceTreeWriter() {
-        return new ResourceTreeWriter(cache, daoResourceTreeFactory.getDaoResourceTreeWriter(), resourceTreeReader);
+        return new ResourceTreeWriter(cache, daoResourceTreeFactory.getDaoResourceTreeWriter(), resourceTreeReader, dbNotifier);
     }
 
     /**

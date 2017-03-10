@@ -27,11 +27,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ResourceAccessControlPolicy {
+public class ResourceAccessControlPolicy extends BaseResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceAccessControlPolicy.class);
-    private ResourceAccessControlPolicy() {}
-
+    public ResourceAccessControlPolicy(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        super(onem2mRequest, onem2mResponse);
+    }
     // taken from 2.2 xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO:
     public static final String PRIVILIEGES = "pv";
@@ -47,28 +48,20 @@ public class ResourceAccessControlPolicy {
     public static final String COUNTRY_CODE = "accc";
     public static final String CIRC_REGION = "accr";
     public static final String ACCESS_CONTROL_WINDOW = "actw";
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
+    
+    private void parseJsonCreateUpdateContent() {
+        
+        Iterator<?> keys = jsonPrimitiveContent.keys();
         while( keys.hasNext() ) {
+
             String key = (String)keys.next();
-            resourceContent.jsonCreateKeys.add(key);
-            Object s = resourceContent.getInJsonContent().opt(key);
+
+            Object s = jsonPrimitiveContent.opt(key);
 
             switch (key) {
                 case PRIVILIEGES:
                 case SELF_PRIIVLIEGES:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         // privileges contains one acr, acr is a list, this is ACR layer
                         if (!(s instanceof JSONObject)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
@@ -282,7 +275,7 @@ public class ResourceAccessControlPolicy {
                                                     }
                                                     break;
                                                 case ACCESS_CONTROL_OPERATIONS:
-                                                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                                                    if (!jsonPrimitiveContent.isNull(key)) {
                                                         if (!(p instanceof Integer)) {
                                                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                                                     "PRIVILEGES(" + ACCESS_CONTROL_OPERATIONS + ") number expected for json key: " + key);
@@ -310,12 +303,10 @@ public class ResourceAccessControlPolicy {
                         }
                     }
                     break;
-                case ResourceContent.LABELS:
-                case ResourceContent.EXPIRATION_TIME:
-                case ResourceContent.RESOURCE_NAME:
-                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
-                            resourceContent,
-                            onem2mResponse)) {
+                case BaseResource.LABELS:
+                case BaseResource.EXPIRATION_TIME:
+                case BaseResource.RESOURCE_NAME:
+                    if (!parseJsonCommonCreateUpdateContent(key)) {
                         return;
                     }
                     break;
@@ -327,35 +318,24 @@ public class ResourceAccessControlPolicy {
         }
     }
 
-
-    /**
-     * Ensure the create/update parameters follow the rules
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void processCreateUpdateAttributes() {
 
         String tempStr;
         Integer tempInt;
 
         // verify this resource can be created under the target resource
         if (onem2mRequest.isCreate) {
-            String rt = onem2mRequest.getOnem2mResource().getResourceType();
-            if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
-                    rt.contentEquals(Onem2m.ResourceType.AE) || rt.contentEquals(Onem2m.ResourceType.REMOTE_CSE))) {
+            Integer prt = onem2mRequest.getParentResourceType();
+            if (!(prt == Onem2m.ResourceType.CSE_BASE ||
+                    prt == Onem2m.ResourceType.AE || prt == Onem2m.ResourceType.REMOTE_CSE)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create AccessControlPolicy under this resource type: " + rt);
+                        "Cannot create AccessControlPolicy under this resource type: " + prt);
                 return;
             }
         }
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-
         //check mandatory privileges and selfPrivileges
-        String pv = resourceContent.getInJsonContent().optString(PRIVILIEGES, null);
+        String pv = jsonPrimitiveContent.optString(PRIVILIEGES, null);
         if (pv == null ||"".contentEquals(pv)) {
             if (onem2mRequest.isCreate) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "PRIVILEGES missing parameter");
@@ -363,11 +343,11 @@ public class ResourceAccessControlPolicy {
             }
         } else {
             // todo: how to check access Control Operations and originators?
-            JSONObject pvjsonObject = resourceContent.getInJsonContent().optJSONObject(PRIVILIEGES);
+            JSONObject pvjsonObject = jsonPrimitiveContent.optJSONObject(PRIVILIEGES);
             if (!isContainPVMandatoryAttr(onem2mResponse, pvjsonObject)) return;
         }
 
-        String pvs = resourceContent.getInJsonContent().optString(SELF_PRIIVLIEGES, null);
+        String pvs = jsonPrimitiveContent.optString(SELF_PRIIVLIEGES, null);
         if (pvs == null || pvs.contentEquals("")) {
             if (onem2mRequest.isCreate) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "SELF PRIVILEGES missing parameter");
@@ -375,26 +355,23 @@ public class ResourceAccessControlPolicy {
             }
         } else {
             // todo: how to check access Control Operations and originators?
-            JSONObject pvjsonObject = resourceContent.getInJsonContent().optJSONObject(SELF_PRIIVLIEGES);
+            JSONObject pvjsonObject = jsonPrimitiveContent.optJSONObject(SELF_PRIIVLIEGES);
             if (!isContainPVMandatoryAttr(onem2mResponse, pvjsonObject)) return;
         }
 
         // todo: Update ACP needs to check first
 
-
-
-
         /**
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -427,54 +404,46 @@ public class ResourceAccessControlPolicy {
         return true;
     }
 
-    /**
-     * Parse the CONTENT resource representation.
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void handleCreateUpdate() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.ACCESS_CONTROL_POLICY,onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        parse(Onem2m.ResourceTypeString.ACCESS_CONTROL_POLICY);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (isJson()) {
+            parseJsonCreateUpdateContent();
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
-        CheckAccessControlProcessor.handleSelfCreateUpdate(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        //CheckAccessControlProcessor.handleSelfCreateUpdate(trc, onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        processCommonCreateUpdateAttributes();
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
         // handle the special attribtue for AccessControlPolicy
-        ResourceAccessControlPolicy.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        processCreateUpdateAttributes();
 
     }
 
-    public static void handleDefaultCreate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleDefaultCreate(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+        ResourceAccessControlPolicy resourceAccessControlPolicy = new ResourceAccessControlPolicy(onem2mRequest, onem2mResponse);
+        onem2mRequest.setBaseResource(resourceAccessControlPolicy);
 
-        resourceContent.parse(Onem2m.ResourceTypeString.ACCESS_CONTROL_POLICY, onem2mRequest, onem2mResponse);
+        resourceAccessControlPolicy.parse(Onem2m.ResourceTypeString.ACCESS_CONTROL_POLICY);
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
+        if (resourceAccessControlPolicy.isJson()) {
+            resourceAccessControlPolicy.parseJsonCreateUpdateContent();
         }
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
+        resourceAccessControlPolicy.processCommonCreateUpdateAttributes();
         // handle the special attribtue for AccessControlPolicy
-        ResourceAccessControlPolicy.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        resourceAccessControlPolicy.processCreateUpdateAttributes();
 
     }
 
     // deal with the opearion numbers
-    public static boolean isAllowedThisOperation(String OperationNumber, BigInteger number) {
+    public static boolean isAllowedThisOperation(Integer OperationNumber, BigInteger number) {
         switch (OperationNumber){
             case Onem2m.Operation.CREATE:
                 if (number.testBit(0)) return true;
@@ -500,7 +469,4 @@ public class ResourceAccessControlPolicy {
         return false;
 
     }
-
-
-
 }

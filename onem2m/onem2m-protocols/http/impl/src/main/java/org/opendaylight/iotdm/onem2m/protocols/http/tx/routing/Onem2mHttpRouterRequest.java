@@ -92,7 +92,7 @@ public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
         StringBuilder ret = new StringBuilder();
         String value = null;
 
-        switch(request.getPrimitive(RequestPrimitive.CONTENT_FORMAT)) {
+        switch(request.getPrimitiveContentFormat()) {
             case Onem2m.ContentFormat.JSON:
                 ret.append(Onem2m.ContentType.APP_VND_RES_JSON);
                 break;
@@ -126,11 +126,11 @@ public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
 
         try {
             // set method and url
-            ex.setMethod(translateOperationToMethod(request.getPrimitive(RequestPrimitive.OPERATION)));
+            ex.setMethod(translateOperationToMethod(request.getPrimitiveOperation()));
 
             // set URL properly
             URL host = new URL(hostURL);
-            String url = Onem2m.translateUriFromOnem2m(request.getPrimitive(RequestPrimitive.TO));
+            String url = Onem2m.translateUriFromOnem2m(request.getPrimitiveTo());
             // add query string
             url += createRequestQueryString(request);
 
@@ -139,9 +139,9 @@ public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
 
             // set headers
             //TODO add all headers
-            ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN, request.getPrimitive(RequestPrimitive.FROM));
+            ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN, request.getPrimitiveFrom());
             ex.setRequestHeader("Host", hostURL);
-            ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_RI, request.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+            ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_RI, request.getPrimitiveRequestIdentifier());
             // ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_NM, request.getPrimitive(RequestPrimitive.NAME));
             ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_GID,
                     request.getPrimitive(RequestPrimitive.GROUP_REQUEST_IDENTIFIER));
@@ -149,9 +149,8 @@ public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
                     request.getPrimitive(RequestPrimitive.ORIGINATING_TIMESTAMP));
 
             // set content
-            if (null != request.getPrimitive(RequestPrimitive.CONTENT)) {
-                ex.setRequestContentSource(new ByteArrayInputStream(
-                                                                           request.getPrimitive(RequestPrimitive.CONTENT).getBytes()));
+            if (null != request.getPrimitiveContent()) {
+                ex.setRequestContentSource(new ByteArrayInputStream(request.getPrimitiveContent().getBytes()));
                 ex.setRequestContentType(createRequestContentTypeString(request));
             }
 
@@ -195,7 +194,7 @@ public class Onem2mHttpRouterRequest extends Onem2mProtocolTxRequest {
         return response;
     }
 
-    private String translateOperationToMethod(String operation) {
+    private String translateOperationToMethod(Integer operation) {
         switch (operation) {
             case Onem2m.Operation.CREATE:
             case Onem2m.Operation.NOTIFY:

@@ -25,11 +25,12 @@ import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceSubscription {
+public class ResourceSubscription extends BaseResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceSubscription.class);
-    private ResourceSubscription() {}
-
+    public ResourceSubscription(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        super(onem2mRequest, onem2mResponse);
+    }
     // taken from CDT-contentInstance-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO: ts0001 9.6.7-1
 
@@ -77,35 +78,28 @@ public class ResourceSubscription {
         }
         return true;
     }
-
-    /**
-     * The list<Attr> and List<AttrSet> must be filled in with the ContentPrimitive attributes
-     * @param onem2mRequest onem2mrequest
-     * @param onem2mResponse onem2mresponse
-     */
-    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    
+    private void processCreateUpdateAttributes() {
 
         String tempStr;
 
         if (onem2mRequest.isCreate) {
-            String rt = onem2mRequest.getOnem2mResource().getResourceType();
-            if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
-                    rt.contentEquals(Onem2m.ResourceType.CONTAINER) ||
-                    rt.contentEquals(Onem2m.ResourceType.AE))) {
+            Integer prt = onem2mRequest.getParentResourceType();
+            if (!(prt == Onem2m.ResourceType.CSE_BASE ||
+                    prt == Onem2m.ResourceType.CONTAINER ||
+                    prt == Onem2m.ResourceType.AE)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.TARGET_NOT_SUBSCRIBABLE,
-                        "Cannot create Subscription under this resource type: " + rt);
+                        "Cannot create Subscription under this resource type: " + prt);
                 return;
             }
         }
-
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
+        
         /**
          * Theoretically, if the notificationURI is different from the Originator, then special processing is
          * required. TODO: see rules in TS0004 to add this functionality
          */
 
-        tempStr = resourceContent.getInJsonContent().optString(NOTIFICATION_CONTENT_TYPE, null);
+        tempStr = jsonPrimitiveContent.optString(NOTIFICATION_CONTENT_TYPE, null);
         if (tempStr != null) {
             if (!tempStr.contentEquals(Onem2m.NotificationContentType.MODIFIED_ATTRIBUTES) &&
                     !tempStr.contentEquals(Onem2m.NotificationContentType.WHOLE_RESOURCE) &&
@@ -118,7 +112,7 @@ public class ResourceSubscription {
 
 
         if (onem2mRequest.isCreate) {
-            if (resourceContent.getInJsonContent().optString(NOTIFICATION_URI, null) == null) {
+            if (jsonPrimitiveContent.optString(NOTIFICATION_URI, null) == null) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                         "NOTIFICATION_URI missing! " );
                 return;
@@ -129,13 +123,13 @@ public class ResourceSubscription {
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -143,25 +137,16 @@ public class ResourceSubscription {
         }
     }
 
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private void parseJsonCreateUpdateContent() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+        boolean creatorPresent = false;
 
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
+        Iterator<?> keys = jsonPrimitiveContent.keys();
         while( keys.hasNext() ) {
 
             String key = (String)keys.next();
 
-            resourceContent.jsonCreateKeys.add(key);
-
-            Object o = resourceContent.getInJsonContent().opt(key);
+            Object o = jsonPrimitiveContent.opt(key);
 
             switch (key) {
 
@@ -169,7 +154,7 @@ public class ResourceSubscription {
                 case NOTIFICATION_EVENT_CAT:
                 case PENDING_NOTIFICATION:
                 case EXPIRATION_COUNTER:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof Integer)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
@@ -179,7 +164,7 @@ public class ResourceSubscription {
                     break;
 
                 case SUBSCRIBER_URI:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -195,7 +180,7 @@ public class ResourceSubscription {
                     break;
 
                 case NOTIFICATION_URI:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof JSONArray)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
@@ -239,7 +224,7 @@ public class ResourceSubscription {
                     break;
 
                 case LATEST_NOTIFY:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof Boolean)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
@@ -249,7 +234,7 @@ public class ResourceSubscription {
                     break;
 
                 case EVENT_NOTIFICATION_CRITERIA:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof JSONObject)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") Object expected for json key: " + key);
@@ -362,18 +347,17 @@ public class ResourceSubscription {
                     }
                     break;
                 case CREATOR:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     }
+                    creatorPresent = true;
                     break;
-                case ResourceContent.LABELS:
-                case ResourceContent.EXPIRATION_TIME:
-                case ResourceContent.RESOURCE_NAME:
-                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
-                            resourceContent,
-                            onem2mResponse)) {
+                case BaseResource.LABELS:
+                case BaseResource.EXPIRATION_TIME:
+                case BaseResource.RESOURCE_NAME:
+                    if (!parseJsonCommonCreateUpdateContent(key)) {
                         return;
                     }
                     break;
@@ -383,40 +367,58 @@ public class ResourceSubscription {
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
                     return;
             }
-            if (resourceContent.jsonCreateKeys.contains(CREATOR)) {
-                JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
+        }
+        if (creatorPresent) {
+            JsonUtils.put(jsonPrimitiveContent, CREATOR, onem2mRequest.getPrimitiveFrom());
+        }
+    }
+
+    public static void modifyParentForSubscriptionCreation(JSONObject parentJsonContent, String resourceId) {
+        // in the parent, maintain a list of subscriptions for fast access
+        String arrayJsonKey = "c:" + Onem2m.ResourceType.SUBSCRIPTION;
+        JSONArray jArray = parentJsonContent.optJSONArray(arrayJsonKey);
+        if (jArray == null) {
+            jArray = new JSONArray();
+            jArray.put(resourceId);
+            parentJsonContent.put(arrayJsonKey, jArray);
+        } else {
+            jArray.put(jArray.length(), resourceId);
+        }
+    }
+
+    public static void modifyParentForSubscriptionDeletion(JSONObject parentJsonContent, String resourceId) {
+
+        String resouceIdJsonKey = "c:" + Onem2m.ResourceType.SUBSCRIPTION;
+        JSONArray resouceIdJsonArray = parentJsonContent.optJSONArray(resouceIdJsonKey);
+
+        if (resouceIdJsonArray != null) {
+            for (int i = 0; i <= resouceIdJsonArray.length(); i++) {
+                if (resourceId.equals(resouceIdJsonArray.getString(i))) {
+                    resouceIdJsonArray.remove(i);
+                    break;
+                }
             }
         }
     }
 
-    /**
-     * Parse the CONTENT resource representation.
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void handleCreateUpdate() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.SUBSCRIPTION, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        parse(Onem2m.ResourceTypeString.SUBSCRIPTION);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (isJson()) {
+            parseJsonCreateUpdateContent();
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        //CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        processCommonCreateUpdateAttributes();
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        ResourceSubscription.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
-
+        processCreateUpdateAttributes();
     }
 }

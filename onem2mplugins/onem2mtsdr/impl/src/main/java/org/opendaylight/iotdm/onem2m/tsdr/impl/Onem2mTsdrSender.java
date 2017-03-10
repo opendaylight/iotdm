@@ -21,7 +21,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.yang.gen.v1.opendaylight.tsdr.rev150219.DataCategory;
 import org.opendaylight.yang.gen.v1.opendaylight.tsdr.log.data.rev160325.tsdrlog.RecordAttributes;
@@ -95,7 +94,7 @@ public class Onem2mTsdrSender {
      * @param h hierarchical resource string
      * @param onem2mResource resource
      */
-    public void sendDataToTsdr(ResourceTreeReader trc, Onem2mTargetDesc t, String h, Onem2mResource onem2mResource) {
+    public void sendDataToTsdr(Onem2mTargetDesc t, String h, Onem2mResource onem2mResource) {
 
         switch (t.getContentType()) {
             case LATESTCICONTSDRMETRIC:
@@ -215,7 +214,7 @@ public class Onem2mTsdrSender {
         keysList.add(oneM2MURIKey.build());
         RecordKeysBuilder oneM2MResourceTypeKey = new RecordKeysBuilder()
                 .setKeyName("oneM2MResourceType")
-                .setKeyValue(Onem2m.resourceTypeToString.get(onem2mResource.getResourceType()));
+                .setKeyValue(Onem2m.resourceTypeToString.get(Integer.valueOf(onem2mResource.getResourceType())));
         keysList.add(oneM2MResourceTypeKey.build());
         String jsonContentString = onem2mResource.getResourceContentJsonString();
         List<RecordAttributes> recordAttrsList = parseJsonContentIntoTsdrAttributes(onem2mTargetDesc, jsonContentString);
