@@ -24,7 +24,7 @@ public interface DaoResourceTreeWriter extends Closeable {
 
     void close();
 
-    String generateResourceId(String parentResourceId, String resourceType, Integer iotdmInstance);
+    public String generateResourceId(String parentResourceId, Integer resourceType, Integer iotdmInstance);
 
     /**
      * Add the cse to the db store using its name/resourceId
@@ -38,69 +38,22 @@ public interface DaoResourceTreeWriter extends Closeable {
     /**
      * Add a resource to the data store
      *
+     * @param transaction      transaction
      * @param onem2mRequest    request
      * @param parentResourceId id of the parent resource
      * @param resourceType     resourceType of the resource
      * @return this new resource
      */
-    boolean createResource(RequestPrimitive onem2mRequest,
-                           String parentResourceId, String resourceType);
+    boolean createResource(Object transaction, RequestPrimitive onem2mRequest,
+                           String parentResourceId, Integer resourceType);
 
     /**
-     * Update the pointers to the oldest and latest children
-     *
-     * @param resourceId the resource id
-     * @param resourceType     resourceType of the resource
-     * @param oldest     pointer to the tail
-     * @param latest     pointer to the head
-     * @return the resource
-     */
-    boolean updateResourceOldestLatestInfo(String resourceId,
-                                           String resourceType,
-                                           String oldest,
-                                           String latest);
-
-    /**
+     * @param transaction      transaction
      * @param resourceId          this resource
      * @param jsonResourceContent serailized JSON object
      * @return true if successfully updated
      */
-    boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent);
-
-    /**
-     * Link the parent resource to the child resource in the data store.
-     *
-     * @param parentResourceId parent
-     * @param childName        name of child
-     * @param childResourceId  child res id
-     * @param prevId           pointer to prev sibling
-     * @param nextId           pointer to next sibling
-     * @return true if successfully created
-     */
-    boolean createParentChildLink(String parentResourceId,
-                                  String childName, String childResourceId,
-                                  String prevId, String nextId);
-
-    /**
-     * Update the Next pointer
-     *
-     * @param parentResourceId the parent
-     * @param child            the child
-     * @param nextId           its next pointer
-     * @return true if successfully updated
-     */
-    boolean updateChildSiblingNextInfo(String parentResourceId,
-                                       Onem2mParentChild child,
-                                       String nextId);
-
-    /**
-     * Unlink the child resource from the parent resource
-     *
-     * @param parentResourceId  the parent
-     * @param childResourceName child name
-     * @return true if successfully removed
-     */
-    boolean removeParentChildLink(String parentResourceId, String childResourceName);
+    boolean updateJsonResourceContentString(Object transaction, String resourceId, String jsonResourceContent);
 
     /**
      * Delete the resource using its id
@@ -108,24 +61,14 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @param resourceId the resource id
      * @return true if successfully deleted
      */
-    boolean deleteResourceById(String resourceId);
+    boolean deleteResource(Object transaction, String resourceId, String parentResourceId, String resourceName);
 
+    boolean moveParentChildLinkToDeleteParent(String resoruceId, String oldPrentResourceId, String childResourceName,
+                                              String newParentResourceId);
     /**
      * Cleanup the data store.
      */
     void reInitializeDatastore();
-
-    /**
-     * Update the prev pointer
-     *
-     * @param parentResourceId the parent
-     * @param child            the child
-     * @param prevId           prev pointer
-     * @return true if successfully updated
-     */
-    boolean updateChildSiblingPrevInfo(String parentResourceId,
-                                       Onem2mParentChild child,
-                                       String prevId);
 
     /**
      * Add the AE-ID to resourceID mapping into Onem2mCseList.
@@ -168,4 +111,8 @@ public interface DaoResourceTreeWriter extends Closeable {
      * @param resourceId The last assigned resourceId
      */
     boolean writeSystemStartId(int resourceId);
+
+    Object startTransaction();
+
+    boolean endTransaction(Object transaction);
 }

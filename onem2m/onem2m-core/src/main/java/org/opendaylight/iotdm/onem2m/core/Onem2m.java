@@ -34,6 +34,7 @@ public class Onem2m {
     }
     public static final String CSE_DEFAULT_NAME = "InCSE1";
     public static final String SYS_PERF_TEST_CSE = "SYS_PERF_TEST_CSE";
+    public static final String SYS_DELETE_RESOURCE_ID = "1";
 
     public static final int MAX_RESOURCES = 1000000;
     public static final int MAX_TREE_WIDTH = 10000;
@@ -45,12 +46,12 @@ public class Onem2m {
     public static final SecurityLevel DEFAULTSECURITYLEVEL = SecurityLevel.L0;
 
     public class Operation {
-        public static final String CREATE = "1";
-        public static final String RETRIEVE = "2";
-        public static final String UPDATE = "3";
-        public static final String DELETE = "4";
-        public static final String NOTIFY = "5";
-        public static final String DISCOVER = "6";
+        public static final int CREATE = 1;
+        public static final int RETRIEVE = 2;
+        public static final int UPDATE = 3;
+        public static final int DELETE = 4;
+        public static final int NOTIFY = 5;
+        public static final int DISCOVER = 6;
     }
 
     // TODO: onem2m mime types: TS0004 section 6.7
@@ -109,19 +110,19 @@ public class Onem2m {
 
     // TODO: ts0004 6.3.3.2.1, 8.2.4-1, why are there ENUMS and SHORT NAMES ???? WHICH ONE DO WE USE
     public class ResourceType {
-        public static final String AE = "2"; //"ae";
-        public static final String CONTAINER = "3"; //"cnt";
-        public static final String CSE_BASE = "5"; //"cb";
-        public static final String CONTENT_INSTANCE = "4"; //"cin";
-        public static final String SUBSCRIPTION = "23"; //"sub";
-        public static final String NODE = "14"; //"nod";
-        public static final String GROUP = "9"; //"grp";
-        public static final String ACCESS_CONTROL_POLICY = "1"; //"acp";
-        public static final String REMOTE_CSE = "16"; //"csr";
-        public static final String MGMT_OBJECT = "13";
-        public static final String FLEX_CONTAINER = "24";
+        public static final int AE = 2;
+        public static final int CONTAINER = 3;
+        public static final int CSE_BASE = 5;
+        public static final int CONTENT_INSTANCE = 4;
+        public static final int SUBSCRIPTION = 23;
+        public static final int NODE = 14;
+        public static final int GROUP = 9;
+        public static final int ACCESS_CONTROL_POLICY = 1;
+        public static final int REMOTE_CSE = 16;
+        public static final int MGMT_OBJECT = 13;
+        public static final int FLEX_CONTAINER = 24;
     }
-    public class ResourceTypeString {
+    public static class ResourceTypeString {
         public static final String AE = "ae";
         public static final String CONTAINER = "cnt";
         public static final String CSE_BASE = "cb";
@@ -141,7 +142,7 @@ public class Onem2m {
     }
 
     // hard code set of long to short name
-    public static final Map<String,String> resourceTypeToString = new HashMap<String,String>() {{
+    public static final Map<Integer,String> resourceTypeToString = new HashMap<Integer,String>() {{
         // type; string
         put(ResourceType.AE, ResourceTypeString.AE);
         put(ResourceType.CONTAINER, ResourceTypeString.CONTAINER);
@@ -184,9 +185,9 @@ public class Onem2m {
     }
 
     public class ResponseType { // TS0001 section 8.2.1
-        public static final String NON_BLOCKING_REQUEST_SYNCH = "1";
-        public static final String NON_BLOCKING_REQUEST_ASYNCH = "2";
-        public static final String BLOCKING_REQUEST = "3";
+        public static final int NON_BLOCKING_REQUEST_SYNCH = 1;
+        public static final int NON_BLOCKING_REQUEST_ASYNCH = 2;
+        public static final int BLOCKING_REQUEST = 3;
     }
 
     public class NotificationContentType {
@@ -197,27 +198,27 @@ public class Onem2m {
 
     // TODO: where did this list come from, not specified in XSD but specified in TS0001 8.1.2
     public class ResultContent {
-        public static final String NOTHING = "0";
-        public static final String ATTRIBUTES = "1";
-        public static final String HIERARCHICAL_ADDRESS = "2";
-        public static final String HIERARCHICAL_ADDRESS_ATTRIBUTES = "3";
-        public static final String ATTRIBUTES_CHILD_RESOURCES = "4";
-        public static final String ATTRIBUTES_CHILD_RESOURCE_REFS = "5";
-        public static final String CHILD_RESOURCE_REFS = "6";
-        //public static final String ORIGINAL_RESOURCE = "7";
+        public static final int NOTHING = 0;
+        public static final int ATTRIBUTES = 1;
+        public static final int HIERARCHICAL_ADDRESS = 2;
+        public static final int HIERARCHICAL_ADDRESS_ATTRIBUTES = 3;
+        public static final int ATTRIBUTES_CHILD_RESOURCES = 4;
+        public static final int ATTRIBUTES_CHILD_RESOURCE_REFS = 5;
+        public static final int CHILD_RESOURCE_REFS = 6;
+        //public static final int ORIGINAL_RESOURCE = 7;
     }
 
     // TODO: CDT-enumerationTypes
     public class DiscoveryResultType {
-        public static final String HIERARCHICAL = "1";
-        public static final String NON_HIERARCHICAL = "2";
+        public static final int HIERARCHICAL = 1;
+        public static final int NON_HIERARCHICAL = 2;
 
     }
 
     // TODO: Filter Usage
     public class FilterUsageType {
-        public static final String DISCOVERY = "1";
-        public static final String CONDITIONAL_RETRIEVAL = "2";
+        public static final int DISCOVERY = 1;
+        public static final int CONDITIONAL_RETRIEVAL = 2;
 
     }
 

@@ -18,8 +18,9 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
@@ -88,7 +89,6 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String CONTENT_FORMAT = "contentFormat"; // See ContentFormat below
     public static final String NATIVEAPP_NAME = "nativeAppName"; // if Protocol is NATIVE_APP then set this parm
 
-
     // hard code set of acceptable primitive attributes, short name
     public static final Set<String> primitiveAttributes = new HashSet<String>() {{
         add(OPERATION);
@@ -129,66 +129,108 @@ public class RequestPrimitive extends BasePrimitive {
         add(ROLE);
     }};
 
-    // hard code set of long to short name
-    public static final Map<String,String> longToShortAttributes = new HashMap<String,String>() {{
-        // short; long
-        put("operation", OPERATION);
-        put("to", TO);
-        put("from", FROM);
-        put("requestIdentifier", REQUEST_IDENTIFIER);
-        put("resourceType", RESOURCE_TYPE);
-        put("name", NAME);
-        put("content", CONTENT);
-        put("originatingTimestamp", ORIGINATING_TIMESTAMP);
-        put("requestExpirationTimestamp", REQUEST_EXPIRATION_TIMESTAMP);
-        put("resultExpirationTimestamp", RESULT_EXPIRATION_TIMESTAMP);
-        put("operationExecutionTime", OPERATION_EXECUTION_TIME);
-        put("responseType", RESPONSE_TYPE);
-        put("resultPersistence", RESULT_PERSISTENCE);
-        put("resultContent", RESULT_CONTENT);
-        put("eventCategory", EVENT_CATEGORY);
-        put("deliveryAggregation", DELIVERY_AGGREGATION);
-        put("groupRequestIdentifier", GROUP_REQUEST_IDENTIFIER);
-        put("createdBefore", FILTER_CRITERIA_CREATED_BEFORE);
-        put("createdAfter", FILTER_CRITERIA_CREATED_AFTER);
-        put("modifiedSince", FILTER_CRITERIA_MODIFIED_SINCE);
-        put("unmodifiedSince", FILTER_CRITERIA_UNMODIFIED_SINCE);
-        put("stateTagSmaller", FILTER_CRITERIA_STATE_TAG_SMALLER);
-        put("stateTagBigger", FILTER_CRITERIA_STATE_TAG_BIGGER);
-        put("label", FILTER_CRITERIA_LABELS);
-        put("resourceType", FILTER_CRITERIA_RESOURCE_TYPE);
-        put("attribute", FILTER_CRITERIA_ATTRIBUTE);
-        put("filterUsage", FILTER_CRITERIA_FILTER_USAGE);
-        put("limit", FILTER_CRITERIA_LIMIT);
-        put("offset", FILTER_CRITERIA_OFFSET);
-        put("discoveryResultType", DISCOVERY_RESULT_TYPE);
-        put("protocol", PROTOCOL);
-        put("contentFormat", CONTENT_FORMAT);
-        put("nativeAppName", NATIVEAPP_NAME);
-        put("role", ROLE);
-    }};
-
     public RequestPrimitive() {
         super();
     }
 
-    public void setPrimitivesList(List<Onem2mPrimitive> onem2mPrimitivesList) {
-        for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
-            switch (onem2mPrimitive.getName()) {
-                case FILTER_CRITERIA_LABELS:
-                case FILTER_CRITERIA_RESOURCE_TYPE:
-                    setPrimitiveMany(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
-                    break;
-                default:
-                    setPrimitive(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
-                    break;
-            }
-        }
+    protected String primitiveTo;
+    public String getPrimitiveTo() { return primitiveTo; }
+    public void setPrimitiveTo(String primitiveTo) { this.primitiveTo = primitiveTo; }
+
+    protected String primitiveFrom;
+    public String getPrimitiveFrom() { return primitiveFrom; }
+
+    protected String primitiveName;
+    public String getPrimitiveName() { return primitiveName; }
+    public void setPrimitiveName(String primitiveName) { this.primitiveName = primitiveName; }
+
+    protected Integer primitiveOperation = -1;
+    public Integer getPrimitiveOperation() { return primitiveOperation; }
+
+    protected Integer primitiveResourceType = -1;
+    public Integer getPrimitiveResourceType() { return primitiveResourceType; }
+    public void setPrimitiveResourceType(Integer primitiveResourceType) { this.primitiveResourceType = primitiveResourceType; }
+
+    protected String primitiveContentFormat;
+    public String getPrimitiveContentFormat() { return primitiveContentFormat; }
+    public void setPrimitiveContentFormat(String primitiveContentFormat) { this.primitiveContentFormat = primitiveContentFormat; }
+
+    protected String primitiveContent;
+    public String getPrimitiveContent() { return primitiveContent; }
+    public void setPrimitiveContent(String primitiveContent) { this.primitiveContent = primitiveContent; }
+
+    protected String primitiveNativeAppName;
+    public String getPrimitiveNativeAppName() { return primitiveNativeAppName; }
+    public void setPrimitiveNativeAppName(String primitiveNativeAppName) { this.primitiveNativeAppName = primitiveNativeAppName; }
+
+    protected Integer primitiveResponseType = -1;
+    public Integer getPrimitiveResponseType() { return primitiveResponseType; }
+
+    protected Integer primitiveResultContent = -1;
+    public Integer getPrimitiveResultContent() { return primitiveResultContent; }
+
+    protected String primitiveRequestIdentifier;
+    public String getPrimitiveRequestIdentifier() { return primitiveRequestIdentifier; }
+
+    protected String primitiveFilterCriteriaCreatedBefore;
+    public String getPrimitiveFilterCriteriaCreatedBefore() { return primitiveFilterCriteriaCreatedBefore; }
+
+    protected String primitiveFilterCriteriaCreatedAfter;
+    public String getPrimitiveFilterCriteriaCreatedAfter() { return primitiveFilterCriteriaCreatedAfter; }
+
+    protected String primitiveFilterCriteriaUnModifiedSince;
+    public String getPrimitiveFilterCriteriaUnModifiedSince() { return primitiveFilterCriteriaUnModifiedSince; }
+
+    protected String primitiveFilterCriteriaModifiedSince;
+    public String getPrimitiveFilterCriteriaModifiedSince() { return primitiveFilterCriteriaModifiedSince; }
+
+    protected Integer primitiveFilterCriteriaStateTagSmaller = -1;
+    public Integer getPrimitiveFilterCriteriaStateTagSmaller() { return primitiveFilterCriteriaStateTagSmaller; }
+
+    protected Integer primitiveFilterCriteriaStateTagBigger = -1;
+    public Integer getPrimitiveFilterCriteriaStateTagBigger() { return primitiveFilterCriteriaStateTagBigger; }
+
+    protected Integer primitiveFilterCriteriaSizeAbove = -1;
+    public Integer getPrimitiveFilterCriteriaSizeAbove() { return primitiveFilterCriteriaSizeAbove; }
+
+    protected Integer primitiveFilterCriteriaSizeBelow = -1;
+    public Integer getPrimitiveFilterCriteriaSizeBelow() { return primitiveFilterCriteriaSizeBelow; }
+
+    protected Integer primitiveFilterCriteriaLimit = -1;
+    public Integer getPrimitiveFilterCriteriaLimit() { return primitiveFilterCriteriaLimit; }
+
+    protected Integer primitiveFilterCriteriaOffset = -1;
+    public Integer getPrimitiveFilterCriteriaOffset() { return primitiveFilterCriteriaOffset; }
+
+    protected Integer primitiveFilterCriteriaFilterUsage = -1;
+    public Integer getPrimitiveFilterCriteriaFilterUsage() { return primitiveFilterCriteriaFilterUsage; }
+
+    protected Integer primitiveDiscoveryResultType = -1;
+    public Integer getPrimitiveDiscoveryResultType() { return primitiveDiscoveryResultType; }
+    public void setPrimitiveDiscoveryResultType(Integer primitiveDiscoveryResultType) {
+        this.primitiveDiscoveryResultType = primitiveDiscoveryResultType;
+    }
+
+    protected List<String> primitiveFilterCriteriaLabels;
+    public List<String> getPrimitiveFilterCriteriaLabels() { return primitiveFilterCriteriaLabels; }
+
+    protected List<Integer> primitiveFilterCriteriaResourceTypes;
+    public List<Integer> getPrimitiveFilterCriteriaResourceTypes() { return primitiveFilterCriteriaResourceTypes; }
+
+    protected String primitiveProtocol;
+    public String getPrimitiveProtocol() { return primitiveProtocol; }
+
+    protected Object writerTransaction;
+    public void setWriterTransaction(Object writerTransaction) {
+        this.writerTransaction = writerTransaction;
+    }
+    public Object getWriterTransaction() {
+        return this.writerTransaction;
     }
 
     public boolean isCreate;
     public boolean isUpdate;
-
+    public boolean found_filter_criteria = false;
     /**
      * The following section is used to hold attributes for the data store.  In the case of create, when the parent
      * resource is read from the database, it is stored in the 'Onem2mResource onem2mResource' variable.
@@ -205,6 +247,14 @@ public class RequestPrimitive extends BasePrimitive {
         return this.resourceId;
     }
 
+    protected String parentResourceId; // filled in by onem2mDb.CRUD routines, even if read hURI or nhURI
+    public void setParentResourceId(String parentResourceId) {
+        this.parentResourceId = parentResourceId;
+    }
+    public String getParentResourceId() {
+        return this.parentResourceId;
+    }
+
     // in a requestPrimitive, the RequestPrimitive.NAME is used to load into the resourceName
     protected String resourceName;
     public void setResourceName(String resourceName) {
@@ -214,6 +264,33 @@ public class RequestPrimitive extends BasePrimitive {
         return this.resourceName;
     }
 
+    // set teh paretnTarget Uri so it can be stored with the resoruce to be created
+    protected String parentTargetUri;
+    public void setParentTargetUri(String parentTargetUri) {
+        this.parentTargetUri = parentTargetUri;
+    }
+    public String getParentTargetUri() {
+        return this.parentTargetUri;
+    }
+
+    protected Integer resourceType;
+    public void setResourceType(String resourceType) {
+        this.resourceType = Integer.valueOf(resourceType);
+    }
+    public void setResourceType(Integer resourceType) {
+        this.resourceType = resourceType;
+    }
+    public Integer getResourceType() {
+        return this.resourceType;
+    }
+
+    protected Integer parentResourceType;
+    public void setParentResourceType(String parentResourceType) {
+        this.parentResourceType = Integer.valueOf(parentResourceType);
+    }
+    public Integer getParentResourceType() {
+        return this.parentResourceType;
+    }
     /*
      * For C:
      *      - parent resource before the new resource is created,
@@ -229,23 +306,43 @@ public class RequestPrimitive extends BasePrimitive {
         return this.onem2mResource;
     }
 
-    protected ResourceContent resourceContent;
-    public void setResourceContent(ResourceContent rc) {
-        this.resourceContent = rc;
+    protected Onem2mResource parentOnem2mResource;
+    public void setParentOnem2mResource(Onem2mResource parentOnem2mResource) {
+        this.parentOnem2mResource = parentOnem2mResource;
     }
-    public ResourceContent getResourceContent() {
-        return this.resourceContent;
+    public Onem2mResource getParentOnem2mResource() {
+        return this.parentOnem2mResource;
     }
 
-    private String requestType;
-    public void setRequestType(String rt) {
-        this.requestType = rt;
+    protected JSONObject parentJsonResourceContent;
+    public void setParentJsonResourceContent(String jsonString) {
+        try {
+            this.parentJsonResourceContent = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            LOG.error("Invalid JSON {}", jsonString, e);
+            throw new IllegalArgumentException("Invalid JSON", e);
+        }
     }
-    public String getRequestType() {
-        return this.requestType;
+    public JSONObject getParentJsonResourceContent() {
+        return this.parentJsonResourceContent;
     }
+
+    protected BaseResource baseResource;
+    public void setBaseResource(BaseResource rc) {
+        this.baseResource = rc;
+    }
+    public BaseResource getBaseResource() {
+        return this.baseResource;
+    }
+
+    private String jsonResourceContentString;
+    public void setJsonResourceContentString(String v) { this.jsonResourceContentString = v; }
+    public String getJsonResourceContentString() { return this.jsonResourceContentString; }
 
     private JSONObject jsonResourceContent;
+    public void setJsonResourceContent(JSONObject jsonResourceContent) {
+        this.jsonResourceContent = jsonResourceContent;
+    }
     public void setJsonResourceContent(String jsonResourceContentString) {
         try {
             this.jsonResourceContent = new JSONObject(jsonResourceContentString);
@@ -258,40 +355,8 @@ public class RequestPrimitive extends BasePrimitive {
         return this.jsonResourceContent;
     }
 
-    private Set<String> validAttributes;
-    public void setValidAttributes(Set<String> va) {
-        this.validAttributes = va;
-    }
-    public Set<String> getValidAttributes() {
-        return this.validAttributes;
-    }
-
-    private String retrieveByAttrName;
-    public void setRetrieveByAttrName(String name) {
-        this.retrieveByAttrName = name;
-    }
-    public String getRetrieveByAttrName() {
-        return this.retrieveByAttrName;
-    }
-
-    public boolean mustUpdateContainer;
-    public Integer containerCbs;
-    public Integer containerCni;
-    public Integer containerSt;
-    public void setCurrContainerValues(Integer cbs, Integer cni, Integer st) {
-
-        this.mustUpdateContainer = true;
-        this.containerCbs = cbs;
-        this.containerCni = cni;
-        this.containerSt = st;
-    }
-
-    private boolean hasFilterCriteria;
-    public void setHasFilterCriteria(boolean hasFilterCriteria) {
-        this.hasFilterCriteria = hasFilterCriteria;
-    }
     public boolean getHasFilterCriteria() {
-        return this.hasFilterCriteria;
+        return this.found_filter_criteria;
     }
 
     private boolean fuDiscovery;
@@ -300,6 +365,14 @@ public class RequestPrimitive extends BasePrimitive {
     }
     public boolean getFUDiscovery() {
         return this.fuDiscovery;
+    }
+
+    private boolean parentContentHasBeenModified;
+    public void setParentContentHasBeenModified(boolean parentContentHasBeenModified) {
+        this.parentContentHasBeenModified = parentContentHasBeenModified;
+    }
+    public boolean getParentContentHasBeenModified() {
+        return this.parentContentHasBeenModified;
     }
 
     public String getContentAttributeString(final String attrName) {

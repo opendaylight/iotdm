@@ -8,7 +8,6 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Futures;
 
 import java.util.List;
@@ -18,18 +17,16 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactory;
-import org.opendaylight.iotdm.onem2m.core.database.lock.ReadWriteLocker;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
+import org.opendaylight.iotdm.onem2m.core.rest.NotificationProcessor;
+import org.opendaylight.iotdm.onem2m.core.rest.RequestLocker;
 import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -40,11 +37,11 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultCoapsConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.SecurityConfig;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
@@ -68,10 +65,13 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private static NotificationPublishService notifierService;
     private static Onem2mRouterService routerService;
     private static final Onem2mCoreProvider coreProvider = new Onem2mCoreProvider();
+    private static final RequestLocker rl = RequestLocker.getInstance();
 
     private SecurityConfig securityConfig = null;
     private DefaultHttpsConfig defaultHttpsConfig = null;
     private DefaultCoapsConfig defaultCoapsConfig = null;
+
+    private boolean onSessionInitialized = false;
 
     public static Onem2mCoreProvider getInstance() {
         return coreProvider;
@@ -135,6 +135,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         db.initializeDatastore(dataBroker);
         Onem2mPluginManager.getInstance().handleDefaultConfigUpdate();
         Onem2mPluginManager.getInstance().startProviders(session, dataBroker);
+        onSessionInitialized = true;
         LOG.info("Session Initiated");
     }
 
@@ -146,10 +147,20 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             return;
         }
 
-        this.transactionManager = new TransactionManager(daoResourceTreeFactory, new ReadWriteLocker(50));
+        while (!onSessionInitialized) {
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+
+            }
+        }
+
+        this.transactionManager = new TransactionManager(this.dataBroker, daoResourceTreeFactory);
         this.twc = this.transactionManager.getDbResourceTreeWriter();
         this.trc = this.transactionManager.getTransactionReader();
+        Onem2mDb.getInstance().registerDbReaderAndWriter(twc, trc);
         Onem2mPluginsDbApi.getInstance().registerDbReaderAndWriter(twc, trc);
+        NotificationProcessor.getInstance().initThreadsAndQueuesForResourceProcessing();
 
         LOG.info("Onem2mCoreProvider.registerDaoPlugin: plugin registered: {}", daoResourceTreeFactory.getName());
     }
@@ -190,10 +201,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         LOG.info("Session Closed");
     }
 
-    private Future<RpcResult<Onem2mRequestPrimitiveOutput>> createOutputFromResponse(
-                                                                           ResponsePrimitive onem2mResponse,
-                                                                           List<Onem2mPrimitive> onem2mPrimitiveList) {
-        onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
+    private Future<RpcResult<Onem2mRequestPrimitiveOutput>> createOutputFromResponse(ResponsePrimitive onem2mResponse) {
+        List<Onem2mPrimitive> onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
         Onem2mRequestPrimitiveOutput output = new Onem2mRequestPrimitiveOutputBuilder()
                                                       .setOnem2mPrimitive(onem2mPrimitiveList).build();
 
@@ -225,23 +234,26 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         List<Onem2mPrimitive> onem2mPrimitiveList = input.getOnem2mPrimitive();
         // todo: if it is a group/fanoutpoint, new a GroupRequestPrimitiveProcessor then called a lot of single processor?
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-        ResponsePrimitive onem2mResponse = null;
-        onem2mRequest.setPrimitivesList(onem2mPrimitiveList);
+        ResponsePrimitive onem2mResponse =  new ResponsePrimitive();
+        onem2mRequest.processPrimitivesList(onem2mPrimitiveList, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null) {
+            return createOutputFromResponse(onem2mResponse);
+        }
 
         if (!isDaoPluginRegistered()) {
             onem2mResponse = new ResponsePrimitive();
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
                     "DaoPlugin not yet registered");
-            return createOutputFromResponse(onem2mResponse, onem2mPrimitiveList);
+            return createOutputFromResponse(onem2mResponse);
         }
 
         Onem2mDb.CseBaseResourceLocator resourceLocator = null;
         try {
-            String nativeAppName = onem2mRequest.getPrimitive(RequestPrimitive.NATIVEAPP_NAME);
+            String nativeAppName = onem2mRequest.getPrimitiveNativeAppName();
             if(nativeAppName != null && nativeAppName.equals("CSEProvisioning")) {
 
                 Onem2mCseProvisioningInput cseInput = new Onem2mCseProvisioningInputBuilder()
-                        .setOnem2mPrimitive(onem2mRequest.getPrimitivesList()).build();
+                        .setOnem2mPrimitive(onem2mPrimitiveList).build();
                 Future<RpcResult<Onem2mCseProvisioningOutput>> rpcResult = onem2mCseProvisioning(cseInput);
                 try {
                     onem2mPrimitiveList = rpcResult.get().getResult().getOnem2mPrimitive();
@@ -252,8 +264,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
                 } catch (InterruptedException | ExecutionException ex) {
                     onem2mResponse = new ResponsePrimitive();
-                    onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
-                            onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+                    onem2mResponse.setPrimitiveRequestIdentifier(onem2mRequest.getPrimitiveRequestIdentifier());
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cse Provisioning failed");
                     onem2mPrimitiveList = onem2mResponse.getPrimitivesList();
                     output = new Onem2mRequestPrimitiveOutputBuilder()
@@ -263,18 +274,17 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                 return RpcResultBuilder.success(output).buildFuture();
             }
         } catch (IllegalArgumentException ex) {
-            LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitive(RequestPrimitive.TO));
+            LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitiveTo());
             // rethrow the exception
             throw ex;
         }
 
         try {
-            String to = onem2mRequest.getPrimitive(RequestPrimitive.TO);
-            onem2mRequest.delPrimitive(RequestPrimitive.TO);
-            onem2mRequest.setPrimitive(RequestPrimitive.TO, Onem2m.translateUriToOnem2m(to));
-            resourceLocator = this.db.createResourceLocator(onem2mRequest.getPrimitive(RequestPrimitive.TO));
+            String to = onem2mRequest.getPrimitiveTo();
+            onem2mRequest.setPrimitiveTo(Onem2m.translateUriToOnem2m(to));
+            resourceLocator = this.db.createResourceLocator(onem2mRequest.getPrimitiveTo());
         } catch (IllegalArgumentException ex) {
-            LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitive(RequestPrimitive.TO));
+            LOG.error("Request with invalid URI passed: {}", onem2mRequest.getPrimitiveTo());
             // rethrow the exception
             throw ex;
         }
@@ -288,11 +298,10 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             if (secLevel == SecurityLevel.L2) {
                 LOG.error("Invalid security level passed (L2) without authentication");
                 onem2mResponse = new ResponsePrimitive();
-                onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
-                        onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+                onem2mResponse.setPrimitiveRequestIdentifier(onem2mRequest.getPrimitiveRequestIdentifier());
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
                                       "Invalid security level without authentication");
-                return createOutputFromResponse(onem2mResponse, onem2mPrimitiveList);
+                return createOutputFromResponse(onem2mResponse);
             }
             LOG.trace("Checking permissions of the request which is not authenticated");
             onem2mResponse = checkRequestPermissionsNoAuth(secLevel, resourceLocator, onem2mRequest);
@@ -301,7 +310,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         if (null != onem2mResponse) {
             // Error response has been returned by verification methods
             LOG.trace("Request permissions check failed");
-            return createOutputFromResponse(onem2mResponse, onem2mPrimitiveList);
+            return createOutputFromResponse(onem2mResponse);
         }
 
         // Check if the target URI points to local resource
@@ -313,8 +322,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             } catch (InterruptedException | ExecutionException ex) {
                 LOG.error("Forwarding procedure failed: {}", ex);
                 onem2mResponse = new ResponsePrimitive();
-                onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
-                        onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+                onem2mResponse.setPrimitiveRequestIdentifier(onem2mRequest.getPrimitiveRequestIdentifier());
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Forwarding procedure failed");
             }
 
@@ -324,32 +332,29 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             onem2mRequest.setTargetResourceLocator(resourceLocator);
             onem2mResponse = new ResponsePrimitive();
 
-            onem2mRequest.handleOperation(twc, trc, onem2mResponse);
+            onem2mRequest.handleOperation(onem2mResponse);
         }
 
-        return createOutputFromResponse(onem2mResponse, onem2mPrimitiveList);
+        return createOutputFromResponse(onem2mResponse);
     }
 
     private ResponsePrimitive prepareAccessDeniedErrorResponse(RequestPrimitive onem2mRequest, String message) {
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-        onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
-                onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+        onem2mResponse.setPrimitiveRequestIdentifier(onem2mRequest.getPrimitiveRequestIdentifier());
         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.ACCESS_DENIED, message);
         return onem2mResponse;
     }
 
     private ResponsePrimitive prepareInternalErrorResponse(RequestPrimitive onem2mRequest, String message) {
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-        onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
-                onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+        onem2mResponse.setPrimitiveRequestIdentifier(onem2mRequest.getPrimitiveRequestIdentifier());
         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, message);
         return onem2mResponse;
     }
 
     private ResponsePrimitive prepareBadRequestErrorResponse(RequestPrimitive onem2mRequest, String message) {
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-        onem2mResponse.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER,
-                onem2mRequest.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER));
+        onem2mResponse.setPrimitiveRequestIdentifier(onem2mRequest.getPrimitiveRequestIdentifier());
         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, message);
         return onem2mResponse;
     }
@@ -361,9 +366,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     private ResponsePrimitive checkRequestPermissionsNoAuth(SecurityLevel securityLevel,
                                                             Onem2mDb.CseBaseResourceLocator resourceLocator,
                                                             RequestPrimitive onem2mRequest) {
-        String originator = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-        String operation = onem2mRequest.getPrimitive(RequestPrimitive.OPERATION);
-        String resourceType  = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
+        String originator = onem2mRequest.getPrimitiveFrom();
+        Integer operation = onem2mRequest.getPrimitiveOperation();
+        Integer resourceType  = onem2mRequest.getPrimitiveResourceType();
 
         /*
          * Create resource locator of the originator in order to check whether the
@@ -379,7 +384,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         }
 
         // Check whether the originator is locally registered entity
-        String originatorEntityType = originLocator.isRegistered(trc);
+        Integer originatorEntityType = originLocator.isRegistered();
 
         if (resourceLocator.isLocalResource()) {
             // targeted to local resource (hosted by local cseBase)
@@ -395,15 +400,15 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                 // verify whether AE doesn't create CSE and vice versa
                 switch (originatorEntityType) {
                     case Onem2m.ResourceType.AE:
-                        if (operation.equals(Onem2m.Operation.CREATE) &&
-                            (resourceType.equals(Onem2m.ResourceType.REMOTE_CSE))) {
+                        if (operation == Onem2m.Operation.CREATE &&
+                            (resourceType == Onem2m.ResourceType.REMOTE_CSE)) {
                             return prepareAccessDeniedErrorResponse(onem2mRequest,
                                                                     "Attempt to register CSE on behalf of AE");
                         }
                         break;
                     case Onem2m.ResourceType.REMOTE_CSE:
-                        if (operation.equals(Onem2m.Operation.CREATE) &&
-                            (resourceType.equals(Onem2m.ResourceType.AE))) {
+                        if (operation == Onem2m.Operation.CREATE &&
+                            (resourceType == Onem2m.ResourceType.AE)) {
                             return prepareAccessDeniedErrorResponse(onem2mRequest,
                                                                     "Attempt to register AE on behalf of CSE");
                         }
@@ -431,8 +436,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                                 "not hosted locally");
             }
 
-            if (operation.equals(Onem2m.Operation.CREATE) &&
-                (resourceType.equals(Onem2m.ResourceType.AE) || resourceType.equals(Onem2m.ResourceType.REMOTE_CSE))) {
+            if (operation == Onem2m.Operation.CREATE &&
+                (resourceType == Onem2m.ResourceType.AE || resourceType == Onem2m.ResourceType.REMOTE_CSE)) {
                 // entity registration requests are not allowed to be forwarded
                 return prepareAccessDeniedErrorResponse(onem2mRequest,
                                                         "Entity registration cannot be forwarded");
@@ -459,9 +464,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
          * Part3: End, deny CSE registration to be forwarded otherwise continue with forwarding or local processing
          */
 
-        String originator = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-        String operation = onem2mRequest.getPrimitive(RequestPrimitive.OPERATION);
-        String resourceType  = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
+        String originator = onem2mRequest.getPrimitiveFrom();
+        Integer operation = onem2mRequest.getPrimitiveOperation();
+        Integer resourceType  = onem2mRequest.getPrimitiveResourceType();
 
         // Create locator of the resource representing originator (not sender) of the request
         Onem2mDb.CseBaseOriginatorLocator originLocator = null;
@@ -472,7 +477,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                       originator, cseBaseId, e);
         }
 
-        if (operation.equals(Onem2m.Operation.CREATE) && resourceType.equals(Onem2m.ResourceType.AE)) {
+        if (operation == Onem2m.Operation.CREATE && resourceType == Onem2m.ResourceType.AE) {
             // AE registration cannot be forwarded nor originated by CSE
             return prepareAccessDeniedErrorResponse(onem2mRequest,
                                                     "AE registration received from CSE");
@@ -541,7 +546,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
              * the registration of the sender CSE
              */
 
-            if (! (operation.equals(Onem2m.Operation.CREATE) && resourceType.equals(Onem2m.ResourceType.REMOTE_CSE))) {
+            if (! (operation == Onem2m.Operation.CREATE && resourceType == Onem2m.ResourceType.REMOTE_CSE)) {
                 // this is not CSE registration request
                 return prepareAccessDeniedErrorResponse(onem2mRequest,
                                                         "Received request from CSE which is not registered");
@@ -570,7 +575,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
          * Part3
          * Sender CSE is registered and From parameter is valid
          */
-        if (operation.equals(Onem2m.Operation.CREATE) && resourceType.equals(Onem2m.ResourceType.REMOTE_CSE)) {
+        if (operation == Onem2m.Operation.CREATE && resourceType == Onem2m.ResourceType.REMOTE_CSE) {
             // Attempt to register CSE remotely
             return prepareAccessDeniedErrorResponse(onem2mRequest, "Remote CSE registration is not allowed");
         }
@@ -588,9 +593,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                                                       @Nonnull final String aeId,
                                                       @Nonnull final Onem2mDb.CseBaseResourceLocator resourceLocator,
                                                       @Nonnull final RequestPrimitive onem2mRequest) {
-        String originator = onem2mRequest.getPrimitive(RequestPrimitive.FROM);
-        String operation = onem2mRequest.getPrimitive(RequestPrimitive.OPERATION);
-        String resourceType  = onem2mRequest.getPrimitive(RequestPrimitive.RESOURCE_TYPE);
+        String originator = onem2mRequest.getPrimitiveFrom();
+        Integer operation = onem2mRequest.getPrimitiveOperation();
+        Integer resourceType  = onem2mRequest.getPrimitiveResourceType();
 
         // Create locator of the resource representing originator (in case of AE it is also sender) of the request
         Onem2mDb.CseBaseOriginatorLocator originLocator = null;
@@ -601,7 +606,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                       originator, cseBaseId, e);
         }
 
-        if (null == originLocator.isRegistered(trc)) {
+        if (null == originLocator.isRegistered()) {
             /*
              * AE is not registered so request must be targeted to locally and
              * the only operation allowed is originator (and also sender) AE registration
@@ -612,7 +617,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                                                         "AE cannot send request to remoteCSE if is not registered");
             }
 
-            if (! ((operation.equals(Onem2m.Operation.CREATE)) && resourceType.equals(Onem2m.ResourceType.AE))) {
+            if (!(operation == Onem2m.Operation.CREATE && resourceType == Onem2m.ResourceType.AE)) {
                 // this is not registration of AE
                 return prepareAccessDeniedErrorResponse(onem2mRequest,
                         "The only operation allowed to non-registered AE is its own registration");
@@ -634,7 +639,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             // Check whether the target of the request is hosted locally
             if (resourceLocator.isLocalResource()) {
                 // targeted locally
-                if (operation.equals(Onem2m.Operation.CREATE) && resourceType.equals(Onem2m.ResourceType.REMOTE_CSE)) {
+                if (operation == Onem2m.Operation.CREATE && resourceType == Onem2m.ResourceType.REMOTE_CSE) {
                     // AE cannot register CSE
                     return prepareAccessDeniedErrorResponse(onem2mRequest,
                             "Entity authenticated as AE attempted to register as CSE");
@@ -652,9 +657,8 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
                             "Request with From parameter set to CSE-relative C-type AE-ID-Stem cannot be forwarded");
                 }
 
-                if (operation.equals(Onem2m.Operation.CREATE) &&
-                    (resourceType.equals(Onem2m.ResourceType.AE) ||
-                             resourceType.equals(Onem2m.ResourceType.REMOTE_CSE))) {
+                if (operation == Onem2m.Operation.CREATE &&
+                    (resourceType == Onem2m.ResourceType.AE || resourceType == Onem2m.ResourceType.REMOTE_CSE)) {
                     return prepareAccessDeniedErrorResponse(onem2mRequest,
                             "Entity registration cannot be forwarded");
                 }
@@ -741,12 +745,18 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         onem2mRequest.setPrimitivesList(csePrimitiveList);
         ResponsePrimitive onem2mResponse = new ResponsePrimitive();
 
-        onem2mRequest.provisionCse(twc, trc, onem2mResponse);
+        if (!isDaoPluginRegistered()) {
+            onem2mResponse = new ResponsePrimitive();
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR,
+                    "DaoPlugin not yet registered");
+        } else {
 
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE).equals(Onem2m.ResponseStatusCode.OK)) {
-            RequestPrimitiveProcessor onem2mRequest1 = new RequestPrimitiveProcessor();
-            onem2mRequest1.setPrimitivesList(csePrimitiveList);
-            onem2mRequest1.createDefaultACP(twc, trc, onem2mResponse);
+            onem2mRequest.provisionCse(onem2mResponse);
+
+            if (onem2mResponse.getPrimitiveResponseStatusCode().equals(Onem2m.ResponseStatusCode.OK)) {
+                RequestPrimitiveProcessor onem2mRequest1 = new RequestPrimitiveProcessor();
+                onem2mRequest1.createDefaultACP(csePrimitiveList, onem2mResponse);
+            }
         }
 
         csePrimitiveList = onem2mResponse.getPrimitivesList();
@@ -767,9 +777,9 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     @Override
     public Future<RpcResult<java.lang.Void>> onem2mCleanupStore() {
 
-        Onem2mDb.getInstance().cleanupDataStore(twc);
+        Onem2mDb.getInstance().cleanupDataStore();
         Onem2mRouterService.cleanRoutingTable();
-        Onem2mDb.getInstance().dumpResourceIdLog(trc, null);
+        Onem2mDb.getInstance().dumpResourceIdLog(null);
         return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
     }
 
@@ -782,28 +792,25 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public Future<RpcResult<java.lang.Void>> onem2mDumpResourceTree(Onem2mDumpResourceTreeInput input) {
         LOG.info("RPC: onem2mDumpResourceTree dumping ...");
 
-        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-
         String resourceId;
         if (input == null || input.getResourceUri() == null || input.getResourceUri().trim().contentEquals("")) {
             resourceId = null;
         } else {
-            String resourceUri = input.getResourceUri().trim();
-            //onem2mRequest.setPrimitive(RequestPrimitive.TO, resourceUri);
-            if (!Onem2mDb.getInstance().findResourceUsingURI(trc, resourceUri, onem2mRequest, onem2mResponse)) {
+            String resourceUri = input.getResourceUri();
+            Onem2mResource onem2mResource = Onem2mDb.getInstance().findResourceUsingURI(resourceUri);
+            if (onem2mResource == null) {
                 LOG.error("Cannot find resourceUri: {}", resourceUri);
                 return Futures.immediateFuture(RpcResultBuilder.<Void>failed().build());
             }
-            resourceId = onem2mRequest.getResourceId();
+            resourceId = onem2mResource.getResourceId();
             LOG.info("Dumping resourceUri: {}, resourceId: {}", resourceUri, resourceId);
         }
         switch (input.getDumpMethod()) {
             case RAW:
-                Onem2mDb.getInstance().dumpResourceIdLog(trc, resourceId);
+                Onem2mDb.getInstance().dumpResourceIdLog(resourceId);
                 break;
             case HIERARCHICAL:
-                Onem2mDb.getInstance().dumpHResourceIdToLog(trc, resourceId);
+                Onem2mDb.getInstance().dumpHResourceIdToLog(resourceId);
                 break;
             default:
                 LOG.error("Unknown dump method: {}", input.getDumpMethod());

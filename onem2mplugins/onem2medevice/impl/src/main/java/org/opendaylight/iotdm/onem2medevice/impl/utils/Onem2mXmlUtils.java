@@ -46,8 +46,8 @@ public class Onem2mXmlUtils {
 
         //fix arrays - common fields
         List<String> arrayFields = Arrays.asList(
-                ResourceContent.LABELS,
-                ResourceContent.ACCESS_CONTROL_POLICY_IDS,
+                BaseResource.LABELS,
+                BaseResource.ACCESS_CONTROL_POLICY_IDS,
                 ResourceCse.POINT_OF_ACCESS,
                 ResourceCse.SUPPORTED_RESOURCE_TYPES,
                 ResourceAE.CONTENT_SERIALIZATION,
@@ -74,8 +74,8 @@ public class Onem2mXmlUtils {
                 ResourceContentInstance.CONTENT,
                 RequestPrimitive.CONTENT_FORMAT,
                 ResourceContentInstance.CONTENT_INFO,
-                ResourceContent.EXPIRATION_TIME,
-                ResourceContent.RESOURCE_NAME);
+                BaseResource.EXPIRATION_TIME,
+                BaseResource.RESOURCE_NAME);
         for (String field:stringFields) {
             Object o = cnResourceBody.opt(field);
             if(o != null && !(o instanceof String)) {
@@ -95,7 +95,7 @@ public class Onem2mXmlUtils {
             String maybeM2mKey = jsonObject.keySet().toArray()[0].toString();
             if (maybeM2mKey.contains("m2m:")) {
                 jsonObject = jsonObject.optJSONObject(maybeM2mKey);
-                String rn = jsonObject.optString(ResourceContent.RESOURCE_NAME);
+                String rn = jsonObject.optString(BaseResource.RESOURCE_NAME);
 
                 xmlContent = XML.toString(content, null); //convert
                 if (!rn.equals("")) { //if exists move resource name to attributes

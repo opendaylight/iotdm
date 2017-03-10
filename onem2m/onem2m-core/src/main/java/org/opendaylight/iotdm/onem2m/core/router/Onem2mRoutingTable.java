@@ -422,7 +422,7 @@ public class Onem2mRoutingTable {
     }
 
     /**
-     * Helper mehod, should be used to keep cseBase hash maps consistent.
+     * Helper method, should be used to keep cseBase hash maps consistent.
      * @param base
      * @return
      */
