@@ -175,8 +175,8 @@ public class Onem2mCoapRouterRequest extends Onem2mProtocolTxRequest {
     private Request createCoapRequest(RequestPrimitive onem2mRequest, String nextHopUrl) {
         Request request = null;
 
-        String operation = onem2mRequest.getPrimitive(RequestPrimitive.OPERATION);
-        if (null == operation) {
+        Integer operation = onem2mRequest.getPrimitiveOperation();
+        if (-1 == operation) {
             LOG.error("Onem2mRequest without operation set");
             return null;
         }
@@ -209,7 +209,7 @@ public class Onem2mCoapRouterRequest extends Onem2mProtocolTxRequest {
             LOG.error("Invalid next hop URL: {}, {}", nextHopUrl, e);
             return null;
         }
-        String path = onem2mRequest.getPrimitive(RequestPrimitive.TO);
+        String path = onem2mRequest.getPrimitiveTo();
         if (null == path) {
             LOG.error("Onem2m request without TO parameter");
             return null;
@@ -237,8 +237,8 @@ public class Onem2mCoapRouterRequest extends Onem2mProtocolTxRequest {
         }
 
         // set content if exists
-        if (null != onem2mRequest.getPrimitive(RequestPrimitive.CONTENT)) {
-            String format =  onem2mRequest.getPrimitive(RequestPrimitive.CONTENT_FORMAT);
+        if (null != onem2mRequest.getPrimitiveContent()) {
+            String format =  onem2mRequest.getPrimitiveContentFormat();
             if (null == format) {
                 LOG.error("Onem2m request with content but without content format specified");
                 return null;
@@ -282,7 +282,7 @@ public class Onem2mCoapRouterRequest extends Onem2mProtocolTxRequest {
             }
 
             // set the content
-            request.setPayload(onem2mRequest.getPrimitive(RequestPrimitive.CONTENT));
+            request.setPayload(onem2mRequest.getPrimitiveContent());
         }
 
         // use the options

@@ -10,8 +10,6 @@ package org.opendaylight.iotdm.onem2m.persistence.mdsal.write;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Monitor;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.persistence.mdsal.MDSALDaoResourceTreeFactory;
@@ -41,7 +39,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.parent.child.list.Onem2mParentChildBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
         .onem2m.parent.child.list.Onem2mParentChildKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.onem2m.resource.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIds;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredAeIdsKey;
@@ -110,7 +107,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
      */
     @Override
     public String generateResourceId(String parentResourceId,
-                                     String resourceType,
+                                     Integer resourceType,
                                      Integer iotdmInstance) {
 
         return factory.generateResourceId(parentResourceId, resourceType, iotdmInstance);
@@ -145,49 +142,25 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean createResource(RequestPrimitive onem2mRequest, String parentResourceId, String resourceType) {
-        int shard = factory.getShardFromResourceId(onem2mRequest.getResourceId());
+    public boolean createResource(Object transaction, RequestPrimitive onem2mRequest, String parentResourceId, Integer resourceType) {
+        int shard = factory.getShardFromResourceId(onem2mRequest.getResourceId()) % numShards;
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
             /**
-             * Initialize empty oldestlatest lists for contentInstances, and subscriptions as these are the two sets
-             * of lists that we need quick access to when processing requests for container/latest and notifications
-             * These act like the head/tail of a linked list where the key of the list is the resource type
-             */
-            List<OldestLatest> oldestLatestList = new ArrayList<OldestLatest>();
-
-            OldestLatest oldestLatestContentInstance = new OldestLatestBuilder()
-                    .setKey(new OldestLatestKey(Onem2m.ResourceType.CONTENT_INSTANCE))
-                    .setResourceType(Onem2m.ResourceType.CONTENT_INSTANCE)
-                    .setLatestId(Onem2mDb.NULL_RESOURCE_ID)
-                    .setOldestId(Onem2mDb.NULL_RESOURCE_ID)
-                    .build();
-            oldestLatestList.add(oldestLatestContentInstance);
-
-            OldestLatest oldestLatestSubscription = new OldestLatestBuilder()
-                    .setKey(new OldestLatestKey(Onem2m.ResourceType.SUBSCRIPTION))
-                    .setResourceType(Onem2m.ResourceType.SUBSCRIPTION)
-                    .setLatestId(Onem2mDb.NULL_RESOURCE_ID)
-                    .setOldestId(Onem2mDb.NULL_RESOURCE_ID)
-                    .build();
-            oldestLatestList.add(oldestLatestSubscription);
-
-            /**
              * Initialize the resource
              */
             Onem2mResourceKey key = new Onem2mResourceKey(onem2mRequest.getResourceId());
-            String jsonContent = onem2mRequest.getResourceContent().getInJsonContent().toString();
+            String jsonContent = onem2mRequest.getJsonResourceContentString();
             Onem2mResource onem2mResource = new Onem2mResourceBuilder()
                     .setKey(key)
                     .setResourceId(onem2mRequest.getResourceId())
                     .setName(onem2mRequest.getResourceName())
-                    .setResourceType(resourceType)
+                    .setResourceType(resourceType.toString())
                     .setParentId(parentResourceId) // parent resource
-                    .setOldestLatest(oldestLatestList)
-                    //.setChild(Collections.<Child>emptyList()) // moved to new parallel container
+                    .setParentTargetUri(onem2mRequest.getParentTargetUri())
                     .setResourceContentJsonString(jsonContent)
                     .build();
 
@@ -209,6 +182,8 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
             writer.create(pciid, onem2mParentChildList, dsType);
 
+            createParentChildLink(parentResourceId, onem2mRequest.getResourceName(), onem2mRequest.getResourceId());
+
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
             status = false;
@@ -220,40 +195,8 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean updateResourceOldestLatestInfo(String resourceId, String resourceType, String oldest, String latest) {
-        int shard = factory.getShardFromResourceId(resourceId);
-        boolean status = true;
-        crudMonitor.get(shard).enter();
-        try {
-            writer.reload();
-
-            OldestLatest oldestlatest = new OldestLatestBuilder()
-                    .setKey(new OldestLatestKey(resourceType))
-                    .setResourceType(resourceType)
-                    .setLatestId(latest)
-                    .setOldestId(oldest)
-                    .build();
-
-            Onem2mResourceKey key = new Onem2mResourceKey(resourceId);
-            OldestLatestKey oldestKey = oldestlatest.getKey();
-            InstanceIdentifier<OldestLatest> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mResource.class, key)
-                    .child(OldestLatest.class, oldestKey);
-
-            writer.update(iid, oldestlatest, dsType);
-        } catch (Exception e) {
-            LOG.error("Exception {}", e.getMessage());
-            status = false;
-        } finally {
-            writer.close();
-            crudMonitor.get(shard).leave();
-            return status;
-        }
-    }
-
-    @Override
-    public boolean updateJsonResourceContentString(String resourceId, String jsonResourceContent) {
-        int shard = factory.getShardFromResourceId(resourceId);
+    public boolean updateJsonResourceContentString(Object transaction, String resourceId, String jsonResourceContent) {
+        int shard = factory.getShardFromResourceId(resourceId) % numShards;
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
@@ -280,19 +223,61 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean createParentChildLink(String parentResourceId, String childName, String childResourceId, String prevId, String nextId) {
-        int shard = factory.getShardFromResourceId(parentResourceId);
+    public boolean moveParentChildLinkToDeleteParent(String resourceId,
+                                                     String oldPrentResourceId,
+                                                     String childResourceName,
+                                                     String newParentResourceId) {
+
+        int shard = factory.getShardFromResourceId(newParentResourceId) % numShards;
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
             writer.reload();
 
+            removeParentChildLink(oldPrentResourceId, childResourceName);
+            createParentChildLink(newParentResourceId, resourceId, resourceId);
+
+        } catch (Exception e) {
+            LOG.error("Exception {}", e.getMessage());
+            status = false;
+        } finally {
+            writer.close();
+            crudMonitor.get(shard).leave();
+            return status;
+        }
+    }
+
+    private void createParentChildLink(String parentResourceId, String childName, String childResourceId) {
+//        int shard = factory.getShardFromResourceId(parentResourceId) % numShards;
+//        boolean status = true;
+//        crudMonitor.get(shard).enter();
+//        try {
+//            writer.reload();
+//
+//            Onem2mParentChild onem2mParentChild = new Onem2mParentChildBuilder()
+//                    .setKey(new Onem2mParentChildKey(childName))
+//                    .setName(childName)
+//                    .setResourceId(childResourceId)
+//                    .build();
+//
+//            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+//                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
+//                    .child(Onem2mParentChild.class, onem2mParentChild.getKey());
+//
+//            writer.create(iid, onem2mParentChild, dsType);
+//        } catch (Exception e) {
+//            LOG.error("Exception {}", e.getMessage());
+//            status = false;
+//        } finally {
+//            writer.close();
+//            crudMonitor.get(shard).leave();
+//            return status;
+//        }
+
             Onem2mParentChild onem2mParentChild = new Onem2mParentChildBuilder()
                     .setKey(new Onem2mParentChildKey(childName))
                     .setName(childName)
                     .setResourceId(childResourceId)
-                    .setNextId(nextId)
-                    .setPrevId(prevId)
                     .build();
 
             InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
@@ -300,80 +285,15 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChild.class, onem2mParentChild.getKey());
 
             writer.create(iid, onem2mParentChild, dsType);
-        } catch (Exception e) {
-            LOG.error("Exception {}", e.getMessage());
-            status = false;
-        } finally {
-            writer.close();
-            crudMonitor.get(shard).leave();
-            return status;
-        }
+
     }
 
-    @Override
-    public boolean updateChildSiblingNextInfo(String parentResourceId, Onem2mParentChild child, String
-            nextId) {
-        int shard = factory.getShardFromResourceId(parentResourceId);
-        boolean status = true;
-        crudMonitor.get(shard).enter();
-        try {
-            writer.reload();
-
-            Onem2mParentChild updateChild = new Onem2mParentChildBuilder(child)
-                    .setNextId(nextId)
-                    .build();
-
-            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
-                    .child(Onem2mParentChild.class, updateChild.getKey());
-
-            writer.update(iid, updateChild, dsType);
-        } catch (Exception e) {
-            LOG.error("Exception {}", e.getMessage());
-            status = false;
-        } finally {
-            writer.close();
-            crudMonitor.get(shard).leave();
-            return status;
-        }
-    }
-
-    @Override
-    public boolean updateChildSiblingPrevInfo(String parentResourceId,
-                                              Onem2mParentChild child,
-                                              String prevId) {
-        int shard = factory.getShardFromResourceId(parentResourceId);
-        boolean status = true;
-        crudMonitor.get(shard).enter();
-        try {
-            writer.reload();
-
-            Onem2mParentChild updateChild = new Onem2mParentChildBuilder(child)
-                    .setPrevId(prevId)
-                    .build();
-
-            InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
-                    .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(parentResourceId))
-                    .child(Onem2mParentChild.class, updateChild.getKey());
-
-            writer.update(iid, updateChild, dsType);
-        } catch (Exception e) {
-            LOG.error("Exception {}", e.getMessage());
-            status = false;
-        } finally {
-            writer.close();
-            crudMonitor.get(shard).leave();
-            return status;
-        }
-    }
-
-    @Override
-    public boolean removeParentChildLink(String parentResourceId, String childResourceName) {
-        int shard = factory.getShardFromResourceId(parentResourceId);
-        boolean status = true;
-        crudMonitor.get(shard).enter();
-        try {
-            writer.reload();
+    private void removeParentChildLink(String parentResourceId, String childResourceName) {
+//        int shard = factory.getShardFromResourceId(parentResourceId) % numShards;
+//        boolean status = true;
+//        crudMonitor.get(shard).enter();
+//        try {
+//            writer.reload();
 
             Onem2mParentChildKey childKey = new Onem2mParentChildKey(childResourceName);
             InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
@@ -381,19 +301,19 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChild.class, childKey);
 
             writer.delete(iid, dsType);
-        } catch (Exception e) {
-            LOG.error("Exception {}", e.getMessage());
-            status = false;
-        } finally {
-            writer.close();
-            crudMonitor.get(shard).leave();
-            return status;
-        }
+//        } catch (Exception e) {
+//            LOG.error("Exception {}", e.getMessage());
+//            status = false;
+//        } finally {
+//            writer.close();
+//            crudMonitor.get(shard).leave();
+//            return status;
+//        }
     }
 
     @Override
-    public boolean deleteResourceById(String resourceId) {
-        int shard = factory.getShardFromResourceId(resourceId);
+    public boolean deleteResource(Object transaction, String resourceId, String parentResourceId, String resourceName) {
+        int shard = factory.getShardFromResourceId(resourceId) % numShards;
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
@@ -412,6 +332,8 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
                     .child(Onem2mParentChildList.class, parentChildListKey);
 
             writer.delete(pciid, dsType);
+
+            removeParentChildLink(parentResourceId, resourceName);
 
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
@@ -576,5 +498,15 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     @Override
     public void close() {
         writer.close();
+    }
+
+    @Override
+    public Object startTransaction() {
+        return null;
+    }
+
+    @Override
+    public boolean endTransaction(Object transaction) {
+        return true;
     }
 }

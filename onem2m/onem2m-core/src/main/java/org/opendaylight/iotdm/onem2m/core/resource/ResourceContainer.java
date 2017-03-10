@@ -9,11 +9,10 @@
 package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
-import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.json.JSONArray;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
@@ -25,14 +24,19 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceContainer {
+public class ResourceContainer extends BaseResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceContainer.class);
-    private ResourceContainer() {}
+
+    public ResourceContainer(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        super(onem2mRequest, onem2mResponse);
+    }
 
     // taken from CDT-container-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO: ts0001 9.6.6-2
 
+    public static final String CIN_BYTES_SIZE_KEY = "cin:bs";
+    public static final Integer SYS_MAX_NR_INSTANCES = 8;
 
     public static final String CREATOR = "cr";
     public static final String MAX_NR_INSTANCES = "mni";
@@ -46,38 +50,29 @@ public class ResourceContainer {
     public static final String DISABLE_RETRIEVAL = "dt";
     // todo change dt to correct name
 
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private void parseJsonCreateUpdateContent() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+        boolean creatorPresent = false;
 
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
+        Iterator<?> keys = jsonPrimitiveContent.keys();
         while( keys.hasNext() ) {
 
             String key = (String)keys.next();
 
-            resourceContent.jsonCreateKeys.add(key);
-
-            Object o = resourceContent.getInJsonContent().opt(key);
+            Object o = jsonPrimitiveContent.opt(key);
 
             switch (key) {
 
                 case CURR_BYTE_SIZE:
                 case CURR_NR_INSTANCES:
-                case ResourceContent.STATE_TAG:
+                case BaseResource.STATE_TAG:
                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, key + ": read-only parameter");
                     return;
 
                 case MAX_NR_INSTANCES:
                 case MAX_BYTE_SIZE:
                 case MAX_INSTANCE_AGE:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof Integer)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") number expected for json key: " + key);
@@ -91,14 +86,15 @@ public class ResourceContainer {
                     break;
 
                 case CREATOR:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                 "CONTENT(" + RequestPrimitive.CONTENT + ") CREATOR must be null");
                         return;
                     }
+                    creatorPresent = true;
                     break;
                 case DISABLE_RETRIEVAL:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof Boolean)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") boolean expected for json key: " + key);
@@ -107,7 +103,7 @@ public class ResourceContainer {
                     }
                     break;
                 case ONTOLOGY_REF:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -115,13 +111,11 @@ public class ResourceContainer {
                         }
                     }
                     break;
-                case ResourceContent.LABELS:
-                case ResourceContent.ACCESS_CONTROL_POLICY_IDS:
-                case ResourceContent.EXPIRATION_TIME:
-                case ResourceContent.RESOURCE_NAME:
-                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
-                            resourceContent,
-                            onem2mResponse)) {
+                case BaseResource.LABELS:
+                case BaseResource.ACCESS_CONTROL_POLICY_IDS:
+                case BaseResource.EXPIRATION_TIME:
+                case BaseResource.RESOURCE_NAME:
+                    if (!parseJsonCommonCreateUpdateContent(key)) {
                         return;
                     }
                     break;
@@ -130,9 +124,9 @@ public class ResourceContainer {
                             "CONTENT(" + RequestPrimitive.CONTENT + ") attribute not recognized: " + key);
                     return;
             }
-            if (resourceContent.jsonCreateKeys.contains(CREATOR)) {
-                JsonUtils.put(resourceContent.getInJsonContent(), CREATOR, onem2mRequest.getPrimitive(RequestPrimitive.FROM));
-            }
+        }
+        if (creatorPresent) {
+            JsonUtils.put(jsonPrimitiveContent, CREATOR, onem2mRequest.getPrimitiveFrom());
         }
     }
 
@@ -143,239 +137,222 @@ public class ResourceContainer {
      * prev, next with values "".  These 4 special attrs will be head, tail, prev, next for a doubly LL.
      */
 
-    /**
-     * Ensure the create/update parameters follow the rules
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void processCreateUpdateAttributes() {
 
         String tempStr;
 
         // verify this resource can be created under the target resource
         if (onem2mRequest.isCreate) {
-            String rt = onem2mRequest.getOnem2mResource().getResourceType();
-            if (rt == null || !(rt.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
-                    rt.contentEquals(Onem2m.ResourceType.CONTAINER) ||
-                    rt.contentEquals(Onem2m.ResourceType.AE))) {
+            Integer prt = onem2mRequest.getParentResourceType();
+            if (!(prt == Onem2m.ResourceType.CSE_BASE ||
+                    prt == Onem2m.ResourceType.CONTAINER ||
+                    prt == Onem2m.ResourceType.AE)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.OPERATION_NOT_ALLOWED,
-                        "Cannot create Container under this resource type: " + rt);
+                        "Cannot create Container under this resource type: " + prt);
                 return;
             }
         }
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
         // if update disableRetrieval to true, delete all the existing <cin>s
         if (onem2mRequest.isUpdate) {
-            Boolean dt = resourceContent.getInJsonContent().optBoolean(DISABLE_RETRIEVAL);
+            Boolean dt = jsonPrimitiveContent.optBoolean(DISABLE_RETRIEVAL);
             if (dt) {
-                Onem2mDb.getInstance().dumpContentInstancesForContainer(twc, trc, onem2mRequest.getPrimitive(RequestPrimitive.TO));
-                JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_INSTANCES, 0);
-                JsonUtils.put(resourceContent.getInJsonContent(), CURR_BYTE_SIZE, 0);
+                //Onem2mDb.getInstance().dumpContentInstancesForContainer(twc, trc, onem2mRequest.getPrimitive(RequestPrimitive.TO));
+
+                JsonUtils.put(jsonPrimitiveContent, CURR_NR_INSTANCES, 0);
+                JsonUtils.put(jsonPrimitiveContent, CURR_BYTE_SIZE, 0);
             }
         }
-        tempStr = resourceContent.getInJsonContent().optString(CREATOR, null);
+        tempStr = jsonPrimitiveContent.optString(CREATOR, null);
         if (tempStr != null && !onem2mRequest.isCreate) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CREATOR cannot be updated");
             return;
+        }
 
+        Integer mni = jsonPrimitiveContent.optInt(ResourceContainer.MAX_NR_INSTANCES, -1);
+        if (mni != -1 && mni > SYS_MAX_NR_INSTANCES) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "MAX_NR_INSTANCES(mni) exceeds system container limit: " + SYS_MAX_NR_INSTANCES);
+            return;
+        } else if (mni == -1 && onem2mRequest.isCreate) {
+            JsonUtils.put(jsonPrimitiveContent, ResourceContainer.MAX_NR_INSTANCES, 1);
         }
 
         if (onem2mRequest.isCreate) {
             // initialize state tag to 0
-            JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.STATE_TAG, 0);
-            JsonUtils.put(resourceContent.getInJsonContent(), CURR_NR_INSTANCES, 0);
-            JsonUtils.put(resourceContent.getInJsonContent(), CURR_BYTE_SIZE, 0);
+            JsonUtils.put(jsonPrimitiveContent, BaseResource.STATE_TAG, 0);
+            JsonUtils.put(jsonPrimitiveContent, CURR_NR_INSTANCES, 0);
+            JsonUtils.put(jsonPrimitiveContent, CURR_BYTE_SIZE, 0);
         } else {
             // update the existing state tag as the resource is being updated
-            int stateTag = onem2mRequest.getJsonResourceContent().optInt(ResourceContent.STATE_TAG);
-            JsonUtils.put(resourceContent.getInJsonContent(), ResourceContent.STATE_TAG, ++stateTag);
+            int stateTag = onem2mRequest.getJsonResourceContent().optInt(BaseResource.STATE_TAG);
+            JsonUtils.put(jsonPrimitiveContent, BaseResource.STATE_TAG, ++stateTag);
         }
 
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot create in data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot update the data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
-            // may have to remove content instances as mbs and mni may have been reduced
-            ResourceContainer.checkAndFixCurrMaxRules(twc, trc, onem2mRequest.getPrimitive(RequestPrimitive.TO));
-            Onem2mResource containerResource = Onem2mDb.getInstance().getResource(trc, onem2mRequest.getResourceId());
-            onem2mRequest.setOnem2mResource(containerResource);
-            onem2mRequest.setJsonResourceContent(containerResource.getResourceContentJsonString());
         }
     }
 
-    /**
-     * Parse the CONTENT resource representation.
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void handleCreateUpdate() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.CONTAINER, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        parse(Onem2m.ResourceTypeString.CONTAINER);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (isJson()) {
+            parseJsonCreateUpdateContent();
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
-        CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        //CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        processCommonCreateUpdateAttributes();
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
-        ResourceContainer.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        processCreateUpdateAttributes();
 
     }
 
-    private static boolean removeOldestContentInstance(ResourceTreeWriter twc, ResourceTreeReader trc, String containerUri) {
-        String oldestContentInstanceUri = Onem2mDb.trimURI(containerUri) + "/oldest";
-        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-        onem2mRequest.setPrimitive(RequestPrimitive.TO, oldestContentInstanceUri);
-        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
+    public static void checkAndFixCurrMaxRules(JSONObject containerResourceContent) {
 
-        if (!Onem2mDb.getInstance().findResourceUsingURI(trc, oldestContentInstanceUri, onem2mRequest, onem2mResponse)) {
-            return false;
-        }
-        if (!Onem2mDb.getInstance().deleteResourceUsingURI(twc, trc, onem2mRequest, onem2mResponse)) {
-            return false;
-        }
-        return true;
-    }
+        // maintain an array of cin ids in the container
+        String cinResouceIdJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
+        JSONArray cinResouceIdJsonArray = containerResourceContent.optJSONArray(cinResouceIdJsonKey);
+        JSONArray cinByteSizeJsonArray = containerResourceContent.optJSONArray(CIN_BYTES_SIZE_KEY);
 
-    public static void checkAndFixCurrMaxRules(ResourceTreeWriter twc, ResourceTreeReader trc, String containerUri) {
-
-        RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
-        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
-        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
-        if (!Onem2mDb.getInstance().findResourceUsingURI(trc, containerUri, onem2mRequest, onem2mResponse)) {
-            LOG.error("Somehow the resource container is gone! : " + containerUri);
-            return;
-        }
-
-
-        boolean stillMoreToDelete = true;
-        while (stillMoreToDelete) {
-            Integer maxNrInstances = onem2mRequest.getJsonResourceContent().optInt(ResourceContainer.MAX_NR_INSTANCES, -1);
-            if (maxNrInstances != -1) {
-                Integer currNrInstances = onem2mRequest.getJsonResourceContent().optInt(ResourceContainer.CURR_NR_INSTANCES);
-                if (currNrInstances != -1) {
-                    if (currNrInstances <= maxNrInstances) {
-                        stillMoreToDelete = false;
-                    } else {
-                        if (!removeOldestContentInstance(twc, trc, containerUri)) {
-                            stillMoreToDelete = false;
-                        }
-                        onem2mRequest = new RequestPrimitiveProcessor();
-                        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
-                        onem2mResponse = new ResponsePrimitive();
-                        if (!Onem2mDb.getInstance().findResourceUsingURI(trc, containerUri, onem2mRequest, onem2mResponse)) {
-                            LOG.error("Somehow the resource container is gone! : " + containerUri);
-                            return;
-                        }
-                    }
-                } else {
-                    stillMoreToDelete = false;
-                }
-            } else {
-                stillMoreToDelete = false;
+        if (cinResouceIdJsonArray != null && cinByteSizeJsonArray != null) {
+            if (cinResouceIdJsonArray.length() != cinByteSizeJsonArray.length()) {
+                LOG.error("checkAndFixCurrMaxRules: resId len:{}, != byteSize len: {}",
+                        cinResouceIdJsonArray.length(),
+                        cinByteSizeJsonArray.length());
             }
+        } else {
+            return; // possibly no ci's created yet
         }
 
-        onem2mRequest = new RequestPrimitiveProcessor();
-        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
-        onem2mResponse = new ResponsePrimitive();
-        if (!Onem2mDb.getInstance().findResourceUsingURI(trc, containerUri, onem2mRequest, onem2mResponse)) {
-            LOG.error("Somehow the resource container is gone! : " + containerUri);
-            return;
+        // if there is a max nr instances, remove until curr nr instances == max/sys_limit
+        Integer mni = containerResourceContent.optInt(ResourceContainer.MAX_NR_INSTANCES, -1);
+        if (mni == -1) {
+            mni = SYS_MAX_NR_INSTANCES;
+        }
+        int cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES, -1);
+        while (cni != -1 && cni > mni) {
+            int delByteSize = cinByteSizeJsonArray.getInt(0); // 0 is oldest, N is latest
+            JsonUtils.dec(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES);
+            JsonUtils.decN(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, delByteSize);
+            Onem2mDb.getInstance().getBGDeleteProcessor().moveResourceToDeleteParent(cinResouceIdJsonArray.getString(0));
+            cinResouceIdJsonArray.remove(0);
+            cinByteSizeJsonArray.remove(0);
+            cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES, -1);
         }
 
-        stillMoreToDelete = true;
-        while (stillMoreToDelete) {
-            Integer maxByteSize = onem2mRequest.getJsonResourceContent().optInt(ResourceContainer.MAX_BYTE_SIZE, -1);
-            if (maxByteSize != -1) {
-                Integer currByteSize = onem2mRequest.getJsonResourceContent().optInt(ResourceContainer.CURR_BYTE_SIZE);
-                if (currByteSize != -1) {
-                    if (currByteSize <= maxByteSize) {
-                        stillMoreToDelete = false;
-                    } else {
-                        if (!removeOldestContentInstance(twc, trc, containerUri)) {
-                            stillMoreToDelete = false;
-                        }
-                        onem2mRequest = new RequestPrimitiveProcessor();
-                        onem2mRequest.setPrimitive(RequestPrimitive.TO, containerUri);
-                        onem2mResponse = new ResponsePrimitive();
-                        if (!Onem2mDb.getInstance().findResourceUsingURI(trc, containerUri, onem2mRequest, onem2mResponse)) {
-                            LOG.error("Somehow the resource container is gone! : " + containerUri);
-                            return;
-                        }
-                    }
-                } else {
-                    stillMoreToDelete = false;
-                }
-            } else {
-                stillMoreToDelete = false;
+        // if there is a max nr instances, remove until curr nr instances == max
+        Integer mbs = containerResourceContent.optInt(ResourceContainer.MAX_BYTE_SIZE, -1);
+        if (mbs != -1) {
+            int cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE, -1);
+            while (cbs != -1 && cbs > mbs) {
+                int delByteSize = cinByteSizeJsonArray.getInt(0); // 0 is oldest, N is latest
+                JsonUtils.dec(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES);
+                JsonUtils.decN(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, delByteSize);
+                Onem2mDb.getInstance().getBGDeleteProcessor().moveResourceToDeleteParent(cinResouceIdJsonArray.getString(0));
+                cinResouceIdJsonArray.remove(0);
+                cinByteSizeJsonArray.remove(0);
+                cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE, -1);
             }
         }
     }
 
-    /**
-     * A side effect of creating a content instance is that its parent container curr_byte_size,
-     * curr_nr_instances, and state tag must also be updated.
+    // update the parent container to track the new ci, plus maintain curr byte size and curr num instances
+    public static void incrementValuesForThisCreatedContentInstance(JSONObject containerResourceContent,
+                                                                    Integer newByteSize,
+                                                                    String resourceId) {
 
-     * @param onem2mRequest
-     * @param containerResourceContent
-     * @param newByteSize
-     */
-    public static void setCurrValuesForThisCreatedContentInstance(RequestPrimitive onem2mRequest,
-                                                                  JSONObject containerResourceContent,
-                                                                  Integer newByteSize) {
+        JsonUtils.inc(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES);
+        JsonUtils.inc(containerResourceContent, ResourceContainer.STATE_TAG);
+        JsonUtils.incN(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, newByteSize);
 
-        Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
-        Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
-        Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
-        cni++;
-        cbs += newByteSize;
-        st++;
+        // maintain an array of cin ids in the container
+        String arrayJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
+        JSONArray jArray = containerResourceContent.optJSONArray(arrayJsonKey);
+        if (jArray == null) {
+            jArray = new JSONArray();
+            jArray.put(resourceId);
+            containerResourceContent.put(arrayJsonKey, jArray);
+        } else {
+            jArray.put(jArray.length(), resourceId);
+        }
 
-        onem2mRequest.setCurrContainerValues(cbs, cni, st);
+        // also maintain an array of the respective byte sizes
+        JSONArray jCinCbsArray = containerResourceContent.optJSONArray(CIN_BYTES_SIZE_KEY);
+        if (jCinCbsArray == null) {
+            jCinCbsArray = new JSONArray();
+            jCinCbsArray.put(newByteSize);
+            containerResourceContent.put(CIN_BYTES_SIZE_KEY, jCinCbsArray);
+        } else {
+            jCinCbsArray.put(jCinCbsArray.length(), newByteSize);
+        }
     }
 
-    /**
-     * A side effect of deleting a content instance is that its parent container curr_byte_size,
-     * curr_nr_instances, and state tag must also be updated.
-     * @param onem2mRequest
-     * @param containerResourceContent
-     * @param delByteSize
-     */
-    public static void setCurrValuesForThisDeletedContentInstance(RequestPrimitive onem2mRequest,
-                                                                  JSONObject containerResourceContent,
-                                                                  Integer delByteSize) {
+    public static void decrementValuesForThisDeletedContentInstance(JSONObject containerResourceContent,
+                                                                    String cinResourceId) {
 
-        Integer cni = containerResourceContent.optInt(ResourceContainer.CURR_NR_INSTANCES);
-        Integer cbs = containerResourceContent.optInt(ResourceContainer.CURR_BYTE_SIZE);
-        Integer st = containerResourceContent.optInt(ResourceContent.STATE_TAG);
+        String cinResouceIdJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
+        JSONArray cinResouceIdJsonArray = containerResourceContent.optJSONArray(cinResouceIdJsonKey);
+        JSONArray cinByteSizeJsonArray = containerResourceContent.optJSONArray(CIN_BYTES_SIZE_KEY);
 
-        cni--;
-        cbs -= delByteSize;
-        st++;
+        if (cinResouceIdJsonArray != null && cinByteSizeJsonArray != null) {
+            if (cinResouceIdJsonArray.length() != cinByteSizeJsonArray.length()) {
+                LOG.error("decrementValuesForThisDeletedContentInstance: resId len:{}, != byteSize len: {}",
+                        cinResouceIdJsonArray.length(),
+                        cinByteSizeJsonArray.length());
+            }
+        } else {
+            return; // possibly no ci's created yet
+        }
 
-        onem2mRequest.setCurrContainerValues(cbs, cni, st);
+        for (int i = 0; i < cinResouceIdJsonArray.length(); i++) {
+            if (cinResourceId.equals(cinResouceIdJsonArray.getString(i))) {
+                JsonUtils.inc(containerResourceContent, ResourceContainer.STATE_TAG);
+                JsonUtils.dec(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES);
+                JsonUtils.decN(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, cinByteSizeJsonArray.getInt(i));
+                cinResouceIdJsonArray.remove(i);
+                cinByteSizeJsonArray.remove(i);
+                break;
+            }
+        }
+    }
+
+    public static String getLatestCI(JSONObject containerResourceContent) {
+
+        String cinResouceIdJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
+        JSONArray cinResouceIdJsonArray = containerResourceContent.optJSONArray(cinResouceIdJsonKey);
+
+        if (cinResouceIdJsonArray != null && cinResouceIdJsonArray.length() != 0) {
+            return cinResouceIdJsonArray.getString(cinResouceIdJsonArray.length() - 1);
+        }
+        return null;
+    }
+
+    public static String getOldestCI(JSONObject containerResourceContent) {
+
+        String cinResouceIdJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
+        JSONArray cinResouceIdJsonArray = containerResourceContent.optJSONArray(cinResouceIdJsonKey);
+
+        if (cinResouceIdJsonArray != null && cinResouceIdJsonArray.length() != 0) {
+            return cinResouceIdJsonArray.getString(0);
+        }
+        return null;
     }
 }

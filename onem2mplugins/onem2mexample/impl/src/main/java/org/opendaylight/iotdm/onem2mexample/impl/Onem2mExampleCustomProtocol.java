@@ -280,11 +280,11 @@ public class Onem2mExampleCustomProtocol implements IotdmPlugin,
      * operations with data store.
      */
     @Override
-    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception {
+    public void dbClientStart() throws Exception {
         // DataStore Change Handler uses ResourceTreeReader so we should instantiate the change handler
         // here, when we obtain valid ResourceTreeReader
         // ResourceTreeWriter is not used in this example
-        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(trc, dataBroker);
+        onem2mDataStoreChangeHandler = new Onem2mDataStoreChangeHandler(dataBroker);
     }
 
     @Override
@@ -299,8 +299,8 @@ public class Onem2mExampleCustomProtocol implements IotdmPlugin,
      */
     private class Onem2mDataStoreChangeHandler extends Onem2mDatastoreListener {
 
-        public Onem2mDataStoreChangeHandler(ResourceTreeReader trc, DataBroker dataBroker) {
-            super(trc, dataBroker);
+        public Onem2mDataStoreChangeHandler(DataBroker dataBroker) {
+            super(dataBroker);
         }
 
         @Override

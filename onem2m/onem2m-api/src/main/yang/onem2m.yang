@@ -91,23 +91,14 @@ module onem2m {
             leaf parent-id {
                 type string;
             }
+            leaf parent-target-uri {
+                type string;
+            }
             leaf name { // the onem2m resource name
                 type string;
             }
             leaf resource-type {
                 type string;
-            }
-            list oldest-latest {
-                key resource-type;
-                leaf resource-type {
-                    type string;
-                }
-                leaf oldest-id {
-                    type string;
-                }
-                leaf latest-id {
-                    type string;
-                }
             }
             /*
             * The resource specific attributes are stored as a JSON serialized string.  When the attributes arrive in
@@ -128,22 +119,40 @@ module onem2m {
             }
 
             list onem2m-parent-child {
-                key parent-child-key;
-                leaf parent-child-key {
-                    type string;
-                }
+                key name;
                 leaf name {
                     type string;
                 }
                 leaf resource-id {
                     type string;
                 }
-                leaf prev-id {
-                    type string;
+            }
+        }
+    }
+
+    container db-transactions {
+        list db-transaction {
+            key db-transaction-id;
+            leaf db-transaction-id {
+                type uint32;
+            }
+            leaf operation {
+                mandatory true;
+                type enumeration {
+                    enum "CREATE" {
+                        value 1;
+                    }
+                    enum "UPDATE" {
+                        value 2;
+                    }
+                    enum "DELETE" {
+                        value 3;
+                    }
                 }
-                leaf next-id {
-                    type string;
-                }
+                description "Opcode create, update, delete";
+            }
+            leaf resource-id {
+                type string;
             }
         }
     }

@@ -59,9 +59,20 @@ public class Onem2mProtocolUtils {
         return true;
     }
 
+    private static Integer convertToUInt(String intString)  {
+        Integer foo;
+        try {
+            foo = Integer.parseInt(intString);
+            if (foo < 0) return -1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+        return foo;
+    }
+
     public static String verifyRequestPrimitive(Onem2mRequestPrimitiveClientBuilder clientBuilder) {
-        String operation = clientBuilder.getPrimitiveValue(RequestPrimitive.OPERATION);
-        if (null == operation) {
+        Integer operation = convertToUInt(clientBuilder.getPrimitiveValue(RequestPrimitive.OPERATION));
+        if (-1 == operation) {
             return "Operation not specified.";
         }
 
