@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2mtsdr.rev160210.onem2m.tsdr.config.Onem2mTargetDesc;
@@ -31,7 +30,7 @@ public class Onem2mTsdrPeriodicManager {
 
     private HashMap<String,TsdrPollingDesc> tsdrMap;
 
-    public Onem2mTsdrPeriodicManager(ResourceTreeReader trc, Onem2mTsdrSender onem2mTsdrSender) {
+    public Onem2mTsdrPeriodicManager(Onem2mTsdrSender onem2mTsdrSender) {
         this.onem2mTsdrSender = onem2mTsdrSender;
         tsdrMap = new HashMap<String,TsdrPollingDesc>();
         LOG.info("Created Onem2mTsdrPeriodicManager");
@@ -39,7 +38,7 @@ public class Onem2mTsdrPeriodicManager {
         pollerExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                poller(trc);
+                poller();
             }
         });
     }
@@ -70,7 +69,7 @@ public class Onem2mTsdrPeriodicManager {
 
     // for now one poller, one thread ... let's see how it scales
     // future: timerWheel, many threads to poll and send???
-    private void poller(ResourceTreeReader trc) {
+    private void poller() {
         while (true) {
             try {
                 sleep(1000);
@@ -83,13 +82,13 @@ public class Onem2mTsdrPeriodicManager {
             for (Map.Entry<String, TsdrPollingDesc> entry : tsdrMap.entrySet()) {
                 TsdrPollingDesc t = entry.getValue();
                 if (t.decrementTimerAndIsExpired()) {
-                    sendPollingDataToTsdr(trc, t.onem2mTargetDesc);
+                    sendPollingDataToTsdr(t.onem2mTargetDesc);
                 }
             }
         }
     }
 
-    private void sendPollingDataToTsdr(ResourceTreeReader trc, Onem2mTargetDesc t) {
+    private void sendPollingDataToTsdr(Onem2mTargetDesc t) {
         Onem2mResource onem2mResource;
         Onem2mResource onem2mTargetResource = Onem2mPluginsDbApi.getInstance().getResourceUsingURI(t.getOnem2mTargetUri());
         if (onem2mTargetResource != null) {
@@ -102,7 +101,7 @@ public class Onem2mTsdrPeriodicManager {
                     continue;
                 }
                 String h = Onem2mPluginsDbApi.getInstance().getHierarchicalNameForResource(onem2mResource);
-                onem2mTsdrSender.sendDataToTsdr(trc, t, h, onem2mResource);
+                onem2mTsdrSender.sendDataToTsdr(t, h, onem2mResource);
             }
         }
     }

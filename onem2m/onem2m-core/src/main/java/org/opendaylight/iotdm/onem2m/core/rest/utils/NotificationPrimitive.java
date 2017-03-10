@@ -11,7 +11,7 @@ package org.opendaylight.iotdm.onem2m.core.rest.utils;
 import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opendaylight.iotdm.onem2m.core.resource.ResourceContent;
+import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
@@ -50,12 +50,12 @@ public class NotificationPrimitive extends BasePrimitive {
     }
 
     // the original resourceContent used to return content based on result content requested
-    protected ResourceContent resourceContent;
-    public void setResourceContent(ResourceContent rc) {
-        this.resourceContent = rc;
+    protected BaseResource baseResource;
+    public void setBaseResource(BaseResource rc) {
+        this.baseResource = rc;
     }
-    public ResourceContent getResourceContent() {
-        return this.resourceContent;
+    public BaseResource getBaseResource() {
+        return this.baseResource;
     }
 
     protected Onem2mResource subscriptionResource;

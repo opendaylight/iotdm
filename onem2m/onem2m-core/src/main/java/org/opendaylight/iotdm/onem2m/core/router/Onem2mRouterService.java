@@ -59,8 +59,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
 
         // Register this instance
         try {
-            Onem2mPluginManager.getInstance()
-                               .registerDbClientPlugin(this);
+            Onem2mPluginManager.getInstance().registerDbClientPlugin(this);
         } catch (IotdmPluginRegistrationException e) {
             LOG.error("Failed to register Onem2mRouterService as DB API client: {}", e);
         }
@@ -80,20 +79,20 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
 
 
     @Override
-    public void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception {
+    public void dbClientStart() throws Exception {
 
         if (this.cleanTable.get()) {
             this.cleanRoutingTable();
         }
 
-        List<Onem2mCse> cseBaseList = trc.retrieveCseBaseList();
+        List<Onem2mCse> cseBaseList = Onem2mDb.getInstance().retrieveCseBaseList();
         if (null == cseBaseList || cseBaseList.isEmpty()) {
             return;
         }
 
         for (Onem2mCse cseBase : cseBaseList) {
             // add cseBase into routing table
-            Onem2mResourceElem cseBaseResource = trc.retrieveResourceById(cseBase.getResourceId());
+            Onem2mResource cseBaseResource = Onem2mDb.getInstance().getResource(cseBase.getResourceId());
             if (null == cseBaseResource) {
                 LOG.error("Failed to get cseBaseResource of cseBase: resourceName: {}, resourceId: {}",
                           cseBase.getName(), cseBase.getResourceId());
@@ -139,7 +138,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
 
             for (Onem2mRegisteredRemoteCses remoteCse : remoteCsesList) {
 
-                Onem2mResourceElem remoteCseResource = trc.retrieveResourceById(remoteCse.getResourceId());
+                Onem2mResource remoteCseResource = Onem2mDb.getInstance().getResource(remoteCse.getResourceId());
                 if (null == remoteCseResource) {
                     LOG.error("Failed to retrieve resource of remoteCse type: resourceId: {}, CSE-ID: {}, " +
                               "cseBaseCseId: {}",
@@ -307,9 +306,9 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
 
         // if the request had a REQUEST_IDENTIFIER, return it in the response so client can correlate
         // this must be the first statement as the rqi must be in the error response
-        String rqi = request.getPrimitive(RequestPrimitive.REQUEST_IDENTIFIER);
+        String rqi = request.getPrimitiveRequestIdentifier();
         if (rqi != null) {
-            responseToOrigin.setPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER, rqi);
+            responseToOrigin.setPrimitiveRequestIdentifier(rqi);
         } else {
             responseToOrigin.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
                                   "REQUEST_IDENTIFIER(" + RequestPrimitive.REQUEST_IDENTIFIER + ") not specified");
@@ -332,7 +331,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
         response = forwardRequestRemoteCse(request, responseToOrigin, routingData);
 
         // Check the status code
-        if (response.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE).equals(
+        if (response.getPrimitiveResponseStatusCode().equals(
                 Onem2m.ResponseStatusCode.TARGET_NOT_REACHABLE)) {
 
             // Forward to registrar CSE of this cseBase, if the cseBase is MN-CSE type
@@ -362,7 +361,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
         // forwarding end
         LOG.debug("Forwarding end, response: RID: {}, statusCode: {}",
                   responseToOrigin.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER),
-                  responseToOrigin.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE));
+                  responseToOrigin.getPrimitiveResponseStatusCode());
         return responseToOrigin;
     }
 
@@ -400,7 +399,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
                     }
 
                     // continue if target is not reachable through this next hop
-                    String statusCode = response.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
+                    String statusCode = response.getPrimitiveResponseStatusCode();
                     if (null == statusCode) {
                         LOG.error("Response without status code, content: {}",
                                   response.getPrimitive(ResponsePrimitive.CONTENT));
@@ -596,14 +595,14 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
      * Only updates of cseBase and remoteCSE resources are expected.
      * @param request The request primitive
      */
-    public void updateRoutingTable(ResourceTreeReader trc, RequestPrimitive request) {
-        if (Onem2m.ResourceType.CSE_BASE.equals(request.getOnem2mResource().getResourceType())) {
+    public void updateRoutingTable(RequestPrimitive request) {
+        if (Onem2m.ResourceType.CSE_BASE == request.getResourceType()) {
             updateRoutingTableCseBase(request);
             return;
         }
 
-        if (Onem2m.ResourceType.REMOTE_CSE.equals(request.getOnem2mResource().getResourceType())) {
-            updateRoutingTableRemoteCse(trc, request);
+        if (Onem2m.ResourceType.REMOTE_CSE == request.getResourceType()) {
+            updateRoutingTableRemoteCse(request);
             return;
         }
 
@@ -639,12 +638,12 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
         final String baseCsePassword = "CSE_PASSWORD";
 
         String name = request.getResourceName();
-        String operation = null;
+        Integer operation = -1;
         CseRoutingDataBase result = null;
         if (request.isCreate) { operation = Onem2m.Operation.CREATE; }
         if (request.isUpdate) { operation = Onem2m.Operation.UPDATE; }
 
-        if (null == operation) {
+        if (-1 == operation) {
             LOG.error("Failed to resolve operation type");
             return;
         }
@@ -714,16 +713,18 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
      * operation with remoteCSE resource
      * @param request The request primitive
      */
-    private void updateRoutingTableRemoteCse(ResourceTreeReader trc, RequestPrimitive request) {
+    private void updateRoutingTableRemoteCse(RequestPrimitive request) {
         // retrieve parent of the remoteCSE
-        Onem2mResource parent = Onem2mDb.getInstance().getResource(trc, request.getOnem2mResource().getParentId());
+        //Onem2mResource parent = Onem2mDb.getInstance().getResource(trc, request.getOnem2mResource().getParentId());
+        Onem2mResource parent = request.getParentOnem2mResource();
         if (null == parent) {
             LOG.error("Failed to get parent of the RemoteCSE resource");
             return;
         }
 
         // parent of the remoteCSE must be cseBase
-        if (! parent.getResourceType().equals(Onem2m.ResourceType.CSE_BASE)) {
+        String rt = ((Integer)Onem2m.ResourceType.CSE_BASE).toString();
+        if (! parent.getResourceType().equals(rt)) {
             LOG.error("Invalid RemoteCSE parent resource type: {}, expected CSEBase",
                       request.getOnem2mResource().getResourceType());
             return;
@@ -738,7 +739,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
         // get some data common for all operations
         String cseBaseName = parent.getName();
         String remoteCseId = request.getContentAttributeString(ResourceRemoteCse.CSE_ID);
-        String operation = request.getPrimitive(RequestPrimitive.OPERATION);
+        Integer operation = request.getPrimitiveOperation();
         String cseType = request.getContentAttributeString(ResourceRemoteCse.CSE_TYPE);
         CseRoutingDataRemote result = null;
         CseRoutingDataRemote newRoutingData = null;

@@ -27,7 +27,7 @@ public class IotdmPluginCoapRequest implements IotdmPluginRequest<Exchange> {
     }
 
     @Override
-    public String getOnem2mOperation() {
+    public Integer getOnem2mOperation() {
         CoAP.Code code = coapRequest.getCode();
         switch(code) {
             case GET:

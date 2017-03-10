@@ -9,6 +9,7 @@ package org.opendaylight.iotdm.onem2m.persistence.mdsal.read;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
+import java.util.ArrayList;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -73,7 +74,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         if (resource == null) return null;
         else
             return new Onem2mResourceElem(this, resource.getResourceId(), resource.getParentId(), resource.getName(), resource.getResourceType(),
-                    resource.getOldestLatest(), resource.getResourceContentJsonString());
+                    resource.getResourceContentJsonString(), resource.getParentTargetUri());
     }
 
     @Override
@@ -87,6 +88,31 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         Onem2mParentChildList list = retrieve(iid, dsType);
 
         return list.getOnem2mParentChild();
+    }
+
+    @Override
+    public List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit) {
+
+        List<Onem2mParentChild> returnList = new ArrayList();
+
+        if (limit <= 0) return returnList;
+
+        int shard = factory.getShardFromResourceId(key.getParentResourceId());
+
+        InstanceIdentifier<Onem2mParentChildList> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
+                .child(Onem2mParentChildList.class, key);
+
+        Onem2mParentChildList list = retrieve(iid, dsType);
+
+        if (list != null) {
+            int numElements = 0;
+            for (Onem2mParentChild child : list.getOnem2mParentChild()) {
+                returnList.add(child);
+                if (++numElements == limit) break;
+            }
+        }
+
+        return returnList;
     }
 
     @Override
@@ -134,7 +160,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         return aeIds.getResourceId();
     }
 
-    private String isEntityRegisteredAtCseBase(final String entityId, final String cseBaseCseId) {
+    private Integer isEntityRegisteredAtCseBase(final String entityId, final String cseBaseCseId) {
         /* TODO need to implement some CSE-ID to resource ID mapping */
 
         if (null != this.retrieveAeResourceIdByAeId(cseBaseCseId, entityId)) {
@@ -147,7 +173,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public String isEntityRegistered(String entityId, String cseBaseCseId) {
+    public Integer isEntityRegistered(String entityId, String cseBaseCseId) {
 
         if (null != cseBaseCseId) {
             return isEntityRegisteredAtCseBase(entityId, cseBaseCseId);

@@ -17,7 +17,6 @@ import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeW
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
-import org.opendaylight.iotdm.onem2m.core.router.Onem2mRoutingTable;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +27,13 @@ import org.slf4j.LoggerFactory;
  * Based on the CONTENT_FORMAT, is is sent to the appropriate parser.  The Resource base class help with
  * some of this effort.
  */
-public class ResourceCse {
+public class ResourceCse extends BaseResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceCse.class);
-    private ResourceCse() {}
+    public ResourceCse(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        super(onem2mRequest, onem2mResponse);
+
+    }
 
     // taken from CDT-cseBase-v1_0_0.xsd / TS0004_v_1-0_1 Section 8.2.2 Short Names
     // TODO: TS0001 9.6.3 ResourceType CSEBase
@@ -42,11 +44,9 @@ public class ResourceCse {
     public static final String NOTIFICATION_CONGESTION_POLICY = "ncp";
     public static final String POINT_OF_ACCESS = "poa";
 
-    private static void processCreateUpdateAttributes(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private void processCreateUpdateAttributes() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        String cseId = resourceContent.getInJsonContent().optString(CSE_ID, null);
+        String cseId = jsonPrimitiveContent.optString(CSE_ID, null);
         if (cseId == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST, "CSE_ID: missing parameter");
             return;
@@ -62,18 +62,18 @@ public class ResourceCse {
         a.put(Integer.valueOf(Onem2m.ResourceType.GROUP));
         a.put(Integer.valueOf(Onem2m.ResourceType.NODE));
         a.put(Integer.valueOf(Onem2m.ResourceType.ACCESS_CONTROL_POLICY));
-        JsonUtils.put(resourceContent.getInJsonContent(), SUPPORTED_RESOURCE_TYPES, a);
+        JsonUtils.put(jsonPrimitiveContent, SUPPORTED_RESOURCE_TYPES, a);
         /**
          * The resource has been filled in with any attributes that need to be written to the database
          */
         if (onem2mRequest.isCreate) {
-            if (!Onem2mDb.getInstance().createCseResource(twc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().createCseResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
             }
         } else {
-            if (!Onem2mDb.getInstance().updateResource(twc, trc, onem2mRequest, onem2mResponse)) {
+            if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
                 return;
@@ -83,35 +83,25 @@ public class ResourceCse {
         /*
          * Update routing table with the changes
          */
-        Onem2mRouterService.getInstance().updateRoutingTable(trc, onem2mRequest);
+        Onem2mRouterService.getInstance().updateRoutingTable(onem2mRequest);
     }
 
-    /**
-     * This routine processes the JSON content for this resource representation.  Ideally, a json schema file would
-     * be used so that each json key could be looked up in the json schema to find out what type it is, and so forth.
-     * Maybe the next iteration of code, I'll create json files for each resource.
-     * @param onem2mRequest
-     * @param onem2mResponse
-     */
-    private static void parseJsonCreateUpdateContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    private void parseJsonCreateUpdateContent() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
+        Iterator<?> keys = jsonPrimitiveContent.keys();
 
-        Iterator<?> keys = resourceContent.getInJsonContent().keys();
         while( keys.hasNext() ) {
 
             String key = (String)keys.next();
 
-            resourceContent.jsonCreateKeys.add(key);
-
-            Object o = resourceContent.getInJsonContent().opt(key);
+            Object o = jsonPrimitiveContent.opt(key);
 
             switch (key) {
 
                 case CSE_ID:
                 case CSE_TYPE:
-                case ResourceContent.CREATION_TIME:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                case BaseResource.CREATION_TIME:
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof String)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") string expected for json key: " + key);
@@ -119,17 +109,15 @@ public class ResourceCse {
                         }
                     }
                     break;
-                case ResourceContent.LABELS:
+                case BaseResource.LABELS:
 //                case ResourceContent.RESOURCE_NAME:
 //                    // todo: can CSE be modified?
-                    if (!ResourceContent.parseJsonCommonCreateUpdateContent(key,
-                            resourceContent,
-                            onem2mResponse)) {
+                    if (!parseJsonCommonCreateUpdateContent(key)) {
                         return;
                     }
                     break;
                 case POINT_OF_ACCESS:
-                    if (!resourceContent.getInJsonContent().isNull(key)) {
+                    if (!jsonPrimitiveContent.isNull(key)) {
                         if (!(o instanceof JSONArray)) {
                             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                                     "CONTENT(" + RequestPrimitive.CONTENT + ") array expected for json key: " + key);
@@ -153,31 +141,22 @@ public class ResourceCse {
         }
     }
 
-    /**
-     * Parse the CONTENT resource representation.
-     * @param twc database writer interface
-     * @param trc database reader interface
-     * @param onem2mRequest  request
-     * @param onem2mResponse response
-     */
-    public static void handleCreateUpdate(ResourceTreeWriter twc, ResourceTreeReader trc, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public void handleCreateUpdate() {
 
-        ResourceContent resourceContent = onem2mRequest.getResourceContent();
-
-        resourceContent.parse(Onem2m.ResourceTypeString.CSE_BASE, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        parse(Onem2m.ResourceTypeString.CSE_BASE);
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        if (resourceContent.isJson()) {
-            parseJsonCreateUpdateContent(onem2mRequest, onem2mResponse);
-            if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        if (isJson()) {
+            parseJsonCreateUpdateContent();
+            if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
-        resourceContent.processCommonCreateUpdateAttributes(trc, onem2mRequest, onem2mResponse);
-        if (onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE) != null)
+        processCommonCreateUpdateAttributes();
+        if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
 
-        ResourceCse.processCreateUpdateAttributes(twc, trc, onem2mRequest, onem2mResponse);
+        processCreateUpdateAttributes();
 
     }
 

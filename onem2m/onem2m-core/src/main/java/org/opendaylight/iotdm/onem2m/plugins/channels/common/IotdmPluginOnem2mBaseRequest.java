@@ -44,9 +44,9 @@ public class IotdmPluginOnem2mBaseRequest implements IotdmPluginRequest<String> 
      * @return onem2m operation
      */
     @Override
-    public String getOnem2mOperation() {
+    public Integer getOnem2mOperation() {
         initRqpJson();
-        return rqpBody.getString(RequestPrimitive.OPERATION);
+        return Integer.valueOf(rqpBody.getString(RequestPrimitive.OPERATION));
     }
 
     /**
@@ -113,7 +113,7 @@ public class IotdmPluginOnem2mBaseRequest implements IotdmPluginRequest<String> 
      */
     @Override
     public String getMethod() {
-        return getOnem2mOperation();
+        return getOnem2mOperation().toString();
     }
 
     /**

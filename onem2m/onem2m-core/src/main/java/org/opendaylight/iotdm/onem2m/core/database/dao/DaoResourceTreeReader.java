@@ -45,6 +45,11 @@ public interface DaoResourceTreeReader extends Closeable {
      * @return childList list of resources
      */
     List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key);
+
+    List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit);
+
+
+
     Onem2mParentChild retrieveChildByName(String resourceId, String name);
 
     /**
@@ -67,7 +72,7 @@ public interface DaoResourceTreeReader extends Closeable {
      * @param cseBaseCseId CSE-ID of the cseBase
      * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
      */
-    String isEntityRegistered(String entityId, String cseBaseCseId);
+    Integer isEntityRegistered(String entityId, String cseBaseCseId);
 
     /**
      * Returns the last used resourceId stored in data store.

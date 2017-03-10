@@ -34,6 +34,7 @@ public class BasePrimitive {
      * @param onem2mPrimitivesList input list
      */
     public void setPrimitivesList(List<Onem2mPrimitive> onem2mPrimitivesList) {
+        this.onem2mPrimitivesList = onem2mPrimitivesList;
         for (Onem2mPrimitive onem2mPrimitive : onem2mPrimitivesList) {
             primitiveMap.put(onem2mPrimitive.getName(), onem2mPrimitive.getValue());
         }

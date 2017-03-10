@@ -20,7 +20,7 @@ public interface IotdmPluginRequest<TOriginalRequest> {
      * of the request.
      * @return Onem2m operation type.
      */
-    String getOnem2mOperation();
+    Integer getOnem2mOperation();
 
     /**
      * Returns received target URI translated to Onem2m format.

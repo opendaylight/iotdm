@@ -27,25 +27,30 @@ public class Onem2mRequestPrimitiveClientBuilder {
     }
 
     public Onem2mRequestPrimitiveClientBuilder setOperationCreate() {
-        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.CREATE);
+        String op = ((Integer)Onem2m.Operation.CREATE).toString();
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, op);
         isCreate = true;
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationRetrieve() {
-        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.RETRIEVE);
+        String op = ((Integer)Onem2m.Operation.RETRIEVE).toString();
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, op);
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationUpdate() {
-        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.UPDATE);
+        String op = ((Integer)Onem2m.Operation.UPDATE).toString();
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, op);
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationDelete() {
-        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.DELETE);
+        String op = ((Integer)Onem2m.Operation.DELETE).toString();
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, op);
         isDelete = true;
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setOperationNotify() {
-        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, Onem2m.Operation.NOTIFY);
+        String op = ((Integer)Onem2m.Operation.NOTIFY).toString();
+        onem2mRequest.setPrimitive(RequestPrimitive.OPERATION, op);
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setTo(String value) {
@@ -64,6 +69,10 @@ public class Onem2mRequestPrimitiveClientBuilder {
 
     public Onem2mRequestPrimitiveClientBuilder setResourceType(String value) {
         onem2mRequest.setPrimitive(RequestPrimitive.RESOURCE_TYPE, value);
+        return this;
+    }
+    public Onem2mRequestPrimitiveClientBuilder setResourceType(Integer value) {
+        onem2mRequest.setPrimitive(RequestPrimitive.RESOURCE_TYPE, value.toString());
         return this;
     }
     public Onem2mRequestPrimitiveClientBuilder setName(String value) {

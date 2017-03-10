@@ -48,13 +48,8 @@ public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
      * when API becomes prepared.
      * This method can be called multiple times during runtime and dbClientStop()
      * method is called between each call of this method.
-     * @param twc ResourceTreeWriter instance.
-     * @param trc ResourceTreeReader instance.
      */
-    default void dbClientStart(final ResourceTreeWriter twc, final ResourceTreeReader trc) throws Exception {
-        // Default implementation does nothing
-        return;
-    }
+    void dbClientStart() throws Exception;
 
     /**
      * This method is called by API and it means that plugin must stop
@@ -66,8 +61,5 @@ public interface IotdmPluginDbClient extends IotdmPluginCommonInterface {
      * This method might be called multiple times before the dbClientStart() method
      * is called again.
      */
-    default void dbClientStop() {
-        // Default implementation does nothing
-        return;
-    }
+    void dbClientStop();
 }
