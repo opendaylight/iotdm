@@ -12,6 +12,7 @@ import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.http.HttpSchemes;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxRequest;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolUtils;
 import org.opendaylight.iotdm.onem2m.protocols.http.tx.Onem2mHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ public class Onem2mHttpNotifierRequest extends Onem2mProtocolTxRequest {
         Integer cl = payload != null ?  payload.length() : 0;
         ex.setRequestHeader("Content-Length", cl.toString());
         ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_ORIGIN, ("/"+ this.cseBaseId));
+        ex.setRequestHeader(Onem2m.HttpHeaders.X_M2M_RI, Onem2mProtocolUtils.getNextRequestId());
         ex.setMethod("post");
         return true;
     }

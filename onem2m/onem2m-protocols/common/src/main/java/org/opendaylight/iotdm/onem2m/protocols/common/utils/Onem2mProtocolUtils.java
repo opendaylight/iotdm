@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.protocols.common.utils;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -24,6 +25,12 @@ import java.util.Optional;
  */
 public class Onem2mProtocolUtils {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2m.class);
+
+    private static final AtomicInteger requestId = new AtomicInteger(0);
+
+    public static String getNextRequestId() {
+        return String.valueOf(requestId.incrementAndGet());
+    }
 
     /**
      * @param jsonMessage - json message with onem2m primitive content

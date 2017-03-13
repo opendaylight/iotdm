@@ -250,6 +250,13 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         return found_filter_criteria;
     }
 
+    public boolean hasContent() {
+        if (null != this.getPrimitive(RequestPrimitive.CONTENT)) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Called by the core RPC:onem2mRequestPrimitive to process the onenm2m request primitive operation.
      * The philosophy is to do as much error checking as possible up front so downstream code will not have to
@@ -382,6 +389,12 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
         switch (operation) {
             case Onem2m.Operation.CREATE:
                 try {
+                    if (! hasContent()) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                              "Mandatory resource content is missing!");
+                        break;
+                    }
+
                     if (!resourceType.contentEquals(Onem2m.ResourceType.CSE_BASE) ||
                             protocol.contentEquals(Onem2m.Protocol.NATIVEAPP)) {
                         handleOperationCreate(twc, trc, onem2mResponse);
@@ -397,6 +410,12 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                 break;
             case Onem2m.Operation.UPDATE:
                 try {
+                    if (! hasContent()) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                              "Mandatory resource content is missing!");
+                        break;
+                    }
+
                     handleOperationUpdate(twc, trc, onem2mResponse);
                 } finally {
                 }

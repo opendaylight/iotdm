@@ -70,6 +70,21 @@ public class ResourceContent {
 
 
     public boolean isXml() { return xmlContent != null; }
+    public String getXmlContent() { return xmlContent; }
+
+    public boolean hasContent() {
+        if (isJson()) {
+            if (null != getInJsonContent()) {
+                return true;
+            }
+        } else if (isXml()) {
+            if (null != getXmlContent()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /**
      * Pulls the json/xml formatted data out of the RequestPrimitive.CONTENT string

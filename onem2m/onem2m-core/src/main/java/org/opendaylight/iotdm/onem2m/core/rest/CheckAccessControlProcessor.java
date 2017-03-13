@@ -39,7 +39,13 @@ public class CheckAccessControlProcessor {
         String targetURI = onem2mRequest.getPrimitive(RequestPrimitive.TO);
         // trace back acpid
         if (onem2mRequest.isCreate) {
-            String acpi = onem2mRequest.getResourceContent().getInJsonContent().optString("acpi", null);
+            String acpi = null;
+            if (null != onem2mRequest.getResourceContent() &&
+                null != onem2mRequest.getResourceContent().getInJsonContent()) {
+                acpi = onem2mRequest.getResourceContent()
+                                    .getInJsonContent()
+                                    .optString("acpi", null);
+            }
             if (acpi != null) {
                 JSONArray acpiArray = onem2mRequest.getResourceContent().getInJsonContent().optJSONArray("acpi");
                 for (int i = 0; i < acpiArray.length(); i++) {
@@ -82,8 +88,12 @@ public class CheckAccessControlProcessor {
                 }
             }
         } else {
-            if (onem2mRequest.isUpdate && onem2mRequest.getResourceContent().getInJsonContent().optString("acpi", null) != null) {
-                JSONArray acpiArray = onem2mRequest.getResourceContent().getInJsonContent().optJSONArray("acpi");
+            JSONArray acpiArray = null;
+            if (null != onem2mRequest.getResourceContent() &&
+                null != onem2mRequest.getResourceContent().getInJsonContent()) {
+                acpiArray = onem2mRequest.getResourceContent().getInJsonContent().optJSONArray("acpi");
+            }
+            if (onem2mRequest.isUpdate && acpiArray != null) {
                 for (int i = 0; i < acpiArray.length(); i++) {
                     AccessControlPolicyIDList.add(acpiArray.optString(i));
                 }
@@ -110,9 +120,9 @@ public class CheckAccessControlProcessor {
                     }
 
                     if (AccessControlPolicyIDList.isEmpty()) {
-                        JSONArray acpiArray = jsonContent.optJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
-                        for (int i = 0; i < acpiArray.length(); i++) {
-                            AccessControlPolicyIDList.add(acpiArray.optString(i));
+                        JSONArray parentAcpiArray = jsonContent.optJSONArray(ResourceContent.ACCESS_CONTROL_POLICY_IDS);
+                        for (int i = 0; i < parentAcpiArray.length(); i++) {
+                            AccessControlPolicyIDList.add(parentAcpiArray.optString(i));
                         }
                     }
                 } catch (JSONException e) {

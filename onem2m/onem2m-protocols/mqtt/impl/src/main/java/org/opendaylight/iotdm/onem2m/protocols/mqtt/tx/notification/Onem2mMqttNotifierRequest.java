@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxRequest;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +150,10 @@ public class Onem2mMqttNotifierRequest extends Onem2mProtocolTxRequest {
             jsonObj.put(RequestPrimitive.FROM, this.cseBaseId);
         }
 
-        // TODO Set rquestId ??? - we're not waiting for responses
+        // Set requestId
+        if (! jsonObj.has(RequestPrimitive.REQUEST_IDENTIFIER)) {
+            jsonObj.put(RequestPrimitive.REQUEST_IDENTIFIER, Onem2mProtocolUtils.getNextRequestId());
+        }
 
         this.payload = jsonObj.toString();
         return true;

@@ -8,11 +8,14 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.tx.notification;
 
+import org.eclipse.californium.core.coap.Option;
+import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
 import org.eclipse.jetty.client.ContentExchange;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.protocols.coap.tx.Onem2mCoapClient;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxRequest;
+import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +67,13 @@ public class Onem2mCoapNotifierRequest extends Onem2mProtocolTxRequest {
         Request request = Request.newPost();
         request.setURI(url);
         request.setPayload(payload);
+
+        OptionSet options = new OptionSet();
+        options.setContentFormat(Onem2m.CoapContentFormat.APP_VND_NTFY_JSON);
+        options.addOption(new Option(Onem2m.CoapOption.ONEM2M_FR, "/" + cseBaseId));
+        options.addOption(new Option(Onem2m.CoapOption.ONEM2M_RQI, Onem2mProtocolUtils.getNextRequestId()));
+        request.setOptions(options);
+
         LOG.debug("CoAP: Send notification cseBaseId: {}, uri: {}, payload: {}:", url, payload, cseBaseId);
         try {
             client.send(request);
