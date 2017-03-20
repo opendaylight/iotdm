@@ -1,42 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright © 2015 Cisco Systems, Inc and others. All rights reserved.
+Copyright © 2017 Cisco Systems Inc and others. All rights reserved.
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>features-parent</artifactId>
     <version>1.8.0-SNAPSHOT</version>
     <relativePath/>
   </parent>
+
   <groupId>org.opendaylight.iotdm</groupId>
-  <artifactId>onem2mall-features</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <artifactId>iotdmcsitdist-features</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
   <!-- <name> formatting is used by autorelease to parse and notify projects on
        build failure. Please do not modify this unless you have a good reason. -->
-  <name>ODL :: iotdm :: ${project.artifactId}</name>
-  <modelVersion>4.0.0</modelVersion>
-  <prerequisites>
-    <maven>3.1.1</maven>
-  </prerequisites>
+  <name>ODL :: org.opendaylight.iotdm :: ${project.artifactId}</name>
+
   <properties>
     <mdsal.model.version>0.10.0-SNAPSHOT</mdsal.model.version>
     <mdsal.version>1.5.0-SNAPSHOT</mdsal.version>
     <restconf.version>1.5.0-SNAPSHOT</restconf.version>
     <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
     <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
-    <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
-    <onem2msimpleadapter.version>0.3.0-SNAPSHOT</onem2msimpleadapter.version>
-    <onem2mtsdr.version>0.3.0-SNAPSHOT</onem2mtsdr.version>
-    <onem2moic.version>0.3.0-SNAPSHOT</onem2moic.version>
-    <iotdmbundleloader.version>0.1.0-SNAPSHOT</iotdmbundleloader.version>
-    <iotdmkaraffeatureloader.version>0.1.0-SNAPSHOT</iotdmkaraffeatureloader.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
+
+    <onem2mall.version>0.3.0-SNAPSHOT</onem2mall.version>
+    <onem2mexample.version>0.3.0-SNAPSHOT</onem2mexample.version>
+    <controller.extras.version>1.8.0-SNAPSHOT</controller.extras.version>
   </properties>
+
   <dependencyManagement>
     <dependencies>
       <!-- project specific dependencies -->
@@ -63,6 +64,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       </dependency>
     </dependencies>
   </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.opendaylight.yangtools</groupId>
@@ -104,71 +106,45 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
 
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>onem2m-features</artifactId>
-      <version>${onem2m.version}</version>
+      <artifactId>onem2mall-features</artifactId>
+      <version>${onem2mall.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
+
+
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>onem2msimpleadapter-features</artifactId>
-      <version>${onem2msimpleadapter.version}</version>
+      <artifactId>onem2mexample-features</artifactId>
+      <version>${onem2mexample.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>onem2mtsdr-features</artifactId>
-      <version>${onem2mtsdr.version}</version>
+      <groupId>org.opendaylight.controller</groupId>
+      <artifactId>features-extras</artifactId>
+      <version>${controller.extras.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>onem2moic-features</artifactId>
-      <version>${onem2moic.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>iotdmbundleloader-features</artifactId>
-      <version>${iotdmbundleloader.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>iotdmkaraffeatureloader-features</artifactId>
-      <version>${iotdmkaraffeatureloader.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>onem2mall-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>onem2mall-impl</artifactId>
-      <version>${project.version}</version>
-      <type>xml</type>
-      <classifier>config</classifier>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>onem2mall-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>${project.groupId}</groupId>-->
+      <!--<artifactId>iotdmcsitdist-impl</artifactId>-->
+      <!--<version>${project.version}</version>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>${project.groupId}</groupId>-->
+      <!--<artifactId>iotdmcsitdist-api</artifactId>-->
+      <!--<version>${project.version}</version>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>${project.groupId}</groupId>-->
+      <!--<artifactId>iotdmcsitdist-cli</artifactId>-->
+      <!--<version>${project.version}</version>-->
+    <!--</dependency>-->
   </dependencies>
 </project>
