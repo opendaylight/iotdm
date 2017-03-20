@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright © 2017 Cisco Systems Inc and others. All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-iotdmcsitdist-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+  <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.controller/features-extras/{{VERSION}}/xml/features</repository>
+
+  <repository>mvn:org.opendaylight.iotdm/onem2mall-features/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.iotdm/onem2mexample-features/{{VERSION}}/xml/features</repository>
+
+  <feature name='odl-iotdmcsitdist' version='${project.version}' description='OpenDaylight :: iotdmcsitdist'>
+    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version='${onem2mall.version}'>odl-onem2mall-iotdm</feature>
+    <feature version='${onem2mexample.version}'>odl-onem2mexample</feature>
+    <feature version='${controller.extras.version}'>odl-jolokia</feature>
+  </feature>
+
+  <feature name='odl-iotdmcsitdist-rest' version='${project.version}' description='OpenDaylight :: iotdmcsitdist :: REST'>
+    <feature version="${project.version}">odl-iotdmcsitdist</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+
+  <feature name='odl-iotdmcsitdist-ui' version='${project.version}' description='OpenDaylight :: iotdmcsitdist :: UI'>
+    <feature version="${project.version}">odl-iotdmcsitdist-rest</feature>
+    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+    <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
+  </feature>
+
+</features>
