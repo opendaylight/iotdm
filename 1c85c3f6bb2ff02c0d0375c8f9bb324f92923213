@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafc7978_45f87ae5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-03-21T15:59:24Z",
+      "side": 1,
+      "message": "To be tested instead of onem2mall?",
+      "range": {
+        "startLine": 7,
+        "startChar": 33,
+        "endLine": 7,
+        "endChar": 53
+      },
+      "revId": "1c85c3f6bb2ff02c0d0375c8f9bb324f92923213",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_a5dcc675",
+        "filename": "iotdmcsitdist/features/src/main/features/features.xml",
+        "patchSetId": 3
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-03-21T15:59:24Z",
+      "side": 1,
+      "message": "https://git.opendaylight.org/gerrit/50408",
+      "range": {
+        "startLine": 38,
+        "startChar": 40,
+        "endLine": 38,
+        "endChar": 54
+      },
+      "revId": "1c85c3f6bb2ff02c0d0375c8f9bb324f92923213",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
