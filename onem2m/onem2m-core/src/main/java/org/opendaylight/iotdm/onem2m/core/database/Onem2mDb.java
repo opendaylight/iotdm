@@ -1036,7 +1036,16 @@ public class Onem2mDb implements TransactionChainListener {
     }
 
     public String getNonHierarchicalNameForResource(String resourceId) {
-        return resourceId;
+        Onem2mResource onem2mResource = trc.retrieveResourceById(resourceId);
+        return getNonHierarchicalNameForResource(onem2mResource);
+    }
+
+    public String getNonHierarchicalNameForResource(Onem2mResource onem2mResource) {
+        if (onem2mResource.getParentId().equals(Onem2mDb.NULL_RESOURCE_ID)) {
+            return "/" + onem2mResource.getName();
+        }
+        String[] hierarchy = onem2mResource.getParentTargetUri().split("/");
+        return "/" + hierarchy[0] + "/" + onem2mResource.getResourceId();
     }
 
     /**

@@ -412,7 +412,7 @@ public class ResourceSubscription extends BaseResource {
             if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
                 return;
         }
-        //CheckAccessControlProcessor.handleCreateUpdate(trc, onem2mRequest, onem2mResponse);
+        CheckAccessControlProcessor.handleCreateUpdate(onem2mRequest, onem2mResponse);
         if (onem2mResponse.getPrimitiveResponseStatusCode() != null)
             return;
         processCommonCreateUpdateAttributes();
