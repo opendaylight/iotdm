@@ -1042,7 +1042,10 @@ public class Onem2mDb implements TransactionChainListener {
 
     public String getNonHierarchicalNameForResource(Onem2mResource onem2mResource) {
         if (onem2mResource.getParentId().equals(Onem2mDb.NULL_RESOURCE_ID)) {
-            return "/" + onem2mResource.getName();
+            // This is cseBase resource, cseBase's resourceName and its CSE-ID
+            // are equal in this implementation so we can use resourceName as
+            // CSE-ID here
+            return "/" + onem2mResource.getName() + "/" + onem2mResource.getResourceId();
         }
         String[] hierarchy = onem2mResource.getParentTargetUri().split("/");
         return "/" + hierarchy[0] + "/" + onem2mResource.getResourceId();
