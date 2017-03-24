@@ -1134,9 +1134,10 @@ public class Onem2mDb implements TransactionChainListener {
         // start by looking at the cse root: the first level is the cse name
         Onem2mCse cse = trc.retrieveCseByName(hierarchy[0]);
         if (cse == null)
+
             return null; // resource not found
 
-        /**
+        /*****
          * Cases to consider:
          * 1) the targetURI is just the cse --> hierarchy.length == 1
          * 2) the target URI has just one more level --> hierarchy.length == 2

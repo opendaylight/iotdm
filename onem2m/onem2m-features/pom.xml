@@ -200,14 +200,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <type>xml</type>
         </dependency>
 
+
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>onem2m-protocol-mqtt-impl</artifactId>
+            <artifactId>onem2m-protocol-mqtt-provider</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>onem2m-protocol-mqtt-provider</artifactId>
+            <artifactId>onem2m-protocol-mqtt-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
 

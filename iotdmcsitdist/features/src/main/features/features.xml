@@ -27,10 +27,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${controller.extras.version}'>odl-jolokia</feature>
   </feature>
 
-  <feature name='odl-iotdmcsitdist-rest' version='${project.version}' description='OpenDaylight :: iotdmcsitdist :: REST'>
-    <feature version="${project.version}">odl-iotdmcsitdist</feature>
-    <feature version="${restconf.version}">odl-restconf</feature>
-  </feature>
 
   <feature name='odl-iotdmcsitdist-ui' version='${project.version}' description='OpenDaylight :: iotdmcsitdist :: UI'>
     <feature version="${project.version}">odl-iotdmcsitdist-rest</feature>
@@ -38,5 +34,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
     <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
   </feature>
+
+  <feature name='odl-iotdmcsitdist-rest' version='${project.version}' description='OpenDaylight :: iotdmcsitdist :: REST'>
+    <feature version="${project.version}">odl-iotdmcsitdist</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+  </feature>
+
 
 </features>
