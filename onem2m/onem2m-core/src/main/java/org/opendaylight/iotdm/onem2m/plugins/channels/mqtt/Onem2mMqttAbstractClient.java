@@ -164,6 +164,7 @@ public abstract class Onem2mMqttAbstractClient implements AutoCloseable {
             client.setCallback(new MqttCallbackSetDefault());
 
             MqttConnectOptions options = new MqttConnectOptions();
+            options.setMaxInflight(65000);
             options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
             options.setUserName("mqtt");
             options.setPassword("mqtt".toCharArray());

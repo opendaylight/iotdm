@@ -30,7 +30,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
         <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
         <pax.web.version>3.2.9</pax.web.version>
-        <mqttclient.version>1.0.2</mqttclient.version>
+        <mqttclient.version>1.1.0</mqttclient.version>
         <joda.version>2.7</joda.version>
         <netconf.version>1.2.0-SNAPSHOT</netconf.version>
         <configfile.directory>etc/opendaylight/karaf</configfile.directory>
