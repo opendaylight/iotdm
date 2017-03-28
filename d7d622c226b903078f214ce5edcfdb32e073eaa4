@@ -1,0 +1,8 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+1: Tomas Janciga <tjanciga@cisco.com>
+Code-Review+2: Lionel Florit <lflorit@cisco.com>
+Submitted-by: Lionel Florit <lflorit@cisco.com>
+Submitted-at: Tue, 28 Mar 2017 15:51:41 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/53971
+Project: iotdm
+Branch: refs/heads/master
