@@ -119,7 +119,7 @@ public class BGDeleteProcessor {
                 Onem2mResource onem2mResource = db.getResource(resToDeleteId);
                 if (onem2mResource != null) {
                     if (hierarchyList.size() == 1) {
-                        db.twc.deleteResource(t, resToDeleteId, Onem2m.SYS_DELETE_RESOURCE_ID, onem2mResource.getResourceId());
+                        db.twc.deleteResource(t, resToDeleteId, Onem2m.SYS_DELETE_RESOURCE_ID, onem2mResource.getName());
 
                     } else {
                         db.twc.deleteResource(t, resToDeleteId, onem2mResource.getParentId(), onem2mResource.getName());

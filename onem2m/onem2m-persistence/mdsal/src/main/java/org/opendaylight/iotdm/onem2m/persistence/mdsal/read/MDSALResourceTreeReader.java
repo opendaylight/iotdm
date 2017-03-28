@@ -86,7 +86,9 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
                 .child(Onem2mParentChildList.class, key);
 
         Onem2mParentChildList list = retrieve(iid, dsType);
-
+        if (null == list) {
+            return null;
+        }
         return list.getOnem2mParentChild();
     }
 
@@ -144,6 +146,7 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
      * @param aeId The AE-ID of the AE.
      * @return resourceID of the AE
      */
+    @Override
     public String retrieveAeResourceIdByAeId(String cseBaseName, String aeId) {
         InstanceIdentifier<Onem2mRegisteredAeIds> iid = InstanceIdentifier.create(Onem2mCseList.class)
                                                                 .child(Onem2mCse.class, new Onem2mCseKey(cseBaseName))
