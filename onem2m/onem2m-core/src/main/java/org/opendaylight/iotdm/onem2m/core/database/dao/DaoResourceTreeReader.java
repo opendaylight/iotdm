@@ -46,10 +46,21 @@ public interface DaoResourceTreeReader extends Closeable {
      */
     List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key);
 
+    /**
+     * Retrieve list of child resource data of specific parent resource
+     * @param key Key identifying the parent resource
+     * @param limit Number of child resource data items to be returned
+     * @return  List including child resource data
+     */
     List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit);
 
 
-
+    /**
+     * Retrieve child of parent resource.
+     * @param resourceId ResourceId of the parent resource
+     * @param name ResourceName of the child resource
+     * @return Child resource data
+     */
     Onem2mParentChild retrieveChildByName(String resourceId, String name);
 
     /**
@@ -63,6 +74,14 @@ public interface DaoResourceTreeReader extends Closeable {
      * @return all existing Resource elements
      */
     Onem2mResourceTree retrieveFullResourceList();
+
+    /**
+     * Retrieve the resourceID of the AE by its AE-ID.
+     * @param cseBaseName The name of cseBase.
+     * @param aeId The AE-ID of the AE.
+     * @return resourceID of the AE
+     */
+    String retrieveAeResourceIdByAeId(String cseBaseName, String aeId);
 
     /**
      * Checks whether the entity specified by the entityId is registered at the cseBase.

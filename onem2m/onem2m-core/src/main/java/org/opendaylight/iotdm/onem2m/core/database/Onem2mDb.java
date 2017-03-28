@@ -443,6 +443,8 @@ public class Onem2mDb implements TransactionChainListener {
         return new CseBaseOriginatorLocator(originatorEntityId, cseBaseCseId);
     }
 
+
+
     /**
      * Class provides methods checking From parameter value if is valid entity ID and
      * to gather information about the entity ID and the resource representing the entity.

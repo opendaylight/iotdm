@@ -58,4 +58,21 @@ public interface WriteOnlyCache {
      */
     boolean createCseByName(String name, String resourceId);
 
+
+    /**
+     * Cache is notified about creation of new AE element. Saves AE-ID to AE's resourceId mapping in cache.
+     *
+     * @param cseBaseCseId  CSE-ID of the cseBase resource as parent of the AE
+     * @param aeId  AE-ID of the new AE resource
+     * @param aeResourceId ResourceID of the new AE resource
+     * @return  true if successfully created
+     */
+    boolean createAeResourceIdByAeId(final String cseBaseCseId, final String aeId, final String aeResourceId);
+
+    /**
+     * Remove AE-ID to resourceId mapping cached for cseBase if exists.
+     * @param cseBaseCseId CSE-ID of the cseBase resource
+     * @param aeId AE-ID of the AE resource
+     */
+    void deleteAeResourceIdByAeId(final String cseBaseCseId, final String aeId);
 }

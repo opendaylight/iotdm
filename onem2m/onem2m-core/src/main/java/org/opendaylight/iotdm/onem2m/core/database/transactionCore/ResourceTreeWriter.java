@@ -119,7 +119,7 @@ public class ResourceTreeWriter implements Closeable {
 
     /**
      * @param resourceId          this resource
-     * @param jsonResourceContent serailized JSON object
+     * @param jsonResourceContent serialized JSON object
      */
     public boolean updateJsonResourceContentString(Object transaction, String resourceId, String jsonResourceContent) {
         if (!daoWriter.updateJsonResourceContentString(transaction, resourceId, jsonResourceContent)) {
@@ -165,8 +165,6 @@ public class ResourceTreeWriter implements Closeable {
         return true;
     }
 
-    // TODO: migrate the routing table from Onem2mRouterService into the cache
-
     public boolean createAeUnderCse(String cseBaseName,
                                     String aeId, String aeResourceId) {
         if (!daoWriter.createAeIdToResourceIdMapping(cseBaseName, aeId, aeResourceId)) {
@@ -174,8 +172,7 @@ public class ResourceTreeWriter implements Closeable {
             return false;
         }
 
-        // TODO: add caching
-        return true;
+        return cache.createAeResourceIdByAeId(cseBaseName, aeId, aeResourceId);
     }
 
     public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
@@ -184,9 +181,11 @@ public class ResourceTreeWriter implements Closeable {
             return false;
         }
 
-        // TODO: add caching
+        cache.deleteAeResourceIdByAeId(cseBaseName, aeId);
         return true;
     }
+
+    // TODO: migrate the routing table from Onem2mRouterService into the cache
 
     public boolean createRemoteCseUnderCse(String cseBaseName, String remoteCseCseId, String remoteCseResourceId) {
         if (!daoWriter.createRemoteCseIdToResourceIdMapping(cseBaseName, remoteCseCseId, remoteCseResourceId)) {

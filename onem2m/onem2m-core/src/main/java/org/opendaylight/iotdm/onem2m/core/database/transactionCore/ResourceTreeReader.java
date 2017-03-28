@@ -7,6 +7,7 @@
  */
 package org.opendaylight.iotdm.onem2m.core.database.transactionCore;
 
+import java.util.Collection;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -103,7 +104,27 @@ public class ResourceTreeReader {
      * @return AE resource type or remoteCSE resource type if the entity is registered, null otherwise
      */
     public Integer isEntityRegistered(String entityId, String cseBaseCseId) {
+        // Check if AE-ID first because it's supposed that AEs will produce
+        // more communication than CSEs
+        if (null != cseBaseCseId) {
+            String aeId = cache.retrieveAeResourceIdByAeId(cseBaseCseId, entityId);
+            if (null != aeId) {
+                return Onem2m.ResourceType.AE;
+            }
+        } else {
+            List<Onem2mCse> cseList = cache.retrieveCseBaseList();
+            if (null != cseList) {
+                for (Onem2mCse cse: cseList) {
+                    String aeId = cache.retrieveAeResourceIdByAeId(cse.getName(), entityId);
+                    if (null != aeId) {
+                        return Onem2m.ResourceType.AE;
+                    }
+                }
+            }
+        }
+
         // TODO Temporary caching solution for CSE-IDs
+        // TODO should be moved into the Cache class
         if (null != cseBaseCseId) {
             if (Onem2mRouterService.getInstance().hasRemoteCse(cseBaseCseId, entityId)) {
                 // Entity is registered as remoteCSE
@@ -116,7 +137,6 @@ public class ResourceTreeReader {
             }
         }
 
-        // TODO implement cache
         return daoResourceTreeReader.isEntityRegistered(entityId, cseBaseCseId);
     }
 
@@ -137,11 +157,36 @@ public class ResourceTreeReader {
      * @return the child
      */
     public List<Onem2mParentChild> retrieveParentChildList(String resourceId) {
-        return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+//        List<Onem2mParentChild> listA = daoResourceTreeReader.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), 0);
+//        List<Onem2mParentChild> listB =
+//            cache.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), 0);
+
+//        List<Onem2mParentChild> list =
+          return  cache.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), 0);
+//        if (null == list || list.isEmpty()) {
+//            return daoResourceTreeReader.retrieveParentChildList(new Onem2mParentChildListKey(resourceId));
+//        }
+//
+//        if (null != list && list.isEmpty()) {
+//            // TODO why is this needed ?
+//            return null;
+//        }
+//        return list;
     }
 
     public List<Onem2mParentChild> retrieveParentChildListLimitN(String resourceId, int limit) {
-        return daoResourceTreeReader.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
+//        List<Onem2mParentChild> listA = daoResourceTreeReader.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
+//        List<Onem2mParentChild> listB =
+//            cache.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
+//        if (null == listA || null == listB || listA.size() != listB.size()) {
+//            LOG.info("TESTING");
+//        }
+//        List<Onem2mParentChild> list =
+//            cache.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
+//        if (null == list || list.isEmpty()) {
+            return daoResourceTreeReader.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
+//        }
+//        return list;
     }
 
     /**
@@ -165,7 +210,8 @@ public class ResourceTreeReader {
      * @return the child
      */
     public Onem2mParentChild retrieveChildByName(String resourceId, String childName) {
-        return daoResourceTreeReader.retrieveChildByName(resourceId, childName);
+        return cache.retrieveChildByName(resourceId, childName);
+//        return daoResourceTreeReader.retrieveChildByName(resourceId, childName);
     }
 
     /**
