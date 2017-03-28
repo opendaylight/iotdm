@@ -63,8 +63,16 @@ public interface DaoResourceTreeWriter extends Closeable {
      */
     boolean deleteResource(Object transaction, String resourceId, String parentResourceId, String resourceName);
 
-    boolean moveParentChildLinkToDeleteParent(String resoruceId, String oldPrentResourceId, String childResourceName,
-                                              String newParentResourceId);
+    /**
+     * Move parent-child relation to another parent resource
+     * @param resourceId Child resource's resourceId
+     * @param oldPrentResourceId Current parent resource's resourceId
+     * @param childResourceName Child resource's name
+     * @param newParentResourceId New parent resource's resourceId
+     * @return
+     */
+    boolean moveParentChildLink(String resourceId, String childResourceName,
+                                String oldPrentResourceId, String newParentResourceId);
     /**
      * Cleanup the data store.
      */

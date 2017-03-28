@@ -16,11 +16,12 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.on
 public interface WriteOnlyCache {
 
     /**
-     * Resource with resourceId is removed from the Cache if exists.
-     *
-     * @param resourceId key
+     * Resource and all of it's child resources are removed from cache if exists
+     * @param resourceId ResourceId of the resource
+     * @param resourceName ResourceName of the resource
+     * @param parentResourceId ResourceId of the parent resource
      */
-    void deleteResourceById(String resourceId);
+    void deleteResource(String resourceId, String resourceName, String parentResourceId);
 
     /**
      * Cleans Cache.
@@ -58,4 +59,32 @@ public interface WriteOnlyCache {
      */
     boolean createCseByName(String name, String resourceId);
 
+
+    /**
+     * Cache is notified about creation of new AE element. Saves AE-ID to AE's resourceId mapping in cache.
+     *
+     * @param cseBaseCseId  CSE-ID of the cseBase resource as parent of the AE
+     * @param aeId  AE-ID of the new AE resource
+     * @param aeResourceId ResourceID of the new AE resource
+     * @return  true if successfully created
+     */
+    boolean createAeResourceIdByAeId(final String cseBaseCseId, final String aeId, final String aeResourceId);
+
+    /**
+     * Remove AE-ID to resourceId mapping cached for cseBase if exists.
+     * @param cseBaseCseId CSE-ID of the cseBase resource
+     * @param aeId AE-ID of the AE resource
+     */
+    void deleteAeResourceIdByAeId(final String cseBaseCseId, final String aeId);
+
+    /**
+     * Move parent-child relation to another parent resource
+     * @param resourceId Child resource's resourceId
+     * @param oldPrentResourceId Current parent resource's resourceId
+     * @param childResourceName Child resource's name
+     * @param newParentResourceId New parent resource's resourceId
+     * @return
+     */
+    boolean moveParentChildLink(String resourceId, String childResourceName,
+                                String oldPrentResourceId, String newParentResourceId);
 }
