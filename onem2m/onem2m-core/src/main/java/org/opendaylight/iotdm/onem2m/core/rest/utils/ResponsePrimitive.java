@@ -76,6 +76,7 @@ public class ResponsePrimitive extends BasePrimitive {
     public String getPrimitiveRequestIdentifier() { return primitiveRequestIdentifier; }
     public void setPrimitiveRequestIdentifier(String primitiveRequestIdentifier) {
         this.primitiveRequestIdentifier = primitiveRequestIdentifier;
+        setPrimitive(REQUEST_IDENTIFIER, primitiveRequestIdentifier);
     }
 
     public ResponsePrimitive() {
@@ -129,13 +130,13 @@ public class ResponsePrimitive extends BasePrimitive {
         JSONObject responseJson = new JSONObject();
         JsonUtils.put(
                 responseJson, ResponsePrimitive.CONTENT,
-                this.getPrimitiveContent());
+                this.getPrimitive(ResponsePrimitive.CONTENT));
         JsonUtils.put(
                 responseJson, ResponsePrimitive.RESPONSE_STATUS_CODE,
-                this.getPrimitiveResponseStatusCode());
+                this.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE));
         JsonUtils.put(
                 responseJson, ResponsePrimitive.REQUEST_IDENTIFIER,
-                this.getPrimitiveRequestIdentifier());
+                this.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER));
         return responseJson;
     }
 }
