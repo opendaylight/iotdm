@@ -119,7 +119,7 @@ public class ResourceTreeWriter implements Closeable {
 
     /**
      * @param resourceId          this resource
-     * @param jsonResourceContent serailized JSON object
+     * @param jsonResourceContent serialized JSON object
      */
     public boolean updateJsonResourceContentString(Object transaction, String resourceId, String jsonResourceContent) {
         if (!daoWriter.updateJsonResourceContentString(transaction, resourceId, jsonResourceContent)) {
@@ -138,14 +138,22 @@ public class ResourceTreeWriter implements Closeable {
      * Move from old parent to parent id 1 (the delete parent)
      *
      */
-    public boolean moveParentChildLinkToDeleteParent(String oldParentResourceId, String childResourceName, String childResourceId) {
+    public boolean moveParentChildLinkToDeleteParent(String oldParentResourceId,
+                                                     String childResourceName, String childResourceId) {
 
-        if (!daoWriter.moveParentChildLinkToDeleteParent(childResourceId, oldParentResourceId, childResourceName,
-                Onem2m.SYS_DELETE_RESOURCE_ID)) {
-            LOG.error("moveParentChildLinkToDeleteParent: DB could not perform operation: resourceId:{}", childResourceId);
+        if (!daoWriter.moveParentChildLink(childResourceId, childResourceName,
+                                           oldParentResourceId, Onem2m.SYS_DELETE_RESOURCE_ID)) {
+            LOG.error("moveParentChildLinkToDeleteParent: DB could not perform operation: resourceId:{}",
+                      childResourceId);
             return false;
         }
 
+        if (!cache.moveParentChildLink(childResourceId, childResourceName,
+                                       oldParentResourceId, Onem2m.SYS_DELETE_RESOURCE_ID)) {
+            LOG.error("moveParentChildLinkToDeleteParent: Cache could not perform operation: resourceId:{}",
+                      childResourceId);
+            return false;
+        }
 
         return true;
     }
@@ -156,16 +164,15 @@ public class ResourceTreeWriter implements Closeable {
      * @param resourceId the resource id
      */
     public boolean deleteResource(Object transaction, String resourceId, String parentResourceId, String resourceName) {
+        cache.deleteResource(resourceId, resourceName, parentResourceId);
+
         if (!daoWriter.deleteResource(transaction, resourceId, parentResourceId, resourceName)) {
             LOG.error("deleteResource: DB could not delete");
             return false;
         }
-        cache.deleteResourceById(resourceId);
 
         return true;
     }
-
-    // TODO: migrate the routing table from Onem2mRouterService into the cache
 
     public boolean createAeUnderCse(String cseBaseName,
                                     String aeId, String aeResourceId) {
@@ -174,8 +181,7 @@ public class ResourceTreeWriter implements Closeable {
             return false;
         }
 
-        // TODO: add caching
-        return true;
+        return cache.createAeResourceIdByAeId(cseBaseName, aeId, aeResourceId);
     }
 
     public boolean deleteAeIdToResourceIdMapping(String cseBaseName, String aeId) {
@@ -184,9 +190,11 @@ public class ResourceTreeWriter implements Closeable {
             return false;
         }
 
-        // TODO: add caching
+        cache.deleteAeResourceIdByAeId(cseBaseName, aeId);
         return true;
     }
+
+    // TODO: migrate the routing table from Onem2mRouterService into the cache
 
     public boolean createRemoteCseUnderCse(String cseBaseName, String remoteCseCseId, String remoteCseResourceId) {
         if (!daoWriter.createRemoteCseIdToResourceIdMapping(cseBaseName, remoteCseCseId, remoteCseResourceId)) {

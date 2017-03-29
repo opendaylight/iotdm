@@ -223,10 +223,8 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean moveParentChildLinkToDeleteParent(String resourceId,
-                                                     String oldPrentResourceId,
-                                                     String childResourceName,
-                                                     String newParentResourceId) {
+    public boolean moveParentChildLink(String resourceId, String childResourceName,
+                                       String oldPrentResourceId, String newParentResourceId) {
 
         int shard = factory.getShardFromResourceId(newParentResourceId) % numShards;
         boolean status = true;
@@ -235,7 +233,7 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
             writer.reload();
 
             removeParentChildLink(oldPrentResourceId, childResourceName);
-            createParentChildLink(newParentResourceId, resourceId, resourceId);
+            createParentChildLink(newParentResourceId, childResourceName, resourceId);
 
         } catch (Exception e) {
             LOG.error("Exception {}", e.getMessage());
