@@ -8,6 +8,9 @@
 
 package org.opendaylight.iotdm.onem2m.core.database;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -28,7 +31,6 @@ import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mCseList;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree
         .onem2m.parent.child.list.Onem2mParentChild;
@@ -256,33 +258,31 @@ public class Onem2mDb implements TransactionChainListener {
         String resourceName = onem2mRequest.getResourceName();
         // see resourceAE for comments on why AE_IDs have these naming rules
         String from = onem2mRequest.getPrimitiveFrom();
-        if (from == null) {
-            if (resourceName == null) {
-                onem2mRequest.setResourceName("C" + onem2mRequest.getResourceId());
+        if(isNull(resourceName)) {
+            if(isNull(from)) {
+                resourceName = "C" + onem2mRequest.getResourceId();
             }
-            JsonUtils.put(jsonPrimitiveContent, ResourceAE.AE_ID, onem2mRequest.getResourceName());
-        } else {
-            if (resourceName == null) {
-                // Use the AE-ID from the From parameter as the resourceName
-                // Now use just the AE-ID (ignore FQDN and CSE-ID if used because they should be already verified)
+            else {
                 String[] splitStrins = from.split("/");
-                String removedHead = splitStrins[splitStrins.length - 1];
-                onem2mRequest.setResourceName(removedHead);
+                resourceName = splitStrins[splitStrins.length - 1];
             }
 
-            JsonUtils.put(jsonPrimitiveContent, ResourceAE.AE_ID, onem2mRequest.getResourceName());
-        }
+            if(ResourceAE.resourceNameExists(onem2mRequest.getParentResourceId(), resourceName, onem2mRequest, onem2mResponse)) {
+                return false;
+            }
 
-        boolean ret = false;
-        ret = performResourceCreate(onem2mRequest, onem2mResponse, Onem2m.ResourceType.AE);
-        if (!ret) {
+            onem2mRequest.setResourceName(resourceName);
+        }
+        JsonUtils.put(jsonPrimitiveContent, ResourceAE.AE_ID, onem2mRequest.getResourceName());
+
+        if (!performResourceCreate(onem2mRequest, onem2mResponse, Onem2m.ResourceType.AE)) {
             return false;
         }
 
         // now create record in the AE-ID to resourceID mapping
         String aeId = onem2mRequest.getResourceName();
         String cseBaseName = resourceLocator.getCseBaseName();
-        if (null == cseBaseName) {
+        if (isNull(cseBaseName)) {
             LOG.error("Can't get cseBase name from resource locator");
             return false;
         }
@@ -307,6 +307,13 @@ public class Onem2mDb implements TransactionChainListener {
 
         if (null == remoteCseCseId) {
             LOG.error("Can't get CSE-ID of the remoteCSE resource");
+            return false;
+        }
+
+        //cseBaseName is the same as cseId in our implementation
+        Integer registeredEntity = trc.isEntityRegistered(remoteCseCseId, cseBaseName);
+        if(nonNull(registeredEntity) && registeredEntity == Onem2m.ResourceType.REMOTE_CSE) {
+            LOG.error("Resource create operation failed: remoteCSE with given name already exists.");
             return false;
         }
 
