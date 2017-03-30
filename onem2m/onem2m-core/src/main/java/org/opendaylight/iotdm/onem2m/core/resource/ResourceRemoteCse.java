@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -162,7 +160,7 @@ public class ResourceRemoteCse extends BaseResource {
         String at = jsonPrimitiveContent.optString(ANNOUNCE_TO, null);
         if (at != null && onem2mRequest.isCreate) {
             // store the default ACPID info into this place.
-            String CSEid = onem2mRequest.getOnem2mResource().getResourceId();
+            String CSEid = onem2mRequest.getParentResourceId();
             // to should be an CSE
             String defaultAT = Onem2mDb.getInstance().getChildResourceID(CSEid,"_defaultACP");
             jsonPrimitiveContent.append(ANNOUNCE_TO,defaultAT);
