@@ -10,11 +10,10 @@ package org.opendaylight.iotdm.onem2m.core.resource;
 
 import java.util.Iterator;
 
+import java.util.Objects;
 import org.json.JSONArray;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -100,15 +99,15 @@ public class ResourceAE extends BaseResource {
          */
         if (onem2mRequest.isCreate) {
             if (!Onem2mDb.getInstance().createResourceAe(onem2mRequest, onem2mResponse, resourceLocator)) {
-                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+                if(Objects.isNull(onem2mResponse.getPrimitiveResponseStatusCode())) {
+                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
+                }
                 // TODO: what do we do now ... seems really bad ... keep stats
-                return;
             }
         } else {
             if (!Onem2mDb.getInstance().updateResource(onem2mRequest, onem2mResponse)) {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.INTERNAL_SERVER_ERROR, "Cannot write to data store!");
                 // TODO: what do we do now ... seems really bad ... keep stats
-                return;
             }
         }
     }
@@ -244,5 +243,15 @@ public class ResourceAE extends BaseResource {
             return;
 
         processCreateUpdateAttributes();
+    }
+
+    public static boolean exists(String parentResourceId, String resourceName, RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        if (Onem2mDb.getInstance().findChildFromParentAndChildName(
+                parentResourceId, resourceName) != null) {
+            onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONFLICT,
+                    "Resource already exists: " + onem2mRequest.getPrimitiveTo() + "/" + resourceName);
+            return true;
+        }
+        return false;
     }
 }
