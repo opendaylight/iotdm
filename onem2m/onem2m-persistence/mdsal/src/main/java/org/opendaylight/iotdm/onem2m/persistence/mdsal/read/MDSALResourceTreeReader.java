@@ -61,11 +61,9 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     private Onem2mResource retrieveFullResourceById(Onem2mResourceKey key) {
-        int shard = factory.getShardFromResourceId(key.getResourceId());
         InstanceIdentifier<Onem2mResource> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mResource.class, key);
         return retrieve(iid, dsType);
-
     }
 
     @Override
@@ -79,9 +77,6 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
 
     @Override
     public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key) {
-
-        int shard = factory.getShardFromResourceId(key.getParentResourceId());
-
         InstanceIdentifier<Onem2mParentChildList> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, key);
 
@@ -98,8 +93,6 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         List<Onem2mParentChild> returnList = new ArrayList();
 
         if (limit <= 0) return returnList;
-
-        int shard = factory.getShardFromResourceId(key.getParentResourceId());
 
         InstanceIdentifier<Onem2mParentChildList> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, key);
@@ -119,7 +112,6 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
 
     @Override
     public Onem2mParentChild retrieveChildByName(String resourceId, String name) {
-        int shard = factory.getShardFromResourceId(resourceId);
         InstanceIdentifier<Onem2mParentChild> iid = InstanceIdentifier.create(Onem2mResourceTree.class)
                 .child(Onem2mParentChildList.class, new Onem2mParentChildListKey(resourceId))
                 .child(Onem2mParentChild.class, new Onem2mParentChildKey(name));
