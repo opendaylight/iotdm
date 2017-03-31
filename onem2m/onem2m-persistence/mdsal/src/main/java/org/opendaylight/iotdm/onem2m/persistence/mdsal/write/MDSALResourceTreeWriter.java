@@ -142,8 +142,16 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     }
 
     @Override
-    public boolean createResource(Object transaction, RequestPrimitive onem2mRequest, String parentResourceId, Integer resourceType) {
-        int shard = factory.getShardFromResourceId(onem2mRequest.getResourceId()) % numShards;
+    public boolean createResource(Object transaction, RequestPrimitive onem2mRequest, String parentResourceId,
+                                  Integer resourceType) {
+        int shard = -1;
+        try {
+            shard = factory.getShardFromResourceId(onem2mRequest.getResourceId()) % numShards;
+        } catch(IllegalArgumentException e) {
+            LOG.error("Can't get shard number: {}", e.getMessage());
+            return false;
+        }
+
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
@@ -196,7 +204,14 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
     @Override
     public boolean updateJsonResourceContentString(Object transaction, String resourceId, String jsonResourceContent) {
-        int shard = factory.getShardFromResourceId(resourceId) % numShards;
+        int shard = -1;
+        try {
+            shard = factory.getShardFromResourceId(resourceId) % numShards;
+        } catch(IllegalArgumentException e) {
+            LOG.error("Can't get shard number: {}", e.getMessage());
+            return false;
+        }
+
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
@@ -225,8 +240,14 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
     @Override
     public boolean moveParentChildLink(String resourceId, String childResourceName,
                                        String oldPrentResourceId, String newParentResourceId) {
+        int shard = -1;
+        try {
+            shard = factory.getShardFromResourceId(resourceId) % numShards;
+        } catch(IllegalArgumentException e) {
+            LOG.error("Can't get shard number: {}", e.getMessage());
+            return false;
+        }
 
-        int shard = factory.getShardFromResourceId(newParentResourceId) % numShards;
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {
@@ -311,7 +332,14 @@ public class MDSALResourceTreeWriter implements DaoResourceTreeWriter {
 
     @Override
     public boolean deleteResource(Object transaction, String resourceId, String parentResourceId, String resourceName) {
-        int shard = factory.getShardFromResourceId(resourceId) % numShards;
+        int shard = -1;
+        try {
+            shard = factory.getShardFromResourceId(resourceId) % numShards;
+        } catch(IllegalArgumentException e) {
+            LOG.error("Can't get shard number: {}", e.getMessage());
+            return false;
+        }
+
         boolean status = true;
         crudMonitor.get(shard).enter();
         try {

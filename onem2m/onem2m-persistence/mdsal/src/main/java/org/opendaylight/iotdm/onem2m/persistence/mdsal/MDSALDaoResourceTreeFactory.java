@@ -29,7 +29,9 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     private AtomicInteger nextId;
     private Integer systemStartId = 0;
 
-    private static final String IDDELIMITER = "-";
+    private static final String IDDELIMITER = "-"; //update also regex
+    private static final String IDREGEX = ".+-.+-.+-.+";
+
     private static final int IDRADIX = 36;
     private static final int IDSHARDPOSITION = 0;
 
@@ -108,6 +110,10 @@ public class MDSALDaoResourceTreeFactory implements DaoResourceTreeFactory {
     }
 
     public int getShardFromResourceId(String resourceId) {
+        if (! resourceId.matches(IDREGEX)) {
+            LOG.error("Invalid resourceId format: {}", resourceId);
+            throw new IllegalArgumentException("Invalid resourceId format: " + resourceId);
+        }
         return (int) Integer.valueOf(resourceId.split(IDDELIMITER)[IDSHARDPOSITION], IDRADIX);
     }
 }
