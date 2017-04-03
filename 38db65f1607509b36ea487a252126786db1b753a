@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_a5d99685",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-03T06:17:09Z",
+      "side": 1,
+      "message": "Too long line",
+      "range": {
+        "startLine": 313,
+        "startChar": 87,
+        "endLine": 313,
+        "endChar": 144
+      },
+      "revId": "38db65f1607509b36ea487a252126786db1b753a",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_45d0aa53",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/resource/ResourceRemoteCse.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-03T06:17:09Z",
+      "side": 1,
+      "message": "This is not CSEid, it\u0027s parent\u0027s resourceId.",
+      "revId": "38db65f1607509b36ea487a252126786db1b753a",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
