@@ -42,59 +42,59 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-core</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-notifier</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-persistence-mdsal</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
 
     <!--onem2m-protocols start-->
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocols-common</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-http-provider</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-http-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-coap-provider</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-coap-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-mqtt-provider</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-mqtt-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-protocol-websocket</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <!--onem2m-protocols end-->
     <!--onem2m end-->
@@ -103,7 +103,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2mall-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <!--onem2m-all end-->
 
@@ -121,27 +121,27 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2medevice-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2mexample-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2moic-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2msimpleadapter-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2mtsdr-impl</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <!--onem2m-plugins end-->
   </dependencies>
@@ -162,25 +162,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <configuration>
           <skip>true</skip>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.9</version>
-        <executions>
-          <execution>
-            <id>default-cli</id>
-            <goals>
-              <goal>report-aggregate</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <!-- exclude generated sources -->
-                <exclude>**/org/opendaylight/yang/gen/**/*.class</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
