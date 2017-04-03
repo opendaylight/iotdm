@@ -16,6 +16,24 @@
       "revId": "410c8e6acb127699d769a8861be44204e1dd17a7",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_a0ace436",
+        "filename": "iotdmcsitdist/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-03T10:19:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_4004187e",
+      "revId": "410c8e6acb127699d769a8861be44204e1dd17a7",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
     }
   ]
 }
