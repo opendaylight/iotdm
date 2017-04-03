@@ -1,0 +1,7 @@
+Code-Review+2: Tomas Janciga <tjanciga@cisco.com>
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Submitted-by: Tomas Janciga <tjanciga@cisco.com>
+Submitted-at: Mon, 03 Apr 2017 12:10:37 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/54246
+Project: iotdm
+Branch: refs/heads/master
