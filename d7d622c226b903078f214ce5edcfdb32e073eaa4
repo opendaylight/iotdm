@@ -70,6 +70,30 @@
       "revId": "d7d622c226b903078f214ce5edcfdb32e073eaa4",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_e5d71eec",
+        "filename": "iotdmcsitdist/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-03T07:56:53Z",
+      "side": 1,
+      "message": "you\u0027re right, we can use default jacoco configuration, fixed in https://git.opendaylight.org/gerrit/#/c/54246/1",
+      "parentUuid": "fafc7978_94937af9",
+      "range": {
+        "startLine": 168,
+        "startChar": 20,
+        "endLine": 168,
+        "endChar": 39
+      },
+      "revId": "d7d622c226b903078f214ce5edcfdb32e073eaa4",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
     }
   ]
 }
