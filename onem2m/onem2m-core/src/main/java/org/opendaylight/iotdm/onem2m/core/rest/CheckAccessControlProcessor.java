@@ -122,7 +122,7 @@ public class CheckAccessControlProcessor {
         Boolean orininator_is_allowed = false;
         String from = onem2mRequest.getPrimitiveFrom();
         for (String accessControlPolicyID : AccessControlPolicyIDList) {
-            Onem2mResource accessControlPolicyResource = Onem2mDb.getInstance().getResourceUsingURI(accessControlPolicyID);
+            Onem2mResource accessControlPolicyResource = Onem2mDb.getInstance().findResourceUsingURI(accessControlPolicyID);
             if (accessControlPolicyResource != null) {
                 try {
                     JSONObject jsonContent = new JSONObject(accessControlPolicyResource.getResourceContentJsonString());
@@ -173,7 +173,7 @@ public class CheckAccessControlProcessor {
                 }
             } else {
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                        "CONTENT(" + RequestPrimitive.CONTENT + ") ACPID : " + accessControlPolicyID + " does not exist !! ");
+                        "CONTENT(" + RequestPrimitive.CONTENT + ") ACPID : " + accessControlPolicyID + " does not exist");
                 return;
             }
         }

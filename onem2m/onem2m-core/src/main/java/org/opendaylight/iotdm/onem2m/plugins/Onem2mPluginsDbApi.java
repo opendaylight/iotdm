@@ -164,7 +164,7 @@ public class Onem2mPluginsDbApi {
     }
 
     public Onem2mResource getResourceUsingURI(String targetURI) {
-        return Onem2mDb.getInstance().getResourceUsingURI(targetURI);
+        return Onem2mDb.getInstance().findResourceUsingURI(targetURI);
     }
 
     public boolean isLatestCI(Onem2mResource onem2mResource) {
