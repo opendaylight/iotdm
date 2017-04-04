@@ -120,7 +120,8 @@ public class BaseResource {
         JSONObject resSpecificJsonObject = jsonContent.optJSONObject("m2m:" + resourceType);
         if (resSpecificJsonObject == null) {
             onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
-                    "CONTENT(" + RequestPrimitive.CONTENT + ") cannot find m2m:" + resourceType);
+                    "CONTENT(" + RequestPrimitive.CONTENT + ") m2m:" + resourceType + " resource type expected but "
+                            + jsonContent.keys().next().toString() + " was found");
             return null;
         }
         return resSpecificJsonObject;
