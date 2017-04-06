@@ -34,7 +34,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <bundle>mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.json/json/{{VERSION}}</bundle>
         <bundle>wrap:mvn:joda-time/joda-time/{{VERSION}}</bundle>
-        <feature version='${pax.web.version}'>pax-http</feature>
         <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
@@ -122,6 +121,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-impl/{{VERSION}}</bundle>
     </feature>
 
@@ -129,7 +129,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <feature version="${project.version}">odl-onem2m-notifier</feature>
         <feature version='${project.version}'>odl-onem2m-mqtt-impl</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-provider/{{VERSION}}</bundle>
