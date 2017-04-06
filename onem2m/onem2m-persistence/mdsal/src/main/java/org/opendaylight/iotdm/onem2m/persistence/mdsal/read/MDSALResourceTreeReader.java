@@ -8,8 +8,11 @@
 package org.opendaylight.iotdm.onem2m.persistence.mdsal.read;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.CheckedFuture;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.stream.Collectors;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -88,9 +91,9 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
     }
 
     @Override
-    public List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit) {
+    public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key, int limit, int offset) {
 
-        List<Onem2mParentChild> returnList = new ArrayList();
+        List<Onem2mParentChild> returnList = Lists.newArrayList();
 
         if (limit <= 0) return returnList;
 
@@ -100,13 +103,12 @@ public class MDSALResourceTreeReader implements DaoResourceTreeReader {
         Onem2mParentChildList list = retrieve(iid, dsType);
 
         if (list != null) {
-            int numElements = 0;
-            for (Onem2mParentChild child : list.getOnem2mParentChild()) {
-                returnList.add(child);
-                if (++numElements == limit) break;
-            }
+            return list.getOnem2mParentChild()
+                       .stream()
+                       .skip(offset)
+                       .limit(limit)
+                       .collect(Collectors.toList());
         }
-
         return returnList;
     }
 
