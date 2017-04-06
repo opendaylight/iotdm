@@ -151,11 +151,11 @@ public class ResourceTreeReader {
      * @return the child
      */
     public List<Onem2mParentChild> retrieveParentChildList(String resourceId) {
-          return  cache.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), 0);
+          return  cache.retrieveParentChildList(new Onem2mParentChildListKey(resourceId), 0, 0);
     }
 
-    public List<Onem2mParentChild> retrieveParentChildListLimitN(String resourceId, int limit) {
-          return cache.retrieveParentChildListLimitN(new Onem2mParentChildListKey(resourceId), limit);
+    public List<Onem2mParentChild> retrieveParentChildListLimitN(String resourceId, int limit, int offset) {
+          return cache.retrieveParentChildList(new Onem2mParentChildListKey(resourceId), limit, offset);
     }
 
     /**

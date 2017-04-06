@@ -103,13 +103,13 @@ public class BGDeleteProcessor {
 
             while (numDeleted < MAX_TO_DELETE_PER_CLEANUP) {
 
-                List<Onem2mParentChild> childResourceList = db.getChildrenForResourceLimitN(Onem2m.SYS_DELETE_RESOURCE_ID, 1);
+                List<Onem2mParentChild> childResourceList = db.getChildrenForResourceLimitN(Onem2m.SYS_DELETE_RESOURCE_ID, 1, 0);
                 if (childResourceList.size() == 0) break;
 
                 hierarchyList.add(childResourceList.get(0).getResourceId());
                 int resourceListLen = 1;
                 for (int i = 0; i < resourceListLen; i++) {
-                    childResourceList = db.getChildrenForResourceLimitN(hierarchyList.get(i), 1);
+                    childResourceList = db.getChildrenForResourceLimitN(hierarchyList.get(i), 1, 0);
                     if (childResourceList.size() == 0) break;
 
                     hierarchyList.add(childResourceList.get(0).getResourceId());

@@ -1115,8 +1115,8 @@ public class Onem2mDb implements TransactionChainListener {
         return resourceList;
     }
 
-    public List<Onem2mParentChild> getChildrenForResourceLimitN(String resourceId, int limit) {
-        return trc.retrieveParentChildListLimitN(resourceId, limit);
+    public List<Onem2mParentChild> getChildrenForResourceLimitN(String resourceId, int limit, int offset) {
+        return trc.retrieveParentChildListLimitN(resourceId, limit, offset);
     }
     /**
      * Get the resource
@@ -1147,6 +1147,18 @@ public class Onem2mDb implements TransactionChainListener {
      */
     public List<Onem2mParentChild> getParentChildList(String resourceId) {
         return trc.retrieveParentChildList(resourceId);
+    }
+
+    /**
+     * Retrieve list of children for a resource
+     *
+     * @param resourceId resource key
+     * @param limit number of child resource data items to be returned
+     * @param offset number of child resource data items to be skipped
+     * @return childList list of children for a resource
+     */
+    public List<Onem2mParentChild> getParentChildListLimitN(String resourceId, int limit, int offset) {
+        return trc.retrieveParentChildListLimitN(resourceId, limit, offset);
     }
 
     private boolean handleModifyingParentForDeleteContentInstance(String cinResourceId, Onem2mResource containerResource) {
