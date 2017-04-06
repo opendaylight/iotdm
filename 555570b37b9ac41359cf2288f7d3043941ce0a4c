@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_19b6fd3d",
+        "filename": "onem2m/onem2m-features/odl-iotdm-onem2m/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-06T10:22:33Z",
+      "side": 1,
+      "message": "features4-yangtools\n\nBut why do you need this? Depend on single features instead of reposs.",
+      "range": {
+        "startLine": 52,
+        "startChar": 24,
+        "endLine": 52,
+        "endChar": 42
+      },
+      "revId": "555570b37b9ac41359cf2288f7d3043941ce0a4c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f995f988",
+        "filename": "onem2m/onem2m-features/odl-onem2m-core-rest/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-06T10:22:33Z",
+      "side": 1,
+      "message": "Single features please.",
+      "range": {
+        "startLine": 58,
+        "startChar": 24,
+        "endLine": 58,
+        "endChar": 41
+      },
+      "revId": "555570b37b9ac41359cf2288f7d3043941ce0a4c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_198d5d7c",
+        "filename": "onem2m/onem2m-features/odl-onem2m-http-impl/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-06T10:22:33Z",
+      "side": 1,
+      "message": "Not sure about this.",
+      "range": {
+        "startLine": 77,
+        "startChar": 19,
+        "endLine": 77,
+        "endChar": 26
+      },
+      "revId": "555570b37b9ac41359cf2288f7d3043941ce0a4c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_59eec523",
+        "filename": "onem2m/onem2m-features/odl-onem2m-ui/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-06T10:22:33Z",
+      "side": 1,
+      "message": "single features",
+      "range": {
+        "startLine": 52,
+        "startChar": 24,
+        "endLine": 52,
+        "endChar": 41
+      },
+      "revId": "555570b37b9ac41359cf2288f7d3043941ce0a4c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_b9f37109",
+        "filename": "onem2m/onem2m-features/odl-onem2m-ui/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-06T10:22:33Z",
+      "side": 1,
+      "message": "single features",
+      "range": {
+        "startLine": 59,
+        "startChar": 24,
+        "endLine": 59,
+        "endChar": 41
+      },
+      "revId": "555570b37b9ac41359cf2288f7d3043941ce0a4c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
