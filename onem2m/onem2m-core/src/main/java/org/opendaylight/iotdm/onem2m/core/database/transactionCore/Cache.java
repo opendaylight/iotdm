@@ -12,10 +12,13 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.Weigher;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.dao.DaoResourceTreeReader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
@@ -99,11 +102,9 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
                     if (null == children) {
                         return null;
                     }
-                    Map<String, Onem2mParentChild> childrenMap =
-                        children.parallelStream().collect(
-                            Collectors.toConcurrentMap(parentChild -> parentChild.getName(),
-                                                       parentChild -> parentChild));
-                    return childrenMap;
+                    return children.stream().collect(
+                        Collectors.toConcurrentMap(Onem2mParentChild::getName,
+                                                   parentChild -> parentChild));
                 }
             });
 
@@ -380,31 +381,31 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
     }
 
     @Override
-    public List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit) {
-        List<Onem2mParentChild> empty = new ArrayList<>();
-        List<Onem2mParentChild> list = null;
-        LOG.debug("Retrieve parent-child list limit: parent: {}, limit: {}", key.getParentResourceId(), limit);
+    public List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key, int limit, int offset) {
+        List<Onem2mParentChild> list;
+        int safeOffset = offset < 0 ? 0:offset;
+        LOG.debug("Retrieve parent-child list limit/offset: parent: {}, limit: {}, offset: {}", key.getParentResourceId(), limit, offset);
         try {
-            Map<String, Onem2mParentChild> map =
-                onem2mResourceChildrenCache.get(new Onem2mResourceKey(key.getParentResourceId()));
+            Stream<Onem2mParentChild> childStream =
+                onem2mResourceChildrenCache.get(new Onem2mResourceKey(key.getParentResourceId())).values().stream();
             if (limit > 0) {
-                list = map.values()
-                          .parallelStream()
-                          .limit(limit)
-                          .collect(Collectors.toList());
+                list = childStream.skip(safeOffset)
+                                  .limit(limit)
+                                  .collect(Collectors.toList());
             } else {
-                list = map.values().parallelStream().collect(Collectors.toList());
+                list = childStream.skip(safeOffset)
+                                  .collect(Collectors.toList());
             }
         } catch (ExecutionException e) {
             LOG.error("Failed to retrieve map of child resources for parent resource: {}",
                       key.getParentResourceId());
-            return empty;
+            return Collections.emptyList();
         } catch (CacheLoader.InvalidCacheLoadException e) {
-            return empty;
+            return Collections.emptyList();
         }
 
-        if (null == list) {
-            return empty;
+        if (Objects.isNull(list)) {
+            return Collections.emptyList();
         }
 
         LOG.debug("Retrieved parent-child list limit: parent: {}, limit: {}::", key.getParentResourceId(), limit);
@@ -467,11 +468,7 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
 
             return true;
 
-        } catch (ExecutionException e) {
-            LOG.error("Failed to retrieve map of child resources for parent resource: {}",
-                      oldPrentResourceId);
-            return false;
-        } catch (CacheLoader.InvalidCacheLoadException e) {
+        } catch (ExecutionException | CacheLoader.InvalidCacheLoadException e) {
             LOG.error("Failed to retrieve map of child resources for parent resource: {}",
                       oldPrentResourceId);
             return false;
@@ -498,10 +495,7 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
                     LOG.debug("Removed parent-child relation for parent: {}, child:: resourceId: {}, name: {}",
                               parentResourceId, resourceId, resourceName);
                 }
-            } catch (ExecutionException e) {
-                LOG.error("Failed to retrieve map of child resources for parent resource: {}",
-                          parentKey.getResourceId());
-            } catch (CacheLoader.InvalidCacheLoadException e) {
+            } catch (ExecutionException | CacheLoader.InvalidCacheLoadException e) {
                 LOG.error("Failed to retrieve map of child resources for parent resource: {}",
                           parentKey.getResourceId());
             }
@@ -513,7 +507,7 @@ public class Cache implements WriteOnlyCache, ReadOnlyCache {
 
         // Get list of all children in order to invalidate them all
         Onem2mParentChildListKey parentChildKey = new Onem2mParentChildListKey(resourceId);
-        List<Onem2mParentChild> childList = retrieveParentChildListLimitN(parentChildKey, 0);
+        List<Onem2mParentChild> childList = retrieveParentChildList(parentChildKey, 0, 0);
 
         // Invalidate the parent first to avoid loops
         onem2mResourceChildrenCache.invalidate(key);
