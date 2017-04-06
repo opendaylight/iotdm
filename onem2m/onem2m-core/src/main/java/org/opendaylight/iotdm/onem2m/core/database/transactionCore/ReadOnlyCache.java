@@ -72,7 +72,9 @@ public interface ReadOnlyCache {
      * @param key Key identifying the parent resource
      * @param limit Number of child resource data items to be returned. All data are returned
      *              if set to value lower than 1.
+     * @param offset Number of child resource data items to be skipped. No data are skipped
+     *              if set to value lower than 1.
      * @return  List including child resource data
      */
-    List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit);
+    List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key, int limit, int offset);
 }

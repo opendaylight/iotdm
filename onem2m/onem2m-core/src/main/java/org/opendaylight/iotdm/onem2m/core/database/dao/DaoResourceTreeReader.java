@@ -50,9 +50,10 @@ public interface DaoResourceTreeReader extends Closeable {
      * Retrieve list of child resource data of specific parent resource
      * @param key Key identifying the parent resource
      * @param limit Number of child resource data items to be returned
+     * @param offset Number of child resource data items to be skipped
      * @return  List including child resource data
      */
-    List<Onem2mParentChild> retrieveParentChildListLimitN(Onem2mParentChildListKey key, int limit);
+    List<Onem2mParentChild> retrieveParentChildList(Onem2mParentChildListKey key, int limit, int offset);
 
 
     /**
