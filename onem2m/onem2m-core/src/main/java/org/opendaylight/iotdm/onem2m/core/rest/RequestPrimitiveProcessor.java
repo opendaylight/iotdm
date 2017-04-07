@@ -505,6 +505,11 @@ public class RequestPrimitiveProcessor extends RequestPrimitive {
                                               "Mandatory resource content is missing!");
                         break;
                     }
+                    if (getHasFilterCriteria()) {
+                        onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                "FILTER_CRITERIA not permitted for operation: " + operation);
+                        break;
+                    }
 
                     if (resourceType != Onem2m.ResourceType.CSE_BASE || protocol.equals(Onem2m.Protocol.NATIVEAPP)) {
                         handleOperationCreate(onem2mResponse);
