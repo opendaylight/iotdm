@@ -592,7 +592,7 @@ public class ResultContentProcessor {
             }
         }
         if (childList.isEmpty()) {
-            List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mRequest, Onem2m.EventType.RETRIEVE_NECHILD);
+            List<String> subscriptionResourceIdList = Onem2mDb.getInstance().selfSubscriptionsResourceIds(onem2mRequest, Onem2m.EventType.RETRIEVE_NECHILD);
             if (!subscriptionResourceIdList.isEmpty()) {
                 NotificationProcessor.getInstance().handleEventTypeE(onem2mRequest, subscriptionResourceIdList);
                 //todo: do we have another thread to create resources?
