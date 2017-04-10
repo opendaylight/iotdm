@@ -11,8 +11,10 @@ package org.opendaylight.iotdm.onem2m.core.database;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1340,7 +1342,7 @@ public class Onem2mDb implements TransactionChainListener {
         try {
             JSONObject subscriptionJsonObject = new JSONObject(onem2mSubResource.getResourceContentJsonString());
             JSONObject enc = subscriptionJsonObject.optJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
-            if (enc != null && enc.getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(Onem2m.EventType.ANY_DESCENDENT_CHANGE)) {
+            if (enc != null && enc.getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(Onem2m.EventType.ANY_DESCENDANT_CHANGE)) {
                 subscriptionResourceList.add(subscriptionResourceId);
             }
         } catch (JSONException e) {
@@ -1356,24 +1358,25 @@ public class Onem2mDb implements TransactionChainListener {
      *
      * @param requestPrimitive resourceID
      * @param eventType  eventType
+     * @param skipSelfNotify skip subscription same as given requestPrimitive
      * @return list of direct parent subscriptions
      */
-    public List<String> finddirectParentSubscriptionID(RequestPrimitive requestPrimitive, String eventType) {
+    public List<String> directParentSubscriptionsResourceIds(RequestPrimitive requestPrimitive, String eventType, boolean skipSelfNotify) {
 
-        List<String> subscriptionResourceList = new ArrayList<>();
+        List<String> subscriptionIds = Lists.newArrayList();
 
         JSONObject parentJsonResourceContent;
 
         String parentResourceid = requestPrimitive.getOnem2mResource().getParentId();
         if (parentResourceid.equals(Onem2mDb.NULL_RESOURCE_ID)) {
-            return subscriptionResourceList;
+            return subscriptionIds;
         } else {
             Onem2mResource parentOnem2mResource = getResource(parentResourceid);
             try {
                 parentJsonResourceContent = new JSONObject(parentOnem2mResource.getResourceContentJsonString());
             } catch (JSONException e) {
-                LOG.warn("finddirectParentSubscriptionID: {}", e.toString());
-                return subscriptionResourceList;
+                LOG.warn("directParentSubscriptionsResourceIds: {}", e.toString());
+                return subscriptionIds;
             }
         }
 
@@ -1382,15 +1385,21 @@ public class Onem2mDb implements TransactionChainListener {
         if (jArray != null) {
             for (int i = 0; i < jArray.length(); i++) {
                 String subscriptionResourceId = jArray.getString(i);
-                addSubscriptionsToListForResource(subscriptionResourceId, subscriptionResourceList, eventType);
+                addSubscriptionsToListForResource(subscriptionResourceId, subscriptionIds, eventType);
             }
         }
 
-        return subscriptionResourceList;
+        if (skipSelfNotify) {
+            subscriptionIds = subscriptionIds.stream()
+                                         .filter(subscriptionId -> !subscriptionId.equals(requestPrimitive.getResourceId()))
+                                         .collect(Collectors.toList());
+        }
+
+        return subscriptionIds;
     }
 
     private void addSubscriptionsToListForResource(String subscriptionResourceId,
-                                                        List<String> subscriptionResourceList,
+                                                        List<String> subscriptionIds,
                                                         String eventType) {
 
         Onem2mResource onem2mSubResource = getResource(subscriptionResourceId);
@@ -1404,11 +1413,11 @@ public class Onem2mDb implements TransactionChainListener {
             if (enc != null) {
                 JSONArray net = enc.optJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE);
                 if (net != null && net.toString().contains(eventType)) {
-                    subscriptionResourceList.add(subscriptionResourceId);
+                    subscriptionIds.add(subscriptionResourceId);
                 }
             } else if (eventType.contentEquals(Onem2m.EventType.UPDATE_RESOURCE)) {
                 //default is update.
-                subscriptionResourceList.add(subscriptionResourceId);
+                subscriptionIds.add(subscriptionResourceId);
             }
         } catch (JSONException e) {
             LOG.error("Invalid JSON {}", onem2mSubResource.getResourceContentJsonString(), e);
