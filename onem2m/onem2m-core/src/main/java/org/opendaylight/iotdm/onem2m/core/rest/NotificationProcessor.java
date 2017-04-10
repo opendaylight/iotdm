@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -172,11 +173,16 @@ public class NotificationProcessor {
      */
     private void handleEventTypeC(RequestPrimitive onem2mRequest) {
         String eventType = "3";
-        List<String> subscriptionResourceIdList = Onem2mDb.getInstance().finddirectParentSubscriptionID(onem2mRequest, eventType);
-        if (subscriptionResourceIdList.size() == 0) {
+        List<String> subscriptionIds = Onem2mDb.getInstance().finddirectParentSubscriptionID(onem2mRequest, eventType);
+        if (subscriptionIds.isEmpty()) {
             return;
         }
-        sendNotificationAccordingToType( onem2mRequest, subscriptionResourceIdList, eventType);
+        //prevent notifications on self subscriptions
+        subscriptionIds = subscriptionIds.stream()
+                                         .filter(subscriptionId -> !subscriptionId.equals(onem2mRequest.getResourceId()))
+                                         .collect(Collectors.toList());
+
+        sendNotificationAccordingToType( onem2mRequest, subscriptionIds, eventType);
     }
 
     /**
