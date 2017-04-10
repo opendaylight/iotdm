@@ -1340,7 +1340,7 @@ public class Onem2mDb implements TransactionChainListener {
         try {
             JSONObject subscriptionJsonObject = new JSONObject(onem2mSubResource.getResourceContentJsonString());
             JSONObject enc = subscriptionJsonObject.optJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
-            if (enc != null && enc.getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(Onem2m.EventType.ANY_DESCENDENT_CHANGE)) {
+            if (enc != null && enc.getJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE).toString().contains(Onem2m.EventType.ANY_DESCENDANT_CHANGE)) {
                 subscriptionResourceList.add(subscriptionResourceId);
             }
         } catch (JSONException e) {
@@ -1358,7 +1358,7 @@ public class Onem2mDb implements TransactionChainListener {
      * @param eventType  eventType
      * @return list of direct parent subscriptions
      */
-    public List<String> finddirectParentSubscriptionID(RequestPrimitive requestPrimitive, String eventType) {
+    public List<String> findDirectParentSubscriptionId(RequestPrimitive requestPrimitive, String eventType) {
 
         List<String> subscriptionResourceList = new ArrayList<>();
 
@@ -1372,7 +1372,7 @@ public class Onem2mDb implements TransactionChainListener {
             try {
                 parentJsonResourceContent = new JSONObject(parentOnem2mResource.getResourceContentJsonString());
             } catch (JSONException e) {
-                LOG.warn("finddirectParentSubscriptionID: {}", e.toString());
+                LOG.warn("findDirectParentSubscriptionId: {}", e.toString());
                 return subscriptionResourceList;
             }
         }
