@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
+import com.google.common.collect.Sets;
 import java.util.*;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -113,27 +114,33 @@ public class Onem2m {
         public static final int AE = 2;
         public static final int CONTAINER = 3;
         public static final int CSE_BASE = 5;
+        public static final int DELIVERY = 6;
         public static final int CONTENT_INSTANCE = 4;
         public static final int SUBSCRIPTION = 23;
         public static final int NODE = 14;
         public static final int GROUP = 9;
         public static final int ACCESS_CONTROL_POLICY = 1;
         public static final int REMOTE_CSE = 16;
+        public static final int REQUEST = 17;
         public static final int MGMT_OBJECT = 13;
         public static final int FLEX_CONTAINER = 24;
+        public static final int TIME_SERIES = 29;
     }
     public static class ResourceTypeString {
         public static final String AE = "ae";
         public static final String CONTAINER = "cnt";
         public static final String CSE_BASE = "cb";
+        public static final String DELIVERY = "dlv";
         public static final String CONTENT_INSTANCE = "cin";
         public static final String SUBSCRIPTION = "sub";
         public static final String NODE = "nod";
         public static final String GROUP = "grp";
         public static final String ACCESS_CONTROL_POLICY = "acp";
         public static final String REMOTE_CSE = "csr";
+        public static final String REQUEST = "req";
         public static final String MGMT_OBJECT = "mgo";
         public static final String FLEX_CONTAINER = "flex";
+        public static final String TIME_SERIES = "ts";
     }
 
     public class CseType {
@@ -147,15 +154,27 @@ public class Onem2m {
         put(ResourceType.AE, ResourceTypeString.AE);
         put(ResourceType.CONTAINER, ResourceTypeString.CONTAINER);
         put(ResourceType.CSE_BASE, ResourceTypeString.CSE_BASE);
+        put(ResourceType.DELIVERY, ResourceTypeString.DELIVERY);
         put(ResourceType.CONTENT_INSTANCE, ResourceTypeString.CONTENT_INSTANCE);
         put(ResourceType.SUBSCRIPTION, ResourceTypeString.SUBSCRIPTION);
         put(ResourceType.NODE, ResourceTypeString.NODE);
         put(ResourceType.GROUP, ResourceTypeString.GROUP);
         put(ResourceType.ACCESS_CONTROL_POLICY, ResourceTypeString.ACCESS_CONTROL_POLICY);
         put(ResourceType.REMOTE_CSE, ResourceTypeString.REMOTE_CSE);
+        put(ResourceType.REQUEST, ResourceTypeString.REQUEST);
         put(ResourceType.MGMT_OBJECT, ResourceTypeString.MGMT_OBJECT);
         put(ResourceType.FLEX_CONTAINER, ResourceTypeString.FLEX_CONTAINER);
+        put(ResourceType.TIME_SERIES, ResourceTypeString.TIME_SERIES);
     }};
+
+    public static final Set<Integer> stateTaggedResourceTypes = Sets.newHashSet(
+            ResourceType.CONTAINER,
+            ResourceType.CONTENT_INSTANCE,
+            ResourceType.FLEX_CONTAINER,
+            ResourceType.DELIVERY,
+            ResourceType.TIME_SERIES,
+            ResourceType.REQUEST
+    );
 
     /*
      * Specialized Resources
@@ -224,8 +243,11 @@ public class Onem2m {
 
     public class EventType {
         public static final String UPDATE_RESOURCE = "1";
+        public static final String DELETE_RESOURCE = "2";
+        public static final String CREATE_CHILD = "3";
+        public static final String DELETE_CHILD = "4";
         public static final String RETRIEVE_NECHILD = "5";
-        public static final String ANY_DESCENDENT_CHANGE = "6";
+        public static final String ANY_DESCENDANT_CHANGE = "6";
     }
 
     // TS0004 sections: 6.3.3.2.9, 6.6, for each new error code, add a mapping error code to CoAP and HTTP
