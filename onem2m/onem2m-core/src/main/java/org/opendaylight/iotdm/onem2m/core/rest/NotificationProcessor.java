@@ -8,14 +8,22 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
+import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.ANY_DESCENDANT_CHANGE;
+import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.CREATE_CHILD;
+import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.DELETE_CHILD;
+import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.DELETE_RESOURCE;
+import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.RETRIEVE_NECHILD;
+import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.UPDATE_RESOURCE;
+
 import com.google.common.collect.Lists;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -143,12 +151,8 @@ public class NotificationProcessor {
      * @param onem2mRequest onem2mrequest
      */
     private void handleEventTypeA(RequestPrimitive onem2mRequest) {
-        String eventType = Onem2m.EventType.UPDATE_RESOURCE;
-        List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mRequest, eventType);
-        if (subscriptionResourceIdList.size() == 0) {
-            return;
-        }
-        sendNotificationAccordingToType( onem2mRequest, subscriptionResourceIdList, eventType);
+        List<String> subscriptionIds = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mRequest, UPDATE_RESOURCE);
+        sendNotificationAccordingToType( onem2mRequest, subscriptionIds, UPDATE_RESOURCE);
     }
 
     /**
@@ -157,12 +161,8 @@ public class NotificationProcessor {
      * @param onem2mRequest onem2mrequest
      */
     private void handleEventTypeB(RequestPrimitive onem2mRequest) {
-        String eventType = "2";
-        List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mRequest, eventType);
-        if (subscriptionResourceIdList.size() == 0) {
-            return;
-        }
-        sendNotificationAccordingToType( onem2mRequest, subscriptionResourceIdList, eventType);
+        List<String> subscriptionIds = Onem2mDb.getInstance().findSelfSubscriptionID(onem2mRequest, DELETE_RESOURCE);
+        sendNotificationAccordingToType( onem2mRequest, subscriptionIds, DELETE_RESOURCE);
     }
 
     /**
@@ -171,18 +171,7 @@ public class NotificationProcessor {
      * @param onem2mRequest onem2mrequest
      */
     private void handleEventTypeC(RequestPrimitive onem2mRequest) {
-        String eventType = "3";
-        List<String> subscriptionIds = Onem2mDb.getInstance().finddirectParentSubscriptionID(onem2mRequest, eventType);
-
-        //prevent notifications on self subscriptions
-        subscriptionIds = subscriptionIds.stream()
-                                         .filter(subscriptionId -> !subscriptionId.equals(onem2mRequest.getResourceId()))
-                                         .collect(Collectors.toList());
-        if (subscriptionIds.isEmpty()) {
-            return;
-        }
-
-        sendNotificationAccordingToType( onem2mRequest, subscriptionIds, eventType);
+        handleParentSubscriptions(onem2mRequest, Lists.newArrayList(CREATE_CHILD, UPDATE_RESOURCE), true);
     }
 
     /**
@@ -191,12 +180,26 @@ public class NotificationProcessor {
      * @param onem2mRequest onem2mrequest
      */
     private void handleEventTypeD(RequestPrimitive onem2mRequest) {
-        String eventType = "4";
-        List<String> subscriptionResourceIdList = Onem2mDb.getInstance().finddirectParentSubscriptionID(onem2mRequest, eventType);
-        if (subscriptionResourceIdList.size() == 0) {
-            return;
+        //subscription delete is handled separately so skipSelfNotify=false
+        handleParentSubscriptions(onem2mRequest, Lists.newArrayList(DELETE_CHILD, UPDATE_RESOURCE), false);
+    }
+
+    /**
+     * handle direct parent's subscription for given event types
+     * @param onem2mRequest onem2mRequest
+     * @param eventTypes eventTypes
+     * @param skipSelfNotify skip subscription same as given requestPrimitive
+     */
+    private void handleParentSubscriptions(RequestPrimitive onem2mRequest, List<String> eventTypes, boolean skipSelfNotify) {
+        Map<String, List<String>> eventTypeToSubscriptionIds = new HashMap<>();
+
+        for (String eventType : eventTypes) {
+            List<String> subscriptionIds = Onem2mDb.getInstance()
+                                              .directParentSubscriptionIds(onem2mRequest, eventType, skipSelfNotify);
+            eventTypeToSubscriptionIds.put(eventType, subscriptionIds);
         }
-        sendNotificationAccordingToType( onem2mRequest, subscriptionResourceIdList, eventType);
+
+        sendNotificationAccordingToType(onem2mRequest, eventTypeToSubscriptionIds);
     }
 
     /**
@@ -204,30 +207,31 @@ public class NotificationProcessor {
      *
      * @param onem2mRequest onem2mrequest
      */
-    public void handleEventTypeE(RequestPrimitive onem2mRequest, List<String> subscriptionResourceIdList) {
-        String eventType = Onem2m.EventType.RETRIEVE_NECHILD;
-        sendNotificationAccordingToType( onem2mRequest, subscriptionResourceIdList, eventType);
+    public void handleEventTypeE(RequestPrimitive onem2mRequest, List<String> subscriptionIds) {
+        sendNotificationAccordingToType( onem2mRequest, subscriptionIds, RETRIEVE_NECHILD);
     }
 
     /**
-     * F. update of any descendents of the subscribed-to resource
+     * F. update of any descendants of the subscribed-to resource
      * this method could be inside each of certain operation
      *
      * @param onem2mRequest onem2mrequest
      */
 
-    private void handleEvnetTypeF(RequestPrimitive onem2mRequest) {
-        List<String> subscriptionResourceIdList = Onem2mDb.getInstance().findAllAncestorsSubscriptionID(onem2mRequest);
-        if (subscriptionResourceIdList.size() == 0) {
-            return;
-        }
-
-        sendNotificationAccordingToType( onem2mRequest, subscriptionResourceIdList, "6");
+    private void handleEventTypeF(RequestPrimitive onem2mRequest) {
+        List<String> subscriptionIds = Onem2mDb.getInstance().findAllAncestorsSubscriptionID(onem2mRequest);
+        sendNotificationAccordingToType( onem2mRequest, subscriptionIds, ANY_DESCENDANT_CHANGE);
     }
 
-    private void sendNotificationAccordingToType(RequestPrimitive onem2mRequest, List<String> subscriptionResourceIdList, String type) {
+    private void sendNotificationAccordingToType(RequestPrimitive onem2mRequest, Map<String, List<String>> eventTypeToSubscriptionIds) {
+        for(Map.Entry<String, List<String>> entry : eventTypeToSubscriptionIds.entrySet()) {
+            sendNotificationAccordingToType(onem2mRequest, entry.getValue(), entry.getKey());
+        }
+    }
 
-        for (String subscriptionResourceId : subscriptionResourceIdList) {
+    private void sendNotificationAccordingToType(RequestPrimitive onem2mRequest, List<String> subscriptionIds, String eventType) {
+
+        for (String subscriptionResourceId : subscriptionIds) {
 
             JSONObject notification = new JSONObject();
             JSONObject notificationEvent = new JSONObject();
@@ -269,13 +273,13 @@ public class NotificationProcessor {
 
 
             Boolean sendThisNotification = false;
-            JSONObject eventnotificationcriteria = onem2mNotification.getJsonSubscriptionResourceContent().
+            JSONObject eventNotificationCriteria = onem2mNotification.getJsonSubscriptionResourceContent().
                     optJSONObject(ResourceSubscription.EVENT_NOTIFICATION_CRITERIA);
-            if (eventnotificationcriteria != null) {
-                Iterator<?> encKeys = eventnotificationcriteria.keys();
+            if (eventNotificationCriteria != null) {
+                Iterator<?> encKeys = eventNotificationCriteria.keys();
                 while (encKeys.hasNext()) {
                     String encKey = (String) encKeys.next();
-                    Object j = eventnotificationcriteria.opt(encKey);
+                    Object j = eventNotificationCriteria.opt(encKey);
                     switch (encKey) {
                         case ResourceSubscription.CREATED_BEFORE:
                             String crb = (String) j;
@@ -368,10 +372,10 @@ public class NotificationProcessor {
                         default:
                     }
                 }
-                if (eventnotificationcriteria.length() == 1 ) {
+                if (eventNotificationCriteria.length() == 1 ) {
                     // has only 1 attribute: notificationEventType
-                    JSONArray net = eventnotificationcriteria.optJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE);
-                    if (net !=null && net.toString().contains(type)) {
+                    JSONArray net = eventNotificationCriteria.optJSONArray(ResourceSubscription.NOTIFICATION_EVENT_TYPE);
+                    if (net != null && net.toString().contains(eventType)) {
                         sendThisNotification = true;
                     }
                 }
@@ -413,7 +417,7 @@ public class NotificationProcessor {
 
 
             JsonUtils.put(notificationEvent, REPRESENTATION, representation);
-            JsonUtils.put(notificationEvent, ResourceSubscription.NOTIFICATION_EVENT_TYPE, type);
+            JsonUtils.put(notificationEvent, ResourceSubscription.NOTIFICATION_EVENT_TYPE, eventType);
             JsonUtils.put(notification, NOTIFICATION_EVENT, notificationEvent);
 
             String name = Onem2mDb.getInstance().getHierarchicalNameForResource(subscriptionResourceId);
@@ -560,7 +564,7 @@ public class NotificationProcessor {
      */
     private void handleDelete(RequestPrimitive onem2mRequest) {
 
-        handleEvnetTypeF( onem2mRequest);
+        handleEventTypeF( onem2mRequest);
         Onem2mResource onem2mResource = onem2mRequest.getOnem2mResource();
         Integer resourceType = onem2mRequest.getResourceType();
         if (resourceType == Onem2m.ResourceType.SUBSCRIPTION) {
@@ -572,12 +576,12 @@ public class NotificationProcessor {
     }
 
     private void handleCreate(RequestPrimitive onem2mRequest) {
-        handleEvnetTypeF( onem2mRequest);
+        handleEventTypeF( onem2mRequest);
         handleEventTypeC( onem2mRequest);
     }
 
     private void handleUpdate(RequestPrimitive onem2mRequest) {
-        handleEvnetTypeF( onem2mRequest);
+        handleEventTypeF( onem2mRequest);
         handleEventTypeA( onem2mRequest);
     }
 

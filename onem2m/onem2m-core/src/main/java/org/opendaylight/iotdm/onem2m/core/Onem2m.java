@@ -224,8 +224,11 @@ public class Onem2m {
 
     public class EventType {
         public static final String UPDATE_RESOURCE = "1";
+        public static final String DELETE_RESOURCE = "2";
+        public static final String CREATE_CHILD = "3";
+        public static final String DELETE_CHILD = "4";
         public static final String RETRIEVE_NECHILD = "5";
-        public static final String ANY_DESCENDENT_CHANGE = "6";
+        public static final String ANY_DESCENDANT_CHANGE = "6";
     }
 
     // TS0004 sections: 6.3.3.2.9, 6.6, for each new error code, add a mapping error code to CoAP and HTTP
