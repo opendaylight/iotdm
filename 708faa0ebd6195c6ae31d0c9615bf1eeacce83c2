@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_876d4335",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 2897
+      },
+      "writtenOn": "2017-04-12T15:20:16Z",
+      "side": 1,
+      "message": "Why are these new resource types here?  Are you adding support for these new reosurces ...there is a lot more to do if you are to support a new resource.",
+      "range": {
+        "startLine": 144,
+        "startChar": 4,
+        "endLine": 144,
+        "endChar": 5
+      },
+      "revId": "708faa0ebd6195c6ae31d0c9615bf1eeacce83c2",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
