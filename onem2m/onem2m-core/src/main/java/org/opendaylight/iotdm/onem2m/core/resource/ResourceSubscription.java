@@ -11,17 +11,17 @@ package org.opendaylight.iotdm.onem2m.core.resource;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.Objects;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.opendaylight.iotdm.onem2m.core.utils.Onem2mDateTime;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +78,7 @@ public class ResourceSubscription extends BaseResource {
         }
         return true;
     }
-    
+
     private void processCreateUpdateAttributes() {
 
         String tempStr;
@@ -93,7 +93,7 @@ public class ResourceSubscription extends BaseResource {
                 return;
             }
         }
-        
+
         /**
          * Theoretically, if the notificationURI is different from the Originator, then special processing is
          * required. TODO: see rules in TS0004 to add this functionality
@@ -195,29 +195,23 @@ public class ResourceSubscription extends BaseResource {
                             }
                             String uri = (String) array.opt(i);
 
-                            if (!validateUri(uri)) {
-                                LOG.error("Not valid URI: {}", uri);
-                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                                                      "NOTIFICATION_URI(s) not valid URI: " + uri);
-                                return;
-                            }
-
-                            // Check as URL because schema must be specified in order to identify
-                            // protocol
-                            try {
-                                URI link = new URI(uri);
-                                String scheme = link.getScheme();
-                                if (null == scheme || scheme.isEmpty()) {
-                                    LOG.error("URL without scheme specified: {}", uri);
+                            // Check as URL because schema must be specified in order to identify protocol
+                            if (!Onem2m.isValidUriScheme(uri)) {
+                                // given uri can be resourceId or it's invalid
+                                Onem2mResource resource = Onem2mDb.getInstance().findResourceUsingURI(uri);
+                                if(Objects.isNull(resource)) {
+                                    LOG.error("Given URL or resourceId is not valid: {}", uri);
                                     onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                                                          "NOTIFICATION_URI(s) protocol not specified: " + uri);
+                                            "NOTIFICATION_URI can't be resolved neither as valid uri nor as resourceId: " + uri);
+                                    return;
+                                } else if (Integer.valueOf(resource.getResourceType())
+                                                  .equals(Onem2m.ResourceType.CSE_BASE) || //not supporting using CSE_BASE poa for notifications now
+                                        !Onem2m.pointOfAccessedResourceTypes.contains(Integer.valueOf(resource.getResourceType()))) {
+                                    LOG.error("Given resourceId doesn't match a resource with pointOfAccess attribute: {}", uri);
+                                    onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                                            "NOTIFICATION_URI resourceId doesn't match a resource with pointOfAccess attribute: " + uri);
                                     return;
                                 }
-                            } catch (URISyntaxException e) {
-                                LOG.error("URI Syntax exception catched, URL: {}, {}", uri, e);
-                                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                                                      "NOTIFICATION_URI(s) invalid syntax: " + uri);
-                                return;
                             }
                         }
                     }
