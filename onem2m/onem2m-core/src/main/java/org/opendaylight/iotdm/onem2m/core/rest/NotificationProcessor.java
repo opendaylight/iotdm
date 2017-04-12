@@ -8,6 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.ANY_DESCENDANT_CHANGE;
 import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.CREATE_CHILD;
 import static org.opendaylight.iotdm.onem2m.core.Onem2m.EventType.DELETE_CHILD;
@@ -31,6 +33,7 @@ import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.resource.BaseResource;
+import org.opendaylight.iotdm.onem2m.core.resource.ResourceAE;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContainer;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceContentInstance;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceSubscription;
@@ -432,7 +435,39 @@ public class NotificationProcessor {
             JSONArray uriArray = onem2mNotification.getJsonSubscriptionResourceContent()
                     .optJSONArray(ResourceSubscription.NOTIFICATION_URI);
             for (int i = 0; i < uriArray.length(); i++) {
-                onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uriArray.optString(i));
+                String uri = uriArray.optString(i);
+                if(Onem2m.isValidUriScheme(uri)) {
+                    onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, uri);
+                }
+                else { //supposed to be resourceId
+                    Onem2mResource resource = Onem2mDb.getInstance().findResourceUsingURI(uri);
+                    if(isNull(resource)) {
+                        LOG.warn("sendNotificationAccordingToType: Resource not found " +
+                                "for resourceId specified in NOTIFICATION_URI:"+uri);
+                    }
+                    else {
+                        JSONObject subscriptionJsonObject = new JSONObject(resource.getResourceContentJsonString());
+                        boolean requestReachability = subscriptionJsonObject.getBoolean(ResourceAE.REQUEST_REACHABILITY);
+                        if(requestReachability) {
+                            JSONArray pointOfAccess = subscriptionJsonObject.optJSONArray(ResourceAE.POINT_OF_ACCESS);
+                            for (int j = 0; j < pointOfAccess.length(); j++) {
+                                String poaUri = pointOfAccess.optString(j);
+                                if(Onem2m.isValidUriScheme(poaUri)) {
+                                    onem2mNotification.setPrimitiveMany(NotificationPrimitive.URI, poaUri);
+                                }
+                                else {
+                                    LOG.warn("sendNotificationAccordingToType: PointOfAccess uri(" + poaUri + ") " +
+                                            "is not valid for resource with resourceId specified in NOTIFICATION_URI:"+uri);
+                                }
+                            }
+                        }
+                        else {
+                            LOG.warn("sendNotificationAccordingToType: RequestReachability is set to false " +
+                                    "for resource with resourceId specified in NOTIFICATION_URI:"+uri);
+                        }
+                    }
+                }
+
             }
 
 

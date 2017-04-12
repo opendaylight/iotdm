@@ -8,7 +8,11 @@
 
 package org.opendaylight.iotdm.onem2m.core;
 
+import static java.util.Objects.isNull;
+
 import com.google.common.collect.Sets;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -177,6 +181,15 @@ public class Onem2m {
             ResourceType.DELIVERY,
             ResourceType.TIME_SERIES,
             ResourceType.REQUEST
+    );
+
+    /**
+     * resources with pointOfAccess attribute
+     */
+    public static final Set<Integer> pointOfAccessedResourceTypes = Sets.newHashSet(
+            ResourceType.AE,
+            ResourceType.CSE_BASE,
+            ResourceType.REMOTE_CSE
     );
 
     /*
@@ -572,6 +585,21 @@ public class Onem2m {
         }
 
         return "/" + onem2mUri;
+    }
+
+    /**
+     * Check URI schema (can be used to identify protocol)
+     * @param uri uri
+     * @return true if it's valid uri with scheme, false otherwise
+     */
+    public static boolean isValidUriScheme(String uri) {
+        if(isNull(uri)) return false;
+        try {
+            String uriScheme = new URI(uri).getScheme();
+            return !(isNull(uriScheme) || uriScheme.isEmpty());
+        } catch (URISyntaxException e) {
+            return false;
+        }
     }
 
     /**
