@@ -179,6 +179,7 @@ public class Onem2mHttpHandler {
             sendHttpResponseFromOnem2mResponse(httpResponse, onem2mResponse);
         } catch (IOException e) {
             e.printStackTrace();
+            httpResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -186,7 +187,7 @@ public class Onem2mHttpHandler {
                                                     ResponsePrimitive onem2mResponse) throws IOException {
         // the content is already in the required format ...
         String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);
-        String rscString = onem2mResponse.getPrimitiveResponseStatusCode();
+        String rscString = onem2mResponse.getPrimitive(ResponsePrimitive.RESPONSE_STATUS_CODE);
         String rqi = onem2mResponse.getPrimitive(ResponsePrimitive.REQUEST_IDENTIFIER);
         if (rqi != null) {
             httpResponse.setHeader(Onem2m.HttpHeaders.X_M2M_RI, rqi);
