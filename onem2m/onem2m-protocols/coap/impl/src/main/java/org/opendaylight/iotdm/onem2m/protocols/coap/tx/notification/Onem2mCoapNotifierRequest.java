@@ -11,7 +11,6 @@ package org.opendaylight.iotdm.onem2m.protocols.coap.tx.notification;
 import org.eclipse.californium.core.coap.Option;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
-import org.eclipse.jetty.client.ContentExchange;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.protocols.coap.tx.Onem2mCoapClient;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxRequest;
@@ -20,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /**
@@ -36,7 +34,6 @@ public class Onem2mCoapNotifierRequest extends Onem2mProtocolTxRequest {
     protected final String cseBaseId;
     protected final Onem2mCoapClient client;
     protected final boolean secureConnection;
-    protected ContentExchange ex = null;
 
     public Onem2mCoapNotifierRequest(@Nonnull final String url,
                                      @Nonnull final String payload,

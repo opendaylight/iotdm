@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http.tx;
 
+import java.security.KeyStore;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -45,8 +46,9 @@ public abstract class Onem2mHttpClient implements Onem2mProtocolTxChannel {
                 null != configuration.getSecureConnectionConfig().getTrustStoreConfig()) {
 
                 sslContextFactory = new SslContextFactory(false);
-                sslContextFactory.setTrustStore(
-                        configuration.getSecureConnectionConfig().getTrustStoreConfig().getTrustStoreFile());
+                KeyStore keystore = KeyStore.getInstance(
+                    configuration.getSecureConnectionConfig().getTrustStoreConfig().getTrustStoreFile());
+                sslContextFactory.setTrustStore(keystore);
                 sslContextFactory.setTrustStorePassword(
                         configuration.getSecureConnectionConfig().getTrustStoreConfig().getTrustStorePassword());
 

@@ -24,6 +24,31 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
        build failure. Please do not modify this unless you have a good reason. -->
   <name>ODL :: iotdm :: ${project.artifactId}</name>
 
+
+    <properties>
+        <jetty.version>8.1.19.v20160209</jetty.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.eclipse.jetty.aggregate</groupId>
+                <artifactId>jetty-all</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <!--<dependency>-->
+                <!--<groupId>org.eclipse.jetty.orbit</groupId>-->
+                <!--<artifactId>javax.servlet</artifactId>-->
+                <!--<version>3.0.0.v201112011016</version>-->
+            <!--</dependency>-->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -35,11 +60,112 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
           <!--<artifactId>onem2m-notifier</artifactId>-->
           <!--<version>${project.version}</version>-->
       <!--</dependency>-->
+      <!--<dependency>-->
+          <!--<groupId>org.ops4j.pax.web</groupId>-->
+          <!--<artifactId>pax-web-jetty-bundle</artifactId>-->
+          <!--<version>3.2.9</version>-->
+      <!--</dependency>-->
+      <!--<dependency>-->
+          <!--<groupId>org.eclipse.jetty.aggregate</groupId>-->
+          <!--<artifactId>jetty-all</artifactId>-->
+          <!--<version>${jetty.version}</version>-->
+      <!--</dependency>-->
+
+      <!--<dependency>-->
+          <!--<groupId>org.eclipse.jetty</groupId>-->
+          <!--<artifactId>jetty-server</artifactId>-->
+          <!--<version>${jetty.version}</version>-->
+      <!--</dependency>-->
+
+      <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client -->
       <dependency>
-          <groupId>org.ops4j.pax.web</groupId>
-          <artifactId>pax-web-jetty-bundle</artifactId>
-          <version>3.2.9</version>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-client</artifactId>
+          <version>8.1.19.v20160209</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+              </exclusion>
+          </exclusions>
       </dependency>
+
+      <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-webapp</artifactId>
+          <version>${jetty.version}</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+              </exclusion>
+          </exclusions>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-plus -->
+      <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-plus</artifactId>
+          <version>8.1.19.v20160209</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>org.eclipse.jetty</groupId>
+                  <artifactId>jetty-webapp</artifactId>
+              </exclusion>
+          </exclusions>
+      </dependency>
+
+
+      <!--https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlets-->
+      <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-servlets</artifactId>
+          <version>8.1.19.v20160209</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+              </exclusion>
+          </exclusions>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-websocket -->
+      <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-websocket</artifactId>
+          <version>8.1.19.v20160209</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+              </exclusion>
+          </exclusions>
+      </dependency>
+
+
+      <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-server</artifactId>
+          <version>${jetty.version}</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.eclipse.jetty.orbit</groupId>
+                  <artifactId>javax.servlet</artifactId>
+              </exclusion>
+          </exclusions>
+      </dependency>
+
+      <dependency>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+      </dependency>
+
+
+
       <dependency>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-io</artifactId>

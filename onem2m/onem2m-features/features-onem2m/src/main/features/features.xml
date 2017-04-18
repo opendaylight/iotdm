@@ -16,7 +16,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
-    <repository>mvn:org.ops4j.pax.web/pax-web-features/{{VERSION}}/xml/features</repository> <!-- jetty -->
+    <!--<repository>mvn:org.ops4j.pax.web/pax-web-features/{{VERSION}}/xml/features</repository> &lt;!&ndash; jetty &ndash;&gt;-->
 
     <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
     <!-- the onem2m yang model and rpc's  -->
@@ -29,12 +29,33 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature name='odl-onem2m-core' version='${project.version}' description='OpenDaylight :: onem2m :: core '>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
-        <feature version='${pax.web.version}'>pax-http</feature>
+        <!--<feature version='${pax.web.version}'>pax-http</feature>-->
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-plus/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-webapp/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+
+        <!--<bundle>wrap:mvn:org.eclipse.jetty.aggregate/jetty-all/8.1.19.v20160209</bundle>-->
+        <!--&lt;!&ndash;<bundle>mvn:org.eclipse.jetty.orbit/javax.servlet/3.0.0.v201112011016</bundle>&ndash;&gt;-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>-->
+
 
         <bundle>mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.json/json/{{VERSION}}</bundle>
         <bundle>wrap:mvn:joda-time/joda-time/{{VERSION}}</bundle>
-        <feature version='${pax.web.version}'>pax-http</feature>
         <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>
         <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
@@ -85,7 +106,27 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
-        <feature version='${pax.web.version}'>pax-http</feature>
+        <!--<feature version='${pax.web.version}'>pax-http</feature>-->
+        <!--<bundle>wrap:mvn:org.eclipse.jetty.aggregate/jetty-all/8.1.19.v20160209</bundle>-->
+        <!--&lt;!&ndash;<bundle>mvn:org.eclipse.jetty.orbit/javax.servlet/3.0.0.v201112011016</bundle>&ndash;&gt;-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>-->
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-plus/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-webapp/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
 
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-impl/{{VERSION}}</bundle>
@@ -108,7 +149,28 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <!--<feature version="${project.version}">odl-onem2m-notifier</feature>-->
-        <feature version='${pax.web.version}'>pax-http</feature>
+        <!--<feature version='${pax.web.version}'>pax-http</feature>-->
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-plus/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-webapp/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+
+        <!--<bundle>wrap:mvn:org.eclipse.jetty.aggregate/jetty-all/8.1.19.v20160209</bundle>-->
+        <!--&lt;!&ndash;<bundle>mvn:org.eclipse.jetty.orbit/javax.servlet/3.0.0.v201112011016</bundle>&ndash;&gt;-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>-->
 
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}</bundle>
@@ -122,6 +184,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-impl/{{VERSION}}</bundle>
     </feature>
 
@@ -129,7 +192,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <feature version="${project.version}">odl-onem2m-notifier</feature>
         <feature version='${project.version}'>odl-onem2m-mqtt-impl</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-provider/{{VERSION}}</bundle>
