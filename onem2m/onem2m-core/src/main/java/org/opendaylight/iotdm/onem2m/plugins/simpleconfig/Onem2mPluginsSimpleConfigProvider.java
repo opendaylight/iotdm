@@ -32,19 +32,15 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class Onem2mPluginsSimpleConfigProvider implements Onem2mSimpleConfigService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPluginsSimpleConfigProvider.class);
-    private BindingAwareBroker.RpcRegistration<Onem2mSimpleConfigService> rpcReg;
     private final DataBroker dataBroker;
 
-    public Onem2mPluginsSimpleConfigProvider (final BindingAwareBroker.ProviderContext session,
-                                              final DataBroker dataBroker) {
-        this.rpcReg = session.addRpcImplementation(Onem2mSimpleConfigService.class, this);
+    public Onem2mPluginsSimpleConfigProvider (final DataBroker dataBroker) {
         this.dataBroker = dataBroker;
         Onem2mPluginsSimpleConfigManager.getInstance().setDataBroker(dataBroker);
     }
 
     @Override
     public void close() {
-        this.rpcReg.close();
         Onem2mPluginsSimpleConfigManager.getInstance().unsetDataBroker();
     }
 

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright(c) Cisco Systems, Inc.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-iotdm-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
+
+    <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
+    <!-- the onem2m yang model and rpc's  -->
+    <feature name='odl-onem2m-api' version='${project.version}' description='OpenDaylight :: onem2m :: api '>
+        <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-api/{{VERSION}}</bundle>
+    </feature>
+
+    <!-- the provider of the onem2m service, implementation of the rpc's -->
+    <feature name='odl-onem2m-core' version='${project.version}' description='OpenDaylight :: onem2m :: core '>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-core/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.json/json/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:joda-time/joda-time/{{VERSION}}</bundle>
+        <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-onem2m-persistence-mdsal' version='${project.version}'
+             description='OpenDaylight :: onem2m :: Persistence MDSAL'>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-persistence-mdsal/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-onem2m-notifier' version='${project.version}' description='OpenDaylight :: onem2m :: notifier'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-notifier/{{VERSION}}</bundle>
+    </feature>
+
+    <!-- OneM2M Messaging over CoAP protocol -->
+    <feature name='odl-onem2m-coap-impl' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP :: implementation'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+        <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-impl/{{VERSION}}</bundle>
+        <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->
+    </feature>
+
+    <feature name='odl-onem2m-coap' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version='${project.version}'>odl-onem2m-coap-impl</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-provider/{{VERSION}}</bundle>
+    </feature>
+
+    <!-- oneM2M messaging over HTTP protocol base implementation -->
+    <feature name='odl-onem2m-http-impl' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP :: implementation'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-impl/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-onem2m-http' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+        <feature version='${project.version}'>odl-onem2m-http-impl</feature>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-provider/{{VERSION}}</bundle>
+    </feature>
+
+    <!-- oneM2M messaging over Websocket protocol base implementation -->
+    <feature name='odl-onem2m-websocket' version='${project.version}' description='OpenDaylight :: onem2m :: Websocket'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <!--<feature version="${project.version}">odl-onem2m-notifier</feature>-->
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}</bundle>
+        <configfile finalname="${configfile.directory}/onem2m-protocol-websocket.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}/xml/config</configfile>
+    </feature>
+
+    <!-- oneM2M messaging over MQTT protocol -->
+    <feature name='odl-onem2m-mqtt-impl' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT :: implementation'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-impl/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-onem2m-mqtt' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT'>
+        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+        <feature version='${project.version}'>odl-onem2m-api</feature>
+        <feature version='${project.version}'>odl-onem2m-core</feature>
+        <feature version='${project.version}'>odl-onem2m-mqtt-impl</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-provider/{{VERSION}}</bundle>
+    </feature>
+
+    <!-- use this to test core only with restconf -->
+    <feature name='odl-onem2m-core-rest' version='${project.version}' description='OpenDaylight :: onem2m :: core :: REST '>
+        <feature version="${project.version}">odl-onem2m-core</feature>
+        <feature version="${restconf.version}">odl-restconf</feature>
+        <!-- TODO: uncomment to enable data store persistence -->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-clustering</feature>-->
+    </feature>
+
+    <!-- access via restconf, enable xsql, and api-docs -->
+    <feature name='odl-onem2m-ui' version='${project.version}' description='OpenDaylight :: onem2m :: UI'>
+        <feature version="${restconf.version}">odl-restconf</feature>
+        <!-- use http://localhost:8181/apidoc/explorer/index.html to access api docs -->
+        <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+        <feature version="${dluxapps.version}">odl-dluxapps-applications</feature>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-ui-bundle/{{VERSION}}</bundle>
+    </feature>
+
+    <!--  The <karaf.localFeature> stanza in onem2m-karaf/pom.xml will boot karaf with the feature bundle specified -->
+    <feature name='odl-iotdm-onem2m' version='${project.version}' description='OpenDaylight :: iotdm :: OneM2M'>
+        <!-- the default persistence datastore is the mdsal/clustered datastore -->
+        <feature version="${project.version}">odl-onem2m-persistence-mdsal</feature>
+
+        <feature version="${project.version}">odl-onem2m-ui</feature>
+
+        <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
+        <feature version="${project.version}">odl-onem2m-core</feature>
+        <feature version="${project.version}">odl-onem2m-notifier</feature>
+
+        <!-- TODO: comment out next line if onem2m/coap access is not required -->
+        <feature version="${project.version}">odl-onem2m-coap</feature>
+        <!-- TODO: comment out next line if onem2m/http access is not required -->
+        <feature version="${project.version}">odl-onem2m-http</feature>
+        <!-- TODO: comment out next line if onem2m/websocket access is not required -->
+        <feature version="${project.version}">odl-onem2m-websocket</feature>
+        <!-- TODO: comment out next line if onem2m/mqtt access is not required -->
+        <feature version="${project.version}">odl-onem2m-mqtt</feature>
+    </feature>
+
+</features>
