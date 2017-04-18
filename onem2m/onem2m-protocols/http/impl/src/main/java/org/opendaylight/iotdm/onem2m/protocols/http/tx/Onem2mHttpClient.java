@@ -8,12 +8,14 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http.tx;
 
+import java.io.FileInputStream;
+import java.security.KeyStore;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.opendaylight.iotdm.onem2m.core.Onem2mCoreProvider;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxChannel;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.onem2m.core.https.config.DefaultHttpsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,9 @@ public abstract class Onem2mHttpClient implements Onem2mProtocolTxChannel {
 
     protected HttpClient client = null;
     protected String pluginName = "http"; // http by default
+
+    protected KeyStore truststore = null;
+    protected FileInputStream truststoreStream = null;
 
     public Onem2mHttpClient(Onem2mHttpClientConfiguration configuration) {
         this.configuration = configuration;
@@ -45,8 +50,23 @@ public abstract class Onem2mHttpClient implements Onem2mProtocolTxChannel {
                 null != configuration.getSecureConnectionConfig().getTrustStoreConfig()) {
 
                 sslContextFactory = new SslContextFactory(false);
-                sslContextFactory.setTrustStore(
-                        configuration.getSecureConnectionConfig().getTrustStoreConfig().getTrustStoreFile());
+                truststore = KeyStore.getInstance("JKS");
+                try {
+                    truststoreStream = new FileInputStream(
+                        configuration.getSecureConnectionConfig()
+                                     .getTrustStoreConfig()
+                                     .getTrustStoreFile());
+                    truststore.load(truststoreStream,
+                                    configuration.getSecureConnectionConfig().getTrustStoreConfig().
+                                        getTrustStorePassword().toCharArray());
+                } finally {
+                    if (truststoreStream != null) {
+                        truststoreStream.close();
+                        truststoreStream = null;
+                    }
+                }
+
+                sslContextFactory.setTrustStore(truststore);
                 sslContextFactory.setTrustStorePassword(
                         configuration.getSecureConnectionConfig().getTrustStoreConfig().getTrustStorePassword());
 
@@ -87,6 +107,7 @@ public abstract class Onem2mHttpClient implements Onem2mProtocolTxChannel {
             client.start();
         } catch (Exception e) {
             LOG.error("Failed to start client:: {}", e);
+            truststore = null;
         }
     }
 
@@ -97,6 +118,7 @@ public abstract class Onem2mHttpClient implements Onem2mProtocolTxChannel {
         } catch (Exception e) {
             LOG.error("Failed to close client: {}", e);
         }
+        truststore = null;
     }
 
     /**
