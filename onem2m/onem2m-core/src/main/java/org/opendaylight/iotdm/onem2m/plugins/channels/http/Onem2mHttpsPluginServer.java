@@ -55,14 +55,14 @@ public class Onem2mHttpsPluginServer extends Onem2mHttpBaseChannel<Onem2mHttpsPl
 
     @Override
     public boolean init() {
-        httpServer = new Server();
+        httpServer = new Server(port);
 
         // Prepare the httpServer instance
         this.prepareServer();
 
         // Configure SSL Context Factory
         SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
-        ssl_connector.setPort(port);
+//        ssl_connector.setPort(port);
         SslContextFactory cf = ssl_connector.getSslContextFactory();
 
         cf.setKeyStorePath(this.configuration.getKeyStoreFile());
