@@ -28,6 +28,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>onem2m-karaf</module>
     <module>onem2m-features</module>
     <module>onem2m-artifacts</module>
+    <module>onem2m-karaf4</module>
   </modules>
 
     <!-- DO NOT deploy the repo root pom as it's only needed to initiate a build -->

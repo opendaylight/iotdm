@@ -68,15 +68,16 @@ import java.util.stream.Collectors;
  */
 public class Onem2mPluginManagerProvider implements Onem2mPluginManagerService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mPluginManagerProvider.class);
-    private BindingAwareBroker.RpcRegistration<Onem2mPluginManagerService> rpcReg;
 
-    public Onem2mPluginManagerProvider(BindingAwareBroker.ProviderContext session) {
-        this.rpcReg = session.addRpcImplementation(Onem2mPluginManagerService.class, this);
+    private static final Onem2mPluginManagerProvider instance = new Onem2mPluginManagerProvider();
+
+    public static Onem2mPluginManagerProvider getInstance() {
+        return instance;
     }
 
     @Override
     public void close() {
-        this.rpcReg.close();
+        return;
     }
 
     private static IotdmCommonPluginData createIotdmPluginData(final IotdmPluginCommonInterface plugin,

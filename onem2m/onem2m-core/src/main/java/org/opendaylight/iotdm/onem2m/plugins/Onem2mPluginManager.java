@@ -8,8 +8,6 @@
 
 package org.opendaylight.iotdm.onem2m.plugins;
 
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationChannel;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
 import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmCoapsConfigBuilder;
@@ -117,39 +115,6 @@ public class Onem2mPluginManager implements AutoCloseable {
 
     protected PluginManagerRegistry getMgrRegistry() {
         return this.registry;
-    }
-
-    /**
-     * Initializes and starts providers implementing services of PluginManager infra.
-     * @param session Provider context.
-     * @param dataBroker Data broker.
-     */
-    public void startProviders(final BindingAwareBroker.ProviderContext session,
-                               final DataBroker dataBroker) {
-        if (null != this.serviceProvider) {
-            this.serviceProvider.close();
-        }
-        this.serviceProvider = new Onem2mPluginManagerProvider(session);
-
-        if (null != this.simpleConfigProvider) {
-            this.simpleConfigProvider.close();
-        }
-
-        this.simpleConfigProvider = new Onem2mPluginsSimpleConfigProvider(session, dataBroker);
-    }
-
-    /**
-     * Closes providers implementing services of PluginManager infra.
-     */
-    public void closeProviders() {
-        if (null != this.serviceProvider) {
-            this.serviceProvider.close();
-            this.serviceProvider = null;
-        }
-        if (null != this.simpleConfigProvider) {
-            this.simpleConfigProvider.close();
-            this.simpleConfigProvider = null;
-        }
     }
 
     /**
@@ -660,8 +625,6 @@ public class Onem2mPluginManager implements AutoCloseable {
                 LOG.error("Failed to close communication channel: {}", e);
             }
         });
-
-        this.closeProviders();
     }
 
     /**

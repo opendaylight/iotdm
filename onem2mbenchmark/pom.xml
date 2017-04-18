@@ -29,6 +29,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>api</module>
     <module>impl</module>
     <module>karaf</module>
+    <module>karaf4</module>
     <module>features</module>
     <module>artifacts</module>
   </modules>
