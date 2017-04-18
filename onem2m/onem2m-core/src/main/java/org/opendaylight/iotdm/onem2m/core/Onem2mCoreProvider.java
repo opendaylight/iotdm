@@ -17,11 +17,9 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
-import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
 import org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactory;
+import org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactoryRegistry;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
@@ -31,17 +29,16 @@ import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.primitive.list.Onem2mPrimitive;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultCoapsConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreRuntimeMXBean;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.SecurityConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.Onem2mCoreConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.onem2m.core.coaps.config.DefaultCoapsConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.onem2m.core.https.config.DefaultHttpsConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.onem2m.core.security.config.SecurityConfig;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
@@ -49,22 +46,22 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
-public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBean, BindingAwareProvider, AutoCloseable {
+public class Onem2mCoreProvider implements Onem2mService, AutoCloseable,
+                                           DaoResourceTreeFactoryRegistry {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mCoreProvider.class);
     private Onem2mStats stats;
 
-    private BindingAwareBroker.RpcRegistration<Onem2mService> rpcReg;
-    private DataBroker dataBroker;
+    private final DataBroker dataBroker;
     private TransactionManager transactionManager = null;
 
     private Onem2mDb db;
     private ResourceTreeWriter twc;
     private ResourceTreeReader trc;
 
-    private static NotificationPublishService notifierService;
+    private static NotificationPublishService notifierService = null;
     private static Onem2mRouterService routerService;
-    private static final Onem2mCoreProvider coreProvider = new Onem2mCoreProvider();
+    private static Onem2mCoreProvider coreProvider = null;
     private static final RequestLocker rl = RequestLocker.getInstance();
 
     private SecurityConfig securityConfig = null;
@@ -73,6 +70,34 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     private boolean onSessionInitialized = false;
 
+    public Onem2mCoreProvider(Onem2mCoreConfig config,
+                              DataBroker dataBroker,
+                              NotificationPublishService notifierService) {
+
+        this.dataBroker = dataBroker;
+        this.notifierService = notifierService;
+        routerService = Onem2mRouterService.getInstance();
+
+        stats = Onem2mStats.getInstance();
+        db = Onem2mDb.getInstance();
+        db.initializeDatastore(dataBroker);
+
+        if (null != config) {
+            this.setSecurityConfig(config.getSecurityConfig());
+            this.setDefaultCoapsConfig(config.getDefaultCoapsConfig());
+            this.setDefaultHttpsConfig(config.getDefaultHttpsConfig());
+        }
+
+        onSessionInitialized = true;
+        LOG.info("Session Initiated");
+        this.coreProvider = this;
+    }
+
+    public void init() {
+        return;
+    }
+
+    /* TODO this should be probably chaned to service in call callers ? */
     public static Onem2mCoreProvider getInstance() {
         return coreProvider;
     }
@@ -103,7 +128,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
 
     public static NotificationPublishService getNotifier() {
         return Onem2mCoreProvider.notifierService;
-
     }
 
     public static final String CONFIG_STATUS_OK = "OK";
@@ -117,26 +141,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
             return securityConfig.getCoreSecurityLevel();
         else
             return level;
-    }
-
-    /**
-     * Perform session initialization
-     * @param session the session
-     */
-    @Override
-    public void onSessionInitiated(ProviderContext session) {
-        this.rpcReg = session.addRpcImplementation(Onem2mService.class, this);
-        this.dataBroker = session.getSALService(DataBroker.class);
-        notifierService = session.getSALService(NotificationPublishService.class);
-        routerService = Onem2mRouterService.getInstance();
-
-        stats = Onem2mStats.getInstance();
-        db = Onem2mDb.getInstance();
-        db.initializeDatastore(dataBroker);
-        Onem2mPluginManager.getInstance().handleDefaultConfigUpdate();
-        Onem2mPluginManager.getInstance().startProviders(session, dataBroker);
-        onSessionInitialized = true;
-        LOG.info("Session Initiated");
     }
 
     public void registerDaoPlugin(DaoResourceTreeFactory daoResourceTreeFactory) {
@@ -168,14 +172,20 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
     public void unregisterDaoPlugin() {
         Onem2mPluginsDbApi.getInstance().unregisterDbReaderAndWriter();
 
-        this.transactionManager.close();
-        this.transactionManager = null;
+        if (null != this.transactionManager) {
+            this.transactionManager.close();
+            this.transactionManager = null;
+        }
 
-        this.twc.close();
-        this.twc = null;
+        if (null != this.twc) {
+            this.twc.close();
+            this.twc = null;
+        }
 
-        this.trc.close();
-        this.trc = null;
+        if (null != this.trc) {
+            this.trc.close();
+            this.trc = null;
+        }
     }
 
     private boolean isDaoPluginRegistered() {
@@ -188,11 +198,6 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
      */
     @Override
     public void close() throws Exception {
-        Onem2mPluginManager.getInstance().closeProviders();
-
-        if (this.rpcReg != null) {
-            this.rpcReg.close();
-        }
         if (db != null) {
             db.close();
         }
@@ -852,7 +857,7 @@ public class Onem2mCoreProvider implements Onem2mService, Onem2mCoreRuntimeMXBea
         return RpcResultBuilder.success(output).buildFuture();
     }
 
-    @Override
+    /* TODO fix statistics which are broken after the migration to blueprint */
     public String getOnem2mStats() {
         return stats.getStats().toString();
     }

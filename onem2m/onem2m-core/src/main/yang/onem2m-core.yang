@@ -3,7 +3,6 @@ module onem2m-core {
     namespace "urn:opendaylight:params:xml:ns:yang:onem2m:core";
     prefix "onem2m-core";
 
-    import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
     import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
@@ -12,55 +11,41 @@ module onem2m-core {
         "Service definition for onem2m project";
 
     revision "2014-12-10" {
-        description
-            "Initial revision";
+        description "Initial revision";
     }
 
-    identity onem2m-core {
-        base config:module-type;
-        config:java-name-prefix Onem2mCore;
-    }
-
-    augment "/config:modules/config:module/config:configuration" {
-        case onem2m-core {
-            when "/config:modules/config:module/config:type = 'onem2m-core'";
-            container broker {
-                uses config:service-ref {
-                    refine type {
-                        mandatory true;
-                        config:required-identity md-sal-binding:binding-broker-osgi-registry;
-                    }
-                }
-            }
-            container binding-data-broker {
-                uses config:service-ref {
-                    refine type {
-                        mandatory true;
-                        config:required-identity md-sal-binding:binding-async-data-broker;
-                    }
-                }
-            }
-
-            container security-config {
-                leaf core-security-level {
-                    mandatory true;
-                    type onem2m:security-level;
-                }
-            }
-
-            container default-https-config {
-                description "Default configuration of Java KeyStore file which is used for HTTPS connections by default.";
-                uses onem2m-plugin-manager:java-key-store-config;
-            }
-
-            container default-coaps-config {
-                description "Default configuration of Java KeyStore file and PresharedKeys used for CoAPS communication by default.";
-                uses onem2m-plugin-manager:coaps-keystore-config;
-                uses onem2m-plugin-manager:coaps-psk-config;
+    grouping onem2m-core-security-config {
+        container security-config {
+            leaf core-security-level {
+                mandatory true;
+                type onem2m:security-level;
             }
         }
     }
 
+    grouping onem2m-core-https-config {
+        container default-https-config {
+            description "Default configuration of Java KeyStore file which is used for HTTPS connections by default.";
+            uses onem2m-plugin-manager:java-key-store-config;
+        }
+    }
+
+    grouping onem2m-core-coaps-config {
+        container default-coaps-config {
+            description "Default configuration of Java KeyStore file and PresharedKeys used for CoAPS communication by default.";
+            uses onem2m-plugin-manager:coaps-keystore-config;
+            uses onem2m-plugin-manager:coaps-psk-config;
+        }
+    }
+
+    container onem2m-core-config {
+        uses onem2m-core-security-config;
+        uses onem2m-core-https-config;
+        uses onem2m-core-coaps-config;
+    }
+
+    /* TODO this is just commented out now, need to make it work */
+    /*
     augment "/config:modules/config:module/config:state" {
         case onem2m-core {
             when "/config:modules/config:module/config:type = 'onem2m-core'";
@@ -71,4 +56,5 @@ module onem2m-core {
 
         }
     }
+    */
 }

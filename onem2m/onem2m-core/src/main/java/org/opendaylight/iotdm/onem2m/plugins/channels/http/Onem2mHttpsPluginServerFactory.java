@@ -13,7 +13,7 @@ import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mBaseCommunicationCha
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.opendaylight.iotdm.onem2m.plugins.channels.Onem2mPluginChannelFactory;
 import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.DefaultHttpsConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.core.rev141210.onem2m.core.https.config.DefaultHttpsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
