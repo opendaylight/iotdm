@@ -25,6 +25,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
     <feature version='${project.version}'>odl-onem2mexample-api</feature>
     <feature version='${onem2m.version}'>odl-onem2m-core</feature>
+    <!--<bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>-->
+    <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+    <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
     <bundle>mvn:org.opendaylight.iotdm/onem2mexample-impl/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-onem2mexample-rest' version='${project.version}' description='OpenDaylight :: onem2mexample :: REST'>

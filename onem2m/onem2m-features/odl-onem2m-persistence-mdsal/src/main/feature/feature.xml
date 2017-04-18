@@ -1,0 +1,10 @@
+<features name="odl-iotdm-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+    <feature name='odl-onem2m-persistence-mdsal' version='${project.version}'
+             description='OpenDaylight :: onem2m :: Persistence MDSAL'>
+        <configfile finalname="${configfile.directory}/onem2m-persistence-mdsal.xml">
+            mvn:org.opendaylight.iotdm/onem2m-persistence-mdsal/${project.version}/xml/config
+        </configfile>
+    </feature>
+</features>

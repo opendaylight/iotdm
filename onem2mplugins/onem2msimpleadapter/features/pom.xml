@@ -30,6 +30,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
     <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
     <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
+    <jetty.version>8.1.19.v20160209</jetty.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>
@@ -96,6 +97,53 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client -->
+    <!--<dependency>-->
+    <!--<groupId>org.eclipse.jetty</groupId>-->
+    <!--<artifactId>jetty-client</artifactId>-->
+    <!--<version>${jetty.version}</version>-->
+    <!--<exclusions>-->
+    <!--<exclusion>-->
+    <!--<groupId>org.eclipse.jetty.orbit</groupId>-->
+    <!--<artifactId>javax.servlet</artifactId>-->
+    <!--</exclusion>-->
+    <!--</exclusions>-->
+    <!--</dependency>-->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>${jetty.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty.orbit</groupId>
+          <artifactId>javax.servlet</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlets</artifactId>
+      <version>${jetty.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty.orbit</groupId>
+          <artifactId>javax.servlet</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty.orbit</groupId>
+          <artifactId>javax.servlet</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2m-features</artifactId>
