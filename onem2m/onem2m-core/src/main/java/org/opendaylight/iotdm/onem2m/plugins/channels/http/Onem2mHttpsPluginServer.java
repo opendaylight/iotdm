@@ -55,7 +55,7 @@ public class Onem2mHttpsPluginServer extends Onem2mHttpBaseChannel<Onem2mHttpsPl
 
     @Override
     public boolean init() {
-        httpServer = new Server();
+        httpServer = new Server(port);
 
         // Prepare the httpServer instance
         this.prepareServer();
