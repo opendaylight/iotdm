@@ -8,6 +8,7 @@
 
 package org.opendaylight.iotdm.onem2m.plugins.channels.mqtt;
 
+import com.google.common.collect.Lists;
 import org.eclipse.paho.client.mqttv3.*;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
@@ -18,6 +19,11 @@ import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBa
 import org.opendaylight.iotdm.onem2m.plugins.registry.Onem2mLocalEndpointRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author jkosmel
@@ -26,6 +32,8 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mMqttPluginClient.class);
     private Onem2mMqttAsyncClient onem2mMqttClient;
     private String mqttBrokerAddress = null;
+    private List<LinkedBlockingQueue<Onem2mMqttAsyncClient.QEntry>> queueList = Lists.newArrayList();
+    private static final Integer NUM_SUBSCRIBER_PROCESSORS = 128;
 
     Onem2mMqttPluginClient(String ipAddress, int port,
                            Onem2mLocalEndpointRegistry registry) {
@@ -73,6 +81,7 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
 
         protected Onem2mMqttAsyncClient() {
             super(mqttBrokerAddress, LOG);
+            initThreadsAndQueuesForResourceProcessing();
         }
 
         @Override
@@ -99,11 +108,51 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
             }
         }
 
+        public void initThreadsAndQueuesForResourceProcessing() {
+            ExecutorService executorService = Executors.newFixedThreadPool(NUM_SUBSCRIBER_PROCESSORS);
+            AtomicInteger qNum = new AtomicInteger(-1);
+            for (int i = 0; i < NUM_SUBSCRIBER_PROCESSORS; i++) {
+
+                LinkedBlockingQueue<QEntry> q = new LinkedBlockingQueue<>();
+                queueList.add(i, q);
+                executorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        runProcessSubscriberQ(qNum.incrementAndGet());
+                    }
+                });
+            }
+        }
+
+        private void runProcessSubscriberQ(Integer qNum) {
+
+            Thread.currentThread().setName("subsc-proc-" + qNum);
+            QEntry qEntry;
+            while (true) {
+                try {
+                    qEntry = queueList.get(qNum).take();
+                } catch (Exception e) {
+                    LOG.error("{}", e.toString());
+                    qEntry = null;
+                }
+                if (qEntry != null) handleMqttMessage(qEntry.topic, qEntry.message);
+            }
+        }
+
+        private void enqueueNotifierOperation(String topic, String message) {
+            Integer qNum = Math.abs(message.hashCode()) % NUM_SUBSCRIBER_PROCESSORS;
+            try {
+                queueList.get(qNum).put(new QEntry(topic, message));
+            } catch (InterruptedException e) {
+                LOG.error("Couldn't enqueue mqtt message: topic:{}, message: {}", topic, message);
+            }
+        }
+
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             //check if Qos is not 0
             if ((!message.isRetained()) && (message.getQos() == 1)) {
-                handleMqttMessage(topic, message.toString());
+                enqueueNotifierOperation(topic, message.toString());
             }
             if (message.getQos() != 1) {
                 publishMqttResponse(topic, "QoS must be 1");
@@ -227,6 +276,15 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
             topic = topic.startsWith("/") ? topic.substring("/".length()) : topic;
             topic = topic.endsWith("/") ? topic.substring(0, topic.length() - 1) : topic;
             return topic;
+        }
+
+        private class QEntry {
+            protected String topic;
+            protected String message;
+            QEntry(String topic, String message) {
+                this.topic = topic;
+                this.message = message;
+            }
         }
     }
 }
