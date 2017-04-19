@@ -22,6 +22,30 @@
       "revId": "708faa0ebd6195c6ae31d0c9615bf1eeacce83c2",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_06865a65",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/Onem2m.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-19T06:46:34Z",
+      "side": 1,
+      "message": "I\u0027m not adding support for them, but according to Bug 7859 we want to send notification if parent has stateTag attribute and its child has been created/updated/deleted, so I\u0027ve added it here just to check if a parent\u0027s resource type is \"with stateTag\". I can remove the new ones and check just full supported ones, what do you think?",
+      "parentUuid": "da01753e_876d4335",
+      "range": {
+        "startLine": 144,
+        "startChar": 4,
+        "endLine": 144,
+        "endChar": 5
+      },
+      "revId": "708faa0ebd6195c6ae31d0c9615bf1eeacce83c2",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
     }
   ]
 }
