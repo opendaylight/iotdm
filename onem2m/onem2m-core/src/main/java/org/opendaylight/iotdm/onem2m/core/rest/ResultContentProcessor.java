@@ -8,6 +8,11 @@
 
 package org.opendaylight.iotdm.onem2m.core.rest;
 
+import static java.util.Objects.nonNull;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import org.json.JSONArray;
@@ -49,7 +54,7 @@ public class ResultContentProcessor {
      */
     private static void produceJsonResultContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        JSONObject temp = null;
+        JSONObject tempJsonObject;
         onem2mResponse.setUseHierarchicalAddressing(true);
         Integer drt = onem2mRequest.getPrimitiveDiscoveryResultType();
         if (drt != -1) {
@@ -76,8 +81,8 @@ public class ResultContentProcessor {
 
         onem2mResponse.setPrimitiveContentFormat(Onem2m.ContentFormat.JSON);
 
-        JSONObject jo = new JSONObject(); // for non-fu discovery
-        JSONArray ja = new JSONArray();   // for fu discovery
+        JSONObject jsonObject = new JSONObject(); // for non-fu discovery
+        JSONArray jsonArray = new JSONArray();   // for fu discovery
 
         // cache the resourceContent so that create keys can be accessed and filtered
         onem2mResponse.setBaseResource(onem2mRequest.getBaseResource());
@@ -86,19 +91,35 @@ public class ResultContentProcessor {
         if (rc == -1) {
             rc = Onem2m.ResultContent.ATTRIBUTES;
         }
+
+        //allow attributes filtering for result content ATTRIBUTES and filter usage CONDITIONAL_RETRIEVAL only
+        if(onem2mRequest.hasContentAttributeList()) {
+            if(rc != Onem2m.ResultContent.ATTRIBUTES) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "ATTRIBUTE_LIST(" + RequestPrimitive.ATTRIBUTE_LIST + ") not permitted for given result content " + rc);
+                return;
+            }
+
+            if(onem2mRequest.getFUDiscovery()) {
+                onem2mResponse.setRSC(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                        "ATTRIBUTE_LIST(" + RequestPrimitive.ATTRIBUTE_LIST + ") not permitted for given filter usage " + onem2mRequest.getPrimitiveFilterCriteriaFilterUsage());
+                return;
+            }
+        }
+
         switch (rc) {
             case Onem2m.ResultContent.NOTHING:
-                onem2mResponse.setPrimitiveContent(jo.toString());
+                onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 return; // that was easy
 
             case Onem2m.ResultContent.ATTRIBUTES:
                 if (onem2mRequest.getFUDiscovery()) {
-                    discoveryJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, ja);
-                    onem2mResponse.setPrimitiveContent(ja.toString());
+                    discoveryJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonArray);
+                    onem2mResponse.setPrimitiveContent(jsonArray.toString());
                 } else {
-                    jo = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
-                    if (jo != null) {
-                        onem2mResponse.setPrimitiveContent(jo.toString());
+                    jsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
+                    if (jsonObject != null) {
+                        onem2mResponse.setPrimitiveContent(jsonObject.toString());
                     } else {
                         onem2mResponse.setPrimitiveContent("{}");
                     }
@@ -107,59 +128,58 @@ public class ResultContentProcessor {
 
             case Onem2m.ResultContent.HIERARCHICAL_ADDRESS:
                 // todo: update method here
-                produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                onem2mResponse.setPrimitiveContent(jo.toString());
+                produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
+                onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 break;
 
             case Onem2m.ResultContent.HIERARCHICAL_ADDRESS_ATTRIBUTES:
                 onem2mResponse.setUseHierarchicalAddressing(true);
                 // add the address
-                produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                if (temp != null) jo = temp;
-                onem2mResponse.setPrimitiveContent(jo.toString());
+                produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
+                tempJsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
+                if (tempJsonObject != null) jsonObject = tempJsonObject;
+                onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 break;
 
             case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCES:
                 if (onem2mRequest.getFUDiscovery()) {
-                    discoveryJsonResultContentAttributesAndChildResources(onem2mRequest, onem2mResource, onem2mResponse, ja);
-                    onem2mResponse.setPrimitiveContent(ja.toString());
+                    discoveryJsonResultContentAttributesAndChildResources(onem2mRequest, onem2mResource, onem2mResponse, jsonArray);
+                    onem2mResponse.setPrimitiveContent(jsonArray.toString());
                 } else {
-                    produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
-                    temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                    if (temp != null) jo = temp;
-                    onem2mResponse.setPrimitiveContent(jo.toString());
+                    tempJsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
+                    if (tempJsonObject != null) jsonObject = tempJsonObject;
+                    onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 }
                 break;
 
             case Onem2m.ResultContent.ATTRIBUTES_CHILD_RESOURCE_REFS:
                 if (onem2mRequest.getFUDiscovery()) {
-                    discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, ja, true);
-                    onem2mResponse.setPrimitiveContent(ja.toString());
+                    discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jsonArray, true);
+                    onem2mResponse.setPrimitiveContent(jsonArray.toString());
                 } else {
-                    produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
+                    produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
-                    temp = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                    if (temp != null) jo = temp;
-                    onem2mResponse.setPrimitiveContent(jo.toString());
+                    tempJsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
+                    if (tempJsonObject != null) jsonObject = tempJsonObject;
+                    onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 }
                 break;
 
             case Onem2m.ResultContent.CHILD_RESOURCE_REFS:
                 if (onem2mRequest.getFUDiscovery()) {
-                    discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, ja, false);
-                    onem2mResponse.setPrimitiveContent(ja.toString());
+                    discoveryJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jsonArray, false);
+                    onem2mResponse.setPrimitiveContent(jsonArray.toString());
                 } else {
-                    produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jo);
-                    onem2mResponse.setPrimitiveContent(jo.toString());
+                    produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
+                    onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 }
                 break;
 
             default:
                 onem2mResponse.setRSC(Onem2m.ResponseStatusCode.CONTENTS_UNACCEPTABLE,
                         "RESULT_CONTENT(" + RequestPrimitive.RESULT_CONTENT + ") invalid option: (" + rc + ")");
-                return;
         }
     }
 
@@ -236,11 +256,38 @@ public class ResultContentProcessor {
                         onem2mRequest.getBaseResource().getInJsonContent());
             }
 
+            //filter attributes according to given ATTRIBUTE_LIST - see TS-0009 6.2.2.2
+            if (onem2mRequest.getPrimitiveOperation().equals(Onem2m.Operation.RETRIEVE) && onem2mRequest.hasContentAttributeList()) {
+                filterAttributesByAttributeList(onem2mRequest, onem2mResponse);
+            }
+
             return JsonUtils.put(j, "m2m:" + Onem2m.resourceTypeToString.get(resourceType),
                     onem2mResponse.getJsonResourceContent());
         }
 
         return null;
+    }
+
+    /**
+     * remove all attributes not contained in given attribute list
+     * @param onem2mRequest onem2mRequest
+     * @param onem2mResponse onem2mResponse
+     */
+    private static void filterAttributesByAttributeList(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+        JSONArray attributesArray = new JSONObject(onem2mRequest.getPrimitiveContent()).optJSONArray(RequestPrimitive.ATTRIBUTE_LIST);
+        if (nonNull(attributesArray)) {
+            List<String> attributeList = Lists.newArrayList();
+            for (int i = 0; i < attributesArray.length(); i++) {
+                attributeList.add(attributesArray.getString(i));
+            }
+
+            HashSet attributesNameSet = Sets.newHashSet(onem2mResponse.getJsonResourceContent().keySet());
+            for (Object attributeName : attributesNameSet) {
+                if (!attributeList.contains(attributeName)) {
+                    onem2mResponse.getJsonResourceContent().remove(String.valueOf(attributeName));
+                }
+            }
+        }
     }
 
     /**
