@@ -144,10 +144,19 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
             return false;
         }
 
+        final String queryString = request.getOptions().getUriQueryString();
+
+        if(queryString.contains(RequestPrimitive.ATTRIBUTE_LIST+"=") && code != CoAP.Code.GET) {
+            response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
+                    "Specifying ATTRIBUTE_LIST not permitted for method " + code.name());
+            Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
+            return false;
+        }
+
         // according to the spec, the uri query string can contain in short form, the
         // resourceType, responseType, result persistence,  Delivery Aggregation, Result Content,
         // M3 Boolean
-        resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(request.getOptions().getUriQueryString());
+        resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(queryString);
         if (resourceTypePresent && (nonNull(resourceTypeOption))) {
             // Resource type is set in query string and in the option as well,
             // verify if values are equal

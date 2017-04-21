@@ -158,7 +158,7 @@ public class ResourceContentProcessor {
      * @param onem2mRequest request
      * @param onem2mResponse response
      */
-    public static void handleRetrieve(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
+    public static void handleRetrieveStats(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
         Integer resourceType = onem2mRequest.getResourceType();
         switch (resourceType) {
