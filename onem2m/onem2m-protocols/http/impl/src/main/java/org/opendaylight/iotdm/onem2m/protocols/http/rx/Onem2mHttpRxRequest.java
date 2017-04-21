@@ -12,6 +12,7 @@ import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
+import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
 import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
@@ -138,15 +139,23 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         // the contentType string can have ty=val attached to it so we should handle this case
         Boolean resourceTypePresent = false;
         String contentTypeResourceString = parseContentTypeForResourceType(contentType);
+        String queryString = httpRequest.getQueryString();
+        String method = httpRequest.getMethod().toLowerCase();
+
+        if (queryString.contains(RequestPrimitive.ATTRIBUTE_LIST + "=") && !method.contentEquals("get")) {
+            IotdmPluginHttpResponse.prepareErrorResponse(
+                    httpResponse, "Specifying ATTRIBUTE_LIST not permitted for method " + method, Onem2m.ResponseStatusCode.BAD_REQUEST);
+            return false;
+        }
+
         if (contentTypeResourceString != null) {
             resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(contentTypeResourceString);
         }
-        String method = httpRequest.getMethod().toLowerCase();
         // look in query string if didn't find it in contentType header
         if (!resourceTypePresent) {
-            resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+            resourceTypePresent = clientBuilder.parseQueryStringIntoPrimitives(queryString);
         } else {
-            clientBuilder.parseQueryStringIntoPrimitives(httpRequest.getQueryString());
+            clientBuilder.parseQueryStringIntoPrimitives(queryString);
         }
 
         if (resourceTypePresent && !method.contentEquals("post")) {
