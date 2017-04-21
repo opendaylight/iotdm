@@ -83,6 +83,7 @@ public class RequestPrimitive extends BasePrimitive {
     public static final String FILTER_CRITERIA_OFFSET = "off";
     public static final String DISCOVERY_RESULT_TYPE = "drt";
     public static final String ROLE = "rol";
+    public static final String ATTRIBUTE_LIST = "atrl";
 
     // helper attributes
     public static final String PROTOCOL = "protocol"; // See Protocol below
@@ -418,5 +419,9 @@ public class RequestPrimitive extends BasePrimitive {
         }
 
         return attrArray.toArray(new String[0]);
+    }
+
+    public boolean hasAttributeList() {
+        return this.getPrimitiveContent().contains("\"" + RequestPrimitive.ATTRIBUTE_LIST + "\":");
     }
 }

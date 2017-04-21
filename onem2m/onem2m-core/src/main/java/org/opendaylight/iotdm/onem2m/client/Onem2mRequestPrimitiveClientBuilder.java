@@ -8,8 +8,11 @@
 
 package org.opendaylight.iotdm.onem2m.client;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
+import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,8 +156,8 @@ public class Onem2mRequestPrimitiveClientBuilder {
             String[] pairs = query.split("[&]");
             for (String pair : pairs) {
                 String[] param = pair.split("[=]");
-                String key = null;
-                String value = null;
+                String key;
+                String value;
                 if (param.length > 0) {
                     key = param[0];
                     if (param.length > 1) {
@@ -162,7 +165,12 @@ public class Onem2mRequestPrimitiveClientBuilder {
                         if (key.contentEquals(RequestPrimitive.FILTER_CRITERIA_LABELS) ||
                             key.contentEquals(RequestPrimitive.FILTER_CRITERIA_RESOURCE_TYPE)) {
                             onem2mRequest.setPrimitiveMany(key, value);
-                        } else {
+                        }
+                        else if(key.contentEquals(RequestPrimitive.ATTRIBUTE_LIST)) {
+                            String[] attributes = value.split("\\+");
+                            onem2mRequest.setPrimitive(RequestPrimitive.CONTENT, JsonUtils.put(new JSONObject(), "atrl", attributes).toString());
+                        }
+                        else {
                             onem2mRequest.setPrimitive(key, value);
                         }
                         if (key.equalsIgnoreCase(RequestPrimitive.RESOURCE_TYPE)) { resourceTypePresent = true; }
