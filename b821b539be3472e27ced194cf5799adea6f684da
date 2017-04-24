@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_0d37774f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/transactionCore/Cache.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "Name the Collections really used.",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_4d405fa5",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "please use  { } in if and else as well, it\u0027s recommended coding style for ODL projects",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_2d3b5b39",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "use the block - {}",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_cd13afb6",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "use the block - {}",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_ad162ba5",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "add space after if and use the block - {}",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_0d0e578d",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "use the block - {}",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_ed1033aa",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "use the block - {}",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_4d27bf12",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "add space after if",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_8d7887f3",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 591,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:43:44Z",
+      "side": 1,
+      "message": "use the block - {}",
+      "revId": "b821b539be3472e27ced194cf5799adea6f684da",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
