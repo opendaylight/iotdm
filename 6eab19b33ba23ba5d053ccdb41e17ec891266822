@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_ed02f36d",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:37:14Z",
+      "side": 1,
+      "message": "Indent with (",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_4df97f7f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:37:14Z",
+      "side": 1,
+      "message": "remove the space after (",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_2df4fb85",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:37:14Z",
+      "side": 1,
+      "message": "remove the space after (",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_8df3679d",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:37:14Z",
+      "side": 1,
+      "message": "remove the space after (",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_6dee03b6",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:37:14Z",
+      "side": 1,
+      "message": "add space after for",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
