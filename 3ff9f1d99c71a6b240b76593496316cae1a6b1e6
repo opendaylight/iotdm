@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_ad090bdf",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/client/Onem2mRequestPrimitiveClientBuilder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "It\u0027s recomended to don\u0027t use static imports in ODL projects.",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_0d113705",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/client/Onem2mRequestPrimitiveClientBuilder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "Add space between if and (",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_cd2d6f48",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/RequestPrimitiveProcessor.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "Make it consistent with the new method name of ResourceContentProcessor.",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_2d1cfb12",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "Add some comment about permitted and not permitted cases please.",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_cdd44f22",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "No need to wrap to new line.",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_8df247d0",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/ResultContentProcessor.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "No need to wrap.",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_edaf9392",
+        "filename": "onem2m/onem2m-protocols/http/impl/src/main/java/org/opendaylight/iotdm/onem2m/protocols/http/rx/Onem2mHttpRxRequest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "add space between if and ( and also arround +",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_4d969f4d",
+        "filename": "onem2m/onem2m-protocols/http/impl/src/main/java/org/opendaylight/iotdm/onem2m/protocols/http/rx/Onem2mHttpRxRequest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-04-24T13:25:02Z",
+      "side": 1,
+      "message": "add space after +",
+      "revId": "3ff9f1d99c71a6b240b76593496316cae1a6b1e6",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
