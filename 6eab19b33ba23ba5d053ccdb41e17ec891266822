@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da01753e_55e3c532",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/database/Onem2mDb.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:49:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_ed02f36d",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da01753e_4df97f7f",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2017-04-24T13:37:14Z",
       "side": 1,
       "message": "remove the space after (",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_15abfdd6",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:49:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_4df97f7f",
       "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "da01753e_35972192",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:49:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_2df4fb85",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da01753e_8df3679d",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
         "patchSetId": 8
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "da01753e_1592dd9e",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:49:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_8df3679d",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da01753e_6dee03b6",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
         "patchSetId": 8
@@ -81,6 +153,24 @@
       "writtenOn": "2017-04-24T13:37:14Z",
       "side": 1,
       "message": "add space after for",
+      "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_558c657f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:49:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_6dee03b6",
       "revId": "6eab19b33ba23ba5d053ccdb41e17ec891266822",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
