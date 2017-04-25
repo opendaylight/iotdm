@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da01753e_150f7d2f",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:35:45Z",
+      "side": 1,
+      "message": "done all in this file",
+      "parentUuid": "da01753e_cd90cf45",
+      "revId": "140a7a040f7a677cfa444f015e5e9076ccee6c55",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da01753e_0d9bf767",
         "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
         "patchSetId": 2
@@ -47,6 +65,24 @@
       "writtenOn": "2017-04-24T13:32:34Z",
       "side": 1,
       "message": "Don\u0027t use string concatenation (\u0027+\u0027). Use the log4j formatting using the \"{}\" on the place of desired parameter in the formated string.\nHere and in all usages of LOG.",
+      "revId": "140a7a040f7a677cfa444f015e5e9076ccee6c55",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_b52791b5",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/core/rest/NotificationProcessor.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 6470
+      },
+      "writtenOn": "2017-04-25T07:35:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da01753e_2dc6bb49",
       "revId": "140a7a040f7a677cfa444f015e5e9076ccee6c55",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
       "unresolved": false
