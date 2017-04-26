@@ -15,8 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
@@ -387,6 +385,7 @@ public class ResourceSubscription extends BaseResource {
     }
 
     public static void modifyParentForSubscriptionDeletion(JSONObject parentJsonContent, String resourceId) {
+        incrementParentStateTagIfPresent(parentJsonContent);
 
         String resouceIdJsonKey = "c:" + Onem2m.ResourceType.SUBSCRIPTION;
         JSONArray resouceIdJsonArray = parentJsonContent.optJSONArray(resouceIdJsonKey);

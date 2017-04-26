@@ -316,5 +316,11 @@ public class BaseResource {
                 "CONTENT(" + RequestPrimitive.CONTENT + ") xml not supported yet");
         return null;
     }
+
+    public static void incrementParentStateTagIfPresent(JSONObject parentResourceContent) {
+        if(parentResourceContent.has(ResourceContainer.STATE_TAG)) {
+            JsonUtils.inc(parentResourceContent, ResourceContainer.STATE_TAG);
+        }
+    }
 }
 

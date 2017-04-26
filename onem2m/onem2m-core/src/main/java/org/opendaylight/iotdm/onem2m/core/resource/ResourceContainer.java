@@ -13,14 +13,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.rest.CheckAccessControlProcessor;
-import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -281,7 +277,6 @@ public class ResourceContainer extends BaseResource {
                                                                     String resourceId) {
 
         JsonUtils.inc(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES);
-        JsonUtils.inc(containerResourceContent, ResourceContainer.STATE_TAG);
         JsonUtils.incN(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, newByteSize);
 
         // maintain an array of cin ids in the container
@@ -325,7 +320,7 @@ public class ResourceContainer extends BaseResource {
 
         for (int i = 0; i < cinResouceIdJsonArray.length(); i++) {
             if (cinResourceId.equals(cinResouceIdJsonArray.getString(i))) {
-                JsonUtils.inc(containerResourceContent, ResourceContainer.STATE_TAG);
+                incrementParentStateTagIfPresent(containerResourceContent);
                 JsonUtils.dec(containerResourceContent, ResourceContainer.CURR_NR_INSTANCES);
                 JsonUtils.decN(containerResourceContent, ResourceContainer.CURR_BYTE_SIZE, cinByteSizeJsonArray.getInt(i));
                 cinResouceIdJsonArray.remove(i);
@@ -348,12 +343,16 @@ public class ResourceContainer extends BaseResource {
 
     public static String getOldestCI(JSONObject containerResourceContent) {
 
-        String cinResouceIdJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
-        JSONArray cinResouceIdJsonArray = containerResourceContent.optJSONArray(cinResouceIdJsonKey);
+        String cinResourceIdJsonKey = "c:" + Onem2m.ResourceType.CONTENT_INSTANCE;
+        JSONArray cinResourceIdJsonArray = containerResourceContent.optJSONArray(cinResourceIdJsonKey);
 
-        if (cinResouceIdJsonArray != null && cinResouceIdJsonArray.length() != 0) {
-            return cinResouceIdJsonArray.getString(0);
+        if (cinResourceIdJsonArray != null && cinResourceIdJsonArray.length() != 0) {
+            return cinResourceIdJsonArray.getString(0);
         }
         return null;
+    }
+
+    public static void modifyParentForContainerDeletion(JSONObject parentJsonContent) {
+        incrementParentStateTagIfPresent(parentJsonContent);
     }
 }
