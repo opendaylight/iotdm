@@ -234,6 +234,10 @@ public class Onem2mDb implements TransactionChainListener {
         // update the lmt of the parent
         JsonUtils.put(parentJsonContent, BaseResource.LAST_MODIFIED_TIME, jsonPrimitiveResourceContent.optString(BaseResource.CREATION_TIME));
 
+        //increment state tag if exists in parent resource
+        handleStateTagUpdate(onem2mRequest);
+
+        //handle resource specific attributes
         if (resourceType == Onem2m.ResourceType.CONTENT_INSTANCE) {
             Integer newByteSize = jsonPrimitiveResourceContent.getInt(ResourceContentInstance.CONTENT_SIZE);
             ResourceContainer.incrementValuesForThisCreatedContentInstance(parentJsonContent, newByteSize, onem2mRequest.getResourceId());
@@ -332,7 +336,7 @@ public class Onem2mDb implements TransactionChainListener {
     /**
      * The update resource is carried out by this routine.  The update uses the original JSON content in
      * onem2mRequest.getJSONResourceContent, then it cycles through each value in the new ResourceContent JSON obj
-     * to see what has changed, and applies the change to the old resoruce.
+     * to see what has changed, and applies the change to the old resource.
      *
      * @param onem2mRequest  request
      * @param onem2mResponse response
@@ -352,22 +356,56 @@ public class Onem2mDb implements TransactionChainListener {
         }
 
         if (onem2mRequest.getResourceType() == Onem2m.ResourceType.CONTAINER) {
-            boolean dr = existingJsonContent.optBoolean(ResourceContainer.DISABLE_RETRIEVAL);
-            if (dr == true) {
+            if (existingJsonContent.optBoolean(ResourceContainer.DISABLE_RETRIEVAL)) {
                 LOG.error("updateResource: MUST implement disable_retrieval");
             } else {
                 ResourceContainer.checkAndFixCurrMaxRules(existingJsonContent);
             }
         }
 
+        //increment state tag if exists in parent resource
+        handleStateTagUpdate(onem2mRequest);
+
+        if (onem2mRequest.getParentContentHasBeenModified()) {
+            if(!twc.updateJsonResourceContentString(onem2mRequest.getWriterTransaction(),
+                    onem2mRequest.getParentResourceId(), onem2mRequest.getParentJsonResourceContent().toString())) {
+                return false;
+            }
+        }
+
         if (!twc.updateJsonResourceContentString(
                 onem2mRequest.getWriterTransaction(),
                 onem2mRequest.getResourceId(),
-                onem2mRequest.getJsonResourceContent().toString())) return false;
+                onem2mRequest.getJsonResourceContent().toString())) {
+            return false;
+        }
 
         Onem2mResource onem2mResource = getResource(onem2mRequest.getResourceId());
         onem2mRequest.setOnem2mResource(onem2mResource);
         return true;
+    }
+
+    /**
+     * increment parent's stateTag attribute if present
+     * @param onem2mRequest onem2mRequest
+     */
+    private void handleStateTagUpdate(RequestPrimitive onem2mRequest) {
+        Onem2mResource onem2mParentResource = onem2mRequest.getParentOnem2mResource();
+
+        if (isNull(onem2mRequest.getParentResourceType()) || isNull(onem2mRequest.getParentJsonResourceContent())) {
+            onem2mParentResource = Onem2mDb.getInstance()
+                                           .findResourceUsingURI(onem2mRequest.getParentTargetUri());
+            onem2mRequest.setParentResourceType(onem2mParentResource.getResourceType());
+        }
+
+        if (Onem2m.stateTaggedResourceTypes.contains(onem2mRequest.getParentResourceType())) {
+            JSONObject parentResourceContent = jsonObjectFromResourceContent(onem2mParentResource);
+
+            BaseResource.incrementParentStateTagIfPresent(parentResourceContent);
+            onem2mRequest.setParentJsonResourceContent(parentResourceContent.toString());
+            onem2mRequest.setParentResourceId(onem2mParentResource.getResourceId());
+            onem2mRequest.setParentContentHasBeenModified(true);
+        }
     }
 
     /**
@@ -378,12 +416,10 @@ public class Onem2mDb implements TransactionChainListener {
      * @return true if successfully updated
      */
     public boolean updateSubscriptionResource(String resourceID, String updatedJsonString) {
-
         return twc.updateJsonResourceContentString(null, resourceID, updatedJsonString);
     }
 
     public String findChildFromParentAndChildName(String parentResourceId, String resourceName) {
-
         return trc.retrieveChildResourceIDByName(parentResourceId, resourceName);
     }
 
@@ -842,49 +878,43 @@ public class Onem2mDb implements TransactionChainListener {
 
     private String getCseIdFromResource(Onem2mResource cseResource) {
         // get the content as JSON string and create a JSON object
-        String jsonString = cseResource.getResourceContentJsonString();
-        if (null == jsonString) {
-            LOG.error("CSE resource without content");
-            return null;
-        }
-        JSONObject jsonObj = new JSONObject(jsonString);
-        if (null == jsonObj) {
+        JSONObject resourceContentJson;
+        try {
+            resourceContentJson = jsonObjectFromResourceContent(cseResource);
+        } catch (IllegalArgumentException e) {
             LOG.error("Failed to create Json object from CSE resource content");
             return null;
         }
 
-        if (! jsonObj.has("csi")) {
+        if (!resourceContentJson.has("csi")) {
             LOG.error("CSE resource without CSE-ID set");
             return null;
         }
 
-        return (String) jsonObj.get("csi");
+        return (String) resourceContentJson.get("csi");
     }
 
     private String getAeIdFromResource(Onem2mResource aeResource) {
         // get the content as JSON string and create a JSON object
-        String jsonString = aeResource.getResourceContentJsonString();
-        if (null == jsonString) {
-            LOG.error("AE resource without content");
-            return null;
-        }
-        JSONObject jsonObj = new JSONObject(jsonString);
-        if (null == jsonObj) {
+        JSONObject resourceContentJson;
+        try {
+            resourceContentJson = jsonObjectFromResourceContent(aeResource);
+        } catch (IllegalArgumentException e) {
             LOG.error("Failed to create Json object from AE resource content");
             return null;
         }
 
-        if (! jsonObj.has("aei")) {
+        if (!resourceContentJson.has("aei")) {
             LOG.error("AE resource without AE-ID set");
             return null;
         }
 
-        return (String) jsonObj.get("aei");
+        return (String) resourceContentJson.get("aei");
     }
 
     public Onem2mResource findResourceUsingURI(String targetURI) {
 
-        CseBaseResourceLocator locator = null;
+        CseBaseResourceLocator locator;
         try {
             locator = new CseBaseResourceLocator(targetURI);
         } catch (IllegalArgumentException ex) {
@@ -894,13 +924,8 @@ public class Onem2mDb implements TransactionChainListener {
 
         Onem2mResource onem2mResource = locator.getResource();
 
-        if (onem2mResource == null) {
-            return null; // resource not found
-        } else {
-            // onem2mresource is not empty, check whether this resource is expired.
-            if (!isAlive(onem2mResource)) {
-                return null;
-            }
+        if (onem2mResource == null || !isAlive(onem2mResource)) {
+            return null; // resource not found or check whether this resource is expired
         }
 
         return onem2mResource;
@@ -915,19 +940,13 @@ public class Onem2mDb implements TransactionChainListener {
      * @return true if is not expired
      */
     public Boolean isAlive(Onem2mResource onem2mResource) {
-        try {
-            JSONObject jsonObject = new JSONObject(onem2mResource.getResourceContentJsonString());
-            String exptime = jsonObject.optString(BaseResource.EXPIRATION_TIME);
-            boolean aliveFlag = "".equals(exptime) || Onem2mDateTime.isAlive(exptime);
-            if (!aliveFlag) {
-                Onem2mDb.getInstance().pseudoDeleteOnem2mResource(onem2mResource);
-            }
-            return (aliveFlag);
-
-        } catch (JSONException e) {
-            LOG.error("Invalid JSON {}", onem2mResource.getResourceContentJsonString(), e);
-            throw new IllegalArgumentException("Invalid JSON", e);
+        JSONObject jsonObject = jsonObjectFromResourceContent(onem2mResource);
+        String expTime = jsonObject.optString(BaseResource.EXPIRATION_TIME);
+        boolean aliveFlag = "".equals(expTime) || Onem2mDateTime.isAlive(expTime);
+        if (!aliveFlag) {
+            Onem2mDb.getInstance().pseudoDeleteOnem2mResource(onem2mResource);
         }
+        return (aliveFlag);
     }
 
     /**
@@ -937,27 +956,10 @@ public class Onem2mDb implements TransactionChainListener {
      * @return resource id
      */
     public String findResourceIdUsingURI(String targetURI) {
-
         RequestPrimitiveProcessor onem2mRequest = new RequestPrimitiveProcessor();
         onem2mRequest.setPrimitiveTo(targetURI);
-        ResponsePrimitive onem2mResponse = new ResponsePrimitive();
         Onem2mResource onem2mResource = findResourceUsingURI(targetURI);
-        return onem2mResource != null ? onem2mResource.getResourceId() : null;
-    }
-
-    /**
-     * Using the target URI/attribute, strip off the attribute, and see if a resource is found.  Then look to see
-     * if the attribute exists under this resource type.
-     *
-     * @param uriAndAttribute uri and attributes
-     * @param onem2mRequest request
-     * @param onem2mResponse response
-     * @return found status
-     */
-    public Boolean findResourceUsingURIAndAttribute(String uriAndAttribute,
-                                                    RequestPrimitive onem2mRequest,
-                                                    ResponsePrimitive onem2mResponse) {
-        return false;
+        return nonNull(onem2mResource) ? onem2mResource.getResourceId() : null;
     }
 
     /**
@@ -975,13 +977,12 @@ public class Onem2mDb implements TransactionChainListener {
         JSONObject containerResourceContent;
         String cinLatestResourceId;
         try {
-            containerResourceContent = new JSONObject(containerResource.getResourceContentJsonString());
+            containerResourceContent = jsonObjectFromResourceContent(containerResource);
             cinLatestResourceId = ResourceContainer.getLatestCI(containerResourceContent);
-        } catch (JSONException e) {
-            LOG.error("Invalid JSON {}", containerResource.getResourceContentJsonString(), e);
+        } catch (IllegalArgumentException e) {
             return false;
         }
-        return cinLatestResourceId == null ? false : onem2mResource.getResourceId().equals(cinLatestResourceId);
+        return nonNull(cinLatestResourceId) && onem2mResource.getResourceId().equals(cinLatestResourceId);
     }
 
     /**
@@ -1026,7 +1027,7 @@ public class Onem2mDb implements TransactionChainListener {
             return null;
         }
 
-        String cseName = null;
+        String cseName;
         Onem2mResource onem2mResource = trc.retrieveResourceById(targetResourceId);
         while (onem2mResource != null) {
 
@@ -1037,7 +1038,6 @@ public class Onem2mDb implements TransactionChainListener {
             }
 
             String resourceId = onem2mResource.getParentId();
-
             onem2mResource = trc.retrieveResourceById(resourceId);
         }
 
@@ -1163,28 +1163,30 @@ public class Onem2mDb implements TransactionChainListener {
             throw new IllegalArgumentException("Invalid JSON", e);
         }
 
-        if (!twc.updateJsonResourceContentString(null, containerResource.getResourceId(), containerResourceContent.toString())) {
-            return false;
-        }
-        return true;
+        return twc.updateJsonResourceContentString(null, containerResource.getResourceId(), containerResourceContent.toString());
     }
 
     private boolean handleModifyingParentForDeleteSubscription(String subResourceId, Onem2mResource parentResource) {
+        JSONObject parentResourceContent = jsonObjectFromResourceContent(parentResource);
+        ResourceSubscription.modifyParentForSubscriptionDeletion(parentResourceContent, subResourceId);
 
-        JSONObject parentResourceContent;
+        return twc.updateJsonResourceContentString(null, parentResource.getResourceId(), parentResourceContent.toString());
+    }
+
+    private boolean handleModifyingParentForDeleteContainer(Onem2mResource parentResource) {
+        JSONObject parentResourceContent = jsonObjectFromResourceContent(parentResource);
+        ResourceContainer.modifyParentForContainerDeletion(parentResourceContent);
+
+        return twc.updateJsonResourceContentString(null, parentResource.getResourceId(), parentResourceContent.toString());
+    }
+
+    private static JSONObject jsonObjectFromResourceContent(Onem2mResource resource) {
         try {
-            parentResourceContent = new JSONObject(parentResource.getResourceContentJsonString());
-            ResourceSubscription.modifyParentForSubscriptionDeletion(parentResourceContent, subResourceId);
-
-        } catch (JSONException e) {
-            LOG.error("Invalid JSON {}", parentResource.getResourceContentJsonString(), e);
+            return new JSONObject(resource.getResourceContentJsonString());
+        } catch (JSONException | NullPointerException e) {
+            LOG.error("Invalid JSON {}", resource.getResourceContentJsonString(), e);
             throw new IllegalArgumentException("Invalid JSON", e);
         }
-
-        if (!twc.updateJsonResourceContentString(null, parentResource.getResourceId(), parentResourceContent.toString())) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -1208,11 +1210,10 @@ public class Onem2mDb implements TransactionChainListener {
 
         // cache this resource to be deleted
         String thisResourceId = onem2mResource.getResourceId();
-        String thisResourceName = onem2mResource.getName();
 
         Integer resourceType = Integer.valueOf(onem2mResource.getResourceType());
 
-        String cseBaseCseId = null;
+        String cseBaseCseId;
         switch (resourceType) {
             case Onem2m.ResourceType.CONTENT_INSTANCE:
                 // adjust the curr values in the parent container resource
@@ -1267,6 +1268,10 @@ public class Onem2mDb implements TransactionChainListener {
 
             case Onem2m.ResourceType.SUBSCRIPTION:
                 handleModifyingParentForDeleteSubscription(onem2mResource.getResourceId(), parentOnem2mResource);
+                break;
+
+            case Onem2m.ResourceType.CONTAINER:
+                handleModifyingParentForDeleteContainer(parentOnem2mResource);
                 break;
         }
 
