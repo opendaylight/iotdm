@@ -20,9 +20,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <!-- <name> formatting is used by autorelease to parse and notify projects on
        build failure. Please do not modify this unless you have a good reason. -->
   <name>ODL :: iotdm :: ${project.artifactId}</name>
-  <prerequisites>
-    <maven>3.1.1</maven>
-  </prerequisites>
+
 
   <properties>
     <karaf.localFeature>features4-iotdmcsitdist</karaf.localFeature>

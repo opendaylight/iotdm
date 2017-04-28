@@ -45,6 +45,49 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <classifier>features</classifier>
         <type>xml</type>
       </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>features4-onem2mall</artifactId>
+        <version>${project.version}</version>
+        <classifier>features</classifier>
+        <type>xml</type>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mall</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mall-api</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mall-rest</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mall-ui</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mall-iotdm</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>

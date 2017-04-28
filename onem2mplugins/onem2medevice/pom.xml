@@ -23,9 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <name>ODL :: iotdm :: ${project.artifactId}</name>
   <packaging>pom</packaging>
 
-  <prerequisites>
-    <maven>3.1.1</maven>
-  </prerequisites>
+
 
   <scm>
     <connection>scm:git:ssh://git.opendaylight.org:29418/onem2medevice.git</connection>

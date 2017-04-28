@@ -25,49 +25,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
        build failure. Please do not modify this unless you have a good reason. -->
     <name>ODL :: iotdm :: ${project.artifactId}</name>
 
-    <prerequisites>
-        <maven>3.1.1</maven>
-    </prerequisites>
-
     <properties>
         <mdsal.model.version>0.11.0-SNAPSHOT</mdsal.model.version>
-        <mdsal.version>1.6.0-SNAPSHOT</mdsal.version>
         <yangtools.version>1.2.0-SNAPSHOT</yangtools.version>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.opendaylight.mdsal.model</groupId>
-                <artifactId>mdsal-model-artifacts</artifactId>
-                <version>${mdsal.model.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>mdsal-artifacts</artifactId>
-                <version>${mdsal.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.yangtools</groupId>
-                <artifactId>yangtools-artifacts</artifactId>
-                <version>${yangtools.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
-            <artifactId>features4-yangtools</artifactId>
-            <classifier>features</classifier>
+            <artifactId>odl-yangtools-yang-data</artifactId>
             <version>${yangtools.version}</version>
             <type>xml</type>
+            <classifier>features</classifier>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.mdsal.model</groupId>
@@ -75,14 +44,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <version>${mdsal.model.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.mdsal.model</groupId>
-            <artifactId>features4-mdsal-model</artifactId>
-            <version>${mdsal.model.version}</version>
-            <classifier>features</classifier>
-            <type>xml</type>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>

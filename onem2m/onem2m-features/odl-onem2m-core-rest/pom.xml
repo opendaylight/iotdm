@@ -25,41 +25,24 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
        build failure. Please do not modify this unless you have a good reason. -->
     <name>ODL :: iotdm :: ${project.artifactId}</name>
 
-    <prerequisites>
-        <maven>3.1.1</maven>
-    </prerequisites>
-
     <properties>
         <restconf.version>1.6.0-SNAPSHOT</restconf.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.opendaylight.netconf</groupId>
-                <artifactId>restconf-artifacts</artifactId>
-                <version>${restconf.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
+        <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-restconf</artifactId>
+            <version>${restconf.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-onem2m-core</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.netconf</groupId>
-            <artifactId>features4-restconf</artifactId>
-            <classifier>features</classifier>
-            <version>${restconf.version}</version>
-            <type>xml</type>
-            <scope>runtime</scope>
         </dependency>
     </dependencies>
 </project>
