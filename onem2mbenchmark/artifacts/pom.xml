@@ -45,6 +45,42 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <classifier>features</classifier>
         <type>xml</type>
       </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>features4-onem2mbenchmark</artifactId>
+        <version>${project.version}</version>
+        <classifier>features</classifier>
+        <type>xml</type>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mbenchmark</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mbenchmark-api</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mbenchmark-rest</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.opendaylight.iotdm</groupId>
+        <artifactId>odl-onem2mbenchmark-ui</artifactId>
+        <version>${project.version}</version>
+        <type>xml</type>
+        <classifier>features</classifier>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>

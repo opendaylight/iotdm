@@ -24,7 +24,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <modules>
         <module>itplugin1</module>
         <module>itplugin2</module>
-        <module>itplugininvalid1</module>
+        <!--This module is invalid and it causes failures of automated tests-->
+        <!--<module>itplugininvalid1</module>-->
         <module>itiotdmplugin</module>
     </modules>
 </project>

@@ -23,9 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
        build failure. Please do not modify this unless you have a good reason. -->
   <name>ODL :: iotdm :: ${project.artifactId}</name>
 
-  <prerequisites>
-    <maven>3.1.1</maven>
-  </prerequisites>
+
 
   <properties>
     <mdsal.model.version>0.10.0-SNAPSHOT</mdsal.model.version>

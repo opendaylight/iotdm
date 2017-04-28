@@ -25,10 +25,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
          build failure. Please do not modify this unless you have a good reason. -->
     <name>ODL :: iotdm :: ${project.artifactId}</name>
 
-    <prerequisites>
-        <maven>3.1.1</maven>
-    </prerequisites>
-
     <modules>
         <module>features-onem2mbenchmark</module>
         <module>features4-onem2mbenchmark</module>
@@ -37,23 +33,4 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <module>odl-onem2mbenchmark-ui</module>
         <module>odl-onem2mbenchmark-api</module>
     </modules>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
