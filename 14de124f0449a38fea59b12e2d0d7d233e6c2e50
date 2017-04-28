@@ -1,0 +1,855 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_15a486b8",
+        "filename": "iotdmcsitdist/features/odl-iotdmcsitdist-rest/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "odl-restconf\nDo not depend on feature repos.",
+      "range": {
+        "startLine": 51,
+        "startChar": 24,
+        "endLine": 51,
+        "endChar": 42
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f5a8e28e",
+        "filename": "iotdmcsitdist/features/odl-iotdmcsitdist-rest/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not override scope (for single feature dependencies).",
+      "range": {
+        "startLine": 55,
+        "startChar": 19,
+        "endLine": 55,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_55aa8e85",
+        "filename": "iotdmcsitdist/features/odl-iotdmcsitdist-ui/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Should be already implied by line 67.",
+      "range": {
+        "startLine": 41,
+        "startChar": 24,
+        "endLine": 41,
+        "endChar": 36
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_75c99258",
+        "filename": "iotdmcsitdist/features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f58f4228",
+        "filename": "iotdmcsitdist/features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "This is not really needed and it makes harder to build parts of this project outside ODL infrastructure.",
+      "range": {
+        "startLine": 40,
+        "startChar": 4,
+        "endLine": 40,
+        "endChar": 11
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_95a516a4",
+        "filename": "iotdmcsitdist/iotdmitresources/itiotdmplugin/features/features4-itiotdmplugin/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Is this needed? I believe Odlparent already sets this, but perhaps to a different version.",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_15b926cc",
+        "filename": "iotdmcsitdist/iotdmitresources/itiotdmplugin/features/odl-itiotdmplugin-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 67,
+        "startChar": 24,
+        "endLine": 67,
+        "endChar": 43
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_55af2e7d",
+        "filename": "iotdmcsitdist/iotdmitresources/itiotdmplugin/features/odl-itiotdmplugin-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 45
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_35b42ad0",
+        "filename": "iotdmcsitdist/iotdmitresources/itiotdmplugin/features/odl-itiotdmplugin-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not change scope.",
+      "range": {
+        "startLine": 85,
+        "startChar": 19,
+        "endLine": 85,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_95ccf66b",
+        "filename": "iotdmcsitdist/iotdmitresources/itiotdmplugin/features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_15e006cc",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin1/features/features4-itplugin1/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "odl-iotdm-itplugin1?",
+      "range": {
+        "startLine": 35,
+        "startChar": 24,
+        "endLine": 35,
+        "endChar": 37
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f5e462e2",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin1/features/odl-itplugin1-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 67,
+        "startChar": 24,
+        "endLine": 67,
+        "endChar": 43
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_55e60ee9",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin1/features/odl-itplugin1-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 45
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_35eb8ab1",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin1/features/odl-itplugin1-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not change scope.",
+      "range": {
+        "startLine": 85,
+        "startChar": 19,
+        "endLine": 85,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_95d35603",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin1/features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f50bc28b",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin2/features/features4-itplugin2/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_b5edbab9",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin2/features/odl-itplugin2-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_3539ca41",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin2/features/odl-itplugin2-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 67,
+        "startChar": 24,
+        "endLine": 67,
+        "endChar": 43
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_55344e49",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin2/features/odl-itplugin2-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 45
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f532a25d",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin2/features/odl-itplugin2-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not change scope.",
+      "range": {
+        "startLine": 85,
+        "startChar": 19,
+        "endLine": 85,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_954196ab",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugin2/features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_b5449ab7",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugininvalid1/features/features4-itplugininvalid1/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_1515a69b",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugininvalid1/features/odl-itplugininvalid1-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 67,
+        "startChar": 24,
+        "endLine": 67,
+        "endChar": 43
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_550bae7c",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugininvalid1/features/odl-itplugininvalid1-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 45
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_3510aaa7",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugininvalid1/features/odl-itplugininvalid1-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not change scope.",
+      "range": {
+        "startLine": 85,
+        "startChar": 19,
+        "endLine": 85,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_952876e3",
+        "filename": "iotdmcsitdist/iotdmitresources/itplugininvalid1/features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_75251208",
+        "filename": "iotdmcsitdist/karaf4/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Here the scope is probably correct.",
+      "range": {
+        "startLine": 44,
+        "startChar": 13,
+        "endLine": 44,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_b51bfac8",
+        "filename": "iotdmcsitdist/karaf4/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Here this saves considerable space, so it is ok.",
+      "range": {
+        "startLine": 48,
+        "startChar": 2,
+        "endLine": 48,
+        "endChar": 9
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_35870ad9",
+        "filename": "onem2m/onem2m-features/features4-onem2m/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_956fd62a",
+        "filename": "onem2m/onem2m-features/odl-iotdm-onem2m/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Needed?",
+      "range": {
+        "startLine": 29,
+        "startChar": 15,
+        "endLine": 29,
+        "endChar": 20
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_5559ee8c",
+        "filename": "onem2m/onem2m-features/odl-onem2m-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 67,
+        "startChar": 24,
+        "endLine": 67,
+        "endChar": 43
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_355eea76",
+        "filename": "onem2m/onem2m-features/odl-onem2m-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 45
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_9556b65a",
+        "filename": "onem2m/onem2m-features/odl-onem2m-api/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not change scope.",
+      "range": {
+        "startLine": 85,
+        "startChar": 19,
+        "endLine": 85,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_b5493ab9",
+        "filename": "onem2m/onem2m-features/odl-onem2m-core-rest/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Single features instead of repo.",
+      "range": {
+        "startLine": 58,
+        "startChar": 24,
+        "endLine": 58,
+        "endChar": 42
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_d54cbeca",
+        "filename": "onem2m/onem2m-features/odl-onem2m-core-rest/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Do not change scope.",
+      "range": {
+        "startLine": 62,
+        "startChar": 19,
+        "endLine": 62,
+        "endChar": 26
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_15cac61a",
+        "filename": "onem2m/onem2m-features/odl-onem2m-websocket/src/main/feature/feature.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "The following has to be also listed in pom as dependency.",
+      "range": {
+        "startLine": 14,
+        "startChar": 12,
+        "endLine": 14,
+        "endChar": 16
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da01753e_f5ce222d",
+        "filename": "onem2m/onem2m-features/pom.xml",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-04-28T08:39:31Z",
+      "side": 1,
+      "message": "Not needed.",
+      "range": {
+        "startLine": 51,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 11
+      },
+      "revId": "14de124f0449a38fea59b12e2d0d7d233e6c2e50",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
