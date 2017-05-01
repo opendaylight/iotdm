@@ -53,7 +53,7 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
             LOG.error("Failed to connect to MQTT broker: {}", e);
             this.setState(ChannelState.INITFAILED);
         }
-
+        //configure your MQTT https://wiki.opendaylight.org/view/Iotdm:MQTT-HowTo
         return true;
     }
 
