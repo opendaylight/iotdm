@@ -53,7 +53,9 @@ public class Onem2mMqttPluginClient extends Onem2mBaseCommunicationChannel {
             LOG.error("Failed to connect to MQTT broker: {}", e);
             this.setState(ChannelState.INITFAILED);
         }
-
+        LOG.warn("Set max_queued_messages to 0 (unlimited) or higher number in mosquitto.conf " +
+                "so the broker is able to handle the high traffic environment. " +
+                "Max_inflight_messages can be increased as well, but value too high may cause errors.");
         return true;
     }
 
