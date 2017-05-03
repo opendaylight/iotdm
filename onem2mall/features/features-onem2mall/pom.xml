@@ -29,7 +29,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
     <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
     <onem2msimpleadapter.version>0.3.0-SNAPSHOT</onem2msimpleadapter.version>
-    <onem2mtsdr.version>0.3.0-SNAPSHOT</onem2mtsdr.version>
+    <!--<onem2mtsdr.version>0.3.0-SNAPSHOT</onem2mtsdr.version>-->
     <onem2moic.version>0.3.0-SNAPSHOT</onem2moic.version>
     <iotdmbundleloader.version>0.1.0-SNAPSHOT</iotdmbundleloader.version>
     <iotdmkaraffeatureloader.version>0.1.0-SNAPSHOT</iotdmkaraffeatureloader.version>
@@ -117,14 +117,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <scope>runtime</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.opendaylight.iotdm</groupId>
-      <artifactId>onem2mtsdr-features</artifactId>
-      <version>${onem2mtsdr.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>org.opendaylight.iotdm</groupId>-->
+      <!--<artifactId>onem2mtsdr-features</artifactId>-->
+      <!--<version>${onem2mtsdr.version}</version>-->
+      <!--<classifier>features</classifier>-->
+      <!--<type>xml</type>-->
+      <!--<scope>runtime</scope>-->
+    <!--</dependency>-->
     <dependency>
       <groupId>org.opendaylight.iotdm</groupId>
       <artifactId>onem2moic-features</artifactId>
