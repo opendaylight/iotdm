@@ -125,9 +125,6 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
                 case Onem2m.CoapOption.ONEM2M_TY:
                     resourceTypeOption = String.valueOf(opt.getIntegerValue());
                     break;
-                default:
-                    LOG.error("Unsupported CoAP option: {}", opt.getNumber()); //TODO: should continue or respond with error?
-                    break;
             }
         }
 
