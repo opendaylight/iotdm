@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba068154_ac304757",
+        "filename": "onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/plugins/channels/mqtt/Onem2mMqttPluginClient.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-05-09T10:59:58Z",
+      "side": 1,
+      "message": "These configuration hints should be published on Wiki page and some comments in code could point to the page. Or we can create a readme file for the MQTT plugin. But I don\u0027t think we should add it as log message.",
+      "revId": "5b40365549ad9b4c70ff01e595c8f6b694c6c0d7",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
