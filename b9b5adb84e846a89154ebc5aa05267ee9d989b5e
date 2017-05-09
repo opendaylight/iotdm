@@ -1,0 +1,7 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+2: Tomas Janciga <tjanciga@cisco.com>
+Submitted-by: Tomas Janciga <tjanciga@cisco.com>
+Submitted-at: Tue, 09 May 2017 18:32:25 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/56734
+Project: iotdm
+Branch: refs/heads/stable/carbon
