@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba068154_8cf2a398",
+        "filename": "onem2m/onem2m-protocols/coap/impl/src/main/java/org/opendaylight/iotdm/onem2m/protocols/coap/rx/Onem2mCoapRxRequest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-05-09T10:56:30Z",
+      "side": 0,
+      "message": "Let\u0027s keep the log message but change level to debug.",
+      "revId": "7f312046c988d0650f38c05b4106bf6e6db5a4a0",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
