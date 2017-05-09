@@ -142,7 +142,10 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         String queryString = httpRequest.getQueryString();
         String method = httpRequest.getMethod().toLowerCase();
 
-        if (queryString.contains(RequestPrimitive.ATTRIBUTE_LIST + "=") && !method.contentEquals("get")) {
+        if (null != queryString &&
+            queryString.contains(RequestPrimitive.ATTRIBUTE_LIST + "=") &&
+            ! method.contentEquals("get")) {
+
             IotdmPluginHttpResponse.prepareErrorResponse(
                     httpResponse, "Specifying ATTRIBUTE_LIST not permitted for method " + method, Onem2m.ResponseStatusCode.BAD_REQUEST);
             return false;
