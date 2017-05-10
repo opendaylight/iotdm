@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
@@ -54,7 +55,7 @@ public class ResultContentProcessor {
      */
     private static void produceJsonResultContent(RequestPrimitive onem2mRequest, ResponsePrimitive onem2mResponse) {
 
-        JSONObject tempJsonObject;
+        JSONObject tempJsonObject = null;
         onem2mResponse.setUseHierarchicalAddressing(true);
         Integer drt = onem2mRequest.getPrimitiveDiscoveryResultType();
         if (drt != -1) {
@@ -68,7 +69,7 @@ public class ResultContentProcessor {
 
         // protocol specific info for all rcn values is done here
         String protocol = onem2mRequest.getPrimitiveProtocol();
-        if (protocol != null && protocol.equals(Onem2m.Protocol.HTTP)) {
+        if (nonNull(protocol) && protocol.equals(Onem2m.Protocol.HTTP)) {
             onem2mResponse.setPrimitiveHttpContentType(
                     Onem2m.ContentType.APP_VND_RES_JSON + ";" + RequestPrimitive.RESOURCE_TYPE + "=" +
                             onem2mResource.getResourceType());
@@ -118,7 +119,7 @@ public class ResultContentProcessor {
                     onem2mResponse.setPrimitiveContent(jsonArray.toString());
                 } else {
                     jsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse);
-                    if (jsonObject != null) {
+                    if (nonNull(jsonObject)) {
                         onem2mResponse.setPrimitiveContent(jsonObject.toString());
                     } else {
                         onem2mResponse.setPrimitiveContent("{}");
@@ -137,7 +138,7 @@ public class ResultContentProcessor {
                 // add the address
                 produceJsonResultContentHierarchicalAddress(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
                 tempJsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
-                if (tempJsonObject != null) jsonObject = tempJsonObject;
+                if (nonNull(tempJsonObject)) jsonObject = tempJsonObject;
                 onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 break;
 
@@ -149,7 +150,7 @@ public class ResultContentProcessor {
                     produceJsonResultContentChildResources(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
                     tempJsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
-                    if (tempJsonObject != null) jsonObject = tempJsonObject;
+                    if (nonNull(tempJsonObject)) jsonObject = tempJsonObject;
                     onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 }
                 break;
@@ -162,7 +163,7 @@ public class ResultContentProcessor {
                     produceJsonResultContentChildResourceRefs(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
                     onem2mResponse.setJsonResourceContent(onem2mRequest.getJsonResourceContent());
                     tempJsonObject = produceJsonResultContentAttributes(onem2mRequest, onem2mResource, onem2mResponse, jsonObject);
-                    if (tempJsonObject != null) jsonObject = tempJsonObject;
+                    if (nonNull(tempJsonObject)) jsonObject = tempJsonObject;
                     onem2mResponse.setPrimitiveContent(jsonObject.toString());
                 }
                 break;
@@ -206,9 +207,7 @@ public class ResultContentProcessor {
                                                                     ResponsePrimitive onem2mResponse,
                                                                     JSONObject j) {
 
-        String h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource);
-
-        JsonUtils.put(j, BaseResource.MEMBER_URI, h);
+        JsonUtils.put(j, BaseResource.MEMBER_URI, Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource));
     }
 
     /**
@@ -225,10 +224,10 @@ public class ResultContentProcessor {
 
         if (FilterCriteria.matches(onem2mRequest, onem2mResource, onem2mResponse)) {
 
-            JSONObject j = new JSONObject();
+            JSONObject jsonObject = new JSONObject();
 
             String parentId = onem2mResponse.getJsonResourceContent().optString(BaseResource.PARENT_ID, null);
-            if (parentId != null) {
+            if (nonNull(parentId)) {
                 JsonUtils.put(onem2mResponse.getJsonResourceContent(), BaseResource.PARENT_ID,
                         Onem2mDb.getInstance().getNonHierarchicalNameForResource(parentId));
             }
@@ -239,20 +238,20 @@ public class ResultContentProcessor {
 
             if (onem2mRequest.isCreate) {
                 // if the create contains NAME in the header, or options, do not return name
-                if (onem2mRequest.getPrimitiveName() != null) {
+                if (nonNull(onem2mRequest.getPrimitiveName())) {
                     onem2mResponse.getJsonResourceContent().remove(BaseResource.RESOURCE_NAME);
                 }
 
                 // we start out with all the keys in the content and strip some out if they existed in the create call
                 String[] keys = onem2mResponse.getBaseResource().getInJsonCreateKeys();
-                if (keys != null) {
+                if (nonNull(keys)) {
                     for (String keyToRemove : keys) {
                         onem2mResponse.getJsonResourceContent().remove(keyToRemove);
                     }
                 }
             }
             if (onem2mRequest.isUpdate) {
-                return JsonUtils.put(j, "m2m:" + Onem2m.resourceTypeToString.get(resourceType),
+                return JsonUtils.put(jsonObject, "m2m:" + Onem2m.resourceTypeToString.get(resourceType),
                         onem2mRequest.getBaseResource().getInJsonContent());
             }
 
@@ -260,8 +259,7 @@ public class ResultContentProcessor {
             if (onem2mRequest.getPrimitiveOperation().equals(Onem2m.Operation.RETRIEVE) && onem2mRequest.hasContentAttributeList()) {
                 filterAttributesByAttributeList(onem2mRequest, onem2mResponse);
             }
-
-            return JsonUtils.put(j, "m2m:" + Onem2m.resourceTypeToString.get(resourceType),
+            return JsonUtils.put(jsonObject, "m2m:" + Onem2m.resourceTypeToString.get(resourceType),
                     onem2mResponse.getJsonResourceContent());
         }
 
@@ -307,10 +305,10 @@ public class ResultContentProcessor {
 
         if (FilterCriteria.matches(onem2mRequest, onem2mResource, onem2mResponse)) {
 
-            JSONObject j = new JSONObject();
+            JSONObject jsonObject = new JSONObject();
 
             String parentId = onem2mResponse.getJsonResourceContent().optString(BaseResource.PARENT_ID, null);
-            if (parentId != null) {
+            if (nonNull(parentId)) {
                 JsonUtils.put(onem2mResponse.getJsonResourceContent(), BaseResource.PARENT_ID,
                         Onem2mDb.getInstance().getNonHierarchicalNameForResource(parentId));
             }
@@ -319,11 +317,10 @@ public class ResultContentProcessor {
                 JsonUtils.put(inJsonObject, key, onem2mResponse.getJsonResourceContent().opt(key));
             }
 
-            return JsonUtils.put(j, "m2m:" + Onem2m.resourceTypeToString.get(resourceType), inJsonObject);
+            return JsonUtils.put(jsonObject, "m2m:" + Onem2m.resourceTypeToString.get(resourceType), inJsonObject);
         }
 
         return null;
-        //return inJsonObject;
     }
 
     /**
@@ -335,25 +332,33 @@ public class ResultContentProcessor {
     private static void discoveryJsonResultContentAttributes(RequestPrimitive onem2mRequest,
                                                              Onem2mResource onem2mResource,
                                                              ResponsePrimitive onem2mResponse,
-                                                             JSONArray ja) {
-        Integer count = 0;
-        Integer lim = onem2mRequest.getPrimitiveFilterCriteriaLimit();
-        if (lim == -1) lim = Integer.MAX_VALUE;
+                                                             JSONArray jsonArray) {
+        Integer addedCount = 0;
+        Integer skippedCount = 0;
+        Integer limit = limitFromRequest(onem2mRequest);
+        Integer offset = offsetFromRequest(onem2mRequest);
 
         List<String> resourceIdList =
                 Onem2mDb.getInstance().getHierarchicalResourceList(onem2mResource.getResourceId(),
                         Onem2m.MAX_DISCOVERY_LIMIT);
         for (String resourceId : resourceIdList) {
-            if (count < lim) {
+            if (addedCount < limit) {
 
                 Onem2mResource resource = Onem2mDb.getInstance().getResource(resourceId);
                 onem2mResponse.setJsonResourceContent(resource.getResourceContentJsonString());
 
                 JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse);
-                if (jContent != null) {
-                    ja.put(jContent);
-                    if (++count == lim)
+                if (nonNull(jContent)) {
+                    if (skipAndIncrementOrAdd(jsonArray, jContent, skippedCount, offset)) {
+                        addedCount++;
+                    }
+                    else {
+                        skippedCount++;
+                    }
+
+                    if (Objects.equals(addedCount, limit)) {
                         break;
+                    }
                 }
             }
         }
@@ -370,7 +375,7 @@ public class ResultContentProcessor {
                                                                     Onem2mResource onem2mResource,
                                                                     ResponsePrimitive onem2mResponse,
                                                                     JSONObject j) {
-        String h = null;
+        String hierarchicalResourceName;
 
         String resourceId = onem2mResource.getResourceId();
         Integer resourceType = Integer.valueOf(onem2mResource.getResourceType());
@@ -380,11 +385,11 @@ public class ResultContentProcessor {
         }
 
         if (onem2mResponse.useHierarchicalAddressing()) {
-            h = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource);
+            hierarchicalResourceName = Onem2mDb.getInstance().getHierarchicalNameForResource(onem2mResource);
         } else {
-            h = Onem2mDb.getInstance().getNonHierarchicalNameForResource(resourceId);
+            hierarchicalResourceName = Onem2mDb.getInstance().getNonHierarchicalNameForResource(resourceId);
         }
-        JsonUtils.put(j, BaseResource.MEMBER_URI, h);
+        JsonUtils.put(j, BaseResource.MEMBER_URI, hierarchicalResourceName);
         JsonUtils.put(j, BaseResource.MEMBER_NAME, onem2mResource.getName());
         JsonUtils.put(j, BaseResource.MEMBER_TYPE, resourceType);
 
@@ -401,41 +406,36 @@ public class ResultContentProcessor {
     private static void produceJsonResultContentChildResourceRefs(RequestPrimitive onem2mRequest,
                                                                   Onem2mResource onem2mResource,
                                                                   ResponsePrimitive onem2mResponse,
-                                                                  JSONObject j) {
+                                                                  JSONObject jsonObject) {
 
-        Integer count = 0;
-        Integer lim = onem2mRequest.getPrimitiveFilterCriteriaLimit();
-        if (lim == -1) lim = Integer.MAX_VALUE;
+        Integer limit = limitFromRequest(onem2mRequest);
+        Integer offset = offsetFromRequest(onem2mRequest);
 
-        String h = null;
-        JSONArray ja = new JSONArray();
+        JSONArray resultJsonArray = new JSONArray();
 
         List<Onem2mParentChild> childList = Onem2mDb.getInstance().getParentChildList(onem2mResource
-                .getResourceId());
+                .getResourceId(), limit, offset);
         if (childList.isEmpty()) {
             return;
         }
 
         childList = checkChildList(onem2mRequest, onem2mResource, onem2mResponse, childList);
-        if (childList.isEmpty())
+        if (childList.isEmpty()) {
             return;
+        }
 
         for (Onem2mParentChild child : childList) {
 
-            if (count < lim) {
                 String resourceId = child.getResourceId();
                 Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
                 onem2mResponse.setJsonResourceContent(childResource.getResourceContentJsonString());
                 JSONObject jContent = new JSONObject();
                 if (produceJsonResultContentChildResourceRef(onem2mRequest, childResource, onem2mResponse, jContent)) {
-                    ja.put(jContent);
-                    if (++count == lim)
-                        break;
+                    resultJsonArray.put(jContent);
                 }
-            }
 
         }
-        JsonUtils.put(j, BaseResource.CHILD_RESOURCE_REF, ja);
+        JsonUtils.put(jsonObject, BaseResource.CHILD_RESOURCE_REF, resultJsonArray);
     }
 
     /**
@@ -447,20 +447,20 @@ public class ResultContentProcessor {
     private static void discoveryJsonResultContentChildResourceRefs(RequestPrimitive onem2mRequest,
                                                              Onem2mResource onem2mResource,
                                                              ResponsePrimitive onem2mResponse,
-                                                             JSONArray ja,
+                                                             JSONArray jsonArray,
                                                              boolean showRootAttrs) {
 
-        Integer count = 0;
-        Integer lim = onem2mRequest.getPrimitiveFilterCriteriaLimit();
-        if (lim == -1) lim = Integer.MAX_VALUE;
+        Integer addedCount = 0;
+        Integer skippedCount = 0;
+        Integer limit = limitFromRequest(onem2mRequest);
+        Integer offset = offsetFromRequest(onem2mRequest);
 
         List<String> resourceIdList =
                 Onem2mDb.getInstance().getHierarchicalResourceList(onem2mResource.getResourceId(),
                         Onem2m.MAX_DISCOVERY_LIMIT);
         int resourceListLen = resourceIdList.size();
-        // skip the first as its the root, just want the children
         for (int i = 0; i < resourceListLen; i++) {
-            if (count < lim) {
+            if (addedCount < limit) {
                 String resourceId = resourceIdList.get(i);
                 Onem2mResource resource = Onem2mDb.getInstance().getResource(resourceId);
                 onem2mResponse.setJsonResourceContent(resource.getResourceContentJsonString());
@@ -468,22 +468,69 @@ public class ResultContentProcessor {
                     if (showRootAttrs) {
                         JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse);
 
-                        if (jContent != null) {
-                            ja.put(jContent);
-                            if (++count == lim)
+                        if (nonNull(jContent)) {
+                            if (skipAndIncrementOrAdd(jsonArray, jContent, skippedCount, offset)) {
+                                addedCount++;
+                            }
+                            else {
+                                skippedCount++;
+                            }
+
+                            if (Objects.equals(addedCount, limit)) {
                                 break;
+                            }
                         }
                     }
                 } else {
                     // child resources
                     JSONObject jContent = new JSONObject();
                     if (produceJsonResultContentChildResourceRef(onem2mRequest, resource, onem2mResponse, jContent)) {
-                        ja.put(jContent);
-                        if (++count == lim)
+                        if (skipAndIncrementOrAdd(jsonArray, jContent, skippedCount, offset)) {
+                            addedCount++;
+                        }
+                        else {
+                            skippedCount++;
+                        }
+
+                        if (Objects.equals(addedCount, limit)) {
                             break;
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private static Integer limitFromRequest(RequestPrimitive onem2mRequest) {
+        Integer limit = onem2mRequest.getPrimitiveFilterCriteriaLimit();
+        if (limit == -1) {
+            return Integer.MAX_VALUE;
+        }
+        else {
+            return limit;
+        }
+    }
+
+    private static Integer offsetFromRequest(RequestPrimitive onem2mRequest) {
+        Integer offset = onem2mRequest.getPrimitiveFilterCriteriaOffset();
+        if (offset == -1) {
+            return 0;
+        }
+        else {
+            return offset;
+        }
+    }
+
+    /**
+     * @return true if added false otherwise
+     */
+    private static boolean skipAndIncrementOrAdd(JSONArray jsonArray, JSONObject jContent, Integer skippedCount, Integer offset) {
+        if (skippedCount >= offset) {
+            jsonArray.put(jContent);
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
@@ -499,40 +546,32 @@ public class ResultContentProcessor {
     private static void produceJsonResultContentChildResources(RequestPrimitive onem2mRequest,
                                                                Onem2mResource onem2mResource,
                                                                ResponsePrimitive onem2mResponse,
-                                                               JSONObject j) {
+                                                               JSONObject jsonObject) {
 
-        Integer count = 0;
-        Integer lim = onem2mRequest.getPrimitiveFilterCriteriaLimit();
-        if (lim == -1) lim = Integer.MAX_VALUE;
+        Integer limit = limitFromRequest(onem2mRequest);
+        Integer offset = offsetFromRequest(onem2mRequest);
 
-        String h = null;
-        JSONArray ja = new JSONArray();
+        JSONArray jsonArray = new JSONArray();
         List<Onem2mParentChild> childList =
-                Onem2mDb.getInstance().getParentChildList(onem2mResource.getResourceId());
+                Onem2mDb.getInstance().getParentChildList(onem2mResource.getResourceId(), limit, offset);
 
         //  todo: Check Subscription, if there is no subscription, return error?
         // todo: if there is subscription type E, then send Notification, then wait 3 seconds, then check again?
         childList = checkChildList(onem2mRequest, onem2mResource, onem2mResponse, childList);
-        if (childList.isEmpty())
+        if (childList.isEmpty()) {
             return;
+        }
 
         for (Onem2mParentChild child : childList) {
-
-            if (count < lim) {
-                String resourceId = child.getResourceId();
-
-                Onem2mResource childResource = Onem2mDb.getInstance().getResource(resourceId);
-                onem2mResponse.setJsonResourceContent(childResource.getResourceContentJsonString());
-                JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, childResource, onem2mResponse);
-                if (jContent != null) {
-                    ja.put(jContent);
-                    if (++count == lim)
-                        break;
-                }
+            Onem2mResource childResource = Onem2mDb.getInstance().getResource(child.getResourceId());
+            onem2mResponse.setJsonResourceContent(childResource.getResourceContentJsonString());
+            JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, childResource, onem2mResponse);
+            if (nonNull(jContent)) {
+                jsonArray.put(jContent);
             }
 
         }
-        JsonUtils.put(j, BaseResource.CHILD_RESOURCE, ja);
+        JsonUtils.put(jsonObject, BaseResource.CHILD_RESOURCE, jsonArray);
     }
 
     private static List<Onem2mParentChild> checkChildList(RequestPrimitive onem2mRequest,
@@ -590,27 +629,34 @@ public class ResultContentProcessor {
     private static void discoveryJsonResultContentAttributesAndChildResources(RequestPrimitive onem2mRequest,
                                                                     Onem2mResource onem2mResource,
                                                                     ResponsePrimitive onem2mResponse,
-                                                                    JSONArray ja) {
+                                                                    JSONArray jsonArray) {
 
-        Integer count = 0;
-        Integer lim = onem2mRequest.getPrimitiveFilterCriteriaLimit();
-        if (lim == -1) lim = Integer.MAX_VALUE;
+        Integer addedCount = 0;
+        Integer skippedCount = 0;
+        Integer limit = limitFromRequest(onem2mRequest);
+        Integer offset = offsetFromRequest(onem2mRequest);
 
         List<String> resourceIdList =
                 Onem2mDb.getInstance().getHierarchicalResourceList(onem2mResource.getResourceId(),
                         Onem2m.MAX_DISCOVERY_LIMIT);
-        int resourceListLen = resourceIdList.size();
         // the first resource is the root, show its attrs too
-        for (int i = 0; i < resourceListLen; i++) {
-            if (count < lim) {
-                String resourceId = resourceIdList.get(i);
-                Onem2mResource resource = Onem2mDb.getInstance().getResource(resourceId);
+        for (String aResourceIdList : resourceIdList) {
+            if (addedCount < limit) {
+                Onem2mResource resource = Onem2mDb.getInstance()
+                                                  .getResource(aResourceIdList);
                 onem2mResponse.setJsonResourceContent(resource.getResourceContentJsonString());
                 JSONObject jContent = produceJsonResultContentAttributes(onem2mRequest, resource, onem2mResponse);
-                if (jContent != null) {
-                    ja.put(jContent);
-                    if (++count == lim)
-                    break;
+                if (nonNull(jContent)) {
+                    if (skipAndIncrementOrAdd(jsonArray, jContent, skippedCount, offset)) {
+                        addedCount++;
+                    }
+                    else {
+                        skippedCount++;
+                    }
+
+                    if (Objects.equals(addedCount, limit)) {
+                        break;
+                    }
                 }
             }
         }
