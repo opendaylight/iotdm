@@ -146,7 +146,10 @@ public class Onem2mCoapRxRequest extends Onem2mProtocolRxRequest {
 
         final String queryString = request.getOptions().getUriQueryString();
 
-        if(queryString.contains(RequestPrimitive.ATTRIBUTE_LIST+"=") && code != CoAP.Code.GET) {
+        if(null != queryString &&
+           queryString.contains(RequestPrimitive.ATTRIBUTE_LIST+"=") &&
+           code != CoAP.Code.GET) {
+
             response.prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
                     "Specifying ATTRIBUTE_LIST not permitted for method " + code.name());
             Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
