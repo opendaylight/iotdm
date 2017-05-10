@@ -30,7 +30,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <iotdmbundleloader.version>0.2.0-SNAPSHOT</iotdmbundleloader.version>
         <iotdmkaraffeatureloader.version>0.2.0-SNAPSHOT</iotdmkaraffeatureloader.version>
         <onem2msimpleadapter.version>0.4.0-SNAPSHOT</onem2msimpleadapter.version>
-        <onem2mtsdr.version>0.4.0-SNAPSHOT</onem2mtsdr.version>
+        <!--<onem2mtsdr.version>0.4.0-SNAPSHOT</onem2mtsdr.version>-->
         <onem2moic.version>0.4.0-SNAPSHOT</onem2moic.version>
     </properties>
 

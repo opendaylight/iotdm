@@ -15,7 +15,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <modelVersion>4.0.0</modelVersion>
 
   <modules>
-    <module>onem2mtsdr</module>
+    <!--<module>onem2mtsdr</module>-->
     <module>onem2msimpleadapter</module>
     <module>onem2mexample</module>
     <module>onem2moic</module>
