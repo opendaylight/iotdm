@@ -390,20 +390,21 @@ public class Onem2mDb implements TransactionChainListener {
      * @param onem2mRequest onem2mRequest
      */
     private void handleStateTagUpdate(RequestPrimitive onem2mRequest) {
-        Onem2mResource onem2mParentResource = onem2mRequest.getParentOnem2mResource();
+//        Onem2mResource onem2mParentResource = onem2mRequest.getParentOnem2mResource();
 
         if (isNull(onem2mRequest.getParentResourceType()) || isNull(onem2mRequest.getParentJsonResourceContent())) {
-            onem2mParentResource = Onem2mDb.getInstance()
-                                           .findResourceUsingURI(onem2mRequest.getParentTargetUri());
-            onem2mRequest.setParentResourceType(onem2mParentResource.getResourceType());
+            // This method must not modify the request primitive !
+//            onem2mParentResource = Onem2mDb.getInstance()
+//                                           .findResourceUsingURI(onem2mRequest.getParentTargetUri());
+//            onem2mRequest.setParentResourceType(onem2mParentResource.getResourceType());
+            LOG.error("Request primitive without parent resource type or parent content");
+            return;
         }
 
         if (Onem2m.stateTaggedResourceTypes.contains(onem2mRequest.getParentResourceType())) {
-            JSONObject parentResourceContent = jsonObjectFromResourceContent(onem2mParentResource);
-
+            // Update the state tag of the parent resource
+            JSONObject parentResourceContent =  onem2mRequest.getParentJsonResourceContent();
             BaseResource.incrementParentStateTagIfPresent(parentResourceContent);
-            onem2mRequest.setParentJsonResourceContent(parentResourceContent.toString());
-            onem2mRequest.setParentResourceId(onem2mParentResource.getResourceId());
             onem2mRequest.setParentContentHasBeenModified(true);
         }
     }
