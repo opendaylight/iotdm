@@ -118,10 +118,5 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <artifactId>onem2medevice-api</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>onem2medevice-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 </project>
