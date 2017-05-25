@@ -13,20 +13,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>config-parent</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.6.1-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>iotdmbundleloader-impl</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <!-- <name> formatting is used by autorelease to parse and notify projects on
        build failure. Please do not modify this unless you have a good reason. -->
   <name>ODL :: iotdm :: ${project.artifactId}</name>
 
   <properties>
-    <onem2m.version>0.3.0-SNAPSHOT</onem2m.version>
+    <onem2m.version>0.3.1-SNAPSHOT</onem2m.version>
   </properties>
 
   <dependencies>
