@@ -18,11 +18,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <reference id="rpcProviderRegistry"
              interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry"/>
 
+  <reference id="onem2mDbApi"
+             interface="org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi"/>
+
   <bean id="provider"
     class="org.opendaylight.iotdm.onem2mexample.impl.Onem2mExampleProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker"/>
     <argument ref="rpcProviderRegistry"/>
+    <argument ref="onem2mDbApi"/>
   </bean>
 
 </blueprint>

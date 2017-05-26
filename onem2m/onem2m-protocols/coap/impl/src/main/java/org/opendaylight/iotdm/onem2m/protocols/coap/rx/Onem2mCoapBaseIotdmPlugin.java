@@ -8,33 +8,30 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurable;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurationBuilderFactory;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmCoapsConfigBuilder;
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapResponse;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmCoapsConfigBuilder;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmPluginCoapRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmPluginCoapResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxChannel;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginManager;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginConfigurable;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.coaps.psk.config.CsePsk;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.plugininfra.commchannels.coap.rev170519.coaps.psk.config.CsePsk;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.plugininfra.pluginmanager.rev161110.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.coap.security.config.dtls.certificates.config.KeyStoreConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.coap.protocol.provider.config.ServerConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.CoapProtocolProviderConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.CoapCoapsConfigBuilder;
 
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.Onem2mCoapCoapsConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapRequest, IotdmPluginCoapResponse>,
                                                   IotdmPluginConfigurable,
@@ -72,19 +69,19 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
 
         this.securityLevel = pluginConfig.getServerConfig().getServerSecurityLevel();
 
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+        IotdmPluginManager mgr = IotdmPluginManager.getInstance();
 
         // Check whether CoAP or CoAPs is used
         if ((null == pluginConfig.getServerConfig().isSecureConnection()) ||
             (false == pluginConfig.getServerConfig().isSecureConnection())) {
             try {
                 mgr.registerPluginCoap(this, pluginConfig.getServerConfig().getServerPort().getValue(),
-                                       Onem2mPluginManager.Mode.Exclusive, null);
+                                       IotdmPluginManager.Mode.Exclusive, null);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to register to PluginManager: {}", e);
             }
         } else {
-            IotdmCoapsConfigBuilder builder = IotdmPluginConfigurationBuilderFactory.getNewCoapsConfigBuilder();
+            IotdmCoapsConfigBuilder builder = new IotdmCoapsConfigBuilder();
             if (null != pluginConfig.getCoapsConfig()) {
                 boolean usePsk = false;
                 if (null != pluginConfig.getServerConfig().isUsePresharedKeys()) {
@@ -123,7 +120,7 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
 
             try {
                 mgr.registerPluginCoaps(this, pluginConfig.getServerConfig().getServerPort().getValue(),
-                                        Onem2mPluginManager.Mode.Exclusive, null, builder);
+                                        IotdmPluginManager.Mode.Exclusive, null, builder);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to register at PluginManager: {}", e);
             }
@@ -136,7 +133,7 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
 
     @Override
     public void close() {
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+        IotdmPluginManager mgr = IotdmPluginManager.getInstance();
         mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed COAP Base IoTDM plugin at port: {}, security level: {}",
@@ -155,7 +152,7 @@ public class Onem2mCoapBaseIotdmPlugin implements IotdmPlugin<IotdmPluginCoapReq
 
     @Override
     public PluginSpecificConfiguration getRunningConfig() {
-        return new CoapCoapsConfigBuilder()
+        return new Onem2mCoapCoapsConfigBuilder()
                 .setCoapsConfig(pluginConfig.getCoapsConfig())
                 .setServerConfig(pluginConfig.getServerConfig())
                 .setNotifierPluginConfig(pluginConfig.getNotifierPluginConfig())

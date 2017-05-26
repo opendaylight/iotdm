@@ -11,13 +11,14 @@ import org.eclipse.californium.core.coap.*;
 import org.eclipse.californium.core.network.Exchange;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmPluginCoapRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmPluginCoapResponse;
+import org.opendaylight.iotdm.onem2m.commchannels.common.Onem2mProtocolPluginRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.common.Onem2mProtocolPluginResponse;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.plugins.*;
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapResponse;
 import org.opendaylight.iotdm.onem2medevice.impl.utils.Onem2mXmlUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ public class Onem2mCoapHandler {
         onem2mService = om2mService;
     }
 
-    public void handle(IotdmPluginRequest request, IotdmPluginResponse response) {
+    public void handle(Onem2mProtocolPluginRequest request, Onem2mProtocolPluginResponse response) {
         Exchange exchange = ((IotdmPluginCoapRequest) request).getOriginalRequest();
         CoAP.Code code = exchange.getRequest().getCode();
         OptionSet options = exchange.getRequest().getOptions();
@@ -107,7 +108,7 @@ public class Onem2mCoapHandler {
                 LOG.error("Invalid request received, resource type set in option ({}) and query ({}) mismatch",
                         resourceTypeOption, resourceTypeQuerry);
                 ((IotdmPluginCoapResponse)response).prepareErrorResponse(Onem2m.ResponseStatusCode.BAD_REQUEST,
-                        "Resource type in option and query string mismatch");
+                                                                         "Resource type in option and query string mismatch");
                 Onem2mStats.getInstance().inc(Onem2mStats.COAP_REQUESTS_ERROR);
                 return;
             }

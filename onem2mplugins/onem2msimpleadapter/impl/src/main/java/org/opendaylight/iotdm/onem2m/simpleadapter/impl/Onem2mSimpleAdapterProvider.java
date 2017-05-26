@@ -9,34 +9,36 @@
 package org.opendaylight.iotdm.onem2m.simpleadapter.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
-import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mDbApiClientPlugin;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, BindingAwareProvider, AutoCloseable {
+public class Onem2mSimpleAdapterProvider implements Onem2mDbApiClientPlugin, AutoCloseable {
 
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mSimpleAdapterProvider.class);
-    private DataBroker dataBroker = null;
-    private Onem2mService onem2mService = null;
+    private final DataBroker dataBroker;
+    private final Onem2mService onem2mService;
     private Onem2mSimpleAdapterManager saMgr = null;
     private Onem2mSimpleAdapterHttpServer saHttpServer = null;
+    private final Onem2mPluginsDbApi onem2mDbApi;
     //private Onem2mSimpleAdapterMqttClient saMqttClient = null;
     //private Onem2mSimpleAdapterCoapServer saCoapServer = null;
 
-    @Override
-    public void onSessionInitiated(ProviderContext session) {
-        dataBroker = session.getSALService(DataBroker.class);
-        onem2mService = session.getRpcService(Onem2mService.class);
+    public Onem2mSimpleAdapterProvider(DataBroker dataBroker, RpcProviderRegistry rpcRegistry,
+                                       Onem2mPluginsDbApi onem2mDbApi) {
+        this.dataBroker = dataBroker;
+        this.onem2mService = rpcRegistry.getRpcService(Onem2mService.class);
+        this.onem2mDbApi = onem2mDbApi;
+    }
 
+    public void init() {
         try {
-            Onem2mPluginManager.getInstance().registerDbClientPlugin(this);
+            onem2mDbApi.registerDbClientPlugin(this);
         } catch (IotdmPluginRegistrationException e) {
             LOG.error("Failed to register at PluginDbApi: {}", e);
             return;
@@ -49,12 +51,12 @@ public class Onem2mSimpleAdapterProvider implements IotdmPluginDbClient, Binding
     public void close() throws Exception {
         LOG.info("Onem2mSimpleAdapterProvider Closed");
         saMgr.close();
-        Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
+        onem2mDbApi.unregisterDbClientPlugin(this);
     }
 
     @Override
     public void dbClientStart() {
-        saMgr = new Onem2mSimpleAdapterManager(dataBroker, onem2mService);
+        saMgr = new Onem2mSimpleAdapterManager(dataBroker, onem2mService, onem2mDbApi);
         saHttpServer = new Onem2mSimpleAdapterHttpServer(saMgr);
         //saMqttClient = new Onem2mSimpleAdapterMqttClient(saMgr);
         //saCoapServer = new Onem2mSimpleAdapterCoapServer(saMgr);

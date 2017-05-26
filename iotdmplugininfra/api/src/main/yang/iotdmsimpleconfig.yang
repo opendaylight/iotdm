@@ -1,0 +1,267 @@
+module iotdm-simple-config {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:plugininfra:simpleconfig";
+    prefix iotdm-simple-config;
+
+    description "Simple config data model and RPCs for Iotdm plugins.";
+
+    revision "2016-11-22" {
+        description "Initial revision of iotdm-simple-config yang module.";
+    }
+
+    /*
+     * IoTDM SimpleConfig definitions
+     */
+    grouping key-val-def {
+        leaf cfg-key {
+            description "The unique key identifying value.";
+            type string;
+            mandatory true;
+        }
+        leaf cfg-val {
+            description "The value identified by key.";
+            type string;
+            mandatory true;
+        }
+    }
+
+    grouping key-val-list-def {
+        list key-val-list {
+             description "List of key-value pairs.";
+             /* we can't use: uses key-val-def; */
+             key "cfg-key";
+
+             leaf cfg-key {
+                 description "The unique key identifying value.";
+                 type string;
+                 mandatory true;
+             }
+             leaf cfg-val {
+                description "The value identified by key.";
+                 type string;
+                 mandatory true;
+             }
+        }
+    }
+
+    grouping plugin-simple-config-definition {
+        container plugin-simple-config {
+            description "SimpleConfiguration of plugin instance.";
+            uses key-val-list-def;
+        }
+    }
+
+    grouping iotdm-simple-config-list-definition {
+        list iotdm-simple-config-list {
+            description "List of plugins and instances and their configurations.";
+            key "plugin-name";
+
+            leaf plugin-name {
+                description "Name of the plugin implementation.";
+                type string;
+                mandatory true;
+            }
+
+            list plugin-instances {
+                description "List of plugin instances and their configurations.";
+                key "instance-name";
+
+                leaf instance-name {
+                    description "Name of the plugin instance.";
+                    type string;
+                    mandatory true;
+                }
+
+                uses plugin-simple-config-definition;
+            }
+        }
+    }
+
+
+    container iotdm-simple-config-startup-config {
+        description "Startup configuration of plugin instances.";
+        uses iotdm-simple-config-list-definition;
+    }
+
+
+    /*
+     * IoTDM SimpleConfig RPCs
+     */
+     grouping rpc-input-output-plugin-instance {
+        leaf plugin-name {
+            description "Name of the plugin implementation.";
+            type string;
+            mandatory true;
+        }
+        leaf instance-name {
+            description "Name of the plugin instance.";
+            type string;
+            mandatory true;
+        }
+     }
+
+     grouping rpc-input-output {
+        uses rpc-input-output-plugin-instance;
+
+        uses plugin-simple-config-definition;
+     }
+
+     rpc iplugin-cfg-put {
+        description "Iotdm plugin configuration PUT operation." +
+                    "   INPUT: Configuration for specific plugin instance." +
+                    "   OUTPUT: Current running config of the plugin instance.";
+
+        input {
+            uses rpc-input-output;
+        }
+
+        output {
+            uses rpc-input-output;
+        }
+     }
+
+    rpc iplugin-cfg-del {
+        description "Deletes whole configuration of the plugin instance.";
+
+        input {
+            uses rpc-input-output-plugin-instance;
+        }
+
+        output {
+
+        }
+    }
+
+    rpc iplugin-cfg-get {
+        description "Get whole running config of the plugin instance." +
+                    "   INPUT: Plugin name and instance ID." +
+                    "   OUTPUT: Current running config of the plugin instance.";
+        input {
+            uses rpc-input-output-plugin-instance;
+        }
+
+        output {
+            uses rpc-input-output;
+        }
+    }
+
+    rpc iplugin-cfg-get-startup {
+        description "Get whole startup config of the plugin instance." +
+                    "   INPUT: Plugin name and instance ID." +
+                    "   OUTPUT: Current startup config of the plugin instance.";
+        input {
+            uses rpc-input-output-plugin-instance;
+        }
+
+        output {
+            uses rpc-input-output;
+        }
+    }
+
+
+    /*
+     * Key operations RPCs
+     */
+    grouping rpc-key-instance-and-key-id {
+        uses rpc-input-output-plugin-instance;
+
+        leaf cfg-key {
+            description "Unique key identifying value.";
+            type string;
+            mandatory true;
+        }
+    }
+
+    grouping rpc-key-get-output {
+        uses rpc-key-instance-and-key-id;
+
+        leaf cfg-val {
+            description "Value related to the specific key.";
+            type string;
+            mandatory true;
+        }
+    }
+
+    rpc iplugin-cfg-key-put {
+        description "Iotdm plugin configuration PUT operation with specific key only." +
+                    "   INPUT: Identification of specific plugin instance and key-value pair to be configured." +
+                    "   OUTPUT: Current running config of the plugin instance.";
+        input {
+            uses rpc-input-output-plugin-instance;
+            uses key-val-def;
+        }
+
+        output {
+            uses rpc-input-output;
+        }
+    }
+
+    rpc iplugin-cfg-key-del {
+        description "Deletes specific ke-value pair of the specific plugin instance.";
+
+        input {
+            uses rpc-key-instance-and-key-id;
+        }
+
+        output {
+        }
+    }
+
+    rpc iplugin-cfg-key-get {
+        description "Returns running config value related to specific key of the specific plugin instance." +
+                    "   INPUT: Identification of specific plugin instance and key." +
+                    "   OUTPUT: Current running config value related to the key.";
+        input {
+            uses rpc-key-instance-and-key-id;
+        }
+        output {
+            uses rpc-key-get-output;
+        }
+    }
+
+    rpc iplugin-cfg-key-get-startup {
+        description "Returns startup config value related to specific key of the specific plugin instance." +
+                    "   INPUT: Identification of specific plugin instance and key." +
+                    "   OUTPUT: Current startup config value related to the key.";
+        input {
+            uses rpc-key-instance-and-key-id;
+        }
+        output {
+            uses rpc-key-get-output;
+        }
+    }
+
+
+    /*
+     * RPCs for all plugins / instances
+     */
+     rpc iplugin-cfg-get-running-config {
+        description "Returns running configurations of all plugin instances.";
+
+        input {
+            leaf plugin-name {
+                description "Filters only plugin instances of the specific plugin implementation identified by name.";
+                type string;
+            }
+        }
+
+        output {
+            uses iotdm-simple-config-list-definition;
+        }
+     }
+
+      rpc iplugin-cfg-get-startup-config {
+         description "Returns startup configurations of all plugin instances.";
+
+         input {
+             leaf plugin-name {
+             description "Filters only plugin instances of the specific plugin implementation identified by name.";
+                 type string;
+             }
+         }
+
+         output {
+             uses iotdm-simple-config-list-definition;
+         }
+      }
+}

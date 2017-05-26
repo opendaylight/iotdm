@@ -8,36 +8,33 @@
 package org.opendaylight.iotdm.itiotdmplugin.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRequest;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginResponse;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
-import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigClient;
-import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigException;
-import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmSimpleConfig;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginManager;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRequest;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginResponse;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.simpleconfig.IotdmPluginSimpleConfigClient;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.simpleconfig.IotdmPluginSimpleConfigException;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.simpleconfig.IotdmSimpleConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ItIotdmPluginCustomProtocol implements IotdmPlugin, IotdmPluginDbClient, IotdmPluginSimpleConfigClient {
+public class ItIotdmPluginCustomProtocol implements IotdmPlugin, IotdmPluginSimpleConfigClient {
     private static final Logger LOG = LoggerFactory.getLogger(ItIotdmPluginCustomProtocol.class);
     protected DataBroker dataBroker;
 
     public ItIotdmPluginCustomProtocol(final DataBroker dataBroker) {
         this.dataBroker = dataBroker;
         try {
-            Onem2mPluginManager.getInstance()
-                    .registerSimpleConfigPlugin(this)
-                    .registerDbClientPlugin(this)
-                    .registerPluginHttp(this, 8289, Onem2mPluginManager.Mode.Exclusive, null);
+            IotdmPluginManager.getInstance()
+                              .registerSimpleConfigPlugin(this)
+                              .registerPluginHttp(this, 8289, IotdmPluginManager.Mode.Exclusive, null);
         } catch (final IotdmPluginRegistrationException e) {
             LOG.error("Failed to register plugin: {}", e);
             // Clear all possibly successful registrations
-            Onem2mPluginManager.getInstance()
-                    .unregisterIotdmPlugin(this)
-                    .unregisterDbClientPlugin(this)
-                    .unregisterSimpleConfigPlugin(this);
+            IotdmPluginManager.getInstance()
+                              .unregisterIotdmPlugin(this)
+                              .unregisterSimpleConfigPlugin(this);
         }
     }
 
@@ -52,19 +49,10 @@ public class ItIotdmPluginCustomProtocol implements IotdmPlugin, IotdmPluginDbCl
     }
 
     @Override
-    public void dbClientStart() throws Exception {
-    }
-
-    @Override
-    public void dbClientStop() {
-    }
-
-    @Override
     public void close() {
-        Onem2mPluginManager.getInstance()
-                .unregisterIotdmPlugin(this)
-                .unregisterDbClientPlugin(this)
-                .unregisterIotdmPlugin(this);
+        IotdmPluginManager.getInstance()
+                          .unregisterIotdmPlugin(this)
+                          .unregisterIotdmPlugin(this);
     }
 
     @Override

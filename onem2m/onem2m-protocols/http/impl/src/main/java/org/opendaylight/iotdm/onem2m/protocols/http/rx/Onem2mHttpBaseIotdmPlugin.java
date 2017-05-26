@@ -8,18 +8,21 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.http.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.*;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmHttpsConfigBuilder;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
-import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginManager;
+import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginConfigurable;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
+import org.opendaylight.iotdm.onem2m.commchannels.http.IotdmHttpsConfigBuilder;
+import org.opendaylight.iotdm.onem2m.commchannels.http.IotdmPluginHttpRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.http.IotdmPluginHttpResponse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxChannel;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.plugininfra.pluginmanager.rev161110.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev170110.HttpProtocolProviderConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev170110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.HttpHttpsConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.http.rev170110.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.Onem2mHttpHttpsConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +35,8 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
     private final String pluginName;
 
     private final Onem2mProtocolRxHandler requestHandler;
-    private final Onem2mRxRequestAbstractFactory<Onem2mHttpRxRequest,IotdmPluginHttpRequest,IotdmPluginHttpResponse> requestFactory;
+    private final Onem2mRxRequestAbstractFactory<Onem2mHttpRxRequest,IotdmPluginHttpRequest,IotdmPluginHttpResponse>
+        requestFactory;
     private final Onem2mService onem2mService;
     private final HttpProtocolProviderConfig pluginConfig;
 
@@ -73,12 +77,12 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
     public void start() throws RuntimeException {
         this.securityLevel = pluginConfig.getServerConfig().getServerSecurityLevel();
 
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+        IotdmPluginManager mgr = IotdmPluginManager.getInstance();
 
         // Check whether HTTP or HTTPS is used
         if ((null != pluginConfig.getServerConfig().isSecureConnection()) &&
             (true == pluginConfig.getServerConfig().isSecureConnection())) {
-            IotdmHttpsConfigBuilder cfgBuilder = IotdmPluginConfigurationBuilderFactory.getNewHttpsConfigBuilder();
+            IotdmHttpsConfigBuilder cfgBuilder = new IotdmHttpsConfigBuilder();
 
             if (null == this.pluginConfig.getHttpsConfig() ||
                 null == this.pluginConfig.getHttpsConfig().getKeyStoreConfig()) {
@@ -96,7 +100,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
             cfgBuilder.verify();
             try {
                 mgr.registerPluginHttps(this, pluginConfig.getServerConfig().getServerPort().getValue(),
-                                        Onem2mPluginManager.Mode.Exclusive,
+                                        IotdmPluginManager.Mode.Exclusive,
                                         null, cfgBuilder);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to start HTTPS Base IoTDM plugin: {}", e);
@@ -109,7 +113,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
         } else {
             try {
                 mgr.registerPluginHttp(this, pluginConfig.getServerConfig().getServerPort().getValue(),
-                                       Onem2mPluginManager.Mode.Exclusive, null);
+                                       IotdmPluginManager.Mode.Exclusive, null);
             } catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to start HTTP Base IoTDM plugin: {}", e);
                 return;
@@ -123,7 +127,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
 
     @Override
     public void close() {
-        Onem2mPluginManager mgr = Onem2mPluginManager.getInstance();
+        IotdmPluginManager mgr = IotdmPluginManager.getInstance();
         mgr.unregisterIotdmPlugin(this);
 
         LOG.info("Closed HTTP Base IoTDM plugin at port: {}, security level: {}",
@@ -143,7 +147,7 @@ public class Onem2mHttpBaseIotdmPlugin implements IotdmPlugin<IotdmPluginHttpReq
 
     @Override
     public PluginSpecificConfiguration getRunningConfig() {
-        return new HttpHttpsConfigBuilder()
+        return new Onem2mHttpHttpsConfigBuilder()
             .setHttpsConfig(pluginConfig.getHttpsConfig())
             .setServerConfig(pluginConfig.getServerConfig())
             .setNotifierPluginConfig(pluginConfig.getNotifierPluginConfig())

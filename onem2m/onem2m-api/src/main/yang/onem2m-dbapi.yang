@@ -1,0 +1,86 @@
+module onem2m-db-api {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:onem2m:dbapi";
+    prefix "onem2m-db-api";
+
+    import iotdm-plugin-manager { prefix iotdm-plugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Service definition for onem2m DB API";
+
+    revision "2017-15-5" {
+        description "Initial revision";
+    }
+
+    grouping onem2m-db-api-client-data {
+        leaf db-api-client-state {
+            description "State of the DB API Client plugin.";
+            type string;
+            mandatory true;
+        }
+    }
+
+    /*
+     * Get registrations of DB API client plugins
+     */
+     grouping onem2m-db-api-client-registration-definition {
+        container db-api-client-plugin-data {
+            uses iotdm-plugin-manager:iotdm-plugin-data-definition;
+            uses onem2m-db-api-client-data;
+        }
+     }
+
+     rpc onem2m-db-api-client-registrations {
+        description "Returns table of registered plugin instances implementing DB API Client interface.";
+
+        input {
+            uses iotdm-plugin-manager:iotdm-plugin-filters;
+        }
+
+        output {
+            list registered-db-api-client-plugins-table {
+                description "Table of plugins implementing DB API client interface.";
+                key "plugin-name";
+
+                leaf plugin-name {
+                    description "Name of the plugin implementation.";
+                    mandatory true;
+                    type string;
+                }
+
+                list registered-db-api-client-plugin-instances {
+                    key "plugin-instance-name";
+                    leaf plugin-instance-name {
+                        description "Unique plugin instance name.";
+                        mandatory true;
+                        type string;
+                    }
+
+                    uses onem2m-db-api-client-registration-definition;
+                }
+            }
+        }
+     }
+
+    augment "/iotdm-plugin-manager:iotdm-plugin-manager-custom-services
+             /iotdm-plugin-manager:output
+             /iotdm-plugin-manager:iotdm-plugin-manager-custom-services-list
+             /iotdm-plugin-manager:custom-service-plugins-table
+             /iotdm-plugin-manager:custom-service-plugin-instances
+             /iotdm-plugin-manager:plugin-instance-custom-data" {
+        case onem2m-db-api-data {
+            uses onem2m-db-api-client-data;
+        }
+    }
+
+     augment "/iotdm-plugin-manager:iotdm-plugin-manager-plugin-data
+              /iotdm-plugin-manager:output
+              /iotdm-plugin-manager:iotdm-plugin-manager-plugins-table
+              /iotdm-plugin-manager:iotdm-plugin-manager-plugin-instances
+              /iotdm-plugin-manager:custom-services-list
+              /iotdm-plugin-manager:custom-service-plugin-data" {
+         case onem2m-db-api-plugin-data {
+             uses onem2m-db-api-client-data;
+         }
+     }
+}

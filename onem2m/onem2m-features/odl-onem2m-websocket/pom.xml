@@ -28,7 +28,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <properties>
         <mdsal.version>1.6.0-SNAPSHOT</mdsal.version>
         <jetty.version>8.1.19.v20160209</jetty.version>
-        <configfile.directory>etc/opendaylight/karaf</configfile.directory>
     </properties>
 
     <dependencies>
@@ -119,13 +118,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-protocols-common</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.iotdm</groupId>
-            <artifactId>onem2m-protocol-websocket</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>config</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

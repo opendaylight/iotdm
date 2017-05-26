@@ -8,37 +8,36 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.websocket;
 
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
-import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.websocket.rx.Onem2mWebsocketIotdmPlugin;
-import org.opendaylight.iotdm.onem2m.protocols.websocket.rx.Onem2mWebsocketIotdmPluginConfig;
 import org.opendaylight.iotdm.onem2m.protocols.websocket.rx.Onem2mWebsocketRxRequestFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.websocket.rev141210.Onem2mProtocolWebsocketProviders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Onem2mWebsocketProvider implements BindingAwareProvider, AutoCloseable {
+public class Onem2mWebsocketProvider implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mWebsocketProvider.class);
-    protected final Onem2mWebsocketIotdmPluginConfig serverConfig;
+    protected final Onem2mProtocolWebsocketProviders configuration;
 
     protected Onem2mService onem2mService;
 
     protected Onem2mWebsocketIotdmPlugin onem2mWebsocketIotdmPlugin = null;
 
-    public Onem2mWebsocketProvider(Onem2mWebsocketIotdmPluginConfig serverConfig) {
-        this.serverConfig = serverConfig;
+    public Onem2mWebsocketProvider(RpcProviderRegistry rpcRegistry,
+                                   Onem2mProtocolWebsocketProviders configuration) {
+        this.onem2mService = rpcRegistry.getRpcService(Onem2mService.class);
+        this.configuration = configuration;
     }
 
-    @Override
-    public void onSessionInitiated(ProviderContext session) {
-        onem2mService = session.getRpcService(Onem2mService.class);
+    public void init() {
         try {
             onem2mWebsocketIotdmPlugin = new Onem2mWebsocketIotdmPlugin(new Onem2mProtocolRxHandler(),
                                                                       new Onem2mWebsocketRxRequestFactory(),
                                                                       onem2mService);
-            onem2mWebsocketIotdmPlugin.start(this.serverConfig);
+            onem2mWebsocketIotdmPlugin.start(this.configuration);
         } catch (Exception e) {
             LOG.error("Failed to start websocket server: {}", e);
         }

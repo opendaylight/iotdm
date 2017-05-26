@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright(c) Cisco Systems, Inc.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-iotdm-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.iotdm/onem2m-features/{{VERSION}}/xml/features</repository>
+
+    <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
+    <!-- the onem2m yang model and rpc's  -->
+    <feature name='odl-iotdmplugininfra-api' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: api '>
+        <feature version='${yangtools.version}'>odl-yangtools-yang-data</feature>
+        <feature version='${yangtools.version}'>odl-yangtools-common</feature>
+        <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/iotdmplugininfra-api/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-commchannels' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: commchannels '>
+        <feature version='${project.version}'>odl-iotdmplugininfra-commchannels-common</feature>
+        <feature version='${project.version}'>odl-iotdmplugininfra-commchannels-http</feature>
+        <feature version='${project.version}'>odl-iotdmplugininfra-commchannels-coap</feature>
+        <feature version='${project.version}'>odl-iotdmplugininfra-commchannels-mqtt</feature>
+        <feature version='${project.version}'>odl-iotdmplugininfra-commchannels-websocket</feature>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-pluginmanager' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: pluginmanager '>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+
+        <!--TODO remove this feature dependency when dynamic registration of communication channels implemented -->
+        <!--<feature version='${onem2m.version}'>odl-onem2m-core</feature>-->
+        <feature version='${onem2m.version}'>odl-onem2m-commchannels-http</feature>
+        <feature version='${onem2m.version}'>odl-onem2m-commchannels-coap</feature>
+        <feature version='${onem2m.version}'>odl-onem2m-commchannels-mqtt</feature>
+        <feature version='${onem2m.version}'>odl-onem2m-commchannels-websocket</feature>
+
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-services/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-utils/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-impl/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra' version='${project.version}' description='OpenDaylight :: iotdmplugininfra'>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+        <feature version='${project.version}'>odl-iotdmplugininfra-pluginmanager</feature>
+        <feature version='${project.version}'>odl-iotdmplugininfra-commchannels</feature>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-commchannels-common' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: commchannels-common '>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-commchannels-http' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: commchannels-http '>
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-http/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-commchannels-coap' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: commchannels-coap '>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
+        <bundle>mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-coap/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-commchannels-mqtt' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: commchannels-mqtt '>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-mqtt/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-iotdmplugininfra-commchannels-websocket' version='${project.version}' description='OpenDaylight :: iotdmplugininfra :: commchannels-websocket '>
+        <feature version='${project.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-websocket/{{VERSION}}</bundle>
+    </feature>
+
+</features>

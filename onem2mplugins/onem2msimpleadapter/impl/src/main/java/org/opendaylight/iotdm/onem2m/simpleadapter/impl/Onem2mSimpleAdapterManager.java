@@ -19,7 +19,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.iotdm.onem2m.client.*;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.Onem2mSimpleAdapterConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2msimpleadapter.rev160210.onem2m.simple.adapter.config.SimpleAdapterDesc;
@@ -47,9 +47,11 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
     private Onem2mSimpleAdapterHttpServer onem2mHttpServer = null;
     //private Onem2mSimpleAdapterMqttClient onem2mMqttClient = null;
     //private Onem2mSimpleAdapterCoapServer onem2mCoapServer = null;
-    private Onem2mService onem2mService;
+    private final Onem2mService onem2mService;
+    private final Onem2mPluginsDbApi onem2mDbApi;
 
-    public Onem2mSimpleAdapterManager(DataBroker dataBroker, Onem2mService onem2mService) {
+    public Onem2mSimpleAdapterManager(DataBroker dataBroker, Onem2mService onem2mService,
+                                      Onem2mPluginsDbApi onem2mDbApi) {
 
         this.dataBroker = dataBroker;
         // listen for changes to simple adapter descriptors
@@ -58,6 +60,7 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
         // cache each of the simple adapter descriptors
         simpleAdapterMap = new HashMap<String,SimpleAdapterDesc>();
         this.onem2mService = onem2mService;
+        this.onem2mDbApi = onem2mDbApi;
         LOG.info("Created Onem2mSimpleAdapterManager");
 
     }
@@ -154,7 +157,7 @@ public class Onem2mSimpleAdapterManager implements ClusteredDataTreeChangeListen
             if (uri.contentEquals(trim(desc.getOnem2mTargetId()))) {
                 String onem2mResourceId = null;
                 try {
-                    onem2mResourceId = Onem2mPluginsDbApi.getInstance().findResourceIdUsingURI(uri);
+                    onem2mResourceId = onem2mDbApi.findResourceIdUsingURI(uri);
                 } catch (Exception e) {
                     LOG.error("Failed to find resourceId: {}", e);
                 }

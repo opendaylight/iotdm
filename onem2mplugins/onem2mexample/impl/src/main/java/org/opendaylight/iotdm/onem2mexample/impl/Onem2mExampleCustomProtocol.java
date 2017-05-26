@@ -13,16 +13,21 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.iotdm.onem2m.client.*;
+import org.opendaylight.iotdm.onem2m.commchannels.http.IotdmPluginHttpRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.database.transactionCore.TransactionManager;
-import org.opendaylight.iotdm.onem2m.plugins.*;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
-import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigClient;
-import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmPluginSimpleConfigException;
-import org.opendaylight.iotdm.onem2m.plugins.simpleconfig.IotdmSimpleConfig;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mDatastoreListener;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mDbApiClientPlugin;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginManager;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRequest;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginResponse;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.simpleconfig.IotdmPluginSimpleConfigClient;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.simpleconfig.IotdmPluginSimpleConfigException;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.simpleconfig.IotdmSimpleConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
 import org.slf4j.Logger;
@@ -44,13 +49,14 @@ import java.util.Map;
  * onem2m/onem2m-core/src/main/java/org/opendaylight/iotdm/onem2m/plugins/README.md
  */
 public class Onem2mExampleCustomProtocol implements IotdmPlugin,
-                                                    IotdmPluginDbClient,
+                                                    Onem2mDbApiClientPlugin,
                                                     IotdmPluginSimpleConfigClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mExampleCustomProtocol.class);
     private static final int defaultHttpPort = 8283;
-    protected DataBroker dataBroker;
-    protected Onem2mService onem2mService;
+    protected final DataBroker dataBroker;
+    protected final Onem2mService onem2mService;
+    protected final Onem2mPluginsDbApi dbApi;
     private Onem2mDataStoreChangeHandler onem2mDataStoreChangeHandler;
 
     private static final String ONEM2M_EXAMPLE_CSE_NAME = "ONEM2M_EXAMPLE_CSE_NAME";
@@ -59,32 +65,35 @@ public class Onem2mExampleCustomProtocol implements IotdmPlugin,
     private TransactionManager transactionManager;
     private boolean cseInitialized = false;
 
-    public Onem2mExampleCustomProtocol(DataBroker dataBroker, Onem2mService onem2mService) {
+    public Onem2mExampleCustomProtocol(DataBroker dataBroker, Onem2mService onem2mService,
+                                       Onem2mPluginsDbApi dbApi) {
         this.onem2mService = onem2mService;
         this.dataBroker = dataBroker;
+        this.dbApi = dbApi;
+
         try {
+
+            // Register as DB API client
+            dbApi.registerDbClientPlugin(this);
 
             /*
              * Example-5. Initial registrations of implemented interfaces
              */
-            Onem2mPluginManager.getInstance()
-                    // Register as DB API client
-                    .registerDbClientPlugin(this)
+            IotdmPluginManager.getInstance()
+                              // Register to receive requests use suitable method for required plugin (https, coap, websocket ...)
+                              .registerPluginHttp(this, defaultHttpPort, IotdmPluginManager.Mode.Exclusive, null)
 
-                    // Register to receive requests use suitable method for required plugin (https, coap, websocket ...)
-                    .registerPluginHttp(this, defaultHttpPort, Onem2mPluginManager.Mode.Exclusive, null)
-
-                    // Register for configuration
-                    .registerSimpleConfigPlugin(this);
+                              // Register for configuration
+                              .registerSimpleConfigPlugin(this);
 
         } catch (IotdmPluginRegistrationException e) {
             LOG.error("Failed to register plugin: {}", e);
+            dbApi.unregisterDbClientPlugin(this);
 
             // Clear all possibly successful registrations
-            Onem2mPluginManager.getInstance()
-                    .unregisterDbClientPlugin(this)
-                    .unregisterIotdmPlugin(this)
-                    .unregisterSimpleConfigPlugin(this);
+            IotdmPluginManager.getInstance()
+                              .unregisterIotdmPlugin(this)
+                              .unregisterSimpleConfigPlugin(this);
         }
     }
 
@@ -99,11 +108,12 @@ public class Onem2mExampleCustomProtocol implements IotdmPlugin,
 
     @Override
     public void close() {
+        dbApi.unregisterDbClientPlugin(this);
+
         // Clear all registrations
-        Onem2mPluginManager.getInstance()
-                .unregisterIotdmPlugin(this)
-                .unregisterDbClientPlugin(this)
-                .unregisterSimpleConfigPlugin(this);
+        IotdmPluginManager.getInstance()
+                          .unregisterIotdmPlugin(this)
+                          .unregisterSimpleConfigPlugin(this);
 
         // Clear current configuration
         cfg = null;
@@ -189,8 +199,8 @@ public class Onem2mExampleCustomProtocol implements IotdmPlugin,
 
         // Register to new port number in make before break manner
         try {
-            Onem2mPluginManager.getInstance()
-                    .registerPluginHttp(this, newPort, Onem2mPluginManager.Mode.Exclusive, null);
+            IotdmPluginManager.getInstance()
+                              .registerPluginHttp(this, newPort, IotdmPluginManager.Mode.Exclusive, null);
         } catch (IotdmPluginRegistrationException e) {
             LOG.error("Failed to register to new port: {}, {}", newPort, e);
             throw new IotdmPluginSimpleConfigException("Unable to register to new port number (" +
@@ -200,7 +210,7 @@ public class Onem2mExampleCustomProtocol implements IotdmPlugin,
         }
 
         // New registration passed, unregister the previous one
-        Onem2mPluginManager.getInstance().unregisterIotdmPlugin(this, "http", oldPort);
+        IotdmPluginManager.getInstance().unregisterIotdmPlugin(this, "http", oldPort);
     }
 
     @Override

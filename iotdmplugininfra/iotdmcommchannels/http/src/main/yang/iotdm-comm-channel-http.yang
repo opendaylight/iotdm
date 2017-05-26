@@ -1,0 +1,34 @@
+module iotdm-comm-channel-http {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:plugininfra:commchannels:http";
+    prefix "iotdm-comm-channel-http";
+
+    import iotdm-comm-channels { prefix iotdm-comm-channels; revision-date 2017-05-19; }
+    import iotdm-plugin-manager { prefix iotdm-polugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Defintions of IoTDM plugin infractructure HTTP(S) communication channel ";
+
+    revision "2017-05-19" {
+        description
+            "Initial revision of iotdm-comm-channel-http model";
+    }
+
+    grouping https-channel-config-definition {
+        uses iotdm-comm-channels:java-key-store-config;
+    }
+
+    augment "iotdm-plugin-manager:iotdm-plugin-manager-communication-channels/
+             iotdm-plugin-manager:output/
+             iotdm-plugin-manager:iotdm-communication-channel-protocols/
+             iotdm-plugin-manager:iotdm-communication-channel-addresses/
+             iotdm-plugin-manager:iotdm-communication-channel-ports/
+             iotdm-plugin-manager:channel-data/
+             iotdm-plugin-manager:channel-configuration/
+             iotdm-plugin-manager:channel-specific-configuration" {
+
+        case https-channel-config {
+            uses https-channel-config-definition;
+        }
+    }
+}

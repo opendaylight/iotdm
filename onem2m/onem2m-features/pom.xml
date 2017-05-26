@@ -42,5 +42,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <module>odl-onem2m-core-rest</module>
         <module>odl-onem2m-ui</module>
         <module>odl-iotdm-onem2m</module>
+        <module>odl-onem2m-commchannels</module>
+        <module>odl-onem2m-commchannels-common</module>
+        <module>odl-onem2m-commchannels-http</module>
+        <module>odl-onem2m-commchannels-coap</module>
+        <module>odl-onem2m-commchannels-mqtt</module>
+        <module>odl-onem2m-commchannels-websocket</module>
     </modules>
 </project>

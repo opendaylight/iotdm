@@ -28,10 +28,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <dependencies>
         <dependency>
-            <groupId>org.opendaylight.iotdm</groupId>
-            <artifactId>onem2m-core</artifactId>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>pluginmanager-api-plugins</artifactId>
             <version>0.4.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>pluginmanager-impl</artifactId>
+            <version>0.4.0-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>itiotdmplugin-api</artifactId>

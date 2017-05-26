@@ -8,21 +8,21 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.mqtt.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPlugin;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginConfigurable;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
-import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseRequest;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
-import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseResponse;
+import org.opendaylight.iotdm.onem2m.commchannels.common.IotdmPluginOnem2mBaseRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.common.IotdmPluginOnem2mBaseResponse;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginManager;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxChannel;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPlugin;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginConfigurable;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2mpluginmanager.rev161110.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.plugininfra.pluginmanager.rev161110.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.mqtt.rev170118.Onem2mProtocolMqttProviders;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.mqtt.rev170118.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.Onem2mMqttConfigBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.mqtt.rev170118.mqtt.protocol.provider.config.MqttClientConfig;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.mqtt.rev170118.onem2m.plugin.manager.plugin.data.output.onem2m.plugin.manager.plugins.table.onem2m.plugin.manager.plugin.instances.plugin.configuration.plugin.specific.configuration.MqttConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,10 +69,10 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
 
         if (null != clientCfg) {
             try {
-                Onem2mPluginManager.getInstance()
-                                   .registerPluginMQTT(this, clientCfg.getMqttBrokerPort().getValue(),
-                                                       clientCfg.getMqttBrokerIp().getValue(),
-                                                       Onem2mPluginManager.Mode.Exclusive, null);
+                IotdmPluginManager.getInstance()
+                                  .registerPluginMQTT(this, clientCfg.getMqttBrokerPort().getValue(),
+                                                      clientCfg.getMqttBrokerIp().getValue(),
+                                                      IotdmPluginManager.Mode.Exclusive, null);
             }
             catch (IotdmPluginRegistrationException e) {
                 LOG.error("Failed to register at PluginManager: {}", e);
@@ -92,8 +92,8 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
         MqttClientConfig clientCfg = configuration.getMqttClientConfig();
 
         if (null != clientCfg) {
-            Onem2mPluginManager.getInstance()
-                               .unregisterIotdmPlugin(this);
+            IotdmPluginManager.getInstance()
+                              .unregisterIotdmPlugin(this);
 
             LOG.info("Closed MQTT Base IoTDM plugin for broker port: {}, ip: {}, security level: {}",
                      clientCfg.getMqttBrokerPort().getValue(), clientCfg.getMqttBrokerIp().getValue(),
@@ -116,11 +116,11 @@ public class Onem2mMqttIotdmPlugin implements IotdmPlugin<IotdmPluginOnem2mBaseR
     public PluginSpecificConfiguration getRunningConfig() {
 
         if (null != this.configuration) {
-            return new MqttConfigBuilder()
+            return new Onem2mMqttConfigBuilder()
                 .setMqttClientConfig(this.configuration.getMqttClientConfig())
                 .build();
         }
 
-        return new MqttConfigBuilder().build();
+        return new Onem2mMqttConfigBuilder().build();
     }
 }

@@ -9,6 +9,7 @@ package org.opendaylight.iotdm.onem2medevice.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +22,13 @@ public class Onem2mEdeviceProvider {
     Onem2mEdeviceHandler onem2mEdeviceHandler;
     private final DataBroker dataBroker;
     private final RpcProviderRegistry rpcProviderRegistry;
+    private final Onem2mPluginsDbApi onem2mDbApi;
 
-    public Onem2mEdeviceProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcProviderRegistry) {
+    public Onem2mEdeviceProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcProviderRegistry,
+                                 final Onem2mPluginsDbApi onem2mDbApi) {
         this.dataBroker = dataBroker;
         this.rpcProviderRegistry = rpcProviderRegistry;
+        this.onem2mDbApi = onem2mDbApi;
     }
 
     /**
@@ -36,7 +40,7 @@ public class Onem2mEdeviceProvider {
         } catch(InterruptedException ignored) {}
 
         onem2mService = rpcProviderRegistry.getRpcService(Onem2mService.class);
-        onem2mEdeviceHandler = new Onem2mEdeviceHandler(dataBroker, onem2mService);
+        onem2mEdeviceHandler = new Onem2mEdeviceHandler(dataBroker, onem2mService, onem2mDbApi);
         LOG.info("Onem2mEdeviceProvider Session Initiated");
     }
 

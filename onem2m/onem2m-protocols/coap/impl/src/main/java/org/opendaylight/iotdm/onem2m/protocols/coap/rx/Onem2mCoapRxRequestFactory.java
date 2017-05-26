@@ -8,8 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.coap.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.coap.IotdmPluginCoapResponse;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmPluginCoapRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.coap.IotdmPluginCoapResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;

@@ -5,7 +5,9 @@ module onem2m-core {
 
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
-    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
+    import iotdm-comm-channel-coap { prefix iotdm-comm-channel-coap; revision-date 2017-05-19; }
+    import iotdm-comm-channel-http { prefix iotdm-comm-channel-http; revision-date 2017-05-19; }
+    import iotdm-comm-channels { prefix iotdm-comm-channels; revision-date 2017-05-19; }
 
     description
         "Service definition for onem2m project";
@@ -26,15 +28,15 @@ module onem2m-core {
     grouping onem2m-core-https-config {
         container default-https-config {
             description "Default configuration of Java KeyStore file which is used for HTTPS connections by default.";
-            uses onem2m-plugin-manager:java-key-store-config;
+            uses iotdm-comm-channels:java-key-store-config;
         }
     }
 
     grouping onem2m-core-coaps-config {
         container default-coaps-config {
             description "Default configuration of Java KeyStore file and PresharedKeys used for CoAPS communication by default.";
-            uses onem2m-plugin-manager:coaps-keystore-config;
-            uses onem2m-plugin-manager:coaps-psk-config;
+            uses iotdm-comm-channel-coap:coaps-keystore-config;
+            uses iotdm-comm-channel-coap:coaps-psk-config;
         }
     }
 
@@ -43,18 +45,4 @@ module onem2m-core {
         uses onem2m-core-https-config;
         uses onem2m-core-coaps-config;
     }
-
-    /* TODO this is just commented out now, need to make it work */
-    /*
-    augment "/config:modules/config:module/config:state" {
-        case onem2m-core {
-            when "/config:modules/config:module/config:type = 'onem2m-core'";
-
-            leaf onem2m-stats {
-                type string;
-            }
-
-        }
-    }
-    */
 }

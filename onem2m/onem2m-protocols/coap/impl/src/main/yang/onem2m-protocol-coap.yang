@@ -3,9 +3,9 @@ module onem2m-protocol-coap {
     namespace "urn:opendaylight:params:xml:ns:yang:onem2m:protocol:coap";
     prefix "onem2m-protocol-coap";
 
-    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
-    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
+    import iotdm-plugin-manager { prefix iotdm-plugin-manager; revision-date 2016-11-10; }
+    import iotdm-comm-channel-coap { prefix iotdm-comm-channel-coap; revision-date 2017-05-19; }
     import ietf-inet-types {prefix inet; revision-date "2013-07-15";}
 
     description
@@ -29,7 +29,7 @@ module onem2m-protocol-coap {
     grouping coap-security-config {
         container dtls-certificates-config {
             container key-store-config {
-                uses onem2m-plugin-manager:coaps-keystore-config;
+                uses iotdm-comm-channel-coap:coaps-keystore-config;
             }
             container trust-store-config {
                 leaf trust-store-file {
@@ -49,11 +49,11 @@ module onem2m-protocol-coap {
         }
 
         container dtls-psk-local-cse-base {
-            uses onem2m-plugin-manager:coaps-psk-config;
+            uses iotdm-comm-channel-coap:coaps-psk-config;
         }
 
         container dtls-psk-remote-cse {
-            uses onem2m-plugin-manager:coaps-psk-config;
+            uses iotdm-comm-channel-coap:coaps-psk-config;
         }
     }
 
@@ -86,13 +86,13 @@ module onem2m-protocol-coap {
         }
     }
 
-    augment "/onem2m-plugin-manager:onem2m-plugin-manager-plugin-data
-             /onem2m-plugin-manager:output
-             /onem2m-plugin-manager:onem2m-plugin-manager-plugins-table
-             /onem2m-plugin-manager:onem2m-plugin-manager-plugin-instances
-             /onem2m-plugin-manager:plugin-configuration
-             /onem2m-plugin-manager:plugin-specific-configuration" {
-        case coap-coaps-config {
+    augment "/iotdm-plugin-manager:iotdm-plugin-manager-plugin-data
+             /iotdm-plugin-manager:output
+             /iotdm-plugin-manager:iotdm-plugin-manager-plugins-table
+             /iotdm-plugin-manager:iotdm-plugin-manager-plugin-instances
+             /iotdm-plugin-manager:plugin-configuration
+             /iotdm-plugin-manager:plugin-specific-configuration" {
+        case onem2m-coap-coaps-config {
             uses coap-protocol-provider-config;
         }
     }

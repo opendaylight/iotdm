@@ -29,7 +29,7 @@ import org.opendaylight.iotdm.onem2m.core.rest.RequestPrimitiveProcessor;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
@@ -54,6 +54,7 @@ public class Onem2mCoreProvider implements Onem2mService, AutoCloseable,
 
     private final DataBroker dataBroker;
     private TransactionManager transactionManager = null;
+    private final Onem2mPluginsDbApi dbApi;
 
     private Onem2mDb db;
     private ResourceTreeWriter twc;
@@ -72,10 +73,12 @@ public class Onem2mCoreProvider implements Onem2mService, AutoCloseable,
 
     public Onem2mCoreProvider(Onem2mCoreConfig config,
                               DataBroker dataBroker,
-                              NotificationPublishService notifierService) {
+                              NotificationPublishService notifierService,
+                              Onem2mPluginsDbApi dbApi) {
 
         this.dataBroker = dataBroker;
         this.notifierService = notifierService;
+        this.dbApi = dbApi;
         routerService = Onem2mRouterService.getInstance();
 
         stats = Onem2mStats.getInstance();
@@ -163,14 +166,14 @@ public class Onem2mCoreProvider implements Onem2mService, AutoCloseable,
         this.twc = this.transactionManager.getDbResourceTreeWriter();
         this.trc = this.transactionManager.getTransactionReader();
         Onem2mDb.getInstance().registerDbReaderAndWriter(twc, trc);
-        Onem2mPluginsDbApi.getInstance().registerDbReaderAndWriter(twc, trc);
+        dbApi.registerDbReaderAndWriter(twc, trc);
         NotificationProcessor.getInstance().initThreadsAndQueuesForResourceProcessing();
 
         LOG.info("Onem2mCoreProvider.registerDaoPlugin: plugin registered: {}", daoResourceTreeFactory.getName());
     }
 
     public void unregisterDaoPlugin() {
-        Onem2mPluginsDbApi.getInstance().unregisterDbReaderAndWriter();
+//        Onem2mPluginsDbApi.getInstance().unregisterDbReaderAndWriter();
 
         if (null != this.transactionManager) {
             this.transactionManager.close();

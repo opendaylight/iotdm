@@ -31,6 +31,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <argument ref="containterConfigDefault" />
     <argument ref="dataBroker" />
     <argument ref="notificationService" />
+    <!--TODO remove this-->
+    <argument ref="onem2mDbApiProvider" />
   </bean>
 
   <service ref="coreProviderDefault" interface="org.opendaylight.iotdm.onem2m.core.database.dao.factory.DaoResourceTreeFactoryRegistry" />
@@ -41,15 +43,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   </bean>
   <odl:rpc-implementation ref="onem2mService"/>
 
-  <bean id="onem2mPluginManagerService"
-        class="org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManagerProvider"
-        factory-method="getInstance">
-  </bean>
-  <odl:rpc-implementation ref="onem2mPluginManagerService" />
+  <!--DB API - TODO remove this from onem2m-core -->
+  <reference id="pluginMgrCustomServicesService" interface="org.opendaylight.iotdm.plugininfra.pluginmanager.api.services.IotdmPluginManagerCustomServicesService" />
 
-  <bean id="onem2mSimpleConfigService"
-        class="org.opendaylight.iotdm.onem2m.plugins.simpleconfig.Onem2mPluginsSimpleConfigProvider">
-    <argument ref="dataBroker" />
+  <bean id="onem2mDbApiProvider"
+        class="org.opendaylight.iotdm.onem2m.dbapi.Onem2mDbApiProvider"
+        factory-method="getInstance"
+        init-method="init" destroy-method="close">
+    <property name="customServicesService" ref="pluginMgrCustomServicesService" />
   </bean>
-  <odl:rpc-implementation ref="onem2mSimpleConfigService" />
+
+  <service ref="onem2mDbApiProvider" interface="org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi" />
+  <odl:rpc-implementation ref="onem2mDbApiProvider"/>
 </blueprint>
