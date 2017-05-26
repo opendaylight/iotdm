@@ -17,16 +17,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <modelVersion>4.0.0</modelVersion>
 
   <modules>
-    <module>onem2m-api</module>
+      <module>onem2m-api</module>
       <module>onem2m-core</module>
       <module>onem2m-persistence</module>
-    <module>onem2m-notifier</module>
-    <module>onem2m-protocols</module>
-    <module>onem2m-ui</module>
-    <module>onem2m-karaf</module>
-    <module>onem2m-features</module>
-    <module>onem2m-artifacts</module>
-    <module>onem2m-karaf4</module>
+      <module>onem2m-notifier</module>
+      <module>onem2m-commchannels</module>
+      <module>onem2m-protocols</module>
+      <module>onem2m-ui</module>
+      <module>onem2m-karaf</module>
+      <module>onem2m-features</module>
+      <module>onem2m-artifacts</module>
+      <!--<module>onem2m-karaf4</module>-->
   </modules>
 
     <!-- DO NOT deploy the repo root pom as it's only needed to initiate a build -->

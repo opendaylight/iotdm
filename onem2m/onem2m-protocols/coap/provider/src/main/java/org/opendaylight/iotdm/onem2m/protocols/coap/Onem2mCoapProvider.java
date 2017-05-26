@@ -9,12 +9,9 @@
 package org.opendaylight.iotdm.onem2m.protocols.coap;
 
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ProviderContext;
-import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
-import org.opendaylight.iotdm.onem2m.protocols.coap.Onem2mCoapConfigurationValidator;
-import org.opendaylight.iotdm.onem2m.protocols.coap.rx.Onem2mCoapBaseIotdmPlugin;
+import org.opendaylight.iotdm.onem2m.protocols.coap.rx.Onem2MCoapBaseIotdmHandlerPlugin;
 import org.opendaylight.iotdm.onem2m.protocols.coap.rx.Onem2mCoapRxRequestFactory;
 import org.opendaylight.iotdm.onem2m.protocols.coap.tx.Onem2mCoapClientConfiguration;
 import org.opendaylight.iotdm.onem2m.protocols.coap.tx.notification.Onem2mCoapNotifierPlugin;
@@ -30,7 +27,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.p
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.coap.protocol.provider.config.RouterPluginConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.coap.protocol.provider.config.CoapsConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.Onem2mProtocolCoapProviders;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.onem2m.protocol.coap.rev170116.CoapProtocolProviderConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +36,7 @@ public class Onem2mCoapProvider implements AutoCloseable {
 
     protected Onem2mService onem2mService;
 
-    protected Onem2mCoapBaseIotdmPlugin onem2mCoapBaseIotdmPlugin = null;
+    protected Onem2MCoapBaseIotdmHandlerPlugin onem2mCoapBaseIotdmPlugin = null;
     protected Onem2mCoapRouterPlugin routerPlugin;
     protected Onem2mCoapNotifierPlugin notifierPlugin;
 
@@ -74,11 +70,11 @@ public class Onem2mCoapProvider implements AutoCloseable {
     public void init() {
 
         try {
-            onem2mCoapBaseIotdmPlugin = new Onem2mCoapBaseIotdmPlugin(new Onem2mProtocolRxHandler(),
-                                                                      new Onem2mCoapRxRequestFactory(),
-                                                                      onem2mService,
-                                                                      configuration,
-                                                                      "coap(s)-base");
+            onem2mCoapBaseIotdmPlugin = new Onem2MCoapBaseIotdmHandlerPlugin(new Onem2mProtocolRxHandler(),
+                                                                             new Onem2mCoapRxRequestFactory(),
+                                                                             onem2mService,
+                                                                             configuration,
+                                                                             "coap(s)-base");
             onem2mCoapBaseIotdmPlugin.start();
         } catch (Exception e) {
             LOG.error("Failed to start COAP server: {}", e);

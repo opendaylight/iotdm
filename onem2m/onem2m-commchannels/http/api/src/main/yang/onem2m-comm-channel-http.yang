@@ -1,0 +1,30 @@
+module onem2m-comm-channel-http {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:onem2m:commchannels:http";
+    prefix "onem2m-comm-channel-http";
+
+    import iotdm-comm-channel-http { prefix iotdm-comm-channel-http; revision-date 2017-05-19; }
+    import iotdm-plugin-manager { prefix iotdm-polugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Defintions of OneM2M HTTP(S) communication channel model";
+
+    revision "2017-05-19" {
+        description
+            "Initial revision of onem2m-comm-channel-http model";
+    }
+
+    augment "iotdm-plugin-manager:iotdm-plugin-manager-communication-channels/
+             iotdm-plugin-manager:output/
+             iotdm-plugin-manager:iotdm-communication-channel-protocols/
+             iotdm-plugin-manager:iotdm-communication-channel-addresses/
+             iotdm-plugin-manager:iotdm-communication-channel-ports/
+             iotdm-plugin-manager:channel-data/
+             iotdm-plugin-manager:channel-configuration/
+             iotdm-plugin-manager:channel-specific-configuration" {
+
+        case onem2m-https-channel-config {
+            uses iotdm-comm-channel-http:https-channel-config-definition;
+        }
+    }
+}

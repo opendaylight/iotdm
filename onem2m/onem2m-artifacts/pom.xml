@@ -47,14 +47,52 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>onem2m-protocol-coap-impl</artifactId>
+                <artifactId>onem2m-commchannels-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>onem2m-commchannels-http-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>onem2m-protocol-coap-provider</artifactId>
+                <artifactId>onem2m-commchannels-http-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>onem2m-commchannels-http-provider</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-commchannels-coap</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-commchannels-mqtt</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-commchannels-websocket</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
+
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-protocol-coap-impl</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-protocol-coap-provider</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -67,16 +105,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <version>${project.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>onem2m-protocol-mqtt-impl</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>onem2m-protocol-mqtt-provider</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-protocol-mqtt-impl</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>${project.groupId}</groupId>-->
+                <!--<artifactId>onem2m-protocol-mqtt-provider</artifactId>-->
+                <!--<version>${project.version}</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -88,6 +126,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>onem2m-ui-bundle</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!--Karaf3 features artifacts-->
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>onem2m-features</artifactId>
@@ -96,6 +136,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <type>xml</type>
             </dependency>
 
+            <!--Karaf4 features artifacts-->
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>features4-onem2m</artifactId>
@@ -103,6 +144,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <classifier>features</classifier>
                 <type>xml</type>
             </dependency>
+
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>odl-onem2m-api</artifactId>
@@ -197,6 +239,48 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>odl-iotdm-onem2m</artifactId>
+                <version>${project.version}</version>
+                <type>xml</type>
+                <classifier>features</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-onem2m-commchannels-common</artifactId>
+                <version>${project.version}</version>
+                <type>xml</type>
+                <classifier>features</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-onem2m-commchannels-http</artifactId>
+                <version>${project.version}</version>
+                <type>xml</type>
+                <classifier>features</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-onem2m-commchannels-coap</artifactId>
+                <version>${project.version}</version>
+                <type>xml</type>
+                <classifier>features</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-onem2m-commchannels-mqtt</artifactId>
+                <version>${project.version}</version>
+                <type>xml</type>
+                <classifier>features</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-onem2m-commchannels-websocket</artifactId>
+                <version>${project.version}</version>
+                <type>xml</type>
+                <classifier>features</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-onem2m-commchannels</artifactId>
                 <version>${project.version}</version>
                 <type>xml</type>
                 <classifier>features</classifier>

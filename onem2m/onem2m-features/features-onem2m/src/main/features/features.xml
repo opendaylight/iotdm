@@ -16,18 +16,32 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.iotdm.plugininfra/iotdmplugininfra-features/{{VERSION}}/xml/features</repository>
 
     <!--  define first the individual features, then bundles of feature sets that are sensibly grouped -->
     <!-- the onem2m yang model and rpc's  -->
     <feature name='odl-onem2m-api' version='${project.version}' description='OpenDaylight :: onem2m :: api '>
         <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+        <feature version='${plugininfra.version}'>odl-iotdmplugininfra-api</feature>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-api/{{VERSION}}</bundle>
     </feature>
 
     <!-- the provider of the onem2m service, implementation of the rpc's -->
     <feature name='odl-onem2m-core' version='${project.version}' description='OpenDaylight :: onem2m :: core '>
         <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+
+        <feature version='${plugininfra.version}'>odl-iotdmplugininfra</feature>
+
         <feature version='${project.version}'>odl-onem2m-api</feature>
+
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-coap/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-http/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-services/{{VERSION}}</bundle>
+
+        <!--not really dependent what to do with this ? -->
+        <feature version='${plugininfra.version}'>odl-iotdmplugininfra-pluginmanager</feature>
 
         <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
         <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
@@ -61,26 +75,115 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <bundle>mvn:org.opendaylight.iotdm/onem2m-notifier/{{VERSION}}</bundle>
     </feature>
 
-    <!-- OneM2M Messaging over CoAP protocol -->
-    <feature name='odl-onem2m-coap-impl' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP :: implementation'>
-        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-        <feature version='${project.version}'>odl-onem2m-api</feature>
+    <feature name='odl-onem2m-commchannels-common' version='${project.version}' description='OpenDaylight :: OneM2M :: commchannels-common '>
+        <feature version='${plugininfra.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <feature version="${project.version}">odl-onem2m-notifier</feature>
-        <bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-impl/{{VERSION}}</bundle>
-        <!-- TODO: there is also a californium properties config file that we can use too ... where does it go -->
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-common/{{VERSION}}</bundle>
     </feature>
 
-    <feature name='odl-onem2m-coap' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP'>
-        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-        <feature version='${project.version}'>odl-onem2m-api</feature>
+    <feature name='odl-onem2m-commchannels-http' version='${project.version}' description='OpenDaylight :: OneM2M :: commchannels-http '>
+        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
+
+        <feature version='${plugininfra.version}'>odl-iotdmplugininfra-api</feature>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-http/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-utils-application/{{VERSION}}</bundle>
+
         <feature version='${project.version}'>odl-onem2m-core</feature>
-        <feature version='${project.version}'>odl-onem2m-coap-impl</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-provider/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-common/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-http-api/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-http-impl/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-http-provider/{{VERSION}}</bundle>
     </feature>
+
+    <!--<feature name='odl-onem2m-commchannels-coap' version='${project.version}' description='OpenDaylight :: OneM2M :: commchannels-coap '>-->
+        <!--<feature version='${plugininfra.version}'>odl-iotdmplugininfra-api</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-coap/{{VERSION}}</bundle>-->
+
+        <!--<bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.eclipse.californium/scandium/{{VERSION}}</bundle>-->
+
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-coap/{{VERSION}}</bundle>-->
+    <!--</feature>-->
+
+    <!--<feature name='odl-onem2m-commchannels-mqtt' version='${project.version}' description='OpenDaylight :: OneM2M :: commchannels-mqtt '>-->
+        <!--<feature version='${plugininfra.version}'>odl-iotdmplugininfra-api</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>-->
+        <!--<bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-mqtt/{{VERSION}}</bundle>-->
+
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-mqtt/{{VERSION}}</bundle>-->
+    <!--</feature>-->
+
+    <!--<feature name='odl-onem2m-commchannels-websocket' version='${project.version}' description='OpenDaylight :: OneM2M :: commchannels-websocket '>-->
+        <!--<feature version='${plugininfra.version}'>odl-iotdmplugininfra-api</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-channels/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/pluginmanager-api-plugins/{{VERSION}}</bundle>-->
+
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>-->
+
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm.plugininfra/commchannels-websocket/{{VERSION}}</bundle>-->
+
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-websocket/{{VERSION}}</bundle>-->
+    <!--</feature>-->
+
+    <!-- OneM2M Messaging over CoAP protocol -->
+    <!--<feature name='odl-onem2m-coap-impl' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP :: implementation'>-->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-broker</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-api</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<feature version="${project.version}">odl-onem2m-notifier</feature>-->
+        <!--<feature version='${plugininfra.version}'>odl-iotdmplugininfra-pluginmanager</feature>-->
+        <!--<bundle>mvn:org.eclipse.californium/californium-osgi/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-impl/{{VERSION}}</bundle>-->
+        <!--&lt;!&ndash; TODO: there is also a californium properties config file that we can use too ... where does it go &ndash;&gt;-->
+    <!--</feature>-->
+
+    <!--<feature name='odl-onem2m-coap' version='${project.version}' description='OpenDaylight :: onem2m :: CoAP'>-->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-broker</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-api</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-coap-impl</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-coap-provider/{{VERSION}}</bundle>-->
+    <!--</feature>-->
 
     <!-- oneM2M messaging over HTTP protocol base implementation -->
     <feature name='odl-onem2m-http-impl' version='${project.version}' description='OpenDaylight :: onem2m :: HTTP :: implementation'>
@@ -88,6 +191,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-onem2m-api</feature>
         <feature version='${project.version}'>odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
+        <feature version='${plugininfra.version}'>odl-iotdmplugininfra-pluginmanager</feature>
 
         <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
         <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
@@ -101,6 +205,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
         <bundle>mvn:org.eclipse.jetty/jetty-xml/8.1.19.v20160209</bundle>
 
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-http-api/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-impl/{{VERSION}}</bundle>
     </feature>
@@ -112,52 +217,55 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version="${project.version}">odl-onem2m-notifier</feature>
         <feature version='${project.version}'>odl-onem2m-http-impl</feature>
 
+        <bundle>mvn:org.opendaylight.iotdm/onem2m-commchannels-http-api/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-http-provider/{{VERSION}}</bundle>
     </feature>
 
     <!-- oneM2M messaging over Websocket protocol base implementation -->
-    <feature name='odl-onem2m-websocket' version='${project.version}' description='OpenDaylight :: onem2m :: Websocket'>
-        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-        <feature version='${project.version}'>odl-onem2m-api</feature>
-        <feature version='${project.version}'>odl-onem2m-core</feature>
-        <!--<feature version="${project.version}">odl-onem2m-notifier</feature>-->
+    <!--<feature name='odl-onem2m-websocket' version='${project.version}' description='OpenDaylight :: onem2m :: Websocket'>-->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-broker</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-api</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--&lt;!&ndash;<feature version="${project.version}">odl-onem2m-notifier</feature>&ndash;&gt;-->
+        <!--<feature version='${plugininfra.version}'>odl-iotdmplugininfra-pluginmanager</feature>-->
 
-        <bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
-        <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-client/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-http/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-servlet/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-security/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-servlets/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-continuation/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-util/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-websocket/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>-->
+        <!--<bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>-->
 
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}</bundle>
-        <configfile finalname="${configfile.directory}/onem2m-protocol-websocket.xml">mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}/xml/config</configfile>
-    </feature>
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-websocket/{{VERSION}}</bundle>-->
+    <!--</feature>-->
 
     <!-- oneM2M messaging over MQTT protocol -->
-    <feature name='odl-onem2m-mqtt-impl' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT :: implementation'>
-        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-        <feature version='${project.version}'>odl-onem2m-api</feature>
-        <feature version='${project.version}'>odl-onem2m-core</feature>
-        <feature version="${project.version}">odl-onem2m-notifier</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-impl/{{VERSION}}</bundle>
-    </feature>
+    <!--<feature name='odl-onem2m-mqtt-impl' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT :: implementation'>-->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-broker</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-api</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<feature version="${project.version}">odl-onem2m-notifier</feature>-->
+        <!--<feature version='${plugininfra.version}'>odl-iotdmplugininfra-pluginmanager</feature>-->
 
-    <feature name='odl-onem2m-mqtt' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT'>
-        <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-        <feature version='${project.version}'>odl-onem2m-api</feature>
-        <feature version='${project.version}'>odl-onem2m-core</feature>
-        <feature version='${project.version}'>odl-onem2m-mqtt-impl</feature>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>
-        <bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-provider/{{VERSION}}</bundle>
-    </feature>
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>-->
+        <!--<bundle>wrap:mvn:org.eclipse.paho/org.eclipse.paho.client.mqttv3/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-impl/{{VERSION}}</bundle>-->
+    <!--</feature>-->
+
+    <!--<feature name='odl-onem2m-mqtt' version='${project.version}' description='OpenDaylight :: onem2m :: MQTT'>-->
+        <!--<feature version='${mdsal.version}'>odl-mdsal-broker</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-api</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-core</feature>-->
+        <!--<feature version='${project.version}'>odl-onem2m-mqtt-impl</feature>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocols-common/{{VERSION}}</bundle>-->
+        <!--<bundle>mvn:org.opendaylight.iotdm/onem2m-protocol-mqtt-provider/{{VERSION}}</bundle>-->
+    <!--</feature>-->
 
     <!-- use this to test core only with restconf -->
     <feature name='odl-onem2m-core-rest' version='${project.version}' description='OpenDaylight :: onem2m :: core :: REST '>
@@ -187,14 +295,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version="${project.version}">odl-onem2m-core</feature>
         <feature version="${project.version}">odl-onem2m-notifier</feature>
 
+        <feature version="${project.version}">odl-onem2m-commchannels-common</feature>
+        <feature version="${project.version}">odl-onem2m-commchannels-http</feature>
+        <!--<feature version="${project.version}">odl-onem2m-commchannels-coap</feature>-->
+        <!--<feature version="${project.version}">odl-onem2m-commchannels-mqtt</feature>-->
+        <!--<feature version="${project.version}">odl-onem2m-commchannels-websocket</feature>-->
+
         <!-- TODO: comment out next line if onem2m/coap access is not required -->
-        <feature version="${project.version}">odl-onem2m-coap</feature>
+        <!--<feature version="${project.version}">odl-onem2m-coap</feature>-->
         <!-- TODO: comment out next line if onem2m/http access is not required -->
         <feature version="${project.version}">odl-onem2m-http</feature>
         <!-- TODO: comment out next line if onem2m/websocket access is not required -->
-        <feature version="${project.version}">odl-onem2m-websocket</feature>
+        <!--<feature version="${project.version}">odl-onem2m-websocket</feature>-->
         <!-- TODO: comment out next line if onem2m/mqtt access is not required -->
-        <feature version="${project.version}">odl-onem2m-mqtt</feature>
+        <!--<feature version="${project.version}">odl-onem2m-mqtt</feature>-->
     </feature>
 
 </features>

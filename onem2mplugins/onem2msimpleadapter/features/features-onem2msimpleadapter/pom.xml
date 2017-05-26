@@ -29,7 +29,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dluxapps.version>0.6.0-SNAPSHOT</dluxapps.version>
     <onem2m.version>0.4.0-SNAPSHOT</onem2m.version>
     <jetty.version>8.1.19.v20160209</jetty.version>
-    <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -154,13 +153,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <groupId>${project.groupId}</groupId>
       <artifactId>onem2msimpleadapter-impl</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>onem2msimpleadapter-impl</artifactId>
-      <version>${project.version}</version>
-      <type>xml</type>
-      <classifier>config</classifier>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

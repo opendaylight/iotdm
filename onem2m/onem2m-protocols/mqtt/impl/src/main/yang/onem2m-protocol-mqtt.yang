@@ -3,9 +3,8 @@ module onem2m-protocol-mqtt {
     namespace "urn:opendaylight:params:xml:ns:yang:onem2m:protocol:mqtt";
     prefix "onem2m-protocol-mqtt";
 
-    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
-    import onem2m-plugin-manager { prefix onem2m-plugin-manager; revision-date 2016-11-10; }
+    import iotdm-plugin-manager { prefix iotdm-plugin-manager; revision-date 2016-11-10; }
     import ietf-inet-types {prefix inet; revision-date "2013-07-15";}
 
     description
@@ -40,13 +39,13 @@ module onem2m-protocol-mqtt {
         }
     }
 
-    augment "/onem2m-plugin-manager:onem2m-plugin-manager-plugin-data
-             /onem2m-plugin-manager:output
-             /onem2m-plugin-manager:onem2m-plugin-manager-plugins-table
-             /onem2m-plugin-manager:onem2m-plugin-manager-plugin-instances
-             /onem2m-plugin-manager:plugin-configuration
-             /onem2m-plugin-manager:plugin-specific-configuration" {
-        case mqtt-config {
+    augment "/iotdm-plugin-manager:iotdm-plugin-manager-plugin-data
+             /iotdm-plugin-manager:output
+             /iotdm-plugin-manager:iotdm-plugin-manager-plugins-table
+             /iotdm-plugin-manager:iotdm-plugin-manager-plugin-instances
+             /iotdm-plugin-manager:plugin-configuration
+             /iotdm-plugin-manager:plugin-specific-configuration" {
+        case onem2m-mqtt-config {
             uses mqtt-protocol-provider-config;
         }
     }

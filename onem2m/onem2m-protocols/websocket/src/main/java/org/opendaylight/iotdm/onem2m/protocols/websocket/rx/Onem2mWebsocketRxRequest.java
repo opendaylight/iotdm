@@ -10,12 +10,12 @@ package org.opendaylight.iotdm.onem2m.protocols.websocket.rx;
 
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
+import org.opendaylight.iotdm.onem2m.commchannels.common.IotdmPluginOnem2mBaseRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.common.IotdmPluginOnem2mBaseResponse;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseResponse;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
-import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseRequest;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginManager;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxRequest;
 import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
-
-import static java.util.Objects.nonNull;
 
 /**
  * Implements complete handling logic for Websocket RxRequests.
@@ -72,7 +70,7 @@ class Onem2mWebsocketRxRequest extends Onem2mProtocolRxRequest {
     @Override
     protected boolean translateRequestToOnem2m() {
         onem2mRxBuilder = new Onem2mRequestPrimitiveClientBuilder();
-        onem2mRxBuilder.setProtocol(Onem2mPluginManager.ProtocolWebsocket);
+        onem2mRxBuilder.setProtocol(IotdmPluginManager.ProtocolWebsocket);
         if (! Onem2mProtocolUtils.processRequestPrimitiveFromJson(rxPayloadPrimitive, onem2mRxBuilder)) {
             LOG.error("Failed to process request JSON content");
             String rqi = onem2mRxBuilder.getPrimitiveValue(RequestPrimitive.REQUEST_IDENTIFIER);

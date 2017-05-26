@@ -17,10 +17,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <modelVersion>4.0.0</modelVersion>
 
   <modules>
-    <module>coap</module>
+    <!--<module>coap</module>-->
     <module>http</module>
-    <module>websocket</module>
-    <module>mqtt</module>
+    <!--<module>websocket</module>-->
+    <!--<module>mqtt</module>-->
     <module>common</module>
   </modules>
 </project>

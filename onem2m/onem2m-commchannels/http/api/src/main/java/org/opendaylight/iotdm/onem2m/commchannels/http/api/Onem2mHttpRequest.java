@@ -1,0 +1,184 @@
+/*
+ * Copyright (c) 2017 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package org.opendaylight.iotdm.onem2m.commchannels.http.api;
+
+import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.common.Onem2mProtocolPluginRequest;
+import org.opendaylight.iotdm.onem2m.core.Onem2m;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Implementation of class wrapping original HTTP request.
+ */
+public class Onem2mHttpRequest extends Onem2mProtocolPluginRequest<HttpServletRequest> {
+    private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpRequest.class);
+
+    protected final HttpServletRequest httpRequest; // The original HTTP request
+    protected HashMap<String, String[]> headers = null; // HashMap with header names as keys and header values as values
+    protected String payload = null; // Payload of the received request
+    private String contentType;
+
+    /**
+     * Constructor just sets orignal request. Headers and payload are not prepared
+     * in advance, lazy initialization is used.
+     * @param httpRequest Original HTTP request.
+     */
+    // TODO make interface for this class in order to don't expose it to plugins
+    public Onem2mHttpRequest(@Nonnull final HttpServletRequest httpRequest) {
+        this.httpRequest = httpRequest;
+    }
+
+    @Override
+    public Integer getOnem2mOperation() {
+        switch(this.httpRequest.getMethod().toLowerCase()) {
+            case "get":
+                return Onem2m.Operation.RETRIEVE;
+            case "post":
+                return Onem2m.Operation.CREATE;
+            case "put":
+                return Onem2m.Operation.UPDATE;
+            case "delete":
+                return Onem2m.Operation.DELETE;
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public String getOnem2mUri() {
+        return Onem2m.translateUriToOnem2m(httpRequest.getRequestURI());
+    }
+
+    @Override
+    public String getMethod() {
+        return this.httpRequest.getMethod();
+    }
+
+    /**
+     * Returns URL including HTTP query string.
+     * @return URL with query string if exists.
+     */
+    private String getFullUrl() {
+        StringBuffer requestURL = this.httpRequest.getRequestURL();
+        String queryString = this.httpRequest.getQueryString();
+
+        if (queryString == null) {
+            return requestURL.toString();
+        } else {
+            return requestURL.append('?').append(queryString).toString();
+        }
+    }
+
+    @Override
+    public String getUrl() {
+        return this.getFullUrl();
+    }
+
+    private void getAndStorePayload() {
+        try {
+            StringBuilder buffer = new StringBuilder();
+            BufferedReader reader = this.httpRequest.getReader();
+            String line = null;
+
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line);
+            }
+
+            this.payload = buffer.toString();
+        } catch (java.io.IOException e) {
+            LOG.error("Failed to read HTTP request payload: {}", e);
+            this.payload = "";
+        }
+    }
+
+    @Override
+    public String getPayLoad() {
+        if (null == this.payload) {
+            this.getAndStorePayload();
+        }
+
+        return this.payload;
+    }
+
+    @Override
+    public String getContentType() {
+        if(Objects.isNull(contentType)) {
+            contentType = httpRequest.getContentType();
+        }
+        return contentType;
+    }
+
+    private void getAndStoreAllHeaders() {
+        Enumeration<String> headerNames = this.httpRequest.getHeaderNames();
+        if (null == headerNames) {
+            return;
+        }
+
+        this.headers = new HashMap<>();
+
+        for(String headerName = null;  headerNames.hasMoreElements(); headerName = headerNames.nextElement()) {
+            String[] retArray = null;
+            try {
+                ArrayList<String> arrayList = Collections.list(this.httpRequest.getHeaders(headerName));
+                if (arrayList.isEmpty()) {
+                    retArray = new String[0];
+                } else {
+                    retArray = arrayList.toArray(retArray);
+                }
+            } catch (Exception e) {
+                LOG.error("Failed to get HTTP Header {}, {}", headerName, e);
+                continue;
+            }
+
+            this.headers.put(headerName, retArray);
+        }
+    }
+
+    public HashMap<String, String[]> getHeadersAll() {
+        if (null == this.headers) {
+            this.getAndStoreAllHeaders();
+        }
+
+        return this.headers;
+    }
+
+    public String[] getHeaders(String key) {
+        if (null == this.headers) {
+            this.getAndStoreAllHeaders();
+        }
+        return this.headers.get(key);
+    }
+
+    public String getHeader(String key) {
+        return this.httpRequest.getHeader(key);
+    }
+
+    @Override
+    public HttpServletRequest getOriginalRequest() {
+        return httpRequest;
+    }
+
+    @Override
+    public void setPayLoad(String s) {
+        this.payload = s;
+    }
+
+    @Override
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+}

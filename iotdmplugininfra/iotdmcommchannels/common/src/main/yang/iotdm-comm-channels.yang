@@ -1,0 +1,36 @@
+module iotdm-comm-channels {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:pluginifra:commchannels";
+    prefix "iotdm-comm-channels";
+
+    description
+        "Common defintions of IoTDM plugin infractructure communication channels";
+
+    revision "2017-05-19" {
+        description
+            "Initial revision of iotdm-comm-channels model";
+    }
+
+    /*
+     * Communication channel configurations definitions
+     */
+    grouping java-key-store-config {
+        leaf key-store-file {
+            description "Path to the Java KeyStore file.";
+            mandatory true;
+            type string;
+        }
+
+        leaf key-store-password {
+            description "Password to access the KeyStore file.";
+            mandatory true;
+            type string;
+        }
+
+        leaf key-manager-password {
+            description "Password for key manager (needed if different from the key-store-password).";
+            mandatory false;
+            type string;
+        }
+    }
+}

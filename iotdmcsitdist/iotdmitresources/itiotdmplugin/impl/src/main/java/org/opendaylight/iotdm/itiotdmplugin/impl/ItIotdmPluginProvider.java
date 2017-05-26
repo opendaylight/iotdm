@@ -16,7 +16,7 @@ public class ItIotdmPluginProvider {
     private static final Logger LOG = LoggerFactory.getLogger(ItIotdmPluginProvider.class);
 
     private final DataBroker dataBroker;
-    private ItIotdmPluginCustomProtocol itIotdmPluginCustomProtocol;
+    private ItIotdmHandlerPluginCustomProtocol itIotdmPluginCustomProtocol;
 
     public ItIotdmPluginProvider(final DataBroker dataBroker) {
         this.dataBroker = dataBroker;
@@ -26,7 +26,7 @@ public class ItIotdmPluginProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-        itIotdmPluginCustomProtocol = new ItIotdmPluginCustomProtocol(dataBroker);
+        itIotdmPluginCustomProtocol = new ItIotdmHandlerPluginCustomProtocol(dataBroker);
         LOG.info("ItIotdmPluginProvider Session Initiated");
     }
 

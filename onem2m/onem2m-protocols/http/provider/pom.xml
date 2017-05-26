@@ -39,5 +39,11 @@
             <artifactId>onem2m-protocol-http-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>onem2m-commchannels-http-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

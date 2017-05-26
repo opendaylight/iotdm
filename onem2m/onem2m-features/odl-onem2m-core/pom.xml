@@ -33,6 +33,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <yangtools.version>1.2.0-SNAPSHOT</yangtools.version>
         <jetty.version>8.1.19.v20160209</jetty.version>
         <mdsal.model.version>0.11.0-SNAPSHOT</mdsal.model.version>
+        <plugininfra.version>0.4.0-SNAPSHOT</plugininfra.version>
     </properties>
 
     <dependencyManagement>
@@ -78,6 +79,42 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <artifactId>onem2m-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>pluginmanager-api-plugins</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>pluginmanager-api-services</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>commchannels-common</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>commchannels-coap</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>commchannels-http</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+
+        <!--Not real dependency but it implements services -->
+        <!--But must be commented out now in order to break dependency loop-->
+        <!--<dependency>-->
+            <!--<groupId>org.opendaylight.iotdm.plugininfra</groupId>-->
+            <!--<artifactId>odl-iotdmplugininfra-pluginmanager</artifactId>-->
+            <!--<version>${plugininfra.version}</version>-->
+            <!--<type>xml</type>-->
+            <!--<classifier>features</classifier>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>javax.servlet</groupId>

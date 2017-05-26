@@ -1,0 +1,453 @@
+module iotdm-plugin-manager {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:plugininfra:pluginmanager";
+    prefix iotdm-plugin-manager;
+
+    import iotdm-simple-config { prefix iotdm-simple-config; revision-date 2016-11-22; }
+
+    description "IoTDM PluginManager data models and RPCs.";
+
+    revision "2016-11-10" {
+        description "Initial revision of iotdm-plugin-manager yang module.";
+    }
+
+    /*
+     * IoTDM PluginManager data definitions and RPCs
+     */
+     grouping iotdm-plugin-data-definition {
+         container iotdm-common-plugin-data {
+            description "Plugin data common for all plugins.";
+
+            leaf plugin-name {
+                description "Name of the plugin.";
+                mandatory true;
+                type string;
+            }
+
+            leaf plugin-instance-name {
+                description "Unique plugin instance name.";
+                mandatory true;
+                type string;
+            }
+
+            leaf plugin-class {
+                description "Class of the plugin.";
+                mandatory true;
+                type string;
+            }
+
+            leaf plugin-loader {
+                description
+                    "Name of the PluginLoader instance used to load the plugin. " +
+                    "This item is not set if the plugin is loaded as ODL module without PluginLoader.";
+                type string;
+            }
+         }
+     }
+
+    grouping iotdm-plugin-filters {
+        leaf plugin-name {
+            description "Name of the plugin implementation.";
+            type string;
+        }
+
+        leaf plugin-instance-name {
+            description "Unique name of plugin instance.";
+            type string;
+        }
+
+        leaf plugin-loader-name {
+            description "Filter plugins loaded by specific plugin loader.";
+            type string;
+        }
+    }
+
+    /*
+     * Get table of plugins registered in plugin manager
+     */
+    grouping iotdm-plugin-registration-data-definition {
+        container registration-data {
+            description "Data identifying unique registration of instance of IotdmPlugin.";
+            leaf protocol {
+                description "Registered protocol.";
+                mandatory true;
+                type string;
+            }
+
+            leaf address {
+                description
+                    "Meaning depends on communication channel type used. " +
+                    "Value is local interface address in case of server channel or " +
+                    "the value is remote address of destination in case of client channel.";
+                type string;
+            }
+
+            leaf port {
+                description "Meaning depends on communication channel type used. " +
+                            "Value is local port registered in case of server channel or " +
+                            "the value is remote port of destination in case of client channel.";
+                mandatory true;
+                type uint16;
+            }
+
+            leaf transport-protocol {
+                description "Transport protocol type used.";
+                mandatory true;
+                type string;
+            }
+
+            leaf local-url {
+                description "Local URL for which the plugin is registered.";
+                type string;
+            }
+
+            leaf registration-mode {
+                description "Registration mode used.";
+                mandatory true;
+                type string;
+            }
+        }
+    }
+
+    grouping iotdm-plugin-instance-registration-data-definition {
+        uses iotdm-plugin-data-definition;
+
+        list iotdm-plugin-registrations {
+            description "List of registration data of IotdmPlugin instances.";
+            uses iotdm-plugin-registration-data-definition;
+        }
+    }
+
+    rpc iotdm-plugin-manager-iotdm-plugin-registrations {
+        description
+          "Returns table of registered plugin instances implementing IotdmPlugin.";
+
+        input {
+            uses iotdm-plugin-filters;
+        }
+
+        output {
+            list registered-iotdm-plugins-table {
+                description "Table of all plugins implementing IotdmPlugin interface.";
+
+                key "plugin-name";
+                leaf plugin-name {
+                    description "Name of the plugin implementation.";
+                    mandatory true;
+                    type string;
+                }
+
+                list registered-iotdm-plugin-instances {
+                    key "plugin-instance-name";
+                    leaf plugin-instance-name {
+                        description "Unique plugin instance name.";
+                        mandatory true;
+                        type string;
+                    }
+
+                    uses iotdm-plugin-instance-registration-data-definition;
+                }
+            }
+        }
+    }
+
+
+    /*
+     * Get communication channels data
+     */
+    grouping iotdm-communication-channel-data-definition {
+        container channel-data {
+            description "Data describing CommunicationChannel instance.";
+
+            leaf channel-type {
+                description "Type of communication channel used.";
+                mandatory true;
+                type string;
+            }
+
+            leaf protocol {
+                description "Registered protocol.";
+                mandatory true;
+                type string;
+            }
+
+            leaf address {
+                description "IP address of local interface for servers or remote interface for clients.";
+                type string;
+            }
+
+            leaf port {
+                description "UDP or TCP port on local interface for servers or remote interface for clients.";
+                type uint16;
+            }
+
+            leaf transport-protocol {
+                description "Transport protocol type used.";
+                mandatory true;
+                type string;
+            }
+
+            leaf channel-state {
+                description "Current state of the communication channel.";
+                type string;
+            }
+
+            container channel-configuration {
+                description "Configuration of the CommunicationChannel.";
+
+                leaf is-default {
+                    description "Is set to True if the default configuration is used. " +
+                                "False value is used if the registered plugin(s) used own configuration.";
+                    mandatory true;
+                    type boolean;
+                }
+
+                choice channel-specific-configuration {
+                    description "Current configuration of the channel.";
+                    /* To be augmented */
+                }
+            }
+        }
+
+        list iotdm-plugins {
+            description "List of IotdmPlugins registered to use this CommunicationChannel instance.";
+            key "iotdm-plugin-name";
+
+            leaf iotdm-plugin-name {
+                description "Name of the plugin implementation.";
+                type string;
+                mandatory true;
+            }
+
+            list iotdm-plugin-instances {
+                description "List of instances of the plugin implementation.";
+                key "iotdm-plugin-instance-id";
+
+                leaf iotdm-plugin-instance-id {
+                    description "Unique instance ID.";
+                    type string;
+                    mandatory true;
+                }
+            }
+        }
+    }
+
+    rpc iotdm-plugin-manager-communication-channels {
+        description "Returns table of CommunicationChannel instances.";
+
+        input {
+            leaf protocol-name {
+                description "Optional attribute used to filter CommunicationChannel instances " +
+                            "implementing specific protocol.";
+                type string;
+            }
+
+            leaf plugin-name {
+                description "Name of the plugin implementation.";
+                type string;
+            }
+
+            leaf plugin-instance-name {
+                description "Unique name of plugin instance.";
+                type string;
+            }
+        }
+
+        output {
+            list iotdm-communication-channel-protocols {
+                description "List of CommunicationChannel instances per protocol, address and port.";
+                key "communication-channel-protocol";
+
+                leaf communication-channel-protocol {
+                    type string;
+                    mandatory true;
+                }
+
+                list iotdm-communication-channel-addresses {
+                    description "List of CommunicationChannel instances per address and port.";
+                    key "communication-channel-address";
+
+                    leaf communication-channel-address {
+                        type string;
+                        mandatory true;
+                    }
+
+                    list iotdm-communication-channel-ports {
+                        description "List of CommunicationChannel instances per port number.";
+                        key "iotdm-communication-channel-port";
+
+                        leaf iotdm-communication-channel-port {
+                            type uint16;
+                            mandatory true;
+                        }
+
+                        uses iotdm-communication-channel-data-definition;
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+     * Get registrations of SimpleConfig client plugins
+     */
+     rpc iotdm-plugin-manager-simple-config-client-registrations {
+        description "Returns table of registered plugin instances implementing SimpleConfig client interface.";
+
+        input {
+            uses iotdm-plugin-filters;
+        }
+
+        output {
+            list registered-simple-config-client-plugins-table {
+                key "plugin-name";
+                leaf plugin-name {
+                    description "Name of the plugin implementation.";
+                    mandatory true;
+                    type string;
+                }
+
+                list registered-simple-config-client-plugin-instances {
+                    key "plugin-instance-name";
+                    leaf plugin-instance-name {
+                        description "Unique plugin instance name.";
+                        mandatory true;
+                        type string;
+                    }
+
+                    uses iotdm-plugin-data-definition;
+
+                    uses iotdm-simple-config:plugin-simple-config-definition;
+                }
+            }
+        }
+     }
+
+    /*
+     * Get custom services data
+     */
+    rpc iotdm-plugin-manager-custom-services {
+        description "Returns all data and plugins of custom services registered to PluginManager.";
+
+        input {
+            uses iotdm-plugin-filters;
+        }
+
+        output {
+            list iotdm-plugin-manager-custom-services-list {
+                key "custom-service-name";
+
+                leaf custom-service-name {
+                    type string;
+                }
+
+                leaf custom-service-class {
+                    type string;
+                }
+
+                choice custom-service-state {
+                    /* To be augmented */
+                }
+
+                choice custom-service-config {
+                    /* To be augmented */
+                }
+
+                list custom-service-plugins-table {
+                    key "plugin-name";
+                    leaf plugin-name {
+                        description "Name of the plugin implementation.";
+                        mandatory true;
+                        type string;
+                    }
+
+                    list custom-service-plugin-instances {
+                        key "plugin-instance-name";
+                        leaf plugin-instance-name {
+                            description "Unique plugin instance name.";
+                            mandatory true;
+                            type string;
+                        }
+
+                        choice plugin-instance-custom-data {
+                            /* To be augmented */
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+     /*
+      * Get complete plugin data
+      */
+     rpc iotdm-plugin-manager-plugin-data {
+        description "Returns all PluginManager data about plugin instances matching input filters.";
+
+        input {
+            uses iotdm-plugin-filters;
+        }
+
+        output {
+            list iotdm-plugin-manager-plugins-table {
+                key "plugin-name";
+                leaf plugin-name {
+                    description "Name of the plugin implementation.";
+                    mandatory true;
+                    type string;
+                }
+
+                list  iotdm-plugin-manager-plugin-instances {
+                    key "plugin-instance-name";
+                    leaf plugin-instance-name {
+                        description "Unique plugin instance name.";
+                        mandatory true;
+                        type string;
+                    }
+
+                    /* Implemented Iotdm Plugin interfaces */
+                    list implemented-interfaces {
+                        description "List of implemented Iotdm interfaces.";
+                        key "iotdm-interface";
+
+                        leaf iotdm-interface {
+                            type string;
+                        }
+                    }
+
+                    /* IotdmPlugin instace registration data */
+                    uses iotdm-plugin-instance-registration-data-definition;
+
+                    /* Custom Services plugin data */
+                    list custom-services-list {
+                        key "custom-service-name";
+
+                        leaf custom-service-name {
+                            type string;
+                        }
+
+                        leaf custom-service-class {
+                            type string;
+                        }
+
+                        choice custom-service-plugin-data {
+                            /* To be augmented */
+                        }
+                    }
+
+                    /* Plugin configuration */
+                    container plugin-configuration {
+                        choice plugin-specific-configuration {
+                            description "Configuration of the plugin instance.";
+                            case simple-config {
+                                uses iotdm-simple-config:plugin-simple-config-definition;
+                            }
+                        }
+                    }
+
+                    /* TODO errors */
+                }
+            }
+        }
+     }
+}

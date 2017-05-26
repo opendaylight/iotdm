@@ -37,12 +37,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   </odl:clustered-app-config>
 
   <reference id="rpcRegistry" interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry"/>
+  <reference id="onem2mHttpCommChannelProviderService" interface="org.opendaylight.iotdm.onem2m.commchannels.http.api.Onem2mHttpChannelProviderService" />
 
   <bean id="httpProviderDefault"
         class="org.opendaylight.iotdm.onem2m.protocols.http.Onem2mHttpProvider"
         init-method="init" destroy-method="close">
     <argument ref="rpcRegistry" />
     <argument ref="listConfigDefault" />
+    <argument ref="onem2mHttpCommChannelProviderService" />
   </bean>
 
 </blueprint>

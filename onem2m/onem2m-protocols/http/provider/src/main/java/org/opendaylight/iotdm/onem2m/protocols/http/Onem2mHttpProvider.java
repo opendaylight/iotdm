@@ -9,12 +9,13 @@
 package org.opendaylight.iotdm.onem2m.protocols.http;
 
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.iotdm.onem2m.commchannels.http.api.Onem2mHttpChannelProviderService;
 import org.opendaylight.iotdm.onem2m.core.router.Onem2mRouterService;
 import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolConfigException;
-import org.opendaylight.iotdm.onem2m.protocols.http.rx.Onem2mHttpBaseIotdmPlugin;
+import org.opendaylight.iotdm.onem2m.protocols.http.rx.Onem2MHttpBaseIotdmHandlerPlugin;
 import org.opendaylight.iotdm.onem2m.protocols.http.rx.Onem2mHttpRxRequestFactory;
 import org.opendaylight.iotdm.onem2m.protocols.http.tx.Onem2mHttpClientConfiguration;
 import org.opendaylight.iotdm.onem2m.protocols.http.tx.notificaction.Onem2mHttpNotifierPlugin;
@@ -35,8 +36,9 @@ public class Onem2mHttpProvider implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mHttpProvider.class);
 
     protected final Onem2mService onem2mService;
+    protected final Onem2mHttpChannelProviderService channelProviderService;
 
-    protected Onem2mHttpBaseIotdmPlugin onem2mHttpBaseIotdmPlugin = null;
+    protected Onem2MHttpBaseIotdmHandlerPlugin onem2mHttpBaseIotdmPlugin = null;
     protected Onem2mHttpRouterPlugin routerPlugin = null;
     protected Onem2mHttpNotifierPlugin notifierPlugin = null;
 
@@ -46,8 +48,11 @@ public class Onem2mHttpProvider implements AutoCloseable {
     protected final RouterPluginConfig routerConfig;
     protected final HttpsConfig secConfig;
 
-    public Onem2mHttpProvider(RpcProviderRegistry rpcRegistry,
-                              Onem2mProtocolHttpProviders config) throws Onem2mProtocolConfigException {
+    public Onem2mHttpProvider(final RpcProviderRegistry rpcRegistry,
+                              final Onem2mProtocolHttpProviders config,
+                              final Onem2mHttpChannelProviderService channelProviderService)
+        throws Onem2mProtocolConfigException {
+
         // Validate the configuration
         Onem2mHttpConfigurationValidator validator =
             new Onem2mHttpConfigurationValidator(config.getServerConfig(), config.getNotifierPluginConfig(),
@@ -65,14 +70,16 @@ public class Onem2mHttpProvider implements AutoCloseable {
         this.routerConfig = config.getRouterPluginConfig();
         this.secConfig = config.getHttpsConfig();
         this.configuration = config;
+        this.channelProviderService = channelProviderService;
     }
 
     public void init() {
 
         try {
-            onem2mHttpBaseIotdmPlugin = new Onem2mHttpBaseIotdmPlugin(new Onem2mProtocolRxHandler(),
-                                                                      new Onem2mHttpRxRequestFactory(),
-                                                                      onem2mService, configuration);
+            onem2mHttpBaseIotdmPlugin = new Onem2MHttpBaseIotdmHandlerPlugin(new Onem2mProtocolRxHandler(),
+                                                                             new Onem2mHttpRxRequestFactory(),
+                                                                             onem2mService, configuration,
+                                                                             channelProviderService);
             onem2mHttpBaseIotdmPlugin.start();
         } catch (Exception e) {
             LOG.error("Failed to start HTTP server: {}", e);

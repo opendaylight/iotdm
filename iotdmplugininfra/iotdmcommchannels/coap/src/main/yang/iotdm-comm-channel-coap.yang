@@ -1,0 +1,62 @@
+module iotdm-comm-channel-coap {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:iotdm:plugininfra:commchannels:coap";
+    prefix "iotdm-comm-channel-coap";
+
+    import iotdm-comm-channels { prefix iotdm-comm-channels; revision-date 2017-05-19; }
+    import iotdm-plugin-manager { prefix iotdm-polugin-manager; revision-date 2016-11-10; }
+
+    description
+        "Defintions of IoTDM plugin infractructure CoAP(S) communication channel ";
+
+    revision "2017-05-19" {
+        description
+            "Initial revision of iotdm-comm-channel-coap model";
+    }
+
+    grouping coaps-keystore-config {
+        uses iotdm-comm-channels:java-key-store-config;
+
+        leaf key-alias {
+            mandatory true;
+            type string;
+        }
+    }
+
+    grouping coaps-psk-config {
+        list cse-psk {
+            key cse-id;
+            leaf cse-id {
+                type string;
+            }
+            leaf psk {
+                type string;
+            }
+        }
+    }
+
+    grouping coaps-channel-config-definition {
+        choice coaps-channel-config-options {
+            case coaps-keystore-config-options {
+                uses coaps-keystore-config;
+            }
+            case coaps-psk-config-options {
+                uses coaps-psk-config;
+            }
+        }
+    }
+
+    augment "iotdm-plugin-manager:iotdm-plugin-manager-communication-channels/
+             iotdm-plugin-manager:output/
+             iotdm-plugin-manager:iotdm-communication-channel-protocols/
+             iotdm-plugin-manager:iotdm-communication-channel-addresses/
+             iotdm-plugin-manager:iotdm-communication-channel-ports/
+             iotdm-plugin-manager:channel-data/
+             iotdm-plugin-manager:channel-configuration/
+             iotdm-plugin-manager:channel-specific-configuration" {
+
+        case coaps-channel-config {
+            uses coaps-channel-config-definition;
+        }
+    }
+}

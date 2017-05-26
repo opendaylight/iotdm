@@ -3,9 +3,9 @@ module onem2m-protocol-websocket {
     namespace "urn:opendaylight:params:xml:ns:yang:onem2m:protocol:websocket";
     prefix "onem2m-protocol-websocket";
 
-    import config { prefix config; revision-date 2013-04-05; }
-    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28; }
     import onem2m { prefix onem2m; revision-date 2015-01-05; }
+    import iotdm-plugin-manager { prefix iotdm-plugin-manager; revision-date 2016-11-10; }
+    import ietf-inet-types {prefix inet; revision-date "2013-07-15";}
 
     description
         "Service definition for onem2m project";
@@ -15,15 +15,10 @@ module onem2m-protocol-websocket {
             "Initial revision";
     }
 
-    identity onem2m-protocol-websocket {
-        base config:module-type;
-        config:java-name-prefix Onem2mWebsocket;
-    }
-
     grouping websocket-protocol-server-config {
         leaf server-port {
             mandatory true;
-            type uint16;
+            type inet:port-number;
         }
 
         leaf server-security-level {
@@ -32,21 +27,23 @@ module onem2m-protocol-websocket {
         }
     }
 
-    augment "/config:modules/config:module/config:configuration" {
-        case onem2m-protocol-websocket {
-            when "/config:modules/config:module/config:type = 'onem2m-protocol-websocket'";
-            container broker {
-                uses config:service-ref {
-                    refine type {
-                        mandatory false;
-                        config:required-identity md-sal-binding:binding-broker-osgi-registry;
-                    }
-                }
-            }
-
-            container server-config {
-                uses websocket-protocol-server-config;
-            }
+    augment "/iotdm-plugin-manager:iotdm-plugin-manager-plugin-data
+             /iotdm-plugin-manager:output
+             /iotdm-plugin-manager:iotdm-plugin-manager-plugins-table
+             /iotdm-plugin-manager:iotdm-plugin-manager-plugin-instances
+             /iotdm-plugin-manager:plugin-configuration
+             /iotdm-plugin-manager:plugin-specific-configuration" {
+        case onem2m-websocket-config {
+            uses websocket-protocol-server-config;
         }
+    }
+
+    list onem2m-protocol-websocket-providers {
+        key "websocket-provider-instance-name";
+        leaf websocket-provider-instance-name {
+            type string;
+        }
+
+        uses websocket-protocol-server-config;
     }
 }

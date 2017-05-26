@@ -13,7 +13,7 @@ import org.opendaylight.iotdm.onem2m.notifier.Onem2mNotifierService;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolTxHandler;
 import org.opendaylight.iotdm.onem2m.protocols.common.utils.Onem2mProtocolConfigException;
-import org.opendaylight.iotdm.onem2m.protocols.mqtt.rx.Onem2mMqttIotdmPlugin;
+import org.opendaylight.iotdm.onem2m.protocols.mqtt.rx.Onem2MMqttIotdmHandlerPlugin;
 import org.opendaylight.iotdm.onem2m.protocols.mqtt.rx.Onem2mMqttRxRequestFactory;
 import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttNotifierPlugin;
 import org.opendaylight.iotdm.onem2m.protocols.mqtt.tx.notification.Onem2mMqttNotifierRequestAbstractFactory;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class Onem2mMqttProvider implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mMqttProvider.class);
-    private Onem2mMqttIotdmPlugin onem2mMqttIotdmPlugin = null;
+    private Onem2MMqttIotdmHandlerPlugin onem2mMqttIotdmPlugin = null;
     private final Onem2mProtocolMqttProviders mqttConfig;
 
     protected final Onem2mService onem2mService;
@@ -55,9 +55,9 @@ public class Onem2mMqttProvider implements AutoCloseable {
 
     public void init() {
         try {
-            onem2mMqttIotdmPlugin = new Onem2mMqttIotdmPlugin(new Onem2mProtocolRxHandler(),
-                                                              new Onem2mMqttRxRequestFactory(),
-                                                              onem2mService, this.mqttConfig);
+            onem2mMqttIotdmPlugin = new Onem2MMqttIotdmHandlerPlugin(new Onem2mProtocolRxHandler(),
+                                                                     new Onem2mMqttRxRequestFactory(),
+                                                                     onem2mService, this.mqttConfig);
             onem2mMqttIotdmPlugin.start();
         }
         catch (Exception e) {

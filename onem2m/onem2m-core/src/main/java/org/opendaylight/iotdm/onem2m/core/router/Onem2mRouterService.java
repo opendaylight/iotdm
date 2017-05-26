@@ -16,17 +16,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.database.Onem2mDb;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.Onem2mResourceElem;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeReader;
-import org.opendaylight.iotdm.onem2m.core.database.transactionCore.ResourceTreeWriter;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceCse;
 import org.opendaylight.iotdm.onem2m.core.resource.ResourceRemoteCse;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
 import org.opendaylight.iotdm.onem2m.core.utils.JsonUtils;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginDbClient;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRegistrationException;
-import org.opendaylight.iotdm.onem2m.plugins.Onem2mPluginManager;
+//import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginDbClient;
+//import org.opendaylight.iotdm.plugininfra.pluginmanager.IotdmPluginRegistrationException;
+//import org.opendaylight.iotdm.plugininfra.pluginmanager.Onem2mPluginManager;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mDbApiClientPlugin;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mDbApiProvider;
+import org.opendaylight.iotdm.onem2m.dbapi.Onem2mPluginsDbApi;
+import org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins.IotdmPluginRegistrationException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.Onem2mCse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.cse.list.onem2m.cse.Onem2mRegisteredRemoteCses;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.onem2m.resource.tree.Onem2mResource;
@@ -45,7 +46,7 @@ import java.util.concurrent.Future;
 /**
  * Class implements the Router service for Onem2m CSE
  */
-public class Onem2mRouterService implements IotdmPluginDbClient {
+public class Onem2mRouterService implements Onem2mDbApiClientPlugin {
     private static final String defaultPluginName = "http";
     private static final Onem2mRouterService routerService = new Onem2mRouterService();
     private static final Logger LOG = LoggerFactory.getLogger(Onem2mRouterService.class);
@@ -59,7 +60,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
 
         // Register this instance
         try {
-            Onem2mPluginManager.getInstance().registerDbClientPlugin(this);
+            Onem2mDbApiProvider.getInstance().registerDbClientPlugin(this);
         } catch (IotdmPluginRegistrationException e) {
             LOG.error("Failed to register Onem2mRouterService as DB API client: {}", e);
         }
@@ -227,7 +228,7 @@ public class Onem2mRouterService implements IotdmPluginDbClient {
 
     @Override
     public void close() {
-        Onem2mPluginManager.getInstance().unregisterDbClientPlugin(this);
+        Onem2mDbApiProvider.getInstance().unregisterDbClientPlugin(this);
     }
 
     public void pluginRegistration(Onem2mRouterPlugin plugin) {

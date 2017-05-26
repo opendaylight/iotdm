@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2016 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
+package org.opendaylight.iotdm.plugininfra.pluginmanager.api.plugins;
+
+
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.plugininfra.pluginmanager.rev161110.iotdm.plugin.manager.plugin.data.output.iotdm.plugin.manager.plugins.table.iotdm.plugin.manager.plugin.instances.plugin.configuration.PluginSpecificConfiguration;
+
+/**
+ * This interface describes implementation of plugins which are configurable
+ * by specific configuration class which extends PluginConfiguration.
+ */
+public interface IotdmPluginConfigurable extends IotdmPlugin {
+
+    /**
+     * Method returns current running configuration of the plugin instance.
+     * @return Running config.
+     */
+    PluginSpecificConfiguration getRunningConfig();
+}

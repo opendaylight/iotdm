@@ -25,117 +25,42 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>ODL :: iotdm :: ${project.artifactId}</name>
 
     <properties>
-        <jetty.version>8.1.19.v20160209</jetty.version>
+        <plugininfra.version>0.4.0-SNAPSHOT</plugininfra.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-client</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlets</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-websocket</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-client</artifactId>
-            <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.orbit</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.orbit</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-            <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.orbit</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-websocket</artifactId>
-            <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.orbit</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.orbit</groupId>
-                    <artifactId>javax.servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>onem2m-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
-           <groupId>org.eclipse.californium</groupId>
-           <artifactId>californium-osgi</artifactId>
-           <version>1.0.2</version>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>pluginmanager-api-services</artifactId>
+            <version>${plugininfra.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.californium</groupId>
-            <artifactId>scandium</artifactId>
-            <version>1.0.2</version>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>pluginmanager-api-plugins</artifactId>
+            <version>${plugininfra.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>commchannels-common</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>commchannels-coap</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>commchannels-http</artifactId>
+            <version>${plugininfra.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
@@ -151,27 +76,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-            <version>1.0.4</version>
-        </dependency>
-        -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
-        </dependency>
-        <!--<dependency>-->
-            <!--<groupId>commons-validator</groupId>-->
-            <!--<artifactId>commons-validator</artifactId>-->
-            <!--<version>1.4.1</version>-->
-        <!--</dependency>-->
-        <dependency>
-            <groupId>org.eclipse.paho</groupId>
-            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
-            <version>1.1.0</version>
         </dependency>
     </dependencies>
 </project>

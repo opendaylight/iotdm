@@ -8,15 +8,17 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.common;
 
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginRequest;
-import org.opendaylight.iotdm.onem2m.plugins.IotdmPluginResponse;
+import org.opendaylight.iotdm.plugininfra.commchannels.common.IotdmPluginRequest;
+import org.opendaylight.iotdm.plugininfra.commchannels.common.IotdmPluginResponse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
 
 /**
  * Defines abstract factory for RxRequests.
  */
-public interface Onem2mRxRequestAbstractFactory<TRxRequest extends Onem2mProtocolRxRequest, TIotdmPluginRequest extends IotdmPluginRequest,TIotdmPluginResponse extends IotdmPluginResponse> {
+public interface Onem2mRxRequestAbstractFactory<TRxRequest extends Onem2mProtocolRxRequest,
+                                                TIotdmPluginRequest extends IotdmPluginRequest,
+                                                TIotdmPluginResponse extends IotdmPluginResponse> {
 
     /**
      * Creates Onem2mRxRequest for further processing.

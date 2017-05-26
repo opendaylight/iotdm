@@ -8,8 +8,8 @@
 
 package org.opendaylight.iotdm.onem2m.protocols.mqtt.rx;
 
-import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.common.IotdmPluginOnem2mBaseResponse;
+import org.opendaylight.iotdm.onem2m.commchannels.common.IotdmPluginOnem2mBaseRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.common.IotdmPluginOnem2mBaseResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mRxRequestAbstractFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
@@ -22,8 +22,8 @@ public class Onem2mMqttRxRequestFactory implements Onem2mRxRequestAbstractFactor
     @Override
     public Onem2mMqttRxRequest createRxRequest(IotdmPluginOnem2mBaseRequest request,
                                                IotdmPluginOnem2mBaseResponse response,
-                                                       Onem2mService onem2mService,
-                                                       SecurityLevel securityLevel) {
+                                               Onem2mService onem2mService,
+                                               SecurityLevel securityLevel) {
 
         return new Onem2mMqttRxRequest(request, response, onem2mService, securityLevel);
     }

@@ -34,6 +34,5 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bundle>mvn:org.eclipse.jetty/jetty-io/8.1.19.v20160209</bundle>
     <bundle>mvn:org.eclipse.jetty/jetty-server/8.1.19.v20160209</bundle>
     <bundle>mvn:org.opendaylight.iotdm/onem2msimpleadapter-impl/{{VERSION}}</bundle>
-    <configfile finalname="${configfile.directory}/onem2msimpleadapter.xml">mvn:org.opendaylight.iotdm/onem2msimpleadapter-impl/{{VERSION}}/xml/config</configfile>
   </feature>
 </features>

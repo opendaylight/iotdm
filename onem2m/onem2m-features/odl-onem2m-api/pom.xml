@@ -28,6 +28,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <properties>
         <mdsal.model.version>0.11.0-SNAPSHOT</mdsal.model.version>
         <yangtools.version>1.2.0-SNAPSHOT</yangtools.version>
+        <plugininfra.version>0.4.0-SNAPSHOT</plugininfra.version>
     </properties>
 
     <dependencies>
@@ -42,6 +43,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <groupId>org.opendaylight.mdsal.model</groupId>
             <artifactId>odl-mdsal-models</artifactId>
             <version>${mdsal.model.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.iotdm.plugininfra</groupId>
+            <artifactId>odl-iotdmplugininfra-api</artifactId>
+            <version>${plugininfra.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>

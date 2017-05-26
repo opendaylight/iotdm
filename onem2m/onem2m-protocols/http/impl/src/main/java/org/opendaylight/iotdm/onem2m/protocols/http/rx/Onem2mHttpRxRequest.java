@@ -10,12 +10,12 @@ package org.opendaylight.iotdm.onem2m.protocols.http.rx;
 
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
+import org.opendaylight.iotdm.onem2m.commchannels.http.api.Onem2mHttpRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.http.api.Onem2mHttpResponse;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2m.protocols.common.Onem2mProtocolRxRequest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.SecurityLevel;
@@ -38,8 +38,8 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
     /* Let's keep this data protected so they can be accessed by
      * Child classes
      */
-    protected final IotdmPluginHttpRequest request;
-    protected final IotdmPluginHttpResponse response;
+    protected final Onem2mHttpRequest request;
+    protected final Onem2mHttpResponse response;
     protected final HttpServletRequest httpRequest;
     protected final HttpServletResponse httpResponse;
     protected final Onem2mService onem2mService;
@@ -48,8 +48,8 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
     protected Onem2mRequestPrimitiveClientBuilder clientBuilder = null;
     protected ResponsePrimitive onem2mResponse = null;
 
-    public Onem2mHttpRxRequest(@Nonnull final IotdmPluginHttpRequest request,
-                               @Nonnull final IotdmPluginHttpResponse response,
+    public Onem2mHttpRxRequest(@Nonnull final Onem2mHttpRequest request,
+                               @Nonnull final Onem2mHttpResponse response,
                                @Nonnull final Onem2mService onem2mService,
                                final SecurityLevel securityLevel) {
 
@@ -89,7 +89,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
             response.setRequestId(headerValue);
             clientBuilder.setRequestIdentifier(headerValue);
         } else {
-            IotdmPluginHttpResponse.prepareErrorResponse(
+            Onem2mHttpResponse.prepareErrorResponse(
                 httpResponse, "Request identifier is missing.", Onem2m.ResponseStatusCode.BAD_REQUEST);
             return false;
         }
@@ -102,7 +102,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         if (contentFormat.isPresent()) {
             clientBuilder.setContentFormat(contentFormat.get());
         } else {
-            IotdmPluginHttpResponse.prepareErrorResponse(
+            Onem2mHttpResponse.prepareErrorResponse(
                     httpResponse, "Unsupported media type: " + contentType, Onem2m.ResponseStatusCode.NOT_ACCEPTABLE);
             return false;
         }
@@ -115,7 +115,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         if (headerValue != null) {
             clientBuilder.setFrom(headerValue);
         } else {
-            IotdmPluginHttpResponse.prepareErrorResponse(
+            Onem2mHttpResponse.prepareErrorResponse(
                 httpResponse, "Request originator is missing.", Onem2m.ResponseStatusCode.BAD_REQUEST);
             return false;
         }
@@ -146,7 +146,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
             queryString.contains(RequestPrimitive.ATTRIBUTE_LIST + "=") &&
             ! method.contentEquals("get")) {
 
-            IotdmPluginHttpResponse.prepareErrorResponse(
+            Onem2mHttpResponse.prepareErrorResponse(
                     httpResponse, "Specifying ATTRIBUTE_LIST not permitted for method " + method, Onem2m.ResponseStatusCode.BAD_REQUEST);
             return false;
         }
@@ -162,7 +162,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         }
 
         if (resourceTypePresent && !method.contentEquals("post")) {
-            IotdmPluginHttpResponse.prepareErrorResponse(
+            Onem2mHttpResponse.prepareErrorResponse(
                     httpResponse, "Specifying resource type not permitted.", Onem2m.ResponseStatusCode.BAD_REQUEST);
             return false;
         }
@@ -196,7 +196,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
                 Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_DELETE);
                 break;
             default:
-                IotdmPluginHttpResponse.prepareErrorResponse(
+                Onem2mHttpResponse.prepareErrorResponse(
                         httpResponse, "Unsupported method type: " + method, Onem2m.ResponseStatusCode.NOT_IMPLEMENTED);
                 return false;
         }
@@ -219,7 +219,7 @@ public class Onem2mHttpRxRequest extends Onem2mProtocolRxRequest {
         } else {
             Onem2mStats.getInstance().inc(Onem2mStats.HTTP_REQUESTS_ERROR);
         }
-        return IotdmPluginHttpResponse.fromOnem2mResponseToHttp(onem2mResponse, httpResponse);
+        return Onem2mHttpResponse.fromOnem2mResponseToHttp(onem2mResponse, httpResponse);
 
 //        // the content is already in the required format ...
 //        String content = onem2mResponse.getPrimitive(ResponsePrimitive.CONTENT);

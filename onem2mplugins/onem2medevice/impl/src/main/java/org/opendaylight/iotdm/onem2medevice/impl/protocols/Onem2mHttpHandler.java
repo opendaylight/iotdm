@@ -10,14 +10,15 @@ package org.opendaylight.iotdm.onem2medevice.impl.protocols;
 
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClient;
 import org.opendaylight.iotdm.onem2m.client.Onem2mRequestPrimitiveClientBuilder;
+import org.opendaylight.iotdm.onem2m.commchannels.http.Onem2mHttpRequest;
+import org.opendaylight.iotdm.onem2m.commchannels.http.Onem2mHttpResponse;
 import org.opendaylight.iotdm.onem2m.core.Onem2m;
 import org.opendaylight.iotdm.onem2m.core.Onem2mStats;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.RequestPrimitive;
 import org.opendaylight.iotdm.onem2m.core.rest.utils.ResponsePrimitive;
-import org.opendaylight.iotdm.onem2m.plugins.*;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpRequest;
-import org.opendaylight.iotdm.onem2m.plugins.channels.http.IotdmPluginHttpResponse;
 import org.opendaylight.iotdm.onem2medevice.impl.utils.Onem2mXmlUtils;
+import org.opendaylight.iotdm.plugininfra.commchannels.common.IotdmPluginRequest;
+import org.opendaylight.iotdm.plugininfra.commchannels.common.IotdmPluginResponse;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.iotdm.onem2m.rev150105.Onem2mService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,8 +37,8 @@ public class Onem2mHttpHandler {
     }
 
     public void handle(IotdmPluginRequest request, IotdmPluginResponse response){
-        HttpServletRequest httpRequest = ((IotdmPluginHttpRequest)request).getOriginalRequest();
-        HttpServletResponse httpResponse = ((IotdmPluginHttpResponse)response).getHttpResponse();
+        HttpServletRequest httpRequest = ((Onem2mHttpRequest)request).getOriginalRequest();
+        HttpServletResponse httpResponse = ((Onem2mHttpResponse)response).getHttpResponse();
 
         Onem2mRequestPrimitiveClientBuilder clientBuilder = new Onem2mRequestPrimitiveClientBuilder();
         String headerValue;
