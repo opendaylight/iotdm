@@ -10,26 +10,26 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>features-parent</artifactId>
-    <version>1.7.4-SNAPSHOT</version>
+    <version>1.7.5-SNAPSHOT</version>
     <relativePath/>
   </parent>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2mall-features</artifactId>
-  <version>0.2.4-SNAPSHOT</version>
+  <version>0.2.5-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <modelVersion>4.0.0</modelVersion>
   <prerequisites>
     <maven>3.1.1</maven>
   </prerequisites>
   <properties>
-    <mdsal.model.version>0.9.4-SNAPSHOT</mdsal.model.version>
-    <mdsal.version>1.4.4-SNAPSHOT</mdsal.version>
-    <restconf.version>1.4.4-SNAPSHOT</restconf.version>
-    <yangtools.version>1.0.4-SNAPSHOT</yangtools.version>
-    <dlux.version>0.4.4-SNAPSHOT</dlux.version>
-    <onem2m.version>0.2.4-SNAPSHOT</onem2m.version>
-    <onem2msimpleadapter.version>0.2.4-SNAPSHOT</onem2msimpleadapter.version>
-    <onem2mtsdr.version>0.2.4-SNAPSHOT</onem2mtsdr.version>
+    <mdsal.model.version>0.9.5-SNAPSHOT</mdsal.model.version>
+    <mdsal.version>1.4.5-SNAPSHOT</mdsal.version>
+    <restconf.version>1.4.5-SNAPSHOT</restconf.version>
+    <yangtools.version>1.0.5-SNAPSHOT</yangtools.version>
+    <dlux.version>0.4.5-SNAPSHOT</dlux.version>
+    <onem2m.version>0.2.5-SNAPSHOT</onem2m.version>
+    <onem2msimpleadapter.version>0.2.5-SNAPSHOT</onem2msimpleadapter.version>
+    <onem2mtsdr.version>0.2.5-SNAPSHOT</onem2mtsdr.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
   <dependencyManagement>
