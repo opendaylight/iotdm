@@ -4,7 +4,7 @@
     <packaging>pom</packaging>
     <groupId>org.opendaylight.iotdm</groupId>
     <artifactId>onem2m-ui</artifactId>
-    <version>0.3.2-SNAPSHOT</version>
+    <version>0.3.3-SNAPSHOT</version>
     <!-- <name> formatting is used by autorelease to parse and notify projects on
          build failure. Please do not modify this unless you have a good reason. -->
     <name>ODL :: iotdm :: ${project.artifactId}</name>
@@ -16,7 +16,7 @@
     <properties>
         <osgi.core.version>5.0.0</osgi.core.version>
         <apache.felix.compendium>1.4.0</apache.felix.compendium>
-        <dlux.loader.version>0.5.2-SNAPSHOT</dlux.loader.version>
+        <dlux.loader.version>0.5.3-SNAPSHOT</dlux.loader.version>
     </properties>
 
 

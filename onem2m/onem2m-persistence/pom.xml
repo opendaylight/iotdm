@@ -9,7 +9,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <groupId>org.opendaylight.iotdm</groupId>
     <artifactId>onem2m-persistence</artifactId>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.1.6-SNAPSHOT</version>
     <!-- <name> formatting is used by autorelease to parse and notify projects on
          build failure. Please do not modify this unless you have a good reason. -->
     <name>ODL :: iotdm :: ${project.artifactId}</name>
