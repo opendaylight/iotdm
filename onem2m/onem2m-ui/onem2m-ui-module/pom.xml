@@ -4,7 +4,7 @@
     <parent>
         <artifactId>onem2m-ui</artifactId>
         <groupId>org.opendaylight.iotdm</groupId>
-        <version>0.3.3-SNAPSHOT</version>
+        <version>0.3.3-Carbon</version>
     </parent>
     <artifactId>onem2m-ui-module</artifactId>
     <packaging>jar</packaging>
