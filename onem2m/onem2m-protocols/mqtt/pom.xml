@@ -10,7 +10,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>onem2m-protocol-mqtt</artifactId>
-  <version>0.3.3-SNAPSHOT</version>
+  <version>0.3.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <!-- <name> formatting is used by autorelease to parse and notify projects on
        build failure. Please do not modify this unless you have a good reason. -->
