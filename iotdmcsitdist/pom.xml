@@ -34,13 +34,25 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   </scm>
 
   <modules>
-    <module>karaf</module>
-    <module>karaf4</module>
     <module>features</module>
     <module>artifacts</module>
     <module>it</module>
     <module>iotdmitresources</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>karaf</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+
+      <modules>
+        <module>karaf</module>
+        <module>karaf4</module>
+      </modules>
+    </profile>
+  </profiles>
 
   <!-- dependencies for jacoco code coverage -->
   <dependencies>
