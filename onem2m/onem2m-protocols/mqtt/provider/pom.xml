@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.opendaylight.controller</groupId>
         <artifactId>config-parent</artifactId>
-        <version>0.6.4-SNAPSHOT</version>
+        <version>0.6.4-Carbon</version>
         <relativePath/>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opendaylight.iotdm</groupId>
     <artifactId>onem2m-protocol-mqtt-provider</artifactId>
-    <version>0.3.4-SNAPSHOT</version>
+    <version>0.3.4-Carbon</version>
     <packaging>bundle</packaging>
     <!-- <name> formatting is used by autorelease to parse and notify projects on
          build failure. Please do not modify this unless you have a good reason. -->

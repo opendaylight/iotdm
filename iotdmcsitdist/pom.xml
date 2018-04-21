@@ -11,19 +11,19 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>odlparent</artifactId>
-    <version>1.8.4-SNAPSHOT</version>
+    <version>1.8.4-Carbon</version>
     <relativePath/>
   </parent>
 
   <groupId>org.opendaylight.iotdm</groupId>
   <artifactId>iotdmcsitdist-aggregator</artifactId>
-  <version>0.3.4-SNAPSHOT</version>
+  <version>0.3.4-Carbon</version>
   <name>iotdmcsitdist</name> <!-- DO NOT CHANGE - Used by Sonar to set project name -->
   <packaging>pom</packaging>
 
   <properties>
-    <iotdmbundleloader.version>0.1.4-SNAPSHOT</iotdmbundleloader.version>
-    <iotdmkaraffeatureloader.version>0.1.4-SNAPSHOT</iotdmkaraffeatureloader.version>
+    <iotdmbundleloader.version>0.1.4-Carbon</iotdmbundleloader.version>
+    <iotdmkaraffeatureloader.version>0.1.4-Carbon</iotdmkaraffeatureloader.version>
   </properties>
 
   <scm>
