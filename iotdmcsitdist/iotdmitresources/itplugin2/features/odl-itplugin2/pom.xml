@@ -12,13 +12,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>single-feature-parent</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.5-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <groupId>org.opendaylight.iotdm</groupId>
     <artifactId>odl-itplugin2</artifactId>
-    <version>0.1.4-SNAPSHOT</version>
+    <version>0.1.5-SNAPSHOT</version>
     <packaging>feature</packaging>
 
     <!-- <name> formatting is used by autorelease to parse and notify projects on
@@ -26,8 +26,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <name>ODL :: iotdm :: ${project.artifactId}</name>
 
     <properties>
-        <mdsal.version>1.5.4-SNAPSHOT</mdsal.version>
-        <onem2m.version>0.3.4-SNAPSHOT</onem2m.version>
+        <mdsal.version>1.5.5-SNAPSHOT</mdsal.version>
+        <onem2m.version>0.3.5-SNAPSHOT</onem2m.version>
     </properties>
 
     <dependencies>
