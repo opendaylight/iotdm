@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafc7978_9f729fab",
+        "filename": "onem2mplugins/iotdmitresources/itplugin1/api/src/main/yang/itplugin1.yang",
+        "patchSetId": 7
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-02-06T08:19:11Z",
+      "side": 1,
+      "message": "Please change namespace, e.g.: urn:opendaylight:params:xml:ns:yang:iotdm:testing:itplugin1",
+      "revId": "1cfdd070690c80d9fdff168c0161d5b73654f9d3",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_ff680bbc",
+        "filename": "onem2mplugins/iotdmitresources/itplugin1/api/src/main/yang/itplugin1.yang",
+        "patchSetId": 7
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-02-06T08:19:11Z",
+      "side": 1,
+      "message": "You can set also revision to actual date.",
+      "revId": "1cfdd070690c80d9fdff168c0161d5b73654f9d3",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_1f5eaf12",
+        "filename": "onem2mplugins/iotdmitresources/itplugin1/features/src/main/features/features.xml",
+        "patchSetId": 7
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-02-06T08:19:11Z",
+      "side": 1,
+      "message": "Delete this and also dependencies from features/pom.xml which are not needed anymore.",
+      "revId": "1cfdd070690c80d9fdff168c0161d5b73654f9d3",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_7f9c1bc1",
+        "filename": "onem2mplugins/iotdmitresources/itplugin1/features/src/main/features/features.xml",
+        "patchSetId": 7
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-02-06T08:19:11Z",
+      "side": 1,
+      "message": "Delete this and also dependencies from features/pom.xml which are not needed anymore.",
+      "revId": "1cfdd070690c80d9fdff168c0161d5b73654f9d3",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fafc7978_5f9f97b4",
+        "filename": "onem2mplugins/iotdmitresources/itplugin1/features/src/main/features/features.xml",
+        "patchSetId": 7
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 5876
+      },
+      "writtenOn": "2017-02-06T08:19:11Z",
+      "side": 1,
+      "message": "Delete this and also dependencies from features/pom.xml which are not needed anymore.",
+      "revId": "1cfdd070690c80d9fdff168c0161d5b73654f9d3",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
