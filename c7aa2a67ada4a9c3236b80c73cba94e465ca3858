@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafc7978_907742d4",
+        "filename": "onem2mplugins/iotdmitresources/newtestPlugin/onem2mnewtest-impl-0.1.0-SNAPSHOT.jar",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 2046
+      },
+      "writtenOn": "2017-02-01T15:54:12Z",
+      "side": 1,
+      "message": "ODL is open source. Jar is not a source. Build from source please.",
+      "revId": "c7aa2a67ada4a9c3236b80c73cba94e465ca3858",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
